@@ -133,6 +133,15 @@
     .btn-add:hover{transform:translateY(-1px) scale(1.02);box-shadow:0 6px 20px rgba(0,0,0,.1)}
     .btn-add:active{transform:translateY(.5px) scale(.98);box-shadow:0 1px 4px rgba(0,0,0,.06);transition-duration:80ms}
     .btn-add svg{width:16px;height:16px}
+    .grp-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:.72rem;color:var(--label3);font-weight:500}
+    .grp-bar span{white-space:nowrap}
+    .grp-seg{display:flex;background:var(--fill);border-radius:8px;padding:2px}
+    .grp-seg button{padding:5px 10px;font-size:.72rem;font-weight:500;color:var(--label3);background:transparent;border:none;border-radius:6px;cursor:pointer;transition:all var(--dur-fast);font-family:inherit;white-space:nowrap}
+    .grp-seg button.active{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .grp-header{padding:10px 18px 4px;font-size:.72rem;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px;border-top:.5px solid var(--sep)}
+    .grp-header:first-child{border-top:none}
+    .grp-header .grp-count{background:var(--fill);padding:1px 6px;border-radius:4px;font-size:.66rem;font-weight:600}
+    .grp-header .grp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
     /* ===== TASK LIST ===== */
     .tl{background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;transition:background var(--dur-smooth);overscroll-behavior:contain}
@@ -168,6 +177,9 @@
     .dep-children .item::before{content:'';position:absolute;left:-2px;top:22px;width:14px;height:0;border-top:2px solid var(--sep)}
     .dep-children .item:last-child::after{content:'';position:absolute;left:-2px;top:22px;width:2px;height:calc(100% - 22px);background:var(--card)}
     .item-row{display:flex;align-items:flex-start;gap:12px}
+    .item-date{flex-shrink:0;font-size:.7rem;font-weight:500;color:var(--label3);display:flex;align-items:center;gap:3px;margin-top:3px;white-space:nowrap}
+    .item-date svg{width:11px;height:11px}
+    .item-date.overdue{color:#FF3B30}
 
     /* Checkbox — Apple Reminders style with glow */
     .ck{flex-shrink:0;width:22px;height:22px;margin-top:1px;border-radius:50%;border:1.8px solid var(--label3);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:border-color var(--dur-norm) var(--ease-spring),background var(--dur-norm) var(--ease-spring),color var(--dur-fast),transform var(--dur-spring) var(--ease-spring),box-shadow var(--dur-norm)}
@@ -500,6 +512,7 @@
         <div class="seg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="done">Feitas</button></div>
         <button class="btn-add" id="btnAdd"><svg><use href="#i-plus"/></svg>Nova tarefa</button>
       </div>
+      <div class="grp-bar"><span>Agrupar por:</span><div class="grp-seg" id="grpSeg"><button class="active" data-g="none">Padrão</button><button data-g="category">Categoria</button><button data-g="priority">Prioridade</button><button data-g="date">Prazo</button></div></div>
       <div class="tl" id="list"></div>
     </div>
 
@@ -565,7 +578,7 @@ const DEF_CATS=[{id:'familia',name:'Família',icon:'i-heart',color:'#FF2D55'},{i
 const DEF_TASKS=[{id:uid(),title:'Efetivar o empréstimo',category:'financeiro',priority:'alta',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-864e5,completedAt:null},{id:uid(),title:'Tarefa PID',category:'solvay',priority:'media',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-72e6,completedAt:null},{id:uid(),title:'Adicionar WhatsApp do site',category:'manual',priority:'media',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-5e7,completedAt:null},{id:uid(),title:'Agrupar métricas e dashboards do site',category:'manual',priority:'media',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-3e7,completedAt:null}];
 
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
-let aCat='all',aSt='all',qry='',delId=null,mSubs=[],mDeps=[],curView='tasks',editingCatId=null,dashCat='all',showDone=false,fCCat='';
+let aCat='all',aSt='all',qry='',delId=null,mSubs=[],mDeps=[],curView='tasks',editingCatId=null,dashCat='all',showDone=false,fCCat='',groupBy='none';
 const DAILY_CAP=480;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -639,8 +652,12 @@ function renderItem(t,i,isChild=false){
   const waitTag=blocked?'<span class="tag-meta waiting">Aguardando</span>':'';
   const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
-  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><button class="ck ${t.status==='done'?'on':''}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prioTag}${waitTag}${etTag}${t.date?`<span class="tag-meta ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:''}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-acts"><button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
+  const dateTag=t.date?`<span class="item-date ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:'';
+  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><button class="ck ${t.status==='done'?'on':''}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prioTag}${waitTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div>${dateTag}<div class="item-acts"><button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
 }
+
+function getChildren(parentId,list){return list.filter(t=>t.blockedBy&&t.blockedBy.includes(parentId))}
+function isChild(t){return t.blockedBy&&t.blockedBy.length>0&&t.blockedBy.some(bid=>tasks.find(x=>x.id===bid))}
 
 function renderTasks(){
   let list=tasks.filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'&&t.status!==aSt)return false;if(qry){const s=qry.toLowerCase();return t.title.toLowerCase().includes(s)||(t.notes||'').toLowerCase().includes(s)}return true});
@@ -650,24 +667,32 @@ function renderTasks(){
   const pending=list.filter(t=>t.status!=='done');
   const done=list.filter(t=>t.status==='done');
   if(!pending.length&&!done.length){$('#list').innerHTML=`<div class="task-empty"><div class="ei"><svg><use href="#i-inbox"/></svg></div><h3>${qry?'Nada encontrado':'Nenhuma tarefa'}</h3><p>${qry?'Tente outra busca':'Crie uma nova tarefa para começar'}</p></div>`;return}
-  const pendingIds=new Set(pending.map(t=>t.id));
-  const roots=pending.filter(t=>!t.blockedBy||!t.blockedBy.some(bid=>pendingIds.has(bid)));
-  const rendered=new Set();
-  let idx=0;
-  let html='';
-  function renderTree(parent,isC=false){
-    if(rendered.has(parent.id))return;
-    rendered.add(parent.id);
-    html+=renderItem(parent,idx++,isC);
-    const children=pending.filter(t=>t.blockedBy&&t.blockedBy.includes(parent.id)&&!rendered.has(t.id));
-    if(children.length){
-      html+='<div class="dep-children">';
-      children.forEach(ch=>renderTree(ch,true));
-      html+='</div>';
+  let html='';let idx=0;
+  if(groupBy==='none'){
+    const pendingIds=new Set(pending.map(t=>t.id));
+    const roots=pending.filter(t=>!t.blockedBy||!t.blockedBy.some(bid=>pendingIds.has(bid)));
+    const rendered=new Set();
+    function renderTree(parent,isC=false){
+      if(rendered.has(parent.id))return;
+      rendered.add(parent.id);
+      html+=renderItem(parent,idx++,isC);
+      const children=pending.filter(t=>t.blockedBy&&t.blockedBy.includes(parent.id)&&!rendered.has(t.id));
+      if(children.length){html+='<div class="dep-children">';children.forEach(ch=>renderTree(ch,true));html+='</div>';}
     }
+    roots.forEach(r=>renderTree(r));
+    pending.filter(t=>!rendered.has(t.id)).forEach(t=>{rendered.add(t.id);html+=renderItem(t,idx++)});
+  } else if(groupBy==='category'){
+    const groups={};pending.forEach(t=>{const k=t.category;if(!groups[k])groups[k]=[];groups[k].push(t)});
+    cats.forEach(c=>{if(!groups[c.id])return;html+=`<div class="grp-header"><span class="grp-dot" style="background:${c.color}"></span>${c.name}<span class="grp-count">${groups[c.id].length}</span></div>`;groups[c.id].forEach(t=>{html+=renderItem(t,idx++)})});
+    Object.keys(groups).filter(k=>!cats.find(c=>c.id===k)).forEach(k=>{groups[k].forEach(t=>{html+=renderItem(t,idx++)})});
+  } else if(groupBy==='priority'){
+    const labels=[{k:'alta',n:'Alta',c:'#FF3B30'},{k:'media',n:'Média',c:'#FF9500'},{k:'baixa',n:'Baixa',c:'#34C759'},{k:'',n:'Sem prioridade',c:'var(--label3)'}];
+    labels.forEach(l=>{const g=pending.filter(t=>(t.priority||'')===l.k);if(!g.length)return;html+=`<div class="grp-header"><span class="grp-dot" style="background:${l.c}"></span>${l.n}<span class="grp-count">${g.length}</span></div>`;g.forEach(t=>{html+=renderItem(t,idx++)})});
+  } else if(groupBy==='date'){
+    const today=dateStr(new Date());const tom=dateStr(new Date(Date.now()+864e5));
+    const buckets=[{n:'Atrasadas',f:t=>t.date&&t.date<today},{n:'Hoje',f:t=>t.date===today},{n:'Amanhã',f:t=>t.date===tom},{n:'Próximos',f:t=>t.date&&t.date>tom},{n:'Sem prazo',f:t=>!t.date}];
+    buckets.forEach(b=>{const g=pending.filter(b.f);if(!g.length)return;html+=`<div class="grp-header">${b.n}<span class="grp-count">${g.length}</span></div>`;g.forEach(t=>{html+=renderItem(t,idx++)})});
   }
-  roots.forEach(r=>renderTree(r));
-  pending.filter(t=>!rendered.has(t.id)).forEach(t=>{rendered.add(t.id);html+=renderItem(t,idx++)});
   if(done.length){
     html+=`<button class="done-toggle ${showDone?'open':''}" id="doneToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>Concluídas<span class="dt-count">${done.length}</span></button>`;
     html+=`<div class="done-section ${showDone?'open':''}">${done.map((t,i)=>renderItem(t,i)).join('')}</div>`;
@@ -841,6 +866,7 @@ $('#list').addEventListener('click',e=>{const dt=e.target.closest('.done-toggle'
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;renderTasks()})});
+$('#grpSeg').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;$$('#grpSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');groupBy=b.dataset.g;renderTasks()});
 $$('.nav-item').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
 $$('.mob-tab[data-view]').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
 $('#q').addEventListener('input',e=>{qry=e.target.value;renderTasks()});
