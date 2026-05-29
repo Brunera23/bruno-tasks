@@ -48,6 +48,30 @@
     body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--label);min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;line-height:1.47;transition:background var(--dur-smooth) var(--ease-std),color var(--dur-smooth) var(--ease-std)}
     .svg-defs{display:none}
 
+    /* ===== LOGIN SCREEN ===== */
+    .login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;animation:loginFadeIn .6s var(--ease-expo) both}
+    @keyframes loginFadeIn{from{opacity:0}to{opacity:1}}
+    .login-card{text-align:center;max-width:340px;padding:40px 32px;width:100%}
+    .login-logo{margin-bottom:20px}
+    .login-logo-icon{width:72px;height:72px;background:linear-gradient(135deg,#1d1d1f,#3a3a3c);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+    [data-theme="dark"] .login-logo-icon{background:linear-gradient(135deg,#e5e5e7,#98989f)}
+    [data-theme="dark"] .login-logo-icon svg{color:#0a0a0a!important}
+    .login-title{font-size:1.8rem;font-weight:800;letter-spacing:-.04em;color:var(--label);margin-bottom:6px}
+    .login-sub{font-size:.86rem;color:var(--label2);margin-bottom:32px}
+    .login-google-btn{display:flex;align-items:center;gap:12px;padding:14px 28px;border-radius:14px;border:1px solid var(--sep);background:var(--card);color:var(--label);font-size:.92rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:all .2s var(--ease-std);margin:0 auto;width:100%;justify-content:center}
+    .login-google-btn:hover{box-shadow:0 4px 20px rgba(0,0,0,.1);transform:translateY(-1px)}
+    .login-google-btn:active{transform:scale(.98);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+    .login-footer{font-size:.7rem;color:var(--label3);margin-top:24px;line-height:1.4}
+
+    /* ===== SIDEBAR USER ===== */
+    .sidebar-user{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--sep);margin-top:auto}
+    .su-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#007AFF,#5AC8FA);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .su-info{flex:1;min-width:0;display:flex;flex-direction:column}
+    .su-name{font-size:.76rem;font-weight:600;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .su-email{font-size:.62rem;color:var(--label3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .su-logout{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur-fast);flex-shrink:0}
+    .su-logout:hover{background:var(--fill);color:var(--label)}
+
     /* ===== LAYOUT ===== */
     .shell{display:flex;min-height:100dvh}
     .sidebar{width:260px;flex-shrink:0;background:rgba(255,255,255,.88);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-right:1px solid var(--sep);padding:24px 16px 20px;display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;transition:background var(--dur-smooth),border-color var(--dur-smooth)}
@@ -827,7 +851,21 @@
   <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-6H7L5 12z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M3 17h2M19 17h2"/></symbol>
 </svg>
 
-<div class="shell">
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo"><div class="login-logo-icon"><svg width="32" height="32" style="color:#fff"><use href="#i-check"/></svg></div></div>
+    <h1 class="login-title">Bruno Tasks</h1>
+    <p class="login-sub">Faça login para continuar</p>
+    <button class="login-google-btn" id="loginBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Entrar com Google
+    </button>
+    <p class="login-footer">Seus dados são protegidos e sincronizados na nuvem</p>
+  </div>
+</div>
+
+<div class="shell" style="display:none">
   <aside class="sidebar">
     <div class="sidebar-top">
       <div class="sidebar-logo"><div class="logo-icon"><svg><use href="#i-check"/></svg></div>Bruno Tasks</div>
@@ -841,6 +879,11 @@
     <div class="sidebar-cats">
       <div class="nav-label">Categorias<button class="nav-label-btn" id="catMgrBtn" title="Gerenciar"><svg><use href="#i-settings"/></svg></button></div>
       <div id="catNav"></div>
+    </div>
+    <div class="sidebar-user" id="sidebarUser" style="display:none">
+      <div class="su-avatar" id="suAvatar">?</div>
+      <div class="su-info"><span class="su-name" id="suName">—</span><span class="su-email" id="suEmail">—</span></div>
+      <button class="su-logout" id="logoutBtn" title="Sair"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
     </div>
   </aside>
 
@@ -951,6 +994,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <div class="mob-sheet-ov" id="mobSheetOv"></div>
 <div class="mob-sheet" id="mobSheet">
   <div class="mob-sheet-handle"></div>
@@ -980,6 +1024,65 @@ firebase.initializeApp(fbConfig);
 const db=firebase.firestore();
 const FB_DOC='bruno-main';
 let _fbReady=false,_fbSaving=false,_fbListening=false;
+
+// ===== AUTH =====
+const auth=firebase.auth();
+const googleProvider=new firebase.auth.GoogleAuthProvider();
+let currentUser=null;
+
+function showLoginScreen(){
+  $('#loginScreen').style.display='flex';
+  $('.shell').style.display='none';
+  const fab=$('#fab');if(fab)fab.style.display='none';
+  const mn=$('.mob-nav');if(mn)mn.style.display='none';
+}
+
+function showApp(){
+  $('#loginScreen').style.display='none';
+  $('.shell').style.display='';
+  const fab=$('#fab');if(fab)fab.style.display='';
+  const mn=$('.mob-nav');if(mn)mn.style.display='';
+}
+
+function updateSidebarUser(user){
+  const su=$('#sidebarUser');if(!su)return;
+  if(user){
+    su.style.display='flex';
+    const name=user.displayName||user.email||'Usuário';
+    $('#suAvatar').textContent=name.charAt(0).toUpperCase();
+    $('#suName').textContent=name;
+    $('#suEmail').textContent=user.email||'';
+  } else {
+    su.style.display='none';
+  }
+}
+
+function doGoogleLogin(){
+  auth.signInWithPopup(googleProvider).catch(err=>{
+    console.error('Login error:',err);
+    if(err.code==='auth/popup-blocked'){
+      // Fallback to redirect for mobile
+      auth.signInWithRedirect(googleProvider);
+    }
+  });
+}
+
+let _authBooted=false;
+auth.onAuthStateChanged(user=>{
+  currentUser=user;
+  if(user){
+    console.log('Auth OK:',user.uid,user.displayName);
+    updateSidebarUser(user);
+    showApp();
+    if(!_authBooted){
+      _authBooted=true;
+      processRecurring();setGreeting();render();fbInit();
+    }
+  } else {
+    showLoginScreen();
+    updateSidebarUser(null);
+  }
+});
 
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
 const _ui=ld('bt-ui',{});
@@ -2184,7 +2287,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=12',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=13',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2241,8 +2344,10 @@ function processRecurring(){
   // Restore group label
   if(groupBy!=='none'){const go=$('#grpMenu .grp-dd-opt[data-g="'+groupBy+'"]');if(go){$$('#grpMenu .grp-dd-opt').forEach(x=>x.classList.remove('active'));go.classList.add('active');$('#grpVal span').textContent=go.textContent}}
 })();
-processRecurring();
-setGreeting();render();fbInit();
+// Boot is now handled by auth.onAuthStateChanged
+// Only run processRecurring and initial render once auth confirms
+$('#loginBtn').addEventListener('click',doGoogleLogin);
+$('#logoutBtn').addEventListener('click',()=>{auth.signOut()});
 
 // ===== MOBILE BOTTOM SHEET =====
 $('#mobMore').addEventListener('click', openMobSheet);
