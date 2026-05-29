@@ -1036,20 +1036,20 @@
       <button type="button" data-v="bruno" class="active"><span class="pick-dot" style="background:#007AFF"></span>Bruno</button>
       <button type="button" data-v="nos"><span class="pick-dot" style="background:#FF2D55"></span>Nós 💑</button>
     </div></div>
-    <div class="fld" id="fAssignWrap" style="display:none"><label>Para quem?</label><div class="pick-seg assign-seg" id="fAssign">
+    <div class="fld" id="fAssignWrap" style="display:none"><label>De quem é a missão?</label><div class="pick-seg assign-seg" id="fAssign">
       <button type="button" data-v="bruno" class="active"><span class="assign-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Bruno</button>
-      <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="14" height="14"><use href="#i-woman"/></svg></span>Parceira</button>
-      <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-couple"/></svg></span>Ambos</button>
+      <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Parceira</button>
+      <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-users"/></svg></span>Ambos</button>
     </div></div>
-    <div class="fld"><label>Título</label><input type="text" id="fT" placeholder="O que precisa ser feito?" required></div>
-    <div class="fld"><label>Categoria</label>
+    <div class="fld"><label>O que vamos fazer?</label><input type="text" id="fT" placeholder="Ex: Pagar a conta de luz..." required></div>
+    <div class="fld"><label>Onde se encaixa?</label>
       <div class="cs-wrap" id="fCWrap" tabindex="0">
         <div class="cs-val"><div class="cs-val-inner" id="fCVal">Selecione</div><svg class="cs-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
         <div class="cs-menu" id="fCMenu"></div>
       </div>
     </div>
-    <div class="fld-row"><div class="fld"><label>Prioridade</label><div class="pick-seg" id="fP"><button type="button" data-v="alta"><span class="pick-dot" style="background:#FF3B30"></span>Alta</button><button type="button" data-v="media" class="active"><span class="pick-dot" style="background:#FF9500"></span>Média</button><button type="button" data-v="baixa"><span class="pick-dot" style="background:#34C759"></span>Baixa</button></div></div><div class="fld"><label>Status</label><div class="pick-seg" id="fS"><button type="button" data-v="todo" class="active">A Fazer</button><button type="button" data-v="doing">Fazendo</button><button type="button" data-v="done">Feita</button></div></div></div>
-    <div class="fld"><label>Prazo</label><input type="date" id="fD"><div class="adv-field" style="position:relative"><button type="button" class="recur-btn" id="recurBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg><span id="recurLabel">Repetir</span></button><div class="recur-pop" id="recurPop"><div class="recur-freq" id="recurFreq"><button type="button" data-rf="daily">Diário</button><button type="button" data-rf="weekdays">Dias úteis</button><button type="button" data-rf="weekly">Semanal</button><button type="button" data-rf="monthly">Mensal</button><button type="button" data-rf="">Nenhum</button></div><div class="recur-until"><span>Até:</span><input type="date" id="recurUntil"></div></div></div></div>
+    <div class="fld-row"><div class="fld"><label>Qual a urgência?</label><div class="pick-seg" id="fP"><button type="button" data-v="alta"><span class="pick-dot" style="background:#FF3B30"></span>Alta</button><button type="button" data-v="media" class="active"><span class="pick-dot" style="background:#FF9500"></span>Média</button><button type="button" data-v="baixa"><span class="pick-dot" style="background:#34C759"></span>Baixa</button></div></div><div class="fld"><label>Em que pé está?</label><div class="pick-seg" id="fS"><button type="button" data-v="todo" class="active">A Fazer</button><button type="button" data-v="doing">Fazendo</button><button type="button" data-v="done">Feita</button></div></div></div>
+    <div class="fld"><label>Até quando?</label><input type="date" id="fD"><div class="adv-field" style="position:relative"><button type="button" class="recur-btn" id="recurBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg><span id="recurLabel">Repetir</span></button><div class="recur-pop" id="recurPop"><div class="recur-freq" id="recurFreq"><button type="button" data-rf="daily">Diário</button><button type="button" data-rf="weekdays">Dias úteis</button><button type="button" data-rf="weekly">Semanal</button><button type="button" data-rf="monthly">Mensal</button><button type="button" data-rf="">Nenhum</button></div><div class="recur-until"><span>Até:</span><input type="date" id="recurUntil"></div></div></div></div>
     <div class="fld adv-field"><label>Tempo estimado</label><div class="time-chips" id="timeChips"><button type="button" class="time-chip" data-min="15">15min</button><button type="button" class="time-chip" data-min="30">30min</button><button type="button" class="time-chip" data-min="60">1h</button><button type="button" class="time-chip" data-min="120">2h</button><button type="button" class="time-chip" data-min="240">4h</button><button type="button" class="time-chip" data-min="custom">Outro</button></div><div class="time-custom-wrap" id="timeCustom"><input type="number" id="fET" min="1" max="960" placeholder="90"><span>minutos</span></div></div>
     <div class="sub-edit-section adv-field"><label>Subtarefas</label><div class="sub-edit-list" id="subList"></div><button type="button" class="add-sub-btn" id="addSub"><svg width="13" height="13"><use href="#i-plus"/></svg>Adicionar subtarefa</button></div>
     <div class="fld adv-field"><label>Depende de</label><div class="dep-picker" id="depPicker"><input type="text" class="dep-search" id="depSearch" placeholder="Buscar tarefa..." autocomplete="off"><div class="dep-results" id="depResults"></div></div><div class="dep-chips" id="depChips"></div></div>
@@ -1679,7 +1679,7 @@ function renderItem(t,i,isChild=false,depsOpen=false,isLast=false){
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
   const dateTag=t.date?`<span class="item-date ${od?'overdue':''}" data-id="${t.id}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:`<span class="item-date" data-id="${t.id}" style="opacity:.4"><svg><use href="#i-cal"/></svg>Prazo</span>`;
   const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
-  const assignTag=t.project==='nos'&&t.assignedTo?`<span class="tag-meta assign-tag"><span class="assign-mini" style="background:${t.assignedTo==='bruno'?'linear-gradient(135deg,#007AFF,#5AC8FA)':t.assignedTo==='parceira'?'linear-gradient(135deg,#FF2D55,#FF6482)':'linear-gradient(135deg,#AF52DE,#5856D6)'}"><svg width="10" height="10"><use href="${t.assignedTo==='ambos'?'#i-couple':t.assignedTo==='parceira'?'#i-woman':'#i-user'}"/></svg></span>${t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Parceira':'Ambos'}</span>`:'';
+  const assignTag=t.project==='nos'&&t.assignedTo?`<span class="tag-meta assign-tag"><span class="assign-mini" style="background:${t.assignedTo==='bruno'?'linear-gradient(135deg,#007AFF,#5AC8FA)':t.assignedTo==='parceira'?'linear-gradient(135deg,#FF2D55,#FF6482)':'linear-gradient(135deg,#AF52DE,#5856D6)'}"><svg width="10" height="10"><use href="${t.assignedTo==='ambos'?'#i-users':'#i-user'}"/></svg></span>${t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Parceira':'Ambos'}</span>`:'';
   const projDot=t.project==='nos'?'<span class="proj-dot-nos" title="Nós"></span>':'';
   return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><button class="ck ${ckCls}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button></div><div class="item-body"><div class="item-title">${projDot}${t.title}</div><div class="item-meta"><span class="tag tag-cat" data-id="${t.id}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${assignTag}${prioTag}${waitTag}${recurTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-right">${dateTag}<div class="item-acts">${t.status!=='done'?`<button class="a-btn" onclick="quickChild('${t.id}')" title="Adicionar subtarefa"><svg><use href="#i-plus"/></svg></button>`:''}<button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
 }
@@ -2788,7 +2788,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=44',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=45',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2940,13 +2940,9 @@ $('#projNav').addEventListener('click',e=>{
   }
   const row=e.target.closest('[data-proj]');
   if(row){
+    // Click on row = select project (filter to just that one)
     const projId=row.dataset.proj;
-    if (e.ctrlKey || e.metaKey) {
-      const proj=projects.find(p=>p.id===projId);
-      if(proj) { proj.visible=!proj.visible; }
-    } else {
-      projects.forEach(p=>p.visible=(p.id===projId));
-    }
+    projects.forEach(p=>p.visible=(p.id===projId));
     saveUI();render();
   }
 });
