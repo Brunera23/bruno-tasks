@@ -860,7 +860,9 @@ const FB_DOC='bruno-main';
 let _fbReady=false,_fbSaving=false,_fbListening=false;
 
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
-let aCat='all',aSt='all',qry='',delId=null,mSubs=[],mDeps=[],curView='tasks',editingCatId=null,dashCat='all',showDone=false,fCCat='',groupBy='none',sortBy='priority',widgetFilter=null;
+const _ui=ld('bt-ui',{});
+let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null;
+function saveUI(){sv('bt-ui',{aCat,aSt,curView,groupBy,sortBy,showDone})}
 const expandedDeps=new Set();
 const collapsedGroups=new Set();
 const DAILY_CAP=480;
@@ -1014,7 +1016,7 @@ function setGreeting(){
 }
 
 function switchView(v){
-  const apply=()=>{curView=v;$('#tasksView').classList.toggle('active',v==='tasks');$('#dashView').classList.toggle('active',v==='dash');$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));$$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));if(v==='dash')renderDash()};
+  const apply=()=>{curView=v;saveUI();$('#tasksView').classList.toggle('active',v==='tasks');$('#dashView').classList.toggle('active',v==='dash');$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));$$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));if(v==='dash')renderDash()};
   if(document.startViewTransition){document.startViewTransition(apply)}else{apply()}
 }
 
@@ -1812,21 +1814,21 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
-$('#list').addEventListener('click',e=>{if(e.target.closest('.iq-pop'))return;const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);renderTasks();return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const tt=e.target.closest('.tag-time[data-id]');if(tt){e.stopPropagation();showTimePop(tt,tt.dataset.id);return}const id_el=e.target.closest('.item-date[data-id]');if(id_el){e.stopPropagation();showDatePop(id_el,id_el.dataset.id);return}const ct=e.target.closest('.tag-cat[data-id]');if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
-$('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
-$('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
-$$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;renderTasks()})});
+$('#list').addEventListener('click',e=>{if(e.target.closest('.iq-pop'))return;const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);renderTasks();return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;saveUI();dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const tt=e.target.closest('.tag-time[data-id]');if(tt){e.stopPropagation();showTimePop(tt,tt.dataset.id);return}const id_el=e.target.closest('.item-date[data-id]');if(id_el){e.stopPropagation();showDatePop(id_el,id_el.dataset.id);return}const ct=e.target.closest('.tag-cat[data-id]');if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
+$('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;saveUI();render()});
+$('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;saveUI();render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
+$$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;saveUI();renderTasks()})});
 $('#grpDd').addEventListener('click',()=>$('#grpDd').classList.toggle('open'));
 $('#grpDd').addEventListener('blur',()=>setTimeout(()=>$('#grpDd').classList.remove('open'),150));
 $('#sortDd').addEventListener('click',()=>$('#sortDd').classList.toggle('open'));
 $('#sortDd').addEventListener('blur',()=>setTimeout(()=>$('#sortDd').classList.remove('open'),150));
 $('#sortMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.grp-dd-opt');if(!o)return;e.preventDefault();
   $$('#sortMenu .grp-dd-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active');
-  sortBy=o.dataset.so;$('#sortVal span').textContent=o.textContent;$('#sortDd').classList.remove('open');renderTasks();
+  sortBy=o.dataset.so;saveUI();$('#sortVal span').textContent=o.textContent;$('#sortDd').classList.remove('open');renderTasks();
 });
 $('#grpMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.grp-dd-opt');if(!o)return;e.preventDefault();
   $$('#grpMenu .grp-dd-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active');
-  groupBy=o.dataset.g;$('#grpVal span').textContent=o.textContent;$('#grpDd').classList.remove('open');renderTasks();
+  groupBy=o.dataset.g;saveUI();$('#grpVal span').textContent=o.textContent;$('#grpDd').classList.remove('open');renderTasks();
 });
 $$('.nav-item').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
 $$('.mob-tab[data-view]').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
@@ -2026,6 +2028,17 @@ function processRecurring(){
   });
   if(changed){sT();render()}
 }
+// ===== RESTORE UI STATE =====
+(function restoreUI(){
+  // Restore view
+  if(curView==='dash')switchView('dash');
+  // Restore status segment
+  if(aSt!=='all'){$$('.seg button').forEach(s=>{s.classList.toggle('active',s.dataset.s===aSt)})}
+  // Restore sort label
+  if(sortBy!=='priority'){const so=$('#sortMenu .grp-dd-opt[data-so="'+sortBy+'"]');if(so){$$('#sortMenu .grp-dd-opt').forEach(x=>x.classList.remove('active'));so.classList.add('active');$('#sortVal span').textContent=so.textContent}}
+  // Restore group label
+  if(groupBy!=='none'){const go=$('#grpMenu .grp-dd-opt[data-g="'+groupBy+'"]');if(go){$$('#grpMenu .grp-dd-opt').forEach(x=>x.classList.remove('active'));go.classList.add('active');$('#grpVal span').textContent=go.textContent}}
+})();
 processRecurring();
 setGreeting();render();fbInit();
 </script>
