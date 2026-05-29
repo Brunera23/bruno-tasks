@@ -633,6 +633,15 @@
     .pick-seg .pick-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
     /* Dependency picker */
+    .ap-icons{display:flex;gap:8px;flex-wrap:wrap}
+    .ap-opt{width:36px;height:36px;border-radius:10px;background:var(--fill);border:2px solid transparent;color:var(--label);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--dur-fast)}
+    .ap-opt:hover{background:var(--fill2, rgba(120,120,128,.18))}
+    .ap-opt.active{border-color:var(--blue);background:rgba(0,122,255,.1);color:var(--blue)}
+    .ap-opt svg{width:18px;height:18px}
+    .ap-colors{display:flex;gap:10px;flex-wrap:wrap}
+    .ap-c-opt{width:32px;height:32px;border-radius:50%;border:2px solid transparent;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:2px;transition:all var(--dur-fast)}
+    .ap-c-opt span{display:block;width:100%;height:100%;border-radius:50%}
+    .ap-c-opt.active{border-color:var(--blue)}
     .dep-picker{position:relative}
     .dep-search{width:100%;padding:9px 13px;background:var(--bg);border:1px solid var(--sep);border-radius:9px;color:var(--label);font-family:inherit;font-size:.82rem;outline:none;transition:all var(--dur-fast)}
     .dep-search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.1)}
@@ -1052,6 +1061,24 @@
     <h3 style="margin-bottom:12px">Novo Projeto</h3>
     <div style="display:flex; flex-direction:column; gap:12px; margin-bottom: 20px;">
       <input type="text" id="apName" placeholder="Nome do projeto" style="padding: 10px 14px; border-radius: 10px; border: 1px solid var(--sep); background: var(--fill); color: var(--label); font-size: 0.82rem; outline: none; width: 100%; box-sizing: border-box;">
+      <div style="font-size:0.75rem; color:var(--label3); font-weight:500; margin-top:4px">Ícone</div>
+      <div class="ap-icons" id="apIcons" style="display:flex; gap:8px; flex-wrap:wrap">
+         <button type="button" class="ap-opt active" data-v="i-layers"><svg><use href="#i-layers"/></svg></button>
+         <button type="button" class="ap-opt" data-v="i-home"><svg><use href="#i-home"/></svg></button>
+         <button type="button" class="ap-opt" data-v="i-briefcase"><svg><use href="#i-briefcase"/></svg></button>
+         <button type="button" class="ap-opt" data-v="i-book"><svg><use href="#i-book"/></svg></button>
+         <button type="button" class="ap-opt" data-v="i-star"><svg><use href="#i-star"/></svg></button>
+         <button type="button" class="ap-opt" data-v="i-heart"><svg><use href="#i-heart"/></svg></button>
+      </div>
+      <div style="font-size:0.75rem; color:var(--label3); font-weight:500; margin-top:4px">Cor</div>
+      <div class="ap-colors" id="apColors" style="display:flex; gap:10px; flex-wrap:wrap">
+         <button type="button" class="ap-c-opt active" data-v="linear-gradient(135deg,#007AFF,#5AC8FA)"><span style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"></span></button>
+         <button type="button" class="ap-c-opt" data-v="linear-gradient(135deg,#FF2D55,#FF6482)"><span style="background:linear-gradient(135deg,#FF2D55,#FF6482)"></span></button>
+         <button type="button" class="ap-c-opt" data-v="linear-gradient(135deg,#FF9500,#FFC300)"><span style="background:linear-gradient(135deg,#FF9500,#FFC300)"></span></button>
+         <button type="button" class="ap-c-opt" data-v="linear-gradient(135deg,#34C759,#A4E786)"><span style="background:linear-gradient(135deg,#34C759,#A4E786)"></span></button>
+         <button type="button" class="ap-c-opt" data-v="linear-gradient(135deg,#AF52DE,#5856D6)"><span style="background:linear-gradient(135deg,#AF52DE,#5856D6)"></span></button>
+         <button type="button" class="ap-c-opt" data-v="linear-gradient(135deg,#FF3B30,#FF8F87)"><span style="background:linear-gradient(135deg,#FF3B30,#FF8F87)"></span></button>
+      </div>
     </div>
     <div class="m-btns" style="margin-top:0">
       <button class="btn btn-sec" onclick="$('#addProjWrap').classList.remove('open')">Cancelar</button>
@@ -1171,7 +1198,7 @@ auth.onAuthStateChanged(user=>{
     const params=new URLSearchParams(location.search);
     const inv=params.get('invite');
     if(inv){
-      _pendingInvite={id:inv,name:params.get('name')||'Compartilhado',icon:'i-heart',color:'#FF2D55',gradient:'linear-gradient(135deg,#FF2D55,#FF6482)',type:'shared',visible:true,order:9};
+      _pendingInvite={id:inv,name:params.get('name')||'Compartilhado',icon:params.get('icon')||'i-heart',gradient:params.get('gradient')||'linear-gradient(135deg,#FF2D55,#FF6482)',type:'shared',visible:true,order:9};
       window.history.replaceState({},document.title,window.location.pathname);
     }
     updateSidebarUser(user);
@@ -1258,7 +1285,12 @@ function shareProj(id) {
   setTimeout(()=>{
     const p=projects.find(x=>x.id===id);
     if(p){
-      const link=location.origin+location.pathname+'?invite='+p.id+'&name='+encodeURIComponent(p.name);
+      if(p.type!=='shared'){
+         p.type='shared';
+         saveUI();
+         _fbDirectSave().then(()=>fbListen());
+      }
+      const link=location.origin+location.pathname+'?invite='+p.id+'&name='+encodeURIComponent(p.name)+'&icon='+p.icon+'&gradient='+encodeURIComponent(p.gradient);
       $('#invProjName').textContent = p.name;
       $('#invLink').value = link;
       $('#invCopyBtn').onclick = () => {
@@ -1298,18 +1330,22 @@ function sL(){fbSave()}
 // Local storage is only a cache for offline use.
 function showSync(msg,ok){const el=$('#syncDot');if(!el)return;el.className='sync-dot'+(ok?' synced':' saving');if(ok)setTimeout(()=>{el.className='sync-dot'},1500)}
 let _fbTimer=null,_fbInitDone=false;
-let pTasks=[],sTasks=[],pCats=[],pLog=[],sLog=[];
-let _unsubP=null,_unsubS=null;
+let pTasks=[],pCats=[],pLog=[];
+let _unsubP=null;
+const _unsubShared={};
+const sharedTasksMap={};
+const sharedLogMap={};
 
 function _fbDirectSave(){
   if(!currentUser) return Promise.resolve();
   const uid=currentUser.uid;
-  const myPTasks=tasks.filter(t=>t.project!=='nos');
-  const mySTasks=tasks.filter(t=>t.project==='nos');
-  const myPLog=log.filter(l=>l.project!=='nos');
-  const mySLog=log.filter(l=>l.project==='nos');
+  const sharedProjs = projects.filter(p=>p.type==='shared').map(p=>p.id);
+  
+  const myPTasks=tasks.filter(t=>!t.project || !sharedProjs.includes(t.project));
+  const myPLog=log.filter(l=>!l.project || !sharedProjs.includes(l.project));
 
-  const p1=db.collection('users').doc(uid).set({
+  const promises = [];
+  promises.push(db.collection('users').doc(uid).set({
     tasks:JSON.stringify(myPTasks),
     cats:JSON.stringify(cats),
     log:JSON.stringify(myPLog.slice(0,100)),
@@ -1317,16 +1353,20 @@ function _fbDirectSave(){
     device:navigator.userAgent.includes('Mobile')?'mobile':'desktop',
     taskCount:myPTasks.length,
     projects:JSON.stringify(projects)
-  },{merge:true});
+  },{merge:true}));
 
-  const p2=db.collection('shared').doc('nos').set({
-    tasks:JSON.stringify(mySTasks),
-    log:JSON.stringify(mySLog.slice(0,100)),
-    updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-    taskCount:mySTasks.length
-  },{merge:true});
+  sharedProjs.forEach(pid => {
+    const sTasks = tasks.filter(t=>t.project===pid);
+    const sLog = log.filter(l=>l.project===pid);
+    promises.push(db.collection('shared').doc(pid).set({
+      tasks:JSON.stringify(sTasks),
+      log:JSON.stringify(sLog.slice(0,100)),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      taskCount:sTasks.length
+    },{merge:true}));
+  });
 
-  return Promise.all([p1,p2]);
+  return Promise.all(promises);
 }
 
 function fbSave(){
@@ -1374,22 +1414,29 @@ function fbInit(){
 
 function combineData(){
   if(_fbSaving||!_fbInitDone)return;
-  const newTasks=[...pTasks,...sTasks];
+  const newTasks=[...pTasks];
+  for (let pid in sharedTasksMap) newTasks.push(...sharedTasksMap[pid]);
+  
   if(JSON.stringify(newTasks)===JSON.stringify(tasks))return;
   tasks=newTasks;
   cats=[...pCats];
-  log=[...pLog,...sLog].sort((a,b)=>b.ts-a.ts);
+  
+  const newLog=[...pLog];
+  for (let pid in sharedLogMap) newLog.push(...sharedLogMap[pid]);
+  log=newLog.sort((a,b)=>b.ts-a.ts);
+  
   if(typeof render==='function')render();
   showSync('Atualizado ✓',true);
 }
+
+const sharedLoaded={};
 
 function fbListen(){
   if(!currentUser) return;
   const uid=currentUser.uid;
   if(_unsubP) _unsubP();
-  if(_unsubS) _unsubS();
   
-  let pLoaded=false, sLoaded=false;
+  let pLoaded=false;
 
   _unsubP=db.collection('users').doc(uid).onSnapshot(snap=>{
     pLoaded=true;
@@ -1411,18 +1458,37 @@ function fbListen(){
       _pendingInvite=null;
     }
 
-    if(pLoaded&&sLoaded) combineData();
-  },e=>console.warn('FB pListener error',e));
+    // Setup shared listeners
+    const sharedProjects = projects.filter(p => p.type === 'shared');
+    
+    // Remove listeners for projects we no longer have
+    Object.keys(_unsubShared).forEach(pid => {
+      if (!sharedProjects.find(p => p.id === pid)) {
+        _unsubShared[pid]();
+        delete _unsubShared[pid];
+        delete sharedTasksMap[pid];
+        delete sharedLogMap[pid];
+        delete sharedLoaded[pid];
+      }
+    });
 
-  _unsubS=db.collection('shared').doc('nos').onSnapshot(snap=>{
-    sLoaded=true;
-    if(snap.exists&&!_fbSaving){
-      const d=snap.data();
-      sTasks=JSON.parse(d.tasks||'[]');
-      sLog=JSON.parse(d.log||'[]');
-    }
-    if(pLoaded&&sLoaded) combineData();
-  },e=>console.warn('FB sListener error',e));
+    // Add listeners for new shared projects
+    sharedProjects.forEach(p => {
+      if (!_unsubShared[p.id]) {
+        _unsubShared[p.id] = db.collection('shared').doc(p.id).onSnapshot(sSnap => {
+           sharedLoaded[p.id] = true;
+           if (sSnap.exists && !_fbSaving) {
+             const sd = sSnap.data();
+             sharedTasksMap[p.id] = JSON.parse(sd.tasks||'[]');
+             sharedLogMap[p.id] = JSON.parse(sd.log||'[]');
+           }
+           if(pLoaded) combineData();
+        }, e => console.warn(`FB sListener error for ${p.id}`, e));
+      }
+    });
+
+    if(pLoaded) combineData();
+  },e=>console.warn('FB pListener error',e));
 }
 
 function ci(id){return cats.find(c=>c.id===id)||NOS_CATS.find(c=>c.id===id)||{name:id,icon:'i-layers',color:'#8E8E93'}}
@@ -2600,7 +2666,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=32',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=33',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2670,19 +2736,35 @@ $('#addProjBtn').addEventListener('click', () => {
 $('#apName').addEventListener('keydown', e => {
   if (e.key === 'Enter') $('#apSave').click();
 });
+$('#apIcons').addEventListener('click', e => {
+  const btn = e.target.closest('.ap-opt');
+  if(btn) {
+    $$('#apIcons .ap-opt').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+});
+$('#apColors').addEventListener('click', e => {
+  const btn = e.target.closest('.ap-c-opt');
+  if(btn) {
+    $$('#apColors .ap-c-opt').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+});
 $('#apSave').addEventListener('click', () => {
   const nn = $('#apName').value;
   if (nn && nn.trim()) {
     const id = 'proj_' + uid();
-    const colors = ['#007AFF','#34C759','#FF9500','#FF2D55','#AF52DE','#5856D6','#FFCC00','#FF3B30'];
-    const color = colors[Math.floor(Math.random()*colors.length)];
+    const iconBtn = $('#apIcons .ap-opt.active');
+    const colorBtn = $('#apColors .ap-c-opt.active');
+    const icon = iconBtn ? iconBtn.dataset.v : 'i-layers';
+    const gradient = colorBtn ? colorBtn.dataset.v : 'linear-gradient(135deg,#007AFF,#5AC8FA)';
     projects.push({
       id,
       name: nn.trim(),
       type: 'personal',
       visible: true,
-      icon: 'i-layers',
-      color
+      icon,
+      gradient
     });
     saveUI();
     render();
@@ -2701,9 +2783,7 @@ $('#projNav').addEventListener('click',e=>{
     if(p){
       $('#pasTitle').textContent = p.name;
       let html = `<button class="btn" style="width:100%;text-align:left;justify-content:flex-start;padding:12px;border-radius:12px;background:var(--fill);color:var(--label);border:none" onclick="renProj('${p.id}')"><svg style="width:16px;height:16px;margin-right:8px;opacity:0.6"><use href="#i-edit"/></svg> Renomear Projeto</button>`;
-      if(p.type==='shared') {
-         html += `<button class="btn" style="width:100%;text-align:left;justify-content:flex-start;padding:12px;border-radius:12px;background:var(--fill);color:var(--label);border:none" onclick="shareProj('${p.id}')"><svg style="width:16px;height:16px;margin-right:8px;color:#FF2D55"><use href="#i-users"/></svg> Convidar Membro</button>`;
-      }
+      html += `<button class="btn" style="width:100%;text-align:left;justify-content:flex-start;padding:12px;border-radius:12px;background:var(--fill);color:var(--label);border:none;margin-top:8px" onclick="shareProj('${p.id}')"><svg style="width:16px;height:16px;margin-right:8px;color:#FF2D55"><use href="#i-users"/></svg> Convidar Membro</button>`;
       $('#pasContent').innerHTML = html;
       $('#pActionSheet').classList.add('open');
     }
