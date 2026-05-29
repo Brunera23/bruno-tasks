@@ -156,6 +156,20 @@
     .wk-day-pct.mid{color:#FF9500;background:rgba(255,149,0,.1)}
     .wk-day-pct.high{color:#FF3B30;background:rgba(255,59,48,.1)}
     .wk-day-free{font-size:.6rem;color:var(--label3);font-weight:500}
+    /* Week Summary (compact view) */
+    .wk-summary{display:flex;align-items:center;gap:10px;padding:2px 0}
+    .wk-summary-dots{display:flex;align-items:center;gap:6px;flex:1}
+    .wk-summary-day{display:flex;flex-direction:column;align-items:center;gap:3px}
+    .wk-summary-dot{width:8px;height:8px;border-radius:50%;background:var(--fill);transition:background var(--dur-fast)}
+    .wk-summary-dot.filled{background:#34C759}
+    .wk-summary-dot.half{background:linear-gradient(135deg,#34C759 50%,var(--fill) 50%)}
+    .wk-summary-dot.over{background:#FF3B30}
+    .wk-summary-dot.today{box-shadow:0 0 0 2px var(--blue)}
+    .wk-summary-label{font-size:.52rem;font-weight:600;color:var(--label3);line-height:1}
+    .wk-summary-label.today{color:var(--blue);font-weight:700}
+    .wk-summary-total{text-align:right;flex-shrink:0}
+    .wk-summary-total-num{font-size:.82rem;font-weight:800;color:var(--label);line-height:1}
+    .wk-summary-total-sub{font-size:.52rem;color:var(--label3);margin-top:2px;line-height:1}
     /* Foco do Dia */
     .foco-ring-wrap{display:flex;align-items:center;gap:14px;margin-bottom:8px}
     .foco-ring{width:56px;height:56px;position:relative;flex-shrink:0}
@@ -1382,14 +1396,13 @@ function renderWeekWidget(){
       ${totalMin>0?`<div class="wk-day-right"><span class="wk-day-pct ${pctCls}">${pct}%</span></div>`:''}
     </div>`;
   }
-  const maxDay=Math.max(...dayBars.map(d=>d.totalMin),DAILY_CAP);
-  const summaryHtml=`<div style="display:flex;align-items:center;gap:10px;padding:2px 0">
-    <div style="display:flex;align-items:flex-end;gap:3px;height:28px;flex:1">
-      ${dayBars.map(d=>{const h=d.totalMin>0?Math.max(Math.round(d.totalMin/maxDay*28),3):2;const color=d.totalMin<=0?'var(--fill)':d.totalMin>DAILY_CAP?'#FF3B30':d.totalMin>DAILY_CAP*0.7?'#FF9500':'#34C759';const op=d.isToday?1:0.45;const ring=d.isToday?'box-shadow:0 0 0 1.5px var(--blue);':'';return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%"><div style="width:100%;height:${h}px;border-radius:2px;background:${color};opacity:${op};${ring}transition:height .6s var(--ease-spring)"></div><span style="font-size:.46rem;color:${d.isToday?'var(--blue)':'var(--label3)'};font-weight:${d.isToday?'700':'500'};line-height:1">${d.abbr}</span></div>`}).join('')}
+  const summaryHtml=`<div class="wk-summary">
+    <div class="wk-summary-dots">
+      ${dayBars.map(d=>{let dotCls='wk-summary-dot';if(d.totalMin>DAILY_CAP)dotCls+=' over';else if(d.totalMin>DAILY_CAP/2)dotCls+=' filled';else if(d.totalMin>0)dotCls+=' half';if(d.isToday)dotCls+=' today';const lblCls='wk-summary-label'+(d.isToday?' today':'');return`<div class="wk-summary-day"><div class="${dotCls}"></div><span class="${lblCls}">${d.abbr}</span></div>`}).join('')}
     </div>
-    <div style="text-align:right;flex-shrink:0">
-      <div style="font-size:.82rem;font-weight:800;color:var(--label);line-height:1">${weekTotal>0?fmtTime(weekTotal):'0h'}</div>
-      <div style="font-size:.54rem;color:var(--label3);margin-top:2px;line-height:1">semana</div>
+    <div class="wk-summary-total">
+      <div class="wk-summary-total-num">${weekTotal>0?fmtTime(weekTotal):'0h'}</div>
+      <div class="wk-summary-total-sub">semana</div>
     </div>
   </div>`;
   return{badge:weekTotal>0?fmtTime(weekTotal):'',summary:summaryHtml,full};
