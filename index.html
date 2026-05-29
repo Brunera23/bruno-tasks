@@ -972,10 +972,11 @@ function showStatusPop(ckEl,id){
   document.body.appendChild(pop);
   requestAnimationFrame(()=>pop.classList.add('show'));
   pop.addEventListener('click',e=>{const o=e.target.closest('.st-opt');if(!o)return;setStatus(id,o.dataset.st);closeStatusPop()});
-  setTimeout(()=>document.addEventListener('click',closeStatusPop,{once:true}),10);
 }
 function closeStatusPop(){const p=$('#stPop');if(p)p.remove()}
 function closeInlinePop(){const p=document.getElementById('iqPop');if(p)p.remove()}
+function closeAllPops(){closeStatusPop();closeInlinePop()}
+document.addEventListener('mousedown',e=>{const sp=document.getElementById('stPop');if(sp&&!sp.contains(e.target)&&!e.target.closest('.ck'))closeStatusPop();const ip=document.getElementById('iqPop');if(ip&&!ip.contains(e.target)&&!e.target.closest('.tag-cat[data-id]')&&!e.target.closest('.item-date[data-id]')&&!e.target.closest('.tag-time[data-id]'))closeInlinePop()});
 function showDatePop(el,id){
   closeInlinePop();closeStatusPop();
   const t=tasks.find(x=>x.id===id);if(!t)return;
@@ -990,7 +991,6 @@ function showDatePop(el,id){
   pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;t.date=o.dataset.dv||'';sT();render();closeInlinePop();toast(t.date?'Prazo: '+fDate(t.date):'Prazo removido')});
   const inp=pop.querySelector('.iq-date-input');
   inp.addEventListener('change',()=>{t.date=inp.value;sT();render();closeInlinePop();toast('Prazo: '+fDate(t.date))});
-  setTimeout(()=>document.addEventListener('click',e=>{if(!pop.contains(e.target))closeInlinePop()},{once:true}),10);
 }
 function showCatPop(el,id){
   closeInlinePop();closeStatusPop();
@@ -1003,7 +1003,6 @@ function showCatPop(el,id){
   document.body.appendChild(pop);
   requestAnimationFrame(()=>pop.classList.add('show'));
   pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;t.category=o.dataset.cv;sT();render();closeInlinePop();toast('Categoria: '+cats.find(c=>c.id===o.dataset.cv)?.name)});
-  setTimeout(()=>document.addEventListener('click',e=>{if(!pop.contains(e.target))closeInlinePop()},{once:true}),10);
 }
 function showTimePop(el,id){
   closeInlinePop();closeStatusPop();
@@ -1019,7 +1018,6 @@ function showTimePop(el,id){
   pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;const v=parseInt(o.dataset.tv);t.estimatedTime=v||null;sT();render();closeInlinePop();toast(v?'Tempo: '+fmtTime(v):'Estimativa removida')});
   const inp=pop.querySelector('input[type=number]');
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=parseInt(inp.value);t.estimatedTime=v>0?v:null;sT();render();closeInlinePop();toast(v>0?'Tempo: '+fmtTime(v):'Estimativa removida')}});
-  setTimeout(()=>document.addEventListener('click',e=>{if(!pop.contains(e.target))closeInlinePop()},{once:true}),10);
 }
 function toggleSub(tid,si){const t=tasks.find(x=>x.id===tid);if(!t||!t.subtasks||!t.subtasks[si])return;t.subtasks[si].done=!t.subtasks[si].done;sT();render()}
 
