@@ -184,8 +184,11 @@
     .item.blocked .ck svg{display:none}
     .item.blocked .ck::after{content:'';width:10px;height:10px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aeaeb2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0110 0v4'/%3E%3C/svg%3E") center/contain no-repeat}
     .tag-meta.waiting{color:var(--label3);background:var(--fill);padding:2px 6px;border-radius:4px;font-weight:600;font-size:.66rem}
+    /* Dependency tree connector */
+    .item.deps-open{position:relative}
+    .item.deps-open::after{content:'';position:absolute;left:29px;top:36px;bottom:0;width:2px;background:var(--sep)}
     .dep-toggle{display:flex;align-items:center;gap:5px;padding:6px 10px 6px 46px;background:transparent;border:none;color:var(--label3);font-size:.72rem;font-weight:500;cursor:pointer;font-family:inherit;transition:color var(--dur-fast);position:relative}
-    .dep-toggle::before{content:'';position:absolute;left:28px;top:0;height:100%;width:2px;background:var(--sep)}
+    .dep-toggle.open::before{content:'';position:absolute;left:28px;top:0;height:100%;width:2px;background:var(--sep)}
     .dep-toggle:hover{color:var(--label2)}
     .dep-toggle svg{width:12px;height:12px;transition:transform var(--dur-norm) var(--ease-spring)}
     .dep-toggle.open svg{transform:rotate(90deg)}
@@ -470,7 +473,8 @@
       .tag{padding:2px 6px;font-size:.64rem}
       .tag-meta{font-size:.66rem}
       .dep-toggle{padding-left:38px}
-      .dep-toggle::before{left:24px}
+      .dep-toggle.open::before{left:24px}
+      .item.deps-open::after{left:25px;top:32px}
       .dep-children{margin-left:24px;padding-left:12px}
       .dep-children .item::before{left:-12px;width:12px}
       .dep-children .item:last-child::after{left:-12px}
@@ -704,12 +708,12 @@ function renderCatNav(){
   renderCatPicker();
 }
 
-function renderItem(t,i,isChild=false){
+function renderItem(t,i,isChild=false,depsOpen=false){
   const c=ci(t.category);const od=isOD(t.date)&&t.status!=='done';const subs=t.subtasks||[];const sd=subs.filter(s=>s.done).length;
   const etTag=t.estimatedTime?`<span class="tag-time"><svg><use href="#i-clock"/></svg>${fmtTime(t.estimatedTime)}</span>`:'';
   const blocked=isBlocked(t)&&t.status!=='done';
   const waitTag=blocked?'<span class="tag-meta waiting">Aguardando</span>':'';
-  const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');
+  const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');if(depsOpen)cls.push('deps-open');
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
   const dateTag=t.date?`<span class="item-date ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:'';
   const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
@@ -735,10 +739,10 @@ function renderTasks(){
     function renderTree(parent,isC=false){
       if(rendered.has(parent.id))return;
       rendered.add(parent.id);
-      html+=renderItem(parent,idx++,isC);
       const children=pending.filter(t=>t.blockedBy&&t.blockedBy.includes(parent.id)&&!rendered.has(t.id));
+      const isOpen=children.length>0&&expandedDeps.has(parent.id);
+      html+=renderItem(parent,idx++,isC,isOpen);
       if(children.length){
-        const isOpen=expandedDeps.has(parent.id);
         html+=`<button class="dep-toggle ${isOpen?'open':''}" data-dep-toggle="${parent.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>${children.length} dependência${children.length>1?'s':''}<span class="dep-badge">${children.length}</span></button>`;
         html+=`<div class="dep-children ${isOpen?'open':''}">`;
         children.forEach(ch=>renderTree(ch,true));
@@ -946,7 +950,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
-$('#list').addEventListener('click',e=>{const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);dpt.classList.toggle('open');const sec=dpt.nextElementSibling;if(sec)sec.classList.toggle('open');return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
+$('#list').addEventListener('click',e=>{const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);renderTasks();return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;renderTasks()})});
