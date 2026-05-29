@@ -421,11 +421,13 @@
     .dep-toggle svg{width:12px;height:12px;transition:transform var(--dur-norm) var(--ease-spring)}
     .dep-toggle.open svg{transform:rotate(90deg)}
     .dep-toggle .dep-badge{background:var(--fill);padding:1px 6px;border-radius:4px;font-size:.66rem;font-weight:600}
-    .dep-children{margin-left:11px;padding-left:22px;border-left:2px solid var(--sep);position:relative;display:none}
+    .dep-children{margin-left:28px;padding-left:16px;position:relative;display:none}
     .dep-children.open{display:block}
-    .dep-children .item{position:relative}
-    .dep-children .item::before{content:'';position:absolute;left:-22px;top:22px;width:22px;height:0;border-top:2px solid var(--sep)}
-    .dep-children .item:last-child::after, .dep-children .item.is-last::after{content:'';position:absolute;left:-22px;top:22px;width:2px;height:calc(100% - 22px);background:var(--card)}
+    .dep-children>.item{position:relative}
+    .dep-children>.item::before{content:'';position:absolute;left:-16px;top:23px;width:16px;height:0;border-top:2px solid var(--sep)}
+    .dep-children>.item::after{content:'';position:absolute;left:-16px;top:0;bottom:0;width:2px;background:var(--sep)}
+    .dep-children>.item:last-child::before, .dep-children>.item.is-last::before{display:none}
+    .dep-children>.item:last-child::after, .dep-children>.item.is-last::after{bottom:auto;height:23px;width:16px;background:none;border-left:2px solid var(--sep);border-bottom:2px solid var(--sep);border-bottom-left-radius:10px}
     .item-row{display:flex;align-items:flex-start;gap:12px}
     .item-date{flex-shrink:0;font-size:.7rem;font-weight:500;color:var(--label3);display:flex;align-items:center;gap:3px;margin-top:3px;white-space:nowrap}
     .item-date svg{width:11px;height:11px}
@@ -774,7 +776,11 @@
       .item-meta{gap:4px}
       .tag{padding:2px 6px;font-size:.64rem}
       .tag-meta{font-size:.66rem}
-      .dep-children{margin-left:8px;padding-left:16px}
+      .dep-toggle{padding-left:38px}
+      .dep-children{margin-left:24px;padding-left:12px}
+      .dep-children>.item::before{left:-12px;width:12px}
+      .dep-children>.item::after{left:-12px}
+      .dep-children>.item:last-child::after{height:23px;width:12px}
       .sync-dot{bottom:90px}
     }
 
@@ -1415,14 +1421,18 @@ function fbInit(){
 function combineData(){
   if(_fbSaving||!_fbInitDone)return;
   const newTasks=[...pTasks];
-  for (let pid in sharedTasksMap) newTasks.push(...sharedTasksMap[pid]);
+  for (let pid in sharedTasksMap) {
+    if(Array.isArray(sharedTasksMap[pid])) newTasks.push(...sharedTasksMap[pid]);
+  }
   
   if(JSON.stringify(newTasks)===JSON.stringify(tasks))return;
   tasks=newTasks;
   cats=[...pCats];
   
   const newLog=[...pLog];
-  for (let pid in sharedLogMap) newLog.push(...sharedLogMap[pid]);
+  for (let pid in sharedLogMap) {
+    if(Array.isArray(sharedLogMap[pid])) newLog.push(...sharedLogMap[pid]);
+  }
   log=newLog.sort((a,b)=>b.ts-a.ts);
   
   if(typeof render==='function')render();
@@ -1477,10 +1487,15 @@ function fbListen(){
       if (!_unsubShared[p.id]) {
         _unsubShared[p.id] = db.collection('shared').doc(p.id).onSnapshot(sSnap => {
            sharedLoaded[p.id] = true;
-           if (sSnap.exists && !_fbSaving) {
+           if (sSnap.exists) {
              const sd = sSnap.data();
-             sharedTasksMap[p.id] = JSON.parse(sd.tasks||'[]');
-             sharedLogMap[p.id] = JSON.parse(sd.log||'[]');
+             if(!_fbSaving) {
+               sharedTasksMap[p.id] = JSON.parse(sd.tasks||'[]');
+               sharedLogMap[p.id] = JSON.parse(sd.log||'[]');
+             }
+           } else {
+             if (!sharedTasksMap[p.id]) sharedTasksMap[p.id] = [];
+             if (!sharedLogMap[p.id]) sharedLogMap[p.id] = [];
            }
            if(pLoaded) combineData();
         }, e => console.warn(`FB sListener error for ${p.id}`, e));
@@ -1554,6 +1569,11 @@ function renderCatNav(){
     catsToShow = getCatsForProject(ap);
   } else {
     catsToShow = cats; // fallback
+  }
+
+  if (aCat !== 'all' && !catsToShow.find(c => c.id === aCat)) {
+    aCat = 'all';
+    saveUI();
   }
 
   const all=tasks.filter(t=>t.status!=='done'&&(ap==='all'||(t.project||'bruno')===ap)).length;
@@ -2666,7 +2686,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=33',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=34',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
