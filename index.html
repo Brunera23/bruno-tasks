@@ -714,7 +714,6 @@
     /* ===== CATEGORY MANAGER ===== */
     .cat-mgr-list{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
     .cat-mgr-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--fill);border-radius:10px}
-    .cat-mgr-item .cat-dot{width:10px;height:10px}
     .cat-mgr-item svg{width:15px;height:15px;flex-shrink:0}
     .cat-mgr-item .cat-mgr-name{flex:1;font-size:.84rem;font-weight:500}
     .cat-mgr-item .cat-mgr-actions{display:flex;gap:2px}
@@ -2509,7 +2508,7 @@ function delProj(id) {
 
 function openCatMgr(){$('#catMgrView').style.display='';$('#catEditView').style.display='none';$('#catModalTitle').textContent='Categorias';renderCatMgrList();$('#ovCat').classList.add('open');$('#modalCat').classList.add('open')}
 function closeCatMgr(){$('#ovCat').classList.remove('open');$('#modalCat').classList.remove('open')}
-function renderCatMgrList(){$('#catMgrList').innerHTML=cats.map(c=>`<div class="cat-mgr-item"><span class="cat-dot" style="background:${c.color}"></span><svg style="color:${c.color}"><use href="#${c.icon}"/></svg><span class="cat-mgr-name">${c.name}</span><div class="cat-mgr-actions"><button class="a-btn" onclick="editCat('${c.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="delCat('${c.id}')"><svg><use href="#i-trash"/></svg></button></div></div>`).join('')}
+function renderCatMgrList(){$('#catMgrList').innerHTML=cats.map(c=>`<div class="cat-mgr-item"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg><span class="cat-mgr-name">${c.name}</span><div class="cat-mgr-actions"><button class="a-btn" onclick="editCat('${c.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="delCat('${c.id}')"><svg><use href="#i-trash"/></svg></button></div></div>`).join('')}
 function openCatEdit(cat){editingCatId=cat?cat.id:null;$('#catMgrView').style.display='none';$('#catEditView').style.display='';$('#catModalTitle').textContent=cat?'Editar':'Nova Categoria';$('#ceN').value=cat?cat.name:'';const si=cat?cat.icon:'i-star';const sc=cat?cat.color:'#007AFF';$('#ceIcons').innerHTML=ICONS.map(ic=>`<button type="button" class="icon-opt ${ic===si?'active':''}" data-icon="${ic}"><svg><use href="#${ic}"/></svg></button>`).join('');$('#ceColors').innerHTML=COLORS.map(co=>`<button type="button" class="color-opt ${co===sc?'active':''}" data-color="${co}" style="background:${co}"></button>`).join('');setTimeout(()=>$('#ceN').focus(),200)}
 function editCat(id){const c=cats.find(x=>x.id===id);if(c)openCatEdit(c)}
 function delCat(id){closeCatMgr();delId=id;$('#cfTitle').textContent='Excluir Categoria';$('#cfMsg').textContent='Tarefas serão mantidas.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{cats=cats.filter(c=>c.id!==id);sC();render();toast('Categoria excluída');$('#cfWrap').classList.remove('open');openCatMgr()}}
@@ -2731,7 +2730,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=36',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=37',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
