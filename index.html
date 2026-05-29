@@ -800,7 +800,7 @@ $('#ceBack').addEventListener('click',()=>{$('#catMgrView').style.display='';$('
 $('#fab').addEventListener('click',()=>openM());$('#btnAdd').addEventListener('click',()=>openM());$('#mCancel').addEventListener('click',closeM);$('#ov').addEventListener('click',closeM);
 $('#addSub').addEventListener('click',()=>{mSubs.push({text:'',done:false});renderMSubs();const ins=$$('#subList input');if(ins.length)ins[ins.length-1].focus()});
 $('#timeChips').addEventListener('click',e=>{const chip=e.target.closest('.time-chip');if(!chip)return;const val=chip.dataset.min;if(val==='custom'){setTimeChip('custom')}else{setTimeChip(parseInt(val))}});
-$('#fC').addEventListener('click',e=>{const c=e.target.closest('.pick-chip');if(!c)return;$('#fC').querySelectorAll('.pick-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active')});
+
 $('#fP').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;pickVal($('#fP'),b.dataset.v)});
 $('#fS').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;pickVal($('#fS'),b.dataset.v)});
 $('#depSearch').addEventListener('input',e=>{const q=e.target.value.toLowerCase().trim();const editId=$('#fId').value;if(!q){$('#depResults').classList.remove('show');return}
