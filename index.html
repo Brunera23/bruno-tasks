@@ -465,7 +465,6 @@
     .confetti-piece{position:absolute;border-radius:2px;animation:confettiFall 1.2s cubic-bezier(.25,.46,.45,.94) forwards}
     @keyframes confettiFall{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}60%{opacity:1;transform:translate(calc(var(--cx)*.7),calc(var(--cy)*.5)) rotate(calc(var(--cr)*.6)) scale(.9)}100%{opacity:0;transform:translate(var(--cx),var(--cy)) rotate(var(--cr)) scale(0)}}
     @keyframes flashFade{0%{opacity:1}100%{opacity:0}}
-    @keyframes celebShake{0%,100%{transform:translateX(0)}10%{transform:translateX(-3px)}20%{transform:translateX(3px)}30%{transform:translateX(-2px)}40%{transform:translateX(2px)}50%{transform:translateX(-1px)}60%{transform:translateX(1px)}}
 
     .item-body{flex:1;min-width:0}
     .item-title{font-size:.86rem;font-weight:500;line-height:1.4;margin-bottom:5px}
@@ -727,8 +726,7 @@
     /* ===== CONFIRM — bounce in ===== */
     .cf-wrap{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.25);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center}
     .cf-wrap.open{display:flex}
-    .cf-box{background:var(--card);border-radius:14px;padding:24px;text-align:center;max-width:280px;width:85%;box-shadow:0 20px 60px rgba(0,0,0,.12);animation:modalBounceIn var(--dur-spring) var(--ease-spring)}
-    @keyframes modalBounceIn{0%{opacity:0;transform:scale(.9) translateY(10px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+    .cf-box{background:var(--card);border-radius:14px;padding:24px;text-align:center;max-width:280px;width:85%;box-shadow:0 20px 60px rgba(0,0,0,.12)}
     .cf-box h3{font-size:.92rem;font-weight:600;margin-bottom:4px}
     .cf-box p{color:var(--label2);font-size:.82rem;margin-bottom:16px}
 
@@ -2294,9 +2292,6 @@ function celebrateDone(x,y){
   setTimeout(()=>spawnBurst(x+30,y-10,['#FF2D55','#FF9500','#5AC8FA','#34C759'],35,200),250);
   setTimeout(()=>spawnBurst(x,y-30,['#FFCC00','#FF3B30','#007AFF','#FF2D55'],30,250),400);
   setTimeout(()=>spawnBurst(x,y+10,c1,25,160),550);
-  spawnFlash();
-  document.body.style.animation='celebShake .5s ease';
-  setTimeout(()=>{document.body.style.animation=''},600);
 }
 function showStatusPop(ckEl,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
@@ -2584,7 +2579,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=26',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=27',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
