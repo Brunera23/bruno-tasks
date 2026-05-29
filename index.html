@@ -194,10 +194,11 @@
     .dep-toggle .dep-badge{background:var(--fill);padding:1px 6px;border-radius:4px;font-size:.66rem;font-weight:600}
     .dep-children{margin-left:28px;padding-left:16px;position:relative;display:none}
     .dep-children.open{display:block}
-    .dep-children .item{position:relative}
-    .dep-children .item::before{content:'';position:absolute;left:-16px;top:23px;width:16px;height:0;border-top:2px solid var(--sep)}
-    .dep-children .item::after{content:'';position:absolute;left:-16px;top:0;bottom:0;width:2px;background:var(--sep)}
-    .dep-children .item:last-child::after{bottom:auto;height:25px}
+    .dep-children>.item,.dep-children>.dep-tree{position:relative}
+    .dep-children>.item::before,.dep-children>.dep-tree::before{content:'';position:absolute;left:-16px;top:23px;width:16px;height:0;border-top:2px solid var(--sep)}
+    .dep-children>.item::after,.dep-children>.dep-tree::after{content:'';position:absolute;left:-16px;top:0;bottom:0;width:2px;background:var(--sep)}
+    .dep-children>.item:last-child::before,.dep-children>.dep-tree:last-child::before{display:none}
+    .dep-children>.item:last-child::after,.dep-children>.dep-tree:last-child::after{bottom:auto;height:23px;width:16px;background:none;border-left:2px solid var(--sep);border-bottom:2px solid var(--sep);border-bottom-left-radius:10px}
     .item-row{display:flex;align-items:flex-start;gap:12px}
     .item-date{flex-shrink:0;font-size:.7rem;font-weight:500;color:var(--label3);display:flex;align-items:center;gap:3px;margin-top:3px;white-space:nowrap}
     .item-date svg{width:11px;height:11px}
@@ -476,9 +477,9 @@
       .dep-toggle.open::before{left:24px}
       .item.deps-open{background-size:2px calc(100% - 32px);background-position:24px 32px}
       .dep-children{margin-left:24px;padding-left:12px}
-      .dep-children .item::before{left:-12px;width:12px}
-      .dep-children .item::after{left:-12px}
-      .dep-children .item:last-child::after{height:25px}
+      .dep-children>.item::before,.dep-children>.dep-tree::before{left:-12px;width:12px}
+      .dep-children>.item::after,.dep-children>.dep-tree::after{left:-12px}
+      .dep-children>.item:last-child::after,.dep-children>.dep-tree:last-child::after{height:23px;width:12px}
       .grp-bar{font-size:.7rem;margin-bottom:8px}
     }
 
@@ -742,6 +743,8 @@ function renderTasks(){
       rendered.add(parent.id);
       const children=pending.filter(t=>t.blockedBy&&t.blockedBy.includes(parent.id)&&!rendered.has(t.id));
       const isOpen=children.length>0&&expandedDeps.has(parent.id);
+      const wrap=children.length>0&&isC;
+      if(wrap)html+='<div class="dep-tree">';
       html+=renderItem(parent,idx++,isC,isOpen);
       if(children.length){
         html+=`<button class="dep-toggle ${isOpen?'open':''}" data-dep-toggle="${parent.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>${children.length} dependência${children.length>1?'s':''}<span class="dep-badge">${children.length}</span></button>`;
@@ -749,6 +752,7 @@ function renderTasks(){
         children.forEach(ch=>renderTree(ch,true));
         html+='</div>';
       }
+      if(wrap)html+='</div>';
     }
     roots.forEach(r=>renderTree(r));
     pending.filter(t=>!rendered.has(t.id)).forEach(t=>{rendered.add(t.id);html+=renderItem(t,idx++)});
