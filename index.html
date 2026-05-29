@@ -153,8 +153,11 @@
     .grp-header .grp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
     /* ===== TASK LIST ===== */
-    .tl{background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;transition:background var(--dur-smooth);overscroll-behavior:contain}
+    .tl{background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:visible;transition:background var(--dur-smooth);overscroll-behavior:contain}
     .tl:empty{box-shadow:none;background:transparent}
+    .tl>.item:first-child{border-radius:14px 14px 0 0}
+    .tl>.item:last-child,.tl>.dep-children:last-child,.tl>.done-toggle:last-child,.tl>.done-section:last-child{border-radius:0 0 14px 14px}
+    .tl>.item:only-child{border-radius:14px}
     /* Done toggle */
     .done-toggle{display:flex;align-items:center;gap:7px;width:100%;padding:12px 18px;background:transparent;border:none;border-top:.5px solid var(--sep);color:var(--label3);font-size:.78rem;font-weight:500;cursor:pointer;font-family:inherit;transition:color var(--dur-fast)}
     .done-toggle:hover{color:var(--label2)}
@@ -667,11 +670,12 @@ function switchView(v){
 function renderCatNav(){
   const cnt={};tasks.forEach(t=>{if(t.status!=='done')cnt[t.category]=(cnt[t.category]||0)+1});
   const all=tasks.filter(t=>t.status!=='done').length;$('#navBadge').textContent=all;
+  const sorted=[...cats].sort((a,b)=>(cnt[b.id]||0)-(cnt[a.id]||0));
   let h=`<button class="cat-nav-item ${aCat==='all'?'active':''}" data-c="all"><span class="cat-dot" style="background:var(--label3)"></span>Todas<span class="nav-badge">${all}</span></button>`;
-  cats.forEach(c=>{h+=`<button class="cat-nav-item ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${c.name}<span class="nav-badge">${cnt[c.id]||0}</span></button>`});
+  sorted.forEach(c=>{h+=`<button class="cat-nav-item ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${c.name}<span class="nav-badge">${cnt[c.id]||0}</span></button>`});
   $('#catNav').innerHTML=h;
   let mc=`<button class="m-chip ${aCat==='all'?'active':''}" data-c="all"><span class="chip-dot" style="background:var(--label3)"></span>Todas</button>`;
-  cats.forEach(c=>{mc+=`<button class="m-chip ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="chip-dot" style="background:${c.color}"></span>${c.name}</button>`});
+  sorted.forEach(c=>{mc+=`<button class="m-chip ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="chip-dot" style="background:${c.color}"></span>${c.name}</button>`});
   mc+=`<button class="m-chip m-chip-add" id="mobAddCat"><svg><use href="#i-plus"/></svg></button>`;
   $('#mobCats').innerHTML=mc;
   renderCatPicker();
