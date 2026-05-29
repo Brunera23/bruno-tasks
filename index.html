@@ -1593,7 +1593,7 @@ function renderCatNav(){
     catsToShow = cats;
   } else if (ap === 'nos' || projects.find(p=>p.id===ap)?.type==='shared') {
     catsToShow = getCatsForProject(ap);
-  } else {
+  } else if (ap === 'all') {
     // Show all categories from visible projects
     const added = new Set();
     const addCat = c => { if(!added.has(c.id)){ added.add(c.id); catsToShow.push(c); } };
@@ -1601,11 +1601,9 @@ function renderCatNav(){
     if (projects.find(p => p.id === 'nos' && p.visible)) {
       NOS_CATS.forEach(addCat);
     }
-  }
-
-  if (aCat !== 'all' && !catsToShow.find(c => c.id === aCat)) {
-    aCat = 'all';
-    saveUI();
+  } else {
+    // A specific personal project
+    catsToShow = cats;
   }
 
   const all=tasks.filter(t=>t.status!=='done'&&(ap==='all'||(t.project||'bruno')===ap)).length;
@@ -1613,6 +1611,17 @@ function renderCatNav(){
   
   // Use appropriate counts for sorting and display
   const activeCounts = ap==='all'?cnt:pCnt;
+  
+  // If viewing a specific project, only show categories that have tasks in it (or are currently selected)
+  if (ap !== 'all') {
+    catsToShow = catsToShow.filter(c => (activeCounts[c.id] || 0) > 0 || aCat === c.id);
+  }
+
+  if (aCat !== 'all' && !catsToShow.find(c => c.id === aCat)) {
+    aCat = 'all';
+    saveUI();
+  }
+
   const sorted=[...catsToShow].sort((a,b)=>(activeCounts[b.id]||0)-(activeCounts[a.id]||0));
   
   let h=`<button class="cat-nav-item ${aCat==='all'?'active':''}" data-c="all"><span class="cat-dot" style="background:var(--label3)"></span>Todas<span class="nav-badge">${all}</span></button>`;
@@ -2755,7 +2764,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=38',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=39',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
