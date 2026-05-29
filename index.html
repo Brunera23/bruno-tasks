@@ -95,8 +95,8 @@
     .wk-toggle.open:hover{background:#0070e0}
     .wk-toggle svg{width:15px;height:15px;flex-shrink:0;transition:color var(--dur-fast)}
     .wk-toggle.open svg{color:#fff}
-    .wdg-panel{position:fixed;right:0;top:0;width:340px;height:100dvh;padding:70px 16px 20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;z-index:85;pointer-events:none;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);scrollbar-width:none}
-    .wdg-panel::-webkit-scrollbar{display:none}
+    .wdg-panel{position:fixed;right:0;top:0;width:340px;height:100dvh;padding:70px 16px 30px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;overflow-x:hidden;z-index:85;pointer-events:none;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.12) transparent}
+    .wdg-panel::-webkit-scrollbar{width:4px}.wdg-panel::-webkit-scrollbar-track{background:transparent}.wdg-panel::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:2px}
     .wdg-panel.open{transform:translateX(0);pointer-events:all}
     .wdg-card{background:rgba(255,255,255,.95);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border-radius:18px;border:1px solid rgba(255,255,255,.5);box-shadow:0 2px 16px rgba(0,0,0,.05);overflow:hidden;transition:all .3s ease,transform .2s,opacity .2s;opacity:0;transform:translateY(12px)}
     .wdg-panel.open .wdg-card{opacity:1;transform:translateY(0)}
@@ -979,7 +979,7 @@ function buildWidgetCard(key,icon,name,gradient,renderFn){
   const compactCls=st.compact?'compact':'';
   const chevSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
   const dragSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>';
-  return`<div class="wdg-card ${compactCls}" data-wdg="${key}" draggable="true">
+  return`<div class="wdg-card ${compactCls}" data-wdg="${key}">
     <div class="wdg-head" data-wdg-toggle="${key}">
       <div class="wdg-drag" title="Arrastar">${dragSvg}</div>
       <div class="wdg-icon" style="background:${gradient}"><span style="font-size:14px">${icon}</span></div>
@@ -996,40 +996,51 @@ function buildWidgetCard(key,icon,name,gradient,renderFn){
 
 function initWidgetDrag(){
   let dragEl=null;
-  const cards=$$('.wdg-card[draggable]');
-  cards.forEach(card=>{
-    card.addEventListener('dragstart',e=>{
-      // Only drag from the handle
-      if(!e.target.closest('.wdg-drag')&&e.target.closest('.wdg-head')){e.preventDefault();return}
-      dragEl=card;card.classList.add('dragging');
-      e.dataTransfer.effectAllowed='move';
-      e.dataTransfer.setData('text/plain',card.dataset.wdg);
-    });
-    card.addEventListener('dragend',()=>{
-      if(dragEl)dragEl.classList.remove('dragging');
-      $$('.wdg-card').forEach(c=>c.classList.remove('drag-over'));
-      dragEl=null;
-    });
-    card.addEventListener('dragover',e=>{
-      e.preventDefault();e.dataTransfer.dropEffect='move';
-      if(card!==dragEl){
-        $$('.wdg-card').forEach(c=>c.classList.remove('drag-over'));
-        card.classList.add('drag-over');
-      }
-    });
-    card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
-    card.addEventListener('drop',e=>{
+  const panel=$('#wdgPanel');
+  $$('.wdg-drag').forEach(handle=>{
+    handle.addEventListener('mousedown',e=>{
+      const card=handle.closest('.wdg-card');
+      if(!card)return;
       e.preventDefault();
-      if(!dragEl||card===dragEl)return;
-      const fromKey=dragEl.dataset.wdg;
-      const toKey=card.dataset.wdg;
-      const fromIdx=wdgOrder.indexOf(fromKey);
-      const toIdx=wdgOrder.indexOf(toKey);
-      if(fromIdx<0||toIdx<0)return;
-      wdgOrder.splice(fromIdx,1);
-      wdgOrder.splice(toIdx,0,fromKey);
-      saveWdgState();
-      renderWidgets();
+      dragEl=card;
+      card.classList.add('dragging');
+      const startY=e.clientY;
+      const cardRect=card.getBoundingClientRect();
+      const offsetY=e.clientY-cardRect.top;
+      function onMove(ev){
+        ev.preventDefault();
+        const cards=[...$$('.wdg-card')];
+        cards.forEach(c=>{if(c!==dragEl)c.classList.remove('drag-over')});
+        const target=cards.find(c=>{
+          if(c===dragEl)return false;
+          const r=c.getBoundingClientRect();
+          return ev.clientY>r.top&&ev.clientY<r.bottom;
+        });
+        if(target)target.classList.add('drag-over');
+      }
+      function onUp(ev){
+        document.removeEventListener('mousemove',onMove);
+        document.removeEventListener('mouseup',onUp);
+        if(!dragEl)return;
+        dragEl.classList.remove('dragging');
+        const target=$$('.wdg-card.drag-over')[0];
+        $$('.wdg-card').forEach(c=>c.classList.remove('drag-over'));
+        if(target&&target!==dragEl){
+          const fromKey=dragEl.dataset.wdg;
+          const toKey=target.dataset.wdg;
+          const fromIdx=wdgOrder.indexOf(fromKey);
+          const toIdx=wdgOrder.indexOf(toKey);
+          if(fromIdx>=0&&toIdx>=0){
+            wdgOrder.splice(fromIdx,1);
+            wdgOrder.splice(toIdx,0,fromKey);
+            saveWdgState();
+            renderWidgets();
+          }
+        }
+        dragEl=null;
+      }
+      document.addEventListener('mousemove',onMove);
+      document.addEventListener('mouseup',onUp);
     });
   });
 }
