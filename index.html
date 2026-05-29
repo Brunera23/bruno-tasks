@@ -147,6 +147,10 @@
     .cat-nav-item svg{width:15px;height:15px;flex-shrink:0}
     .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
     .cat-nav-item .nav-badge{margin-left:auto;font-size:.7rem;font-weight:600;color:var(--label3)}
+    .cat-nav-hidden-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s cubic-bezier(.16,1,.3,1)}
+    .cat-nav-hidden-wrap.expanded{grid-template-rows:1fr}
+    .cat-nav-hidden-inner{overflow:hidden;display:flex;flex-direction:column}
+    .cat-nav-more-btn{font-size:.75rem;color:var(--label3);padding-left:26px;margin-top:2px}
     .main{flex:1;min-width:0;padding:28px 36px 40px;max-width:900px}
     /* ===== WIDGET PANEL ===== */
     .wk-toggle{position:fixed;right:24px;top:24px;height:36px;padding:0 14px 0 10px;background:var(--card);border:1px solid var(--sep);border-radius:18px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:91;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:all var(--dur-fast) var(--ease-spring);font-family:inherit;font-size:.74rem;font-weight:600;color:var(--label2);letter-spacing:.01em}
@@ -1235,6 +1239,7 @@ let projects=ld('bt-projects',DEF_PROJECTS);
 let activeProject='all'; // 'all', 'bruno', 'nos'
 let fFormProj='bruno'; // project selected in the form
 let editProjId = null; // Currently editing project
+let catNavExpanded = false; // "Ver mais" state
 
 // Categorias específicas do projeto 'Nós'
 const NOS_CATS=[
@@ -1589,7 +1594,13 @@ function renderCatNav(){
   } else if (ap === 'nos' || projects.find(p=>p.id===ap)?.type==='shared') {
     catsToShow = getCatsForProject(ap);
   } else {
-    catsToShow = cats; // fallback
+    // Show all categories from visible projects
+    const added = new Set();
+    const addCat = c => { if(!added.has(c.id)){ added.add(c.id); catsToShow.push(c); } };
+    cats.forEach(addCat);
+    if (projects.find(p => p.id === 'nos' && p.visible)) {
+      NOS_CATS.forEach(addCat);
+    }
   }
 
   if (aCat !== 'all' && !catsToShow.find(c => c.id === aCat)) {
@@ -1605,7 +1616,21 @@ function renderCatNav(){
   const sorted=[...catsToShow].sort((a,b)=>(activeCounts[b.id]||0)-(activeCounts[a.id]||0));
   
   let h=`<button class="cat-nav-item ${aCat==='all'?'active':''}" data-c="all"><span class="cat-dot" style="background:var(--label3)"></span>Todas<span class="nav-badge">${all}</span></button>`;
-  sorted.forEach(c=>{h+=`<button class="cat-nav-item ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${c.name}<span class="nav-badge">${activeCounts[c.id]||0}</span></button>`});
+  
+  const LIMIT = 5;
+  const showMoreBtn = sorted.length > LIMIT;
+  const firstBatch = showMoreBtn ? sorted.slice(0, LIMIT) : sorted;
+  const secondBatch = showMoreBtn ? sorted.slice(LIMIT) : [];
+  
+  firstBatch.forEach(c=>{h+=`<button class="cat-nav-item ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${c.name}<span class="nav-badge">${activeCounts[c.id]||0}</span></button>`});
+  
+  if (showMoreBtn) {
+    h += `<div class="cat-nav-hidden-wrap ${catNavExpanded ? 'expanded' : ''}"><div class="cat-nav-hidden-inner">`;
+    secondBatch.forEach(c=>{h+=`<button class="cat-nav-item ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${c.name}<span class="nav-badge">${activeCounts[c.id]||0}</span></button>`});
+    h += `</div></div>`;
+    h += `<button class="cat-nav-item cat-nav-more-btn" onclick="catNavExpanded=!catNavExpanded;renderCatNav()">${catNavExpanded ? 'Ver menos' : 'Ver mais...'}</button>`;
+  }
+  
   $('#catNav').innerHTML=h;
   let mc=`<button class="m-chip ${aCat==='all'?'active':''}" data-c="all"><span class="chip-dot" style="background:var(--label3)"></span>Todas</button>`;
   sorted.forEach(c=>{mc+=`<button class="m-chip ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="chip-dot" style="background:${c.color}"></span>${c.name}</button>`});
@@ -2730,7 +2755,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=37',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=38',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
