@@ -919,7 +919,7 @@
       <button class="nav-item" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
     </div>
     <div class="sidebar-projects">
-      <div class="nav-label">Projetos</div>
+      <div class="nav-label">Projetos<button class="nav-label-btn" id="addProjBtn" title="Novo Projeto"><svg><use href="#i-plus"/></svg></button></div>
       <div id="projNav"></div>
     </div>
     <div class="sidebar-cats">
@@ -1058,6 +1058,18 @@
     </div>
     <div class="m-btns" style="margin-top:0">
       <button class="btn btn-sec" style="width: 100%" onclick="$('#invWrap').classList.remove('open')">Fechar</button>
+    </div>
+  </div>
+</div>
+<div class="cf-wrap" id="addProjWrap">
+  <div class="cf-box" style="max-width: 320px;">
+    <h3 style="margin-bottom:12px">Novo Projeto</h3>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom: 20px;">
+      <input type="text" id="apName" placeholder="Nome do projeto" style="padding: 10px 14px; border-radius: 10px; border: 1px solid var(--sep); background: var(--fill); color: var(--label); font-size: 0.82rem; outline: none; width: 100%; box-sizing: border-box;">
+    </div>
+    <div class="m-btns" style="margin-top:0">
+      <button class="btn btn-sec" onclick="$('#addProjWrap').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" id="apSave">Criar</button>
     </div>
   </div>
 </div>
@@ -2605,7 +2617,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=30',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=31',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2666,6 +2678,35 @@ function processRecurring(){
 // Only run processRecurring and initial render once auth confirms
 $('#loginBtn').addEventListener('click',doGoogleLogin);
 $('#logoutBtn').addEventListener('click',()=>{auth.signOut()});
+
+$('#addProjBtn').addEventListener('click', () => {
+  $('#apName').value = '';
+  $('#addProjWrap').classList.add('open');
+  setTimeout(() => $('#apName').focus(), 100);
+});
+$('#apName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('#apSave').click();
+});
+$('#apSave').addEventListener('click', () => {
+  const nn = $('#apName').value;
+  if (nn && nn.trim()) {
+    const id = 'proj_' + uid();
+    const colors = ['#007AFF','#34C759','#FF9500','#FF2D55','#AF52DE','#5856D6','#FFCC00','#FF3B30'];
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    projects.push({
+      id,
+      name: nn.trim(),
+      type: 'personal',
+      visible: true,
+      icon: 'i-layers',
+      color
+    });
+    saveUI();
+    render();
+    _fbDirectSave();
+    $('#addProjWrap').classList.remove('open');
+  }
+});
 
 // Project toggle clicks
 $('#projNav').addEventListener('click',e=>{
