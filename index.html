@@ -1022,6 +1022,8 @@ const DEF_TASKS=[{id:uid(),title:'Efetivar o empréstimo',category:'financeiro',
 const fbConfig={apiKey:"AIzaSyDIoHupcNAWZFnW_Y8qYnF-DeDYH8NdQYI",authDomain:"smart-tracker-2eba6.firebaseapp.com",projectId:"smart-tracker-2eba6",storageBucket:"smart-tracker-2eba6.firebasestorage.app",messagingSenderId:"1062515853953",appId:"1:1062515853953:web:a04b9b3aa054be8bdc5b80"};
 firebase.initializeApp(fbConfig);
 const db=firebase.firestore();
+// Enable offline persistence — IndexedDB replaces localStorage for core data
+db.enablePersistence({synchronizeTabs:true}).catch(e=>{console.warn('Persistence failed:',e.code)});
 const FB_DOC='bruno-main';
 let _fbReady=false,_fbSaving=false,_fbListening=false;
 
@@ -1101,10 +1103,10 @@ function sT(){
   // Auto-stamp updatedAt on any task that changed
   const now=Date.now();
   tasks.forEach(t=>{if(!t.updatedAt)t.updatedAt=now});
-  sv('bt-v5',tasks);fbSave()
+  fbSave(); // Firebase only — no localStorage
 }
-function sC(){sv('bt-cats',cats);fbSave()}
-function sL(){sv('bt-log',log);fbSave()}
+function sC(){fbSave()}
+function sL(){fbSave()}
 
 // ===== FIREBASE SYNC — CLOUD IS TRUTH =====
 // Like Todoist/Notion: Firebase is the single source of truth.
@@ -1135,6 +1137,12 @@ function fbSave(){
 
 function fbInit(){
   showSync('Conectando...');
+  // Save what we have locally in case we need to migrate
+  const localTasks=JSON.parse(JSON.stringify(tasks));
+  const localCats=JSON.parse(JSON.stringify(cats));
+  const localLog=JSON.parse(JSON.stringify(log));
+  const hasLocalData=localTasks.length>0;
+
   db.collection('data').doc(FB_DOC).get().then(snap=>{
     if(snap.exists){
       const d=snap.data();
@@ -1142,27 +1150,49 @@ function fbInit(){
       tasks=JSON.parse(d.tasks||'[]');
       cats=JSON.parse(d.cats||'[]');
       log=JSON.parse(d.log||'[]');
-      // Update local cache
-      sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log);
       _fbReady=true;_fbInitDone=true;
+      // Clear old localStorage core keys (no longer needed)
+      localStorage.removeItem('bt-v5');
+      localStorage.removeItem('bt-cats');
+      localStorage.removeItem('bt-log');
+      localStorage.removeItem('bt-v5-backup');
       if(typeof render==='function')render();
       showSync('Sincronizado ✓',true);
       fbListen();
-    } else {
-      // First time — push local data to cloud
+    } else if(hasLocalData){
+      // Cloud is empty but we have local data — MIGRATE to cloud
+      console.log('Migrating local data to cloud...',localTasks.length,'tasks');
+      tasks=localTasks;cats=localCats;log=localLog;
       _fbReady=true;
-      showSync('Primeira sincronização...');
+      showSync('Migrando dados para nuvem...');
       _fbDirectSave().then(()=>{
         _fbInitDone=true;
-        showSync('Primeira sincronização ✓',true);
+        // Clear localStorage after successful migration
+        localStorage.removeItem('bt-v5');
+        localStorage.removeItem('bt-cats');
+        localStorage.removeItem('bt-log');
+        localStorage.removeItem('bt-v5-backup');
+        showSync('Dados migrados para nuvem ✓',true);
         fbListen();
       }).catch(e=>{
         _fbInitDone=true;
-        showSync('Erro na sincronização',false);
+        showSync('Erro na migração',false);
+        console.warn('Migration error',e);
         fbListen();
       });
+    } else {
+      // No data anywhere — fresh start
+      _fbReady=true;_fbInitDone=true;
+      showSync('Pronto',true);
+      fbListen();
     }
-  }).catch(e=>{showSync('Offline — dados locais',true);console.warn('FB init error',e);_fbReady=true;_fbInitDone=true})
+  }).catch(e=>{
+    // Offline — enablePersistence will serve cached Firestore data
+    // Fallback to localStorage only if Firestore cache is also empty
+    showSync('Offline',true);
+    console.warn('FB init error',e);
+    _fbReady=true;_fbInitDone=true;
+  })
 }
 
 function fbListen(){
@@ -1178,7 +1208,7 @@ function fbListen(){
     tasks=cloudTasks;
     cats=JSON.parse(d.cats||'[]');
     log=JSON.parse(d.log||'[]');
-    sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log);
+    // No localStorage — Firestore persistence handles offline cache
     if(typeof render==='function')render();
     showSync('Atualizado ✓',true);
   },e=>{console.warn('FB listener error',e)});
