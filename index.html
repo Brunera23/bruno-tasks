@@ -1068,7 +1068,7 @@
 </div>
 <div class="cf-wrap" id="addProjWrap">
   <div class="cf-box" style="max-width: 320px;">
-    <h3 style="margin-bottom:12px">Novo Projeto</h3>
+    <h3 id="apTitle" style="margin-bottom:12px">Novo Projeto</h3>
     <div style="display:flex; flex-direction:column; gap:12px; margin-bottom: 20px;">
       <input type="text" id="apName" placeholder="Nome do projeto" style="padding: 10px 14px; border-radius: 10px; border: 1px solid var(--sep); background: var(--fill); color: var(--label); font-size: 0.82rem; outline: none; width: 100%; box-sizing: border-box;">
       <div style="font-size:0.75rem; color:var(--label3); font-weight:500; margin-top:4px">Ícone</div>
@@ -1235,6 +1235,7 @@ const DEF_PROJECTS=[
 let projects=ld('bt-projects',DEF_PROJECTS);
 let activeProject='all'; // 'all', 'bruno', 'nos'
 let fFormProj='bruno'; // project selected in the form
+let editProjId = null; // Currently editing project
 
 // Categorias específicas do projeto 'Nós'
 const NOS_CATS=[
@@ -1285,8 +1286,25 @@ function renProj(id) {
   setTimeout(()=>{
     const p=projects.find(x=>x.id===id);
     if(p){
-      const nn=prompt('Novo nome do projeto:',p.name);
-      if(nn&&nn.trim()){p.name=nn.trim();saveUI();render();_fbDirectSave()}
+      editProjId = p.id;
+      $('#apTitle').textContent = 'Editar Projeto';
+      $('#apName').value = p.name;
+      $('#apSave').textContent = 'Salvar';
+      
+      $$('#apIcons .ap-opt').forEach(b => {
+        b.classList.toggle('active', b.dataset.v === (p.icon || 'i-layers'));
+      });
+      
+      let matched = false;
+      $$('#apColors .ap-c-opt').forEach(b => {
+        const isMatch = b.dataset.v === p.gradient;
+        b.classList.toggle('active', isMatch);
+        if (isMatch) matched = true;
+      });
+      if (!matched) $$('#apColors .ap-c-opt')[0].classList.add('active');
+
+      $('#addProjWrap').classList.add('open');
+      setTimeout(() => $('#apName').focus(), 100);
     }
   }, 300);
 }
@@ -2713,7 +2731,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=35',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=36',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2776,7 +2794,12 @@ $('#loginBtn').addEventListener('click',doGoogleLogin);
 $('#logoutBtn').addEventListener('click',()=>{auth.signOut()});
 
 $('#addProjBtn').addEventListener('click', () => {
+  editProjId = null;
+  $('#apTitle').textContent = 'Novo Projeto';
   $('#apName').value = '';
+  $('#apSave').textContent = 'Criar';
+  $$('#apIcons .ap-opt').forEach((b,i)=>b.classList.toggle('active', i===0));
+  $$('#apColors .ap-c-opt').forEach((b,i)=>b.classList.toggle('active', i===0));
   $('#addProjWrap').classList.add('open');
   setTimeout(() => $('#apName').focus(), 100);
 });
@@ -2800,22 +2823,33 @@ $('#apColors').addEventListener('click', e => {
 $('#apSave').addEventListener('click', () => {
   const nn = $('#apName').value;
   if (nn && nn.trim()) {
-    const id = 'proj_' + uid();
     const iconBtn = $('#apIcons .ap-opt.active');
     const colorBtn = $('#apColors .ap-c-opt.active');
     const icon = iconBtn ? iconBtn.dataset.v : 'i-layers';
     const gradient = colorBtn ? colorBtn.dataset.v : 'linear-gradient(135deg,#007AFF,#5AC8FA)';
-    projects.push({
-      id,
-      name: nn.trim(),
-      type: 'personal',
-      visible: true,
-      icon,
-      gradient
-    });
+    
+    if (editProjId) {
+      const p = projects.find(x => x.id === editProjId);
+      if (p) {
+        p.name = nn.trim();
+        p.icon = icon;
+        p.gradient = gradient;
+      }
+    } else {
+      const id = 'proj_' + uid();
+      projects.push({
+        id,
+        name: nn.trim(),
+        type: 'personal',
+        visible: true,
+        icon,
+        gradient
+      });
+    }
+    
     saveUI();
     render();
-    _fbDirectSave();
+    if (typeof _fbDirectSave === 'function') _fbDirectSave();
     $('#addProjWrap').classList.remove('open');
   }
 });
@@ -2829,7 +2863,7 @@ $('#projNav').addEventListener('click',e=>{
     const p=projects.find(x=>x.id===pid);
     if(p){
       $('#pasTitle').textContent = p.name;
-      let html = `<button class="btn" style="width:100%;text-align:left;justify-content:flex-start;padding:12px;border-radius:12px;background:var(--fill);color:var(--label);border:none" onclick="renProj('${p.id}')"><svg style="width:16px;height:16px;margin-right:8px;opacity:0.6"><use href="#i-edit"/></svg> Renomear Projeto</button>`;
+      let html = `<button class="btn" style="width:100%;text-align:left;justify-content:flex-start;padding:12px;border-radius:12px;background:var(--fill);color:var(--label);border:none" onclick="renProj('${p.id}')"><svg style="width:16px;height:16px;margin-right:8px;opacity:0.6"><use href="#i-edit"/></svg> Editar Projeto</button>`;
       html += `<button class="btn" style="width:100%;text-align:left;justify-content:flex-start;padding:12px;border-radius:12px;background:var(--fill);color:var(--label);border:none;margin-top:8px" onclick="shareProj('${p.id}')"><svg style="width:16px;height:16px;margin-right:8px;color:#FF2D55"><use href="#i-users"/></svg> Convidar Membro</button>`;
       if (p.id !== 'bruno') {
         html += `<button class="btn" style="width:100%;text-align:left;justify-content:flex-start;padding:12px;border-radius:12px;background:var(--fill);color:#FF3B30;border:none;margin-top:8px" onclick="delProj('${p.id}')"><svg style="width:16px;height:16px;margin-right:8px;color:#FF3B30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Excluir Projeto</button>`;
