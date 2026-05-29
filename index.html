@@ -646,6 +646,14 @@
       .wdg-panel.open .wdg-card{backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%)}
     }
 
+    /* Sync indicator */
+    .sync-indicator{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-60px);display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,.92);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(255,255,255,.5);border-radius:20px;font-size:.72rem;font-weight:600;color:var(--label2);z-index:9999;box-shadow:0 2px 16px rgba(0,0,0,.08);transition:transform .4s var(--ease-spring),opacity .3s;opacity:0;pointer-events:none}
+    [data-theme="dark"] .sync-indicator{background:rgba(32,32,34,.92);border-color:rgba(255,255,255,.08)}
+    .sync-indicator.show{transform:translateX(-50%) translateY(0);opacity:1}
+    .sync-indicator svg{animation:syncSpin 1s linear infinite;color:var(--blue)}
+    .sync-indicator.synced svg{animation:none;color:#34C759}
+    @keyframes syncSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
     /* Reduced motion */
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
@@ -796,12 +804,22 @@
 
 <div class="cf-wrap" id="cfWrap"><div class="cf-box"><h3 id="cfTitle">Excluir</h3><p id="cfMsg">Essa ação não pode ser desfeita.</p><div class="m-btns"><button class="btn btn-sec" id="cfNo">Cancelar</button><button class="btn btn-red" id="cfYes">Excluir</button></div></div></div>
 <div class="toast" id="toast"></div>
+<div class="sync-indicator" id="syncInd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg><span id="syncTxt">Sincronizando...</span></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 const ICONS=['i-heart','i-building','i-droplet','i-rocket','i-home','i-wallet','i-user','i-briefcase','i-star','i-book','i-cart','i-code','i-car','i-globe','i-coffee','i-bulb','i-flag','i-music','i-camera','i-target','i-zap','i-fire','i-layers','i-activity'];
 const COLORS=['#007AFF','#34C759','#FF9500','#FF3B30','#FF2D55','#AF52DE','#32ADE6','#5856D6','#5AC8FA','#00C7BE','#8E8E93','#A2845E','#FFCC00','#30B0C7','#FF6482'];
 const DEF_CATS=[{id:'familia',name:'Família',icon:'i-heart',color:'#FF2D55'},{id:'solvay',name:'Solvay',icon:'i-building',color:'#32ADE6'},{id:'manual',name:'Manual do Óleo',icon:'i-droplet',color:'#FF9500'},{id:'revviu',name:'Revviu',icon:'i-rocket',color:'#AF52DE'},{id:'imobiliario',name:'Imobiliário',icon:'i-home',color:'#34C759'},{id:'financeiro',name:'Financeiro',icon:'i-wallet',color:'#FF3B30'},{id:'pessoal',name:'Pessoal',icon:'i-user',color:'#8E8E93'}];
 const DEF_TASKS=[{id:uid(),title:'Efetivar o empréstimo',category:'financeiro',priority:'alta',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-864e5,completedAt:null},{id:uid(),title:'Tarefa PID',category:'solvay',priority:'media',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-72e6,completedAt:null},{id:uid(),title:'Adicionar WhatsApp do site',category:'manual',priority:'media',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-5e7,completedAt:null},{id:uid(),title:'Agrupar métricas e dashboards do site',category:'manual',priority:'media',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-3e7,completedAt:null}];
+
+// ===== FIREBASE INIT =====
+const fbConfig={apiKey:"AIzaSyDIoHupcNAWZFnW_Y8qYnF-DeDYH8NdQYI",authDomain:"smart-tracker-2eba6.firebaseapp.com",projectId:"smart-tracker-2eba6",storageBucket:"smart-tracker-2eba6.firebasestorage.app",messagingSenderId:"1062515853953",appId:"1:1062515853953:web:a04b9b3aa054be8bdc5b80"};
+firebase.initializeApp(fbConfig);
+const db=firebase.firestore();
+const FB_DOC='bruno-main';
+let _fbReady=false,_fbSaving=false,_fbListening=false;
 
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
 let aCat='all',aSt='all',qry='',delId=null,mSubs=[],mDeps=[],curView='tasks',editingCatId=null,dashCat='all',showDone=false,fCCat='',groupBy='none';
@@ -814,7 +832,72 @@ function $(s){return document.querySelector(s)}
 function $$(s){return document.querySelectorAll(s)}
 function ld(k,def){const d=localStorage.getItem(k);if(d)return JSON.parse(d);sv(k,def);return JSON.parse(JSON.stringify(def))}
 function sv(k,d){localStorage.setItem(k,JSON.stringify(d))}
-function sT(){sv('bt-v5',tasks)}function sC(){sv('bt-cats',cats)}function sL(){sv('bt-log',log)}
+function sT(){sv('bt-v5',tasks);fbSave()}
+function sC(){sv('bt-cats',cats);fbSave()}
+function sL(){sv('bt-log',log);fbSave()}
+
+// ===== FIREBASE SYNC =====
+function showSync(msg,ok){const el=$('#syncInd');if(!el)return;$('#syncTxt').textContent=msg;el.className='sync-indicator'+(ok?' synced':'');el.classList.add('show');if(ok)setTimeout(()=>el.classList.remove('show'),2000)}
+let _fbTimer=null;
+function fbSave(){
+  if(!_fbReady)return;
+  clearTimeout(_fbTimer);
+  _fbTimer=setTimeout(()=>{
+    _fbSaving=true;
+    showSync('Salvando...');
+    db.collection('data').doc(FB_DOC).set({tasks:JSON.stringify(tasks),cats:JSON.stringify(cats),log:JSON.stringify(log.slice(0,100)),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),device:navigator.userAgent.includes('Mobile')?'mobile':'desktop'}).then(()=>{showSync('Sincronizado ✓',true);_fbSaving=false}).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
+  },800);
+}
+function fbInit(){
+  showSync('Conectando...');
+  db.collection('data').doc(FB_DOC).get().then(snap=>{
+    if(snap.exists){
+      const d=snap.data();
+      const cloudTasks=JSON.parse(d.tasks||'[]');
+      const cloudCats=JSON.parse(d.cats||'[]');
+      const cloudLog=JSON.parse(d.log||'[]');
+      // Merge: keep LOCAL if it has more tasks (first device upload), else use cloud
+      const localTasks=ld('bt-v5',DEF_TASKS);
+      if(localTasks.length>=cloudTasks.length){
+        // Local has more data — upload to cloud (first time from desktop)
+        tasks=localTasks;
+        _fbReady=true;
+        fbSave();
+        showSync('Dados enviados para nuvem ✓',true);
+      } else {
+        // Cloud has more data — download (new device like mobile)
+        tasks=cloudTasks;cats=cloudCats;log=cloudLog;
+        sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log);
+        showSync('Dados baixados da nuvem ✓',true);
+        _fbReady=true;
+        if(typeof render==='function')render();
+      }
+    } else {
+      // First time ever — upload local to cloud
+      _fbReady=true;
+      fbSave();
+      showSync('Primeira sincronização ✓',true);
+    }
+    // Start real-time listener
+    if(!_fbListening)fbListen();
+  }).catch(e=>{showSync('Offline — dados locais',true);console.warn('FB init error',e);_fbReady=true})
+}
+function fbListen(){
+  _fbListening=true;
+  db.collection('data').doc(FB_DOC).onSnapshot(snap=>{
+    if(!snap.exists||_fbSaving)return;
+    const d=snap.data();
+    const cloudTasks=JSON.parse(d.tasks||'[]');
+    // Only update if cloud data is different from local
+    if(JSON.stringify(cloudTasks)===JSON.stringify(tasks))return;
+    tasks=cloudTasks;
+    cats=JSON.parse(d.cats||'[]');
+    log=JSON.parse(d.log||'[]');
+    sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log);
+    if(typeof render==='function')render();
+    showSync('Atualizado de outro dispositivo ✓',true);
+  },e=>{console.warn('FB listener error',e)});
+}
 function ci(id){return cats.find(c=>c.id===id)||{name:id,icon:'i-layers',color:'#8E8E93'}}
 function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
 function fDate(d){if(!d)return'';return new Date(d+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}
@@ -1680,7 +1763,7 @@ if('serviceWorker' in navigator){
     setInterval(()=>reg.update(),2*60*1000);
   }).catch(()=>{});
 }
-setGreeting();render();
+setGreeting();render();fbInit();
 </script>
 </body>
 </html>
