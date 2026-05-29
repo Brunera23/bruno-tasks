@@ -84,8 +84,12 @@
     .proj-info{flex:1;min-width:0;display:flex;flex-direction:column}
     .proj-name{font-weight:600;font-size:.8rem;color:var(--label);line-height:1.2}
     .proj-type{font-size:.62rem;font-weight:500;color:var(--label3);display:flex;align-items:center;gap:3px;margin-top:1px}
-    .proj-type.shared{color:#FF2D55}
-    .proj-badge{font-size:.68rem;font-weight:600;color:var(--label3);min-width:18px;text-align:center}
+    .proj-type.shared{color:#FF2D55;font-weight:600}
+    .proj-actions{display:flex;align-items:center;gap:4px}
+    .proj-actions .a-btn{width:24px;height:24px;padding:0;background:var(--fill);border:none;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all var(--dur-fast)}
+    .proj-actions .a-btn:hover{background:var(--sep);color:var(--label)}
+    .proj-actions .a-btn svg{width:13px;height:13px}
+    .proj-badge{font-size:.68rem;font-weight:600;color:var(--label3);min-width:18px;text-align:center;margin-left:auto;margin-right:8px}
     .proj-toggle{width:34px;height:20px;border-radius:10px;background:var(--fill);position:relative;cursor:pointer;transition:background var(--dur-norm) var(--ease-spring);flex-shrink:0;border:none;padding:0}
     .proj-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform var(--dur-norm) var(--ease-spring)}
     .proj-toggle.on{background:#34C759}
@@ -852,6 +856,7 @@
   <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
   <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4h4v-4z"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 10 17 19 7"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
@@ -2518,7 +2523,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=19',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=20',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
