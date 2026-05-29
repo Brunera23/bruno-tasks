@@ -2202,10 +2202,6 @@ function openM(task){
   // Assignment (for shared project)
   if(e&&task.assignedTo)pickVal($('#fAssign'),task.assignedTo);
   else pickVal($('#fAssign'),'bruno');
-  // Set category for the correct project
-  const projCats=getCatsForProject(fFormProj);
-  fCCat=e?task.category:(aCat!=='all'&&projCats.some(c=>c.id===aCat)?aCat:projCats[0]?.id||'');
-  renderCatPicker();
   $('#ov').classList.add('open');$('#modal').classList.add('open');setTimeout(()=>$('#fT').focus(),300)}
 function closeM(){$('#ov').classList.remove('open');$('#modal').classList.remove('open')}
 function renderMSubs(){
@@ -2582,7 +2578,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=23',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=24',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
