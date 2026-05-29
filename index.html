@@ -95,17 +95,18 @@
     .wk-toggle.open:hover{background:#0070e0}
     .wk-toggle svg{width:15px;height:15px;flex-shrink:0;transition:color var(--dur-fast)}
     .wk-toggle.open svg{color:#fff}
-    .wdg-panel{position:fixed;right:0;top:0;width:340px;height:100dvh;padding:70px 16px 30px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;overflow-x:hidden;z-index:85;pointer-events:none;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.12) transparent}
+    .wdg-panel{position:fixed;right:0;top:0;width:340px;height:100dvh;padding:70px 16px 80px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;overflow-x:hidden;z-index:85;pointer-events:none;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.12) transparent}
     .wdg-panel::-webkit-scrollbar{width:4px}.wdg-panel::-webkit-scrollbar-track{background:transparent}.wdg-panel::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:2px}
     .wdg-panel.open{transform:translateX(0);pointer-events:all}
-    .wdg-card{background:rgba(255,255,255,.95);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border-radius:18px;border:1px solid rgba(255,255,255,.5);box-shadow:0 2px 16px rgba(0,0,0,.05);overflow:hidden;transition:all .3s ease,transform .2s,opacity .2s;opacity:0;transform:translateY(12px)}
+    .wdg-card{background:rgba(255,255,255,.95);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border-radius:18px;border:1px solid rgba(255,255,255,.5);box-shadow:0 2px 16px rgba(0,0,0,.05);overflow:hidden;transition:all .3s ease,transform .25s cubic-bezier(.2,1,.3,1),opacity .2s;opacity:0;transform:translateY(12px);flex-shrink:0}
     .wdg-panel.open .wdg-card{opacity:1;transform:translateY(0)}
     .wdg-card:nth-child(1){transition-delay:40ms}.wdg-card:nth-child(2){transition-delay:100ms}
     .wdg-card:nth-child(3){transition-delay:160ms}.wdg-card:nth-child(4){transition-delay:220ms}
     .wdg-card:nth-child(5){transition-delay:280ms}
     [data-theme="dark"] .wdg-card{background:rgba(32,32,34,.92);border-color:rgba(255,255,255,.08);box-shadow:0 2px 16px rgba(0,0,0,.25)}
-    .wdg-card.dragging{opacity:.6;transform:scale(.96)!important;z-index:100;box-shadow:0 12px 40px rgba(0,0,0,.15)}
-    .wdg-card.drag-over{border-top:2px solid var(--blue);margin-top:-2px}
+    .wdg-card.dragging{opacity:.85;transform:scale(.97);z-index:100;box-shadow:0 16px 48px rgba(0,0,0,.18);transition:box-shadow .15s,opacity .15s}
+    .wdg-card.drag-over-above{transform:translateY(8px);transition:transform .2s cubic-bezier(.2,1,.3,1)}
+    .wdg-card.drag-over-below{transform:translateY(-8px);transition:transform .2s cubic-bezier(.2,1,.3,1)}
     .wdg-head{padding:14px 16px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;transition:background var(--dur-fast)}
     .wdg-head:hover{background:var(--fill)}
     .wdg-drag{width:16px;height:16px;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--label3);opacity:.4;transition:opacity var(--dur-fast);flex-shrink:0;margin-left:-4px;touch-action:none}
@@ -995,51 +996,63 @@ function buildWidgetCard(key,icon,name,gradient,renderFn){
 }
 
 function initWidgetDrag(){
-  let dragEl=null;
+  let dragEl=null,startY=0,startScroll=0;
   const panel=$('#wdgPanel');
   $$('.wdg-drag').forEach(handle=>{
     handle.addEventListener('mousedown',e=>{
       const card=handle.closest('.wdg-card');
       if(!card)return;
-      e.preventDefault();
+      e.preventDefault();e.stopPropagation();
       dragEl=card;
-      card.classList.add('dragging');
-      const startY=e.clientY;
-      const cardRect=card.getBoundingClientRect();
-      const offsetY=e.clientY-cardRect.top;
+      startY=e.clientY;
+      startScroll=panel.scrollTop;
+      // Small delay before visual drag (prevents accidental drags)
+      const startTimer=setTimeout(()=>{
+        if(!dragEl)return;
+        dragEl.classList.add('dragging');
+        document.addEventListener('mousemove',onMove);
+      },80);
       function onMove(ev){
-        ev.preventDefault();
+        if(!dragEl)return;
+        const dy=ev.clientY-startY;
+        dragEl.style.transform=`translateY(${dy}px) scale(.97)`;
+        // Find which card we're over
         const cards=[...$$('.wdg-card')];
-        cards.forEach(c=>{if(c!==dragEl)c.classList.remove('drag-over')});
-        const target=cards.find(c=>{
-          if(c===dragEl)return false;
+        cards.forEach(c=>{if(c!==dragEl)c.classList.remove('drag-over-above','drag-over-below')});
+        const dragRect=dragEl.getBoundingClientRect();
+        const dragCenter=dragRect.top+dragRect.height/2;
+        cards.forEach(c=>{
+          if(c===dragEl)return;
           const r=c.getBoundingClientRect();
-          return ev.clientY>r.top&&ev.clientY<r.bottom;
+          const center=r.top+r.height/2;
+          if(Math.abs(dragCenter-center)<r.height/2){
+            c.classList.add(dragCenter<center?'drag-over-below':'drag-over-above');
+          }
         });
-        if(target)target.classList.add('drag-over');
       }
-      function onUp(ev){
+      function onUp(){
+        clearTimeout(startTimer);
         document.removeEventListener('mousemove',onMove);
         document.removeEventListener('mouseup',onUp);
         if(!dragEl)return;
         dragEl.classList.remove('dragging');
-        const target=$$('.wdg-card.drag-over')[0];
-        $$('.wdg-card').forEach(c=>c.classList.remove('drag-over'));
+        dragEl.style.transform='';
+        const target=$$('.wdg-card.drag-over-above,.wdg-card.drag-over-below')[0];
+        $$('.wdg-card').forEach(c=>c.classList.remove('drag-over-above','drag-over-below'));
         if(target&&target!==dragEl){
           const fromKey=dragEl.dataset.wdg;
           const toKey=target.dataset.wdg;
-          const fromIdx=wdgOrder.indexOf(fromKey);
-          const toIdx=wdgOrder.indexOf(toKey);
-          if(fromIdx>=0&&toIdx>=0){
-            wdgOrder.splice(fromIdx,1);
-            wdgOrder.splice(toIdx,0,fromKey);
+          const fi=wdgOrder.indexOf(fromKey);
+          const ti=wdgOrder.indexOf(toKey);
+          if(fi>=0&&ti>=0){
+            wdgOrder.splice(fi,1);
+            wdgOrder.splice(ti,0,fromKey);
             saveWdgState();
             renderWidgets();
           }
         }
         dragEl=null;
       }
-      document.addEventListener('mousemove',onMove);
       document.addEventListener('mouseup',onUp);
     });
   });
