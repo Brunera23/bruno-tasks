@@ -1064,6 +1064,7 @@ function renderWeekWidget(){
   const dayNames=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   const R=13,C=2*Math.PI*R;
   let full='',weekTotal=0;
+  const dayBars=[];
   for(let i=0;i<7;i++){
     const d=new Date(today);d.setDate(d.getDate()+i);
     const ds=dateStr(d);const isToday=i===0;
@@ -1072,6 +1073,7 @@ function renderWeekWidget(){
     const byCat={};dTasks.forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+t.estimatedTime});
     const totalMin=dTasks.reduce((s,t)=>s+t.estimatedTime,0);
     weekTotal+=totalMin;
+    dayBars.push({totalMin,abbr:dayAbbr[d.getDay()].charAt(0).toUpperCase(),isToday});
     const pct=Math.round(totalMin/DAILY_CAP*100);
     const pctCapped=Math.min(pct,100);
     const isOver=totalMin>DAILY_CAP;
@@ -1086,8 +1088,16 @@ function renderWeekWidget(){
       ${totalMin>0?`<div class="wk-day-right"><span class="wk-day-pct ${pctCls}">${pct}%</span></div>`:''}
     </div>`;
   }
-  const todayRow=full.match(/<div class="wk-day is-today">.*?<\/div>\s*<\/div>/s)||[''];
-  const summaryHtml=`<div style="display:flex;align-items:center;gap:10px;font-size:.74rem;color:var(--label2)"><span style="font-weight:700">${weekTotal>0?fmtTime(weekTotal):'0min'}</span><span style="color:var(--label3)">esta semana</span></div>`;
+  const maxDay=Math.max(...dayBars.map(d=>d.totalMin),DAILY_CAP);
+  const summaryHtml=`<div style="display:flex;align-items:center;gap:10px;padding:2px 0">
+    <div style="display:flex;align-items:flex-end;gap:3px;height:28px;flex:1">
+      ${dayBars.map(d=>{const h=d.totalMin>0?Math.max(Math.round(d.totalMin/maxDay*28),3):2;const color=d.totalMin<=0?'var(--fill)':d.totalMin>DAILY_CAP?'#FF3B30':d.totalMin>DAILY_CAP*0.7?'#FF9500':'#34C759';const op=d.isToday?1:0.45;const ring=d.isToday?'box-shadow:0 0 0 1.5px var(--blue);':'';return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;height:100%"><div style="width:100%;height:${h}px;border-radius:2px;background:${color};opacity:${op};${ring}transition:height .6s var(--ease-spring)"></div><span style="font-size:.46rem;color:${d.isToday?'var(--blue)':'var(--label3)'};font-weight:${d.isToday?'700':'500'};line-height:1">${d.abbr}</span></div>`}).join('')}
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div style="font-size:.82rem;font-weight:800;color:var(--label);line-height:1">${weekTotal>0?fmtTime(weekTotal):'0h'}</div>
+      <div style="font-size:.54rem;color:var(--label3);margin-top:2px;line-height:1">semana</div>
+    </div>
+  </div>`;
   return{badge:weekTotal>0?fmtTime(weekTotal):'',summary:summaryHtml,full};
 }
 
@@ -1121,9 +1131,16 @@ function renderFocoWidget(){
   } else {
     full+='<div style="text-align:center;padding:8px;color:var(--label3);font-size:.76rem">Nenhuma tarefa para hoje</div>';
   }
-  const summaryHtml=`<div class="foco-ring-wrap" style="margin-bottom:0">
-    <div class="foco-ring"><svg viewBox="0 0 56 56"><circle class="ring-bg" cx="28" cy="28" r="${R}"/><circle class="ring-fill" cx="28" cy="28" r="${R}" stroke="${ringColor}" stroke-dasharray="${C}" stroke-dashoffset="${offset}"/></svg><div class="foco-ring-center">${pct}%</div></div>
-    <div class="foco-stats"><div class="foco-stats-main">${done}/${total} concluídas</div><div class="foco-stats-sub">${remainMin>0?fmtTime(remainMin)+' restante':'Tudo concluído! 🎉'}</div></div>
+  const sR=12,sC=2*Math.PI*sR,sOffset=sC-(pct/100)*sC;
+  const summaryHtml=`<div style="display:flex;align-items:center;gap:10px">
+    <div style="width:32px;height:32px;position:relative;flex-shrink:0">
+      <svg viewBox="0 0 32 32" width="32" height="32" style="transform:rotate(-90deg)"><circle cx="16" cy="16" r="${sR}" fill="none" stroke="var(--fill)" stroke-width="3"/><circle cx="16" cy="16" r="${sR}" fill="none" stroke="${ringColor}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${sC}" stroke-dashoffset="${sOffset}" style="transition:stroke-dashoffset .8s cubic-bezier(.34,1.56,.64,1)"/></svg>
+      <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.56rem;font-weight:800;color:var(--label)">${pct}%</span>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.74rem;font-weight:700;color:var(--label);line-height:1.2">${done}/${total} concluídas${remainMin>0?' · <span style="font-weight:500;color:var(--label3)">'+fmtTime(remainMin)+' restante</span>':''}</div>
+      ${nextTask?`<div style="font-size:.62rem;color:var(--label3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1">Próxima: ${nextTask.title}</div>`:'<div style="font-size:.62rem;color:#34C759;margin-top:2px;line-height:1.1">Tudo concluído! 🎉</div>'}
+    </div>
   </div>`;
   return{badge:total?`${done}/${total}`:'',summary:summaryHtml,full};
 }
@@ -1153,8 +1170,14 @@ function renderPrazosWidget(){
     full+=`<div class="prazo-item"><span class="prazo-item-dot" style="background:${c.color}"></span><span class="prazo-item-title">${t.title}</span><span class="prazo-item-tag ${tagCls(t.date)}">${countdown(t.date)}</span></div>`;
   });
   full+='</div>';
-  const urgentCount=overdue.length+dueToday.length;
-  const summaryHtml=`<div style="display:flex;align-items:center;gap:8px;font-size:.74rem">${overdue.length?`<span style="color:#FF3B30;font-weight:700">${overdue.length} atrasada${overdue.length!==1?'s':''}</span><span style="color:var(--label3)">·</span>`:''}<span style="color:var(--label2);font-weight:600">${dueToday.length} hoje</span></div>`;
+  const pTotal=overdue.length+dueToday.length+dueTom.length+dueWeek.length;
+  const summaryHtml=`<div style="display:flex;align-items:center;gap:4px;padding:2px 0;flex-wrap:wrap">
+    ${overdue.length?`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:rgba(255,59,48,.1)"><span style="width:6px;height:6px;border-radius:50%;background:#FF3B30;flex-shrink:0"></span><span style="font-size:.7rem;font-weight:700;color:#FF3B30">${overdue.length}</span><span style="font-size:.56rem;color:#FF3B30;opacity:.7">atrasada${overdue.length!==1?'s':''}</span></div>`:''}
+    ${dueToday.length?`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:rgba(0,122,255,.08)"><span style="width:6px;height:6px;border-radius:50%;background:#007AFF;flex-shrink:0"></span><span style="font-size:.7rem;font-weight:700;color:#007AFF">${dueToday.length}</span><span style="font-size:.56rem;color:#007AFF;opacity:.7">hoje</span></div>`:''}
+    ${dueTom.length?`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:rgba(255,149,0,.08)"><span style="width:6px;height:6px;border-radius:50%;background:#FF9500;flex-shrink:0"></span><span style="font-size:.7rem;font-weight:700;color:#FF9500">${dueTom.length}</span><span style="font-size:.56rem;color:#FF9500;opacity:.7">amanhã</span></div>`:''}
+    ${dueWeek.length?`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:var(--fill)"><span style="width:6px;height:6px;border-radius:50%;background:var(--label3);flex-shrink:0"></span><span style="font-size:.7rem;font-weight:600;color:var(--label3)">${dueWeek.length}</span><span style="font-size:.56rem;color:var(--label3);opacity:.7">semana</span></div>`:''}
+    ${pTotal===0?'<span style="font-size:.72rem;color:var(--label3)">Nenhum prazo próximo 🎉</span>':''}
+  </div>`;
   return{badge:urgentCount?urgentCount.toString():'',summary:summaryHtml,full};
 }
 
@@ -1194,7 +1217,14 @@ function renderStreakWidget(){
   let full=`<div class="streak-main"><span class="streak-flame">🔥</span><div><div class="streak-num">${streak}</div><div class="streak-label">${streak===1?'dia consecutivo':'dias consecutivos'}</div></div></div>`;
   full+=`<div class="streak-rate"><span class="streak-rate-label">Taxa da semana</span><span class="streak-rate-val">${rate}%</span></div>`;
   full+=chartHtml;
-  const summaryHtml=`<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.2rem">🔥</span><span style="font-size:1rem;font-weight:800;color:var(--label)">${streak}</span><span style="font-size:.72rem;color:var(--label3)">${streak===1?'dia consecutivo':'dias consecutivos'}</span></div>`;
+  const summaryHtml=`<div style="display:flex;align-items:center;gap:8px;padding:2px 0">
+    <span style="font-size:1.1rem;line-height:1;filter:${streak>=7?'brightness(1.2) saturate(1.5)':streak>=3?'':'grayscale(.5) opacity(.6)'}">${streak>0?'🔥':'🕯️'}</span>
+    <span style="font-size:1rem;font-weight:800;color:var(--label);line-height:1;min-width:18px">${streak}</span>
+    <div style="display:flex;gap:3px;align-items:center;flex:1">
+      ${dayCounts.map(dc=>{const size=dc.count>0?8:5;const color=dc.count>0?'#FF3B30':'var(--fill)';const opacity=dc.count>0?Math.min(0.4+dc.count/maxC*0.6,1):0.3;return`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:${opacity};flex-shrink:0;transition:all .3s" title="${dc.day}: ${dc.count}"></div>`}).join('')}
+    </div>
+    <span style="font-size:.62rem;color:var(--label3);flex-shrink:0;font-weight:600">${rate}%</span>
+  </div>`;
   return{badge:streak?streak.toString():'0',summary:summaryHtml,full};
 }
 
@@ -1208,7 +1238,18 @@ function renderBlockedWidget(){
     full+=`<div class="block-item"><div class="block-item-title">${t.title}</div><div class="block-item-blocker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>${blockerNames}</div></div>`;
   });
   full+='</div>';
-  const summaryHtml=`<div style="display:flex;align-items:center;gap:6px;font-size:.74rem"><span style="color:var(--label2);font-weight:600">${blocked.length} bloqueada${blocked.length!==1?'s':''}</span></div>`;
+  const blockerCats={};
+  blocked.forEach(t=>{const bks=getActiveBlockers(t);bks.forEach(b=>{blockerCats[b.category]=(blockerCats[b.category]||0)+1})});
+  const topCats=Object.entries(blockerCats).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const summaryHtml=`<div style="display:flex;align-items:center;gap:8px;padding:2px 0">
+    <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:${blocked.length>0?'rgba(142,142,147,.1)':'var(--fill)'};flex-shrink:0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${blocked.length>0?'#8E8E93':'var(--label3)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.74rem;font-weight:700;color:var(--label);line-height:1.1">${blocked.length} bloqueada${blocked.length!==1?'s':''}</div>
+      ${topCats.length?`<div style="display:flex;gap:3px;margin-top:3px">${topCats.map(([catId,cnt])=>{const c=ci(catId);return`<div style="display:flex;align-items:center;gap:2px;padding:1px 5px;border-radius:4px;background:var(--fill)"><span style="width:5px;height:5px;border-radius:50%;background:${c.color}"></span><span style="font-size:.54rem;font-weight:600;color:var(--label3)">${cnt}</span></div>`}).join('')}</div>`:'<div style="font-size:.6rem;color:var(--label3);margin-top:2px;line-height:1">Nenhuma bloqueada 🎉</div>'}
+    </div>
+  </div>`;
   return{badge:blocked.length?blocked.length.toString():'',summary:summaryHtml,full};
 }
 
