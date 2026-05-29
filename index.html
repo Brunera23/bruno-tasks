@@ -1003,7 +1003,9 @@ function sT(){
 function sC(){sv('bt-cats',cats);fbSave()}
 function sL(){sv('bt-log',log);fbSave()}
 
-// ===== FIREBASE SYNC =====
+// ===== FIREBASE SYNC — CLOUD IS TRUTH =====
+// Like Todoist/Notion: Firebase is the single source of truth.
+// Local storage is only a cache for offline use.
 function showSync(msg,ok){const el=$('#syncDot');if(!el)return;el.className='sync-dot'+(ok?' synced':' saving');if(ok)setTimeout(()=>{el.className='sync-dot'},1500)}
 let _fbTimer=null,_fbInitDone=false;
 
@@ -1025,85 +1027,26 @@ function fbSave(){
     _fbSaving=true;
     showSync('Salvando...');
     _fbDirectSave().then(()=>{showSync('Sincronizado ✓',true);_fbSaving=false}).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
-  },600);
-}
-
-// === MERGE-BY-ID SYNC ===
-function mergeTasks(localArr, cloudArr){
-  const merged=new Map();
-  // Index local tasks by ID
-  localArr.forEach(t=>{
-    if(!t.updatedAt)t.updatedAt=t.createdAt||Date.now();
-    merged.set(t.id,t);
-  });
-  // Merge cloud tasks
-  cloudArr.forEach(ct=>{
-    if(!ct.updatedAt)ct.updatedAt=ct.createdAt||Date.now();
-    const local=merged.get(ct.id);
-    if(!local){
-      // New task from cloud — add it
-      merged.set(ct.id,ct);
-    } else {
-      // Exists in both — keep the most recently modified
-      if((ct.updatedAt||0)>(local.updatedAt||0)){
-        merged.set(ct.id,ct);
-      }
-      // else keep local (already in map)
-    }
-  });
-  return Array.from(merged.values());
-}
-
-function mergeCats(localCats, cloudCats){
-  const merged=new Map();
-  localCats.forEach(c=>merged.set(c.id,c));
-  cloudCats.forEach(c=>{if(!merged.has(c.id))merged.set(c.id,c)});
-  return Array.from(merged.values());
+  },400);
 }
 
 function fbInit(){
   showSync('Conectando...');
-  const localTasks=JSON.parse(JSON.stringify(tasks));
-  const localCats=JSON.parse(JSON.stringify(cats));
-  const localLog=JSON.parse(JSON.stringify(log));
-
   db.collection('data').doc(FB_DOC).get().then(snap=>{
     if(snap.exists){
       const d=snap.data();
-      const cloudTasks=JSON.parse(d.tasks||'[]');
-      const cloudCats=JSON.parse(d.cats||'[]');
-      const cloudLog=JSON.parse(d.log||'[]');
-
-      // MERGE by ID — keeps tasks from BOTH sides
-      tasks=mergeTasks(localTasks, cloudTasks);
-      cats=mergeCats(localCats, cloudCats);
-      // Log: combine and deduplicate by timestamp, keep newest 200
-      const allLog=[...localLog,...cloudLog];
-      const logMap=new Map();
-      allLog.forEach(l=>{const key=l.taskId+'_'+l.ts;if(!logMap.has(key))logMap.set(key,l)});
-      log=Array.from(logMap.values()).sort((a,b)=>b.ts-a.ts).slice(0,200);
-
+      // CLOUD IS TRUTH — always use cloud data
+      tasks=JSON.parse(d.tasks||'[]');
+      cats=JSON.parse(d.cats||'[]');
+      log=JSON.parse(d.log||'[]');
+      // Update local cache
       sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log);
-      _fbReady=true;
-
-      const localIds=new Set(localTasks.map(t=>t.id));
-      const cloudIds=new Set(cloudTasks.map(t=>t.id));
-      const newFromCloud=[...cloudIds].filter(id=>!localIds.has(id)).length;
-      const newFromLocal=[...localIds].filter(id=>!cloudIds.has(id)).length;
-
-      showSync(`Mesclando... +${newFromCloud} da nuvem, +${newFromLocal} locais`);
-      _fbDirectSave().then(()=>{
-        _fbInitDone=true;
-        showSync('Sincronizado ✓ ('+tasks.length+' tarefas)',true);
-        if(typeof render==='function')render();
-        fbListen();
-      }).catch(e=>{
-        _fbInitDone=true;
-        showSync('Erro ao sincronizar',false);
-        console.warn('FB init save error',e);
-        fbListen();
-      });
+      _fbReady=true;_fbInitDone=true;
+      if(typeof render==='function')render();
+      showSync('Sincronizado ✓',true);
+      fbListen();
     } else {
+      // First time — push local data to cloud
       _fbReady=true;
       showSync('Primeira sincronização...');
       _fbDirectSave().then(()=>{
@@ -1126,22 +1069,15 @@ function fbListen(){
     if(!snap.exists||_fbSaving||!_fbInitDone)return;
     const d=snap.data();
     const cloudTasks=JSON.parse(d.tasks||'[]');
-    // Quick check: if identical, skip
+    // If identical, skip
     if(JSON.stringify(cloudTasks)===JSON.stringify(tasks))return;
-    // Backup before merge
-    sv('bt-v5-backup',tasks);
-    // MERGE instead of overwrite
-    const before=tasks.length;
-    tasks=mergeTasks(tasks, cloudTasks);
-    cats=mergeCats(cats, JSON.parse(d.cats||'[]'));
+    // ACCEPT cloud data — cloud is truth
+    tasks=cloudTasks;
+    cats=JSON.parse(d.cats||'[]');
     log=JSON.parse(d.log||'[]');
     sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log);
     if(typeof render==='function')render();
-    const diff=tasks.length-before;
-    showSync(diff>0?`+${diff} tarefas de outro dispositivo ✓`:'Atualizado ✓',true);
-    // Re-save merged result to cloud so both devices converge
-    _fbSaving=true;
-    _fbDirectSave().then(()=>{_fbSaving=false}).catch(()=>{_fbSaving=false});
+    showSync('Atualizado ✓',true);
   },e=>{console.warn('FB listener error',e)});
 }
 function ci(id){return cats.find(c=>c.id===id)||{name:id,icon:'i-layers',color:'#8E8E93'}}
