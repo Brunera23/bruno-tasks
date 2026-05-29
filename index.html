@@ -886,7 +886,7 @@
 </svg>
 
 <!-- LOGIN SCREEN -->
-<div class="login-screen" id="loginScreen">
+<div class="login-screen" id="loginScreen" style="display:none">
   <div class="login-card">
     <div class="login-logo"><div class="login-logo-icon"><svg width="32" height="32" style="color:#fff"><use href="#i-check"/></svg></div></div>
     <h1 class="login-title">Bruno Tasks</h1>
@@ -2464,7 +2464,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=16',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=17',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
