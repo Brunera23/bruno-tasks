@@ -62,6 +62,7 @@
     .login-google-btn:hover{box-shadow:0 4px 20px rgba(0,0,0,.1);transform:translateY(-1px)}
     .login-google-btn:active{transform:scale(.98);box-shadow:0 1px 4px rgba(0,0,0,.06)}
     .login-footer{font-size:.7rem;color:var(--label3);margin-top:24px;line-height:1.4}
+    .login-err{font-size:.72rem;color:#FF3B30;margin-top:12px;min-height:1.4em;line-height:1.4;padding:0 8px}
 
     /* ===== SIDEBAR USER ===== */
     .sidebar-user{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--sep);margin-top:auto}
@@ -71,6 +72,27 @@
     .su-email{font-size:.62rem;color:var(--label3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .su-logout{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur-fast);flex-shrink:0}
     .su-logout:hover{background:var(--fill);color:var(--label)}
+
+    /* ===== PROJECT SELECTOR ===== */
+    .sidebar-projects{margin-bottom:8px}
+    .proj-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;border:none;background:transparent;width:100%;text-align:left;font-family:inherit;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-size:.82rem;color:var(--label2)}
+    .proj-item:hover{background:var(--fill);color:var(--label)}
+    .proj-item:active{transform:scale(.98)}
+    .proj-item.active{background:var(--fill);color:var(--label)}
+    .proj-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .proj-icon svg{width:14px;height:14px;color:#fff}
+    .proj-info{flex:1;min-width:0;display:flex;flex-direction:column}
+    .proj-name{font-weight:600;font-size:.8rem;color:var(--label);line-height:1.2}
+    .proj-type{font-size:.62rem;font-weight:500;color:var(--label3);display:flex;align-items:center;gap:3px;margin-top:1px}
+    .proj-type.shared{color:#FF2D55}
+    .proj-badge{font-size:.68rem;font-weight:600;color:var(--label3);min-width:18px;text-align:center}
+    .proj-toggle{width:34px;height:20px;border-radius:10px;background:var(--fill);position:relative;cursor:pointer;transition:background var(--dur-norm) var(--ease-spring);flex-shrink:0;border:none;padding:0}
+    .proj-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform var(--dur-norm) var(--ease-spring)}
+    .proj-toggle.on{background:#34C759}
+    .proj-toggle.on::after{transform:translateX(14px)}
+    .proj-avatars{display:flex;margin-right:2px}
+    .proj-avatar{width:18px;height:18px;border-radius:50%;color:#fff;font-size:.5rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--card);margin-left:-5px}
+    .proj-avatar:first-child{margin-left:0}
 
     /* ===== LAYOUT ===== */
     .shell{display:flex;min-height:100dvh}
@@ -862,6 +884,7 @@
       Entrar com Google
     </button>
     <p class="login-footer">Seus dados são protegidos e sincronizados na nuvem</p>
+    <p class="login-err" id="loginErr"></p>
   </div>
 </div>
 
@@ -875,6 +898,10 @@
       <div class="nav-label">Menu</div>
       <button class="nav-item active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas<span class="nav-badge" id="navBadge">0</span></button>
       <button class="nav-item" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
+    </div>
+    <div class="sidebar-projects">
+      <div class="nav-label">Projetos</div>
+      <div id="projNav"></div>
     </div>
     <div class="sidebar-cats">
       <div class="nav-label">Categorias<button class="nav-label-btn" id="catMgrBtn" title="Gerenciar"><svg><use href="#i-settings"/></svg></button></div>
@@ -1060,11 +1087,20 @@ function updateSidebarUser(user){
 }
 
 function doGoogleLogin(){
+  const btn=$('#loginBtn');
+  btn.disabled=true;btn.textContent='Conectando...';
   auth.signInWithPopup(googleProvider).catch(err=>{
     console.error('Login error:',err);
+    btn.disabled=false;btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Entrar com Google';
+    const loginErr=$('#loginErr');
     if(err.code==='auth/popup-blocked'){
-      // Fallback to redirect for mobile
       auth.signInWithRedirect(googleProvider);
+    } else if(err.code==='auth/unauthorized-domain'){
+      if(loginErr)loginErr.textContent='Domínio não autorizado. Adicione este domínio no Firebase Console → Authentication → Settings → Authorized domains.';
+    } else if(err.code==='auth/operation-not-allowed'){
+      if(loginErr)loginErr.textContent='Google Sign-In não está habilitado. Ative no Firebase Console → Authentication → Sign-in method → Google.';
+    } else {
+      if(loginErr)loginErr.textContent='Erro: '+err.message;
     }
   });
 }
@@ -1089,7 +1125,44 @@ auth.onAuthStateChanged(user=>{
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
 const _ui=ld('bt-ui',{});
 let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null;
-function saveUI(){sv('bt-ui',{aCat,aSt,curView,groupBy,sortBy,showDone})}
+
+// ===== PROJECT SYSTEM =====
+const DEF_PROJECTS=[
+  {id:'bruno',name:'Bruno',icon:'i-user',color:'#007AFF',gradient:'linear-gradient(135deg,#007AFF,#5AC8FA)',type:'personal',visible:true,order:0},
+  {id:'nos',name:'Nós',icon:'i-heart',color:'#FF2D55',gradient:'linear-gradient(135deg,#FF2D55,#FF6482)',type:'shared',visible:true,order:1}
+];
+let projects=ld('bt-projects',DEF_PROJECTS);
+let activeProject='all'; // 'all', 'bruno', 'nos'
+
+function saveUI(){sv('bt-ui',{aCat,aSt,curView,groupBy,sortBy,showDone});sv('bt-projects',projects)}
+
+function getVisibleTasks(){
+  const visibleProjs=new Set(projects.filter(p=>p.visible).map(p=>p.id));
+  return tasks.filter(t=>{
+    const proj=t.project||'bruno';
+    return visibleProjs.has(proj);
+  });
+}
+
+function renderProjNav(){
+  const el=$('#projNav');if(!el)return;
+  let h='';
+  projects.forEach(p=>{
+    const count=tasks.filter(t=>(t.project||'bruno')===p.id&&t.status!=='done').length;
+    const isShared=p.type==='shared';
+    h+=`<div class="proj-item${p.visible?' active':''}" data-proj="${p.id}">
+      <div class="proj-icon" style="background:${p.gradient}"><svg><use href="#${p.icon}"/></svg></div>
+      <div class="proj-info">
+        <span class="proj-name">${p.name}</span>
+        <span class="proj-type${isShared?' shared':''}">${isShared?'Compartilhado':'Pessoal'}</span>
+      </div>
+      ${isShared?'<div class="proj-avatars"><div class="proj-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)">B</div><div class="proj-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)">?</div></div>':''}
+      <span class="proj-badge">${count||''}</span>
+      <button class="proj-toggle${p.visible?' on':''}" data-proj-toggle="${p.id}"></button>
+    </div>`;
+  });
+  el.innerHTML=h;
+}
 const expandedDeps=new Set();
 const collapsedGroups=new Set();
 const DAILY_CAP=480;
@@ -1349,7 +1422,7 @@ function showSmartSuggest(q){
 }
 function hideSmartSuggest(){setTimeout(()=>{$('#smartSuggest').classList.remove('show');$('#smartSuggest').innerHTML=''},150)}
 function renderTasks(){
-  let list=tasks.filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'&&t.status!==aSt)return false;if(qry){if(!smartFilter(t,qry))return false}return true});
+  let list=getVisibleTasks().filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'&&t.status!==aSt)return false;if(qry){if(!smartFilter(t,qry))return false}return true});
   // Widget filter
   if(widgetFilter){
     const todayDs=dateStr(new Date());
@@ -1826,7 +1899,7 @@ function renderHabitsWidget(){
   return{badge:uniqueHabits.length?uniqueHabits.length.toString():'',summary:summaryHtml,full};
 }
 
-function render(){renderCatNav();renderTasks();renderWidgets();if(curView==='dash')renderDash()}
+function render(){renderProjNav();renderCatNav();renderTasks();renderWidgets();if(curView==='dash')renderDash()}
 
 function renderDashFilter(){
   let h=`<button class="df-chip ${dashCat==='all'?'active':''}" data-dc="all">Todas</button>`;
@@ -2317,7 +2390,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=13',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=14',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2378,6 +2451,25 @@ function processRecurring(){
 // Only run processRecurring and initial render once auth confirms
 $('#loginBtn').addEventListener('click',doGoogleLogin);
 $('#logoutBtn').addEventListener('click',()=>{auth.signOut()});
+
+// Project toggle clicks
+$('#projNav').addEventListener('click',e=>{
+  const toggle=e.target.closest('[data-proj-toggle]');
+  if(toggle){
+    e.stopPropagation();
+    const projId=toggle.dataset.projToggle;
+    const proj=projects.find(p=>p.id===projId);
+    if(proj){proj.visible=!proj.visible;saveUI();render()}
+    return;
+  }
+  const row=e.target.closest('[data-proj]');
+  if(row){
+    // Click on row = select project (filter to just that one)
+    const projId=row.dataset.proj;
+    projects.forEach(p=>p.visible=(p.id===projId));
+    saveUI();render();
+  }
+});
 
 // ===== MOBILE BOTTOM SHEET =====
 $('#mobMore').addEventListener('click', openMobSheet);
