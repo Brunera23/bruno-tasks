@@ -994,7 +994,12 @@ function $(s){return document.querySelector(s)}
 function $$(s){return document.querySelectorAll(s)}
 function ld(k,def){const d=localStorage.getItem(k);if(d)return JSON.parse(d);sv(k,def);return JSON.parse(JSON.stringify(def))}
 function sv(k,d){localStorage.setItem(k,JSON.stringify(d))}
-function sT(){sv('bt-v5',tasks);fbSave()}
+function sT(){
+  // Auto-stamp updatedAt on any task that changed
+  const now=Date.now();
+  tasks.forEach(t=>{if(!t.updatedAt)t.updatedAt=now});
+  sv('bt-v5',tasks);fbSave()
+}
 function sC(){sv('bt-cats',cats);fbSave()}
 function sL(){sv('bt-log',log);fbSave()}
 
@@ -1023,6 +1028,39 @@ function fbSave(){
   },600);
 }
 
+// === MERGE-BY-ID SYNC ===
+function mergeTasks(localArr, cloudArr){
+  const merged=new Map();
+  // Index local tasks by ID
+  localArr.forEach(t=>{
+    if(!t.updatedAt)t.updatedAt=t.createdAt||Date.now();
+    merged.set(t.id,t);
+  });
+  // Merge cloud tasks
+  cloudArr.forEach(ct=>{
+    if(!ct.updatedAt)ct.updatedAt=ct.createdAt||Date.now();
+    const local=merged.get(ct.id);
+    if(!local){
+      // New task from cloud — add it
+      merged.set(ct.id,ct);
+    } else {
+      // Exists in both — keep the most recently modified
+      if((ct.updatedAt||0)>(local.updatedAt||0)){
+        merged.set(ct.id,ct);
+      }
+      // else keep local (already in map)
+    }
+  });
+  return Array.from(merged.values());
+}
+
+function mergeCats(localCats, cloudCats){
+  const merged=new Map();
+  localCats.forEach(c=>merged.set(c.id,c));
+  cloudCats.forEach(c=>{if(!merged.has(c.id))merged.set(c.id,c)});
+  return Array.from(merged.values());
+}
+
 function fbInit(){
   showSync('Conectando...');
   const localTasks=JSON.parse(JSON.stringify(tasks));
@@ -1033,35 +1071,38 @@ function fbInit(){
     if(snap.exists){
       const d=snap.data();
       const cloudTasks=JSON.parse(d.tasks||'[]');
-      const cloudCount=d.taskCount||cloudTasks.length;
-      // ALWAYS keep the dataset with MORE tasks
-      if(localTasks.length>=cloudCount){
-        tasks=localTasks;cats=localCats;log=localLog;
-        _fbReady=true;
-        showSync('Enviando dados para nuvem...');
-        // DIRECT save — no debounce — wait for completion before listener
-        _fbDirectSave().then(()=>{
-          _fbInitDone=true;
-          showSync('Dados enviados para nuvem ✓',true);
-          fbListen();
-        }).catch(e=>{
-          _fbInitDone=true;
-          showSync('Erro ao enviar',false);
-          console.warn('FB init save error',e);
-          fbListen();
-        });
-      } else {
-        // Cloud has more — backup local first, then download
-        sv('bt-v5-backup',localTasks);
-        tasks=cloudTasks;
-        cats=JSON.parse(d.cats||'[]');
-        log=JSON.parse(d.log||'[]');
-        sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log);
-        _fbReady=true;_fbInitDone=true;
+      const cloudCats=JSON.parse(d.cats||'[]');
+      const cloudLog=JSON.parse(d.log||'[]');
+
+      // MERGE by ID — keeps tasks from BOTH sides
+      tasks=mergeTasks(localTasks, cloudTasks);
+      cats=mergeCats(localCats, cloudCats);
+      // Log: combine and deduplicate by timestamp, keep newest 200
+      const allLog=[...localLog,...cloudLog];
+      const logMap=new Map();
+      allLog.forEach(l=>{const key=l.taskId+'_'+l.ts;if(!logMap.has(key))logMap.set(key,l)});
+      log=Array.from(logMap.values()).sort((a,b)=>b.ts-a.ts).slice(0,200);
+
+      sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log);
+      _fbReady=true;
+
+      const localIds=new Set(localTasks.map(t=>t.id));
+      const cloudIds=new Set(cloudTasks.map(t=>t.id));
+      const newFromCloud=[...cloudIds].filter(id=>!localIds.has(id)).length;
+      const newFromLocal=[...localIds].filter(id=>!cloudIds.has(id)).length;
+
+      showSync(`Mesclando... +${newFromCloud} da nuvem, +${newFromLocal} locais`);
+      _fbDirectSave().then(()=>{
+        _fbInitDone=true;
+        showSync('Sincronizado ✓ ('+tasks.length+' tarefas)',true);
         if(typeof render==='function')render();
-        showSync('Dados baixados da nuvem ✓',true);
         fbListen();
-      }
+      }).catch(e=>{
+        _fbInitDone=true;
+        showSync('Erro ao sincronizar',false);
+        console.warn('FB init save error',e);
+        fbListen();
+      });
     } else {
       _fbReady=true;
       showSync('Primeira sincronização...');
@@ -1085,16 +1126,22 @@ function fbListen(){
     if(!snap.exists||_fbSaving||!_fbInitDone)return;
     const d=snap.data();
     const cloudTasks=JSON.parse(d.tasks||'[]');
-    if(cloudTasks.length<tasks.length)return;// NEVER overwrite with less data
+    // Quick check: if identical, skip
     if(JSON.stringify(cloudTasks)===JSON.stringify(tasks))return;
-    // Backup before overwrite
+    // Backup before merge
     sv('bt-v5-backup',tasks);
-    tasks=cloudTasks;
-    cats=JSON.parse(d.cats||'[]');
+    // MERGE instead of overwrite
+    const before=tasks.length;
+    tasks=mergeTasks(tasks, cloudTasks);
+    cats=mergeCats(cats, JSON.parse(d.cats||'[]'));
     log=JSON.parse(d.log||'[]');
     sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log);
     if(typeof render==='function')render();
-    showSync('Atualizado de outro dispositivo ✓',true);
+    const diff=tasks.length-before;
+    showSync(diff>0?`+${diff} tarefas de outro dispositivo ✓`:'Atualizado ✓',true);
+    // Re-save merged result to cloud so both devices converge
+    _fbSaving=true;
+    _fbDirectSave().then(()=>{_fbSaving=false}).catch(()=>{_fbSaving=false});
   },e=>{console.warn('FB listener error',e)});
 }
 function ci(id){return cats.find(c=>c.id===id)||{name:id,icon:'i-layers',color:'#8E8E93'}}
@@ -1900,7 +1947,7 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   const wasDone=t.status==='done';
   const ckEl=document.querySelector(`.ck[data-id="${id}"]`);
   const ckRect=ckEl?ckEl.getBoundingClientRect():null;
-  t.status=newSt;t.completedAt=newSt==='done'?Date.now():null;
+  t.status=newSt;t.completedAt=newSt==='done'?Date.now():null;t.updatedAt=Date.now();
   addLog(wasDone&&newSt!=='done'?'reopen':newSt==='done'?'complete':'edit',t);sT();
   if(newSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),800)}}
   render();const msgs={todo:'A Fazer',doing:'Fazendo',done:'Conclu\u00edda'};
@@ -1948,9 +1995,9 @@ function showDatePop(el,id){
   pop.style.top=(rect.bottom+6)+'px';
   document.body.appendChild(pop);
   requestAnimationFrame(()=>pop.classList.add('show'));
-  pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;t.date=o.dataset.dv||'';sT();render();closeInlinePop();toast(t.date?'Prazo: '+fDate(t.date):'Prazo removido')});
+  pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;t.date=o.dataset.dv||'';t.updatedAt=Date.now();sT();render();closeInlinePop();toast(t.date?'Prazo: '+fDate(t.date):'Prazo removido')});
   const inp=pop.querySelector('.iq-date-input');
-  inp.addEventListener('change',()=>{t.date=inp.value;sT();render();closeInlinePop();toast('Prazo: '+fDate(t.date))});
+  inp.addEventListener('change',()=>{t.date=inp.value;t.updatedAt=Date.now();sT();render();closeInlinePop();toast('Prazo: '+fDate(t.date))});
 }
 function showCatPop(el,id){
   closeInlinePop();closeStatusPop();
@@ -1962,7 +2009,7 @@ function showCatPop(el,id){
   pop.style.top=(rect.bottom+6)+'px';
   document.body.appendChild(pop);
   requestAnimationFrame(()=>pop.classList.add('show'));
-  pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;t.category=o.dataset.cv;sT();render();closeInlinePop();toast('Categoria: '+cats.find(c=>c.id===o.dataset.cv)?.name)});
+  pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;t.category=o.dataset.cv;t.updatedAt=Date.now();sT();render();closeInlinePop();toast('Categoria: '+cats.find(c=>c.id===o.dataset.cv)?.name)});
 }
 function showTimePop(el,id){
   closeInlinePop();closeStatusPop();
@@ -1975,11 +2022,11 @@ function showTimePop(el,id){
   pop.style.top=(rect.bottom+6)+'px';
   document.body.appendChild(pop);
   requestAnimationFrame(()=>pop.classList.add('show'));
-  pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;const v=parseInt(o.dataset.tv);t.estimatedTime=v||null;sT();render();closeInlinePop();toast(v?'Tempo: '+fmtTime(v):'Estimativa removida')});
+  pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;const v=parseInt(o.dataset.tv);t.estimatedTime=v||null;t.updatedAt=Date.now();sT();render();closeInlinePop();toast(v?'Tempo: '+fmtTime(v):'Estimativa removida')});
   const inp=pop.querySelector('input[type=number]');
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=parseInt(inp.value);t.estimatedTime=v>0?v:null;sT();render();closeInlinePop();toast(v>0?'Tempo: '+fmtTime(v):'Estimativa removida')}});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=parseInt(inp.value);t.estimatedTime=v>0?v:null;t.updatedAt=Date.now();sT();render();closeInlinePop();toast(v>0?'Tempo: '+fmtTime(v):'Estimativa removida')}});
 }
-function toggleSub(tid,si){const t=tasks.find(x=>x.id===tid);if(!t||!t.subtasks||!t.subtasks[si])return;t.subtasks[si].done=!t.subtasks[si].done;sT();render()}
+function toggleSub(tid,si){const t=tasks.find(x=>x.id===tid);if(!t||!t.subtasks||!t.subtasks[si])return;t.subtasks[si].done=!t.subtasks[si].done;t.updatedAt=Date.now();sT();render()}
 
 // Cat manager
 function openCatMgr(){$('#catMgrView').style.display='';$('#catEditView').style.display='none';$('#catModalTitle').textContent='Categorias';renderCatMgrList();$('#ovCat').classList.add('open');$('#modalCat').classList.add('open')}
@@ -2026,7 +2073,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
   while(others.some(t=>t.title===title)){title=base+' ('+n+')';n++}
   const recurFreq=$('#recurFreq .active')?.dataset.rf||null;const recurUntil=$('#recurUntil').value||null;
   const recurrence=(recurFreq?{freq:recurFreq,until:recurUntil}:null);
-  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,createdAt:isNew?Date.now():(tasks.find(t=>t.id===id)?.createdAt||Date.now()),completedAt:status==='done'?Date.now():null};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
+  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,createdAt:isNew?Date.now():(tasks.find(t=>t.id===id)?.createdAt||Date.now()),completedAt:status==='done'?Date.now():null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
