@@ -416,24 +416,16 @@
     .item.blocked .ck svg{display:none}
     .item.blocked .ck::after{content:'';width:10px;height:10px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aeaeb2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0110 0v4'/%3E%3C/svg%3E") center/contain no-repeat}
     .tag-meta.waiting{color:var(--label3);background:var(--fill);padding:2px 6px;border-radius:4px;font-weight:600;font-size:.66rem}
-    /* Dependency tree connector — parent-to-child line via background-image (avoids ::after conflict) */
-    .item.deps-open{background-image:linear-gradient(var(--sep),var(--sep));background-size:2px calc(100% - 36px);background-position:28px 36px;background-repeat:no-repeat}
-    .dep-toggle{display:flex;align-items:center;gap:5px;padding:6px 10px 6px 46px;background:transparent;border:none;color:var(--label3);font-size:.72rem;font-weight:500;cursor:pointer;font-family:inherit;transition:color var(--dur-fast);position:relative}
-    .dep-toggle.open::before{content:'';position:absolute;left:28px;top:0;height:100%;width:2px;background:var(--sep)}
+    .dep-toggle{display:flex;align-items:center;gap:5px;padding:4px 10px 4px 34px;background:transparent;border:none;border-top:.5px solid var(--sep);color:var(--label3);font-size:.72rem;font-weight:500;cursor:pointer;font-family:inherit;transition:color var(--dur-fast)}
     .dep-toggle:hover{color:var(--label2)}
     .dep-toggle svg{width:12px;height:12px;transition:transform var(--dur-norm) var(--ease-spring)}
     .dep-toggle.open svg{transform:rotate(90deg)}
     .dep-toggle .dep-badge{background:var(--fill);padding:1px 6px;border-radius:4px;font-size:.66rem;font-weight:600}
-    .dep-children{margin-left:28px;padding-left:16px;position:relative;display:none}
+    .dep-children{margin-left:11px;padding-left:22px;border-left:2px solid var(--sep);position:relative;display:none}
     .dep-children.open{display:block}
-    .dep-children>.item,.dep-children>.dep-tree{position:relative}
-    .dep-children>.item::before,.dep-children>.dep-tree::before{content:'';position:absolute;left:-16px;top:23px;width:16px;height:0;border-top:2px solid var(--sep);animation:depBranch var(--dur-smooth) var(--ease-expo) both}
-    .dep-children>.item::after,.dep-children>.dep-tree::after{content:'';position:absolute;left:-16px;top:0;bottom:0;width:2px;background:var(--sep);transform-origin:top;animation:depLine var(--dur-smooth) var(--ease-expo) both}
-    .dep-children>.item:last-child::before,.dep-children>.dep-tree:last-child::before{display:none}
-    .dep-children>.item:last-child::after,.dep-children>.dep-tree:last-child::after{bottom:auto;height:23px;width:16px;background:none;border-left:2px solid var(--sep);border-bottom:2px solid var(--sep);border-bottom-left-radius:10px;animation:depCorner var(--dur-smooth) var(--ease-expo) both}
-    @keyframes depLine{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-    @keyframes depBranch{from{transform:scaleX(0);transform-origin:left}to{transform:scaleX(1);transform-origin:left}}
-    @keyframes depCorner{from{opacity:0;clip-path:inset(0 100% 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+    .dep-children .item{position:relative}
+    .dep-children .item::before{content:'';position:absolute;left:-22px;top:22px;width:22px;height:0;border-top:2px solid var(--sep)}
+    .dep-children .item:last-child::after, .dep-children .item.is-last::after{content:'';position:absolute;left:-22px;top:22px;width:2px;height:calc(100% - 22px);background:var(--card)}
     .item-row{display:flex;align-items:flex-start;gap:12px}
     .item-date{flex-shrink:0;font-size:.7rem;font-weight:500;color:var(--label3);display:flex;align-items:center;gap:3px;margin-top:3px;white-space:nowrap}
     .item-date svg{width:11px;height:11px}
@@ -773,13 +765,7 @@
       .item-meta{gap:4px}
       .tag{padding:2px 6px;font-size:.64rem}
       .tag-meta{font-size:.66rem}
-      .dep-toggle{padding-left:38px}
-      .dep-toggle.open::before{left:24px}
-      .item.deps-open{background-size:2px calc(100% - 32px);background-position:24px 32px}
-      .dep-children{margin-left:24px;padding-left:12px}
-      .dep-children>.item::before,.dep-children>.dep-tree::before{left:-12px;width:12px}
-      .dep-children>.item::after,.dep-children>.dep-tree::after{left:-12px}
-      .dep-children>.item:last-child::after,.dep-children>.dep-tree:last-child::after{height:23px;width:12px}
+      .dep-children{margin-left:8px;padding-left:16px}
       .sync-dot{bottom:90px}
     }
 
@@ -1523,13 +1509,13 @@ function renderCatNav(){
   // Don't renderCatPicker here because it's form specific
 }
 
-function renderItem(t,i,isChild=false,depsOpen=false){
+function renderItem(t,i,isChild=false,depsOpen=false,isLast=false){
   const c=ci(t.category);const od=isOD(t.date)&&t.status!=='done';const subs=t.subtasks||[];const sd=subs.filter(s=>s.done).length;
   const etTag=t.estimatedTime?`<span class="tag-time" data-id="${t.id}"><svg><use href="#i-clock"/></svg>${fmtTime(t.estimatedTime)}</span>`:'';
   const blocked=isBlocked(t)&&t.status!=='done';
   const waitTag=blocked?'<span class="tag-meta waiting">Aguardando</span>':'';
   const recurTag=t.recurrence&&t.recurrence.freq?`<span class="recur-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>${{daily:'Diário',weekdays:'Dias úteis',weekly:'Semanal',monthly:'Mensal'}[t.recurrence.freq]||''}</span>`:'';
-  const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');if(depsOpen)cls.push('deps-open');
+  const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');if(depsOpen)cls.push('deps-open');if(isLast)cls.push('is-last');
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
   const dateTag=t.date?`<span class="item-date ${od?'overdue':''}" data-id="${t.id}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:`<span class="item-date" data-id="${t.id}" style="opacity:.4"><svg><use href="#i-cal"/></svg>Prazo</span>`;
   const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
@@ -1642,21 +1628,18 @@ function renderTasks(){
     const pendingIds=new Set(pending.map(t=>t.id));
     const roots=pending.filter(t=>!t.blockedBy||!t.blockedBy.some(bid=>pendingIds.has(bid)));
     const rendered=new Set();
-    function renderTree(parent,isC=false){
+    function renderTree(parent,isC=false,isLast=false){
       if(rendered.has(parent.id))return;
       rendered.add(parent.id);
       const children=pending.filter(t=>t.blockedBy&&t.blockedBy.includes(parent.id)&&!rendered.has(t.id));
       const isOpen=children.length>0&&expandedDeps.has(parent.id);
-      const wrap=children.length>0&&isC;
-      if(wrap)html+='<div class="dep-tree">';
-      html+=renderItem(parent,idx++,isC,isOpen);
+      html+=renderItem(parent,idx++,isC,isOpen,isLast);
       if(children.length){
         html+=`<button class="dep-toggle ${isOpen?'open':''}" data-dep-toggle="${parent.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>${children.length} dependência${children.length>1?'s':''}<span class="dep-badge">${children.length}</span></button>`;
         html+=`<div class="dep-children ${isOpen?'open':''}">`;
-        children.forEach(ch=>renderTree(ch,true));
+        children.forEach((ch, ci)=>renderTree(ch,true,ci===children.length-1));
         html+='</div>';
       }
-      if(wrap)html+='</div>';
     }
     roots.forEach(r=>renderTree(r));
     pending.filter(t=>!rendered.has(t.id)).forEach(t=>{rendered.add(t.id);html+=renderItem(t,idx++)});
@@ -2617,7 +2600,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=31',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=32',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
