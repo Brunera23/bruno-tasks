@@ -771,6 +771,13 @@
     .mob-sheet-opts button svg{width:16px;height:16px;color:var(--label3)}
     [data-theme="dark"] .mob-sheet{background:rgba(32,32,34,.98);border-top:1px solid rgba(255,255,255,.08)}
 
+    /* ===== SMART SUGGEST AUTOCOMPLETE ===== */
+    .smart-suggest{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow2);z-index:50;padding:4px;margin-top:4px;display:none}
+    .smart-suggest.show{display:block}
+    .smart-suggest-item{padding:8px 12px;border-radius:8px;font-size:.78rem;color:var(--label);cursor:pointer;transition:background var(--dur-fast)}
+    .smart-suggest-item:hover,.smart-suggest-item.active{background:var(--fill)}
+    .smart-suggest-item .ss-hint{color:var(--label3);font-size:.68rem;margin-left:6px}
+
     /* Reduced motion */
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
@@ -850,7 +857,7 @@
       </div>
       <div class="mob-cats" id="mobCats"></div>
       <div class="toolbar">
-        <div class="search-box"><svg class="si"><use href="#i-search"/></svg><input type="text" id="q" placeholder="Buscar tarefas..."></div>
+        <div class="search-box"><svg class="si"><use href="#i-search"/></svg><input type="text" id="q" placeholder="Buscar ou filtrar (hoje, alta, atrasada...)" autocomplete="off"><div class="smart-suggest" id="smartSuggest"></div></div>
         <div class="seg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="done">Feitas</button></div>
         <button class="btn-add" id="btnAdd"><svg><use href="#i-plus"/></svg>Nova tarefa</button>
       </div>
@@ -1162,8 +1169,68 @@ function renderItem(t,i,isChild=false,depsOpen=false){
 function getChildren(parentId,list){return list.filter(t=>t.blockedBy&&t.blockedBy.includes(parentId))}
 function isChild(t){return t.blockedBy&&t.blockedBy.length>0&&t.blockedBy.some(bid=>tasks.find(x=>x.id===bid))}
 
+// ===== SMART FILTER =====
+const SMART_TERMS=[
+  {term:'hoje',hint:'tarefas de hoje',fn:t=>{const ds=dateStr(new Date());return t.date===ds}},
+  {term:'amanhã',hint:'tarefas de amanhã',fn:t=>{const ds=dateStr(new Date(Date.now()+864e5));return t.date===ds}},
+  {term:'amanha',hint:'tarefas de amanhã',fn:t=>{const ds=dateStr(new Date(Date.now()+864e5));return t.date===ds}},
+  {term:'atrasada',hint:'tarefas vencidas',fn:t=>{const ds=dateStr(new Date());return t.date&&t.date<ds&&t.status!=='done'}},
+  {term:'atrasadas',hint:'tarefas vencidas',fn:t=>{const ds=dateStr(new Date());return t.date&&t.date<ds&&t.status!=='done'}},
+  {term:'prioridade alta',hint:'prioridade alta',fn:t=>t.priority==='alta'},
+  {term:'alta',hint:'prioridade alta',fn:t=>t.priority==='alta'},
+  {term:'prioridade media',hint:'prioridade média',fn:t=>t.priority==='media'},
+  {term:'media',hint:'prioridade média',fn:t=>t.priority==='media'},
+  {term:'média',hint:'prioridade média',fn:t=>t.priority==='media'},
+  {term:'prioridade baixa',hint:'prioridade baixa',fn:t=>t.priority==='baixa'},
+  {term:'baixa',hint:'prioridade baixa',fn:t=>t.priority==='baixa'},
+  {term:'em andamento',hint:'status fazendo',fn:t=>t.status==='doing'},
+  {term:'fazendo',hint:'status fazendo',fn:t=>t.status==='doing'},
+  {term:'a fazer',hint:'status pendente',fn:t=>t.status==='todo'},
+  {term:'pendente',hint:'status pendente',fn:t=>t.status==='todo'},
+  {term:'pendentes',hint:'status pendente',fn:t=>t.status==='todo'},
+  {term:'feita',hint:'status concluída',fn:t=>t.status==='done'},
+  {term:'feitas',hint:'status concluída',fn:t=>t.status==='done'},
+  {term:'concluída',hint:'status concluída',fn:t=>t.status==='done'},
+  {term:'concluida',hint:'status concluída',fn:t=>t.status==='done'},
+  {term:'concluidas',hint:'status concluída',fn:t=>t.status==='done'},
+  {term:'sem data',hint:'tarefas sem data',fn:t=>!t.date},
+  {term:'sem prioridade',hint:'sem prioridade definida',fn:t=>!t.priority},
+  {term:'esta semana',hint:'próximos 7 dias',fn:t=>{const ds=dateStr(new Date()),we=dateStr(new Date(Date.now()+7*864e5));return t.date&&t.date>=ds&&t.date<=we}},
+  {term:'semana',hint:'próximos 7 dias',fn:t=>{const ds=dateStr(new Date()),we=dateStr(new Date(Date.now()+7*864e5));return t.date&&t.date>=ds&&t.date<=we}},
+  {term:'recorrente',hint:'tarefas recorrentes',fn:t=>t.recurrence&&t.recurrence.freq},
+  {term:'recorrentes',hint:'tarefas recorrentes',fn:t=>t.recurrence&&t.recurrence.freq},
+  {term:'bloqueada',hint:'tarefas bloqueadas',fn:t=>t.status!=='done'&&isBlocked(t)},
+  {term:'bloqueadas',hint:'tarefas bloqueadas',fn:t=>t.status!=='done'&&isBlocked(t)},
+  {term:'rápida',hint:'≤ 15 min',fn:t=>t.estimatedTime&&t.estimatedTime<=15},
+  {term:'rapida',hint:'≤ 15 min',fn:t=>t.estimatedTime&&t.estimatedTime<=15},
+  {term:'quick',hint:'≤ 15 min',fn:t=>t.estimatedTime&&t.estimatedTime<=15}
+];
+function smartFilter(t,q){
+  const s=q.toLowerCase().trim();
+  const match=SMART_TERMS.find(st=>st.term===s);
+  if(match)return match.fn(t);
+  return t.title.toLowerCase().includes(s)||(t.notes||'').toLowerCase().includes(s);
+}
+// Unique display terms for autocomplete (avoid dupes like amanha/amanhã)
+const SMART_SUGGEST_LIST=(()=>{
+  const seen=new Set(),out=[];
+  for(const st of SMART_TERMS){if(!seen.has(st.hint+st.term.replace(/[aã]/g,'a'))){seen.add(st.hint+st.term.replace(/[aã]/g,'a'));out.push(st)}}
+  return out;
+})();
+function showSmartSuggest(q){
+  const box=$('#smartSuggest');
+  if(!q||q.length<1){box.classList.remove('show');box.innerHTML='';return}
+  const s=q.toLowerCase().trim();
+  // Check if already an exact match
+  if(SMART_TERMS.find(st=>st.term===s)){box.classList.remove('show');box.innerHTML='';return}
+  const matches=SMART_SUGGEST_LIST.filter(st=>st.term.startsWith(s)).slice(0,5);
+  if(!matches.length){box.classList.remove('show');box.innerHTML='';return}
+  box.innerHTML=matches.map(m=>`<div class="smart-suggest-item" data-term="${m.term}">${m.term}<span class="ss-hint">${m.hint}</span></div>`).join('');
+  box.classList.add('show');
+}
+function hideSmartSuggest(){setTimeout(()=>{$('#smartSuggest').classList.remove('show');$('#smartSuggest').innerHTML=''},150)}
 function renderTasks(){
-  let list=tasks.filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'&&t.status!==aSt)return false;if(qry){const s=qry.toLowerCase();if(!(t.title.toLowerCase().includes(s)||(t.notes||'').toLowerCase().includes(s)))return false}return true});
+  let list=tasks.filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'&&t.status!==aSt)return false;if(qry){if(!smartFilter(t,qry))return false}return true});
   // Widget filter
   if(widgetFilter){
     const todayDs=dateStr(new Date());
@@ -1977,7 +2044,9 @@ $('#grpMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.grp-dd
 });
 $$('.nav-item').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
 $$('.mob-tab[data-view]').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
-$('#q').addEventListener('input',e=>{qry=e.target.value;renderTasks()});
+$('#q').addEventListener('input',e=>{qry=e.target.value;showSmartSuggest(qry);renderTasks()});
+$('#q').addEventListener('blur',()=>hideSmartSuggest());
+$('#smartSuggest').addEventListener('mousedown',e=>{const item=e.target.closest('.smart-suggest-item');if(!item)return;e.preventDefault();const term=item.dataset.term;$('#q').value=term;qry=term;$('#smartSuggest').classList.remove('show');$('#smartSuggest').innerHTML='';renderTasks()});
 $('#cfNo').addEventListener('click',()=>{delId=null;$('#cfWrap').classList.remove('open')});
 $('#cfWrap').addEventListener('click',e=>{if(e.target===$('#cfWrap')){delId=null;$('#cfWrap').classList.remove('open')}});
 $('#catMgrBtn').addEventListener('click',openCatMgr);$('#mobCatMgr').addEventListener('click',openCatMgr);
