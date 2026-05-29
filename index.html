@@ -454,7 +454,7 @@
     .cs-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;max-height:220px;overflow-y:auto;z-index:30;box-shadow:var(--shadow2);display:none;padding:5px}
     .cs-wrap.open .cs-menu{display:block}
     .cs-opt{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background var(--dur-fast)}
-    .cs-opt:hover{background:var(--fill)}
+    .cs-opt:hover,.cs-opt.kb-hl{background:var(--fill)}
     .cs-opt.selected{background:rgba(0,122,255,.1);color:var(--blue);font-weight:500}
     .cs-opt svg{width:14px;height:14px;flex-shrink:0}
 
@@ -463,6 +463,7 @@
     .pick-seg button{flex:1;padding:8px 6px;font-size:.78rem;font-weight:500;color:var(--label2);background:transparent;border:none;border-radius:8px;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
     .pick-seg button:active{transform:scale(.96);transition-duration:80ms}
     .pick-seg button.active{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .pick-seg button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
     .pick-seg .pick-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
     /* Dependency picker */
@@ -498,6 +499,8 @@
     .btn{flex:1;padding:11px;border-radius:10px;font-family:inherit;font-size:.86rem;font-weight:600;border:none;cursor:pointer;transition:transform var(--dur-fast) var(--ease-spring),background var(--dur-fast),box-shadow var(--dur-fast);position:relative;overflow:hidden}
     .btn:active{transform:scale(.97);transition-duration:80ms}
     .btn-primary{background:var(--label);color:var(--bg)}.btn-primary:hover{opacity:.85}
+    .kb-hint{font-size:.58rem;font-weight:500;opacity:.5;margin-left:6px;padding:1px 4px;border-radius:3px;background:rgba(255,255,255,.15);font-family:inherit;border:none}
+    .time-chip:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
     .btn-sec{background:var(--fill);color:var(--label2)}.btn-sec:hover{background:var(--sep)}
     .btn-red{background:#FF3B30;color:#fff}
 
@@ -714,7 +717,7 @@
     <div class="sub-edit-section"><label>Subtarefas</label><div class="sub-edit-list" id="subList"></div><button type="button" class="add-sub-btn" id="addSub"><svg width="13" height="13"><use href="#i-plus"/></svg>Adicionar subtarefa</button></div>
     <div class="fld"><label>Depende de</label><div class="dep-picker" id="depPicker"><input type="text" class="dep-search" id="depSearch" placeholder="Buscar tarefa..." autocomplete="off"><div class="dep-results" id="depResults"></div></div><div class="dep-chips" id="depChips"></div></div>
     <div class="fld"><label>Notas</label><textarea id="fN" placeholder="Detalhes, links, anotações..."></textarea></div>
-    <div class="m-btns"><button type="button" class="btn btn-sec" id="mCancel">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
+    <div class="m-btns"><button type="button" class="btn btn-sec" id="mCancel">Cancelar</button><button type="submit" class="btn btn-primary">Salvar<kbd class="kb-hint">⌘↵</kbd></button></div>
   </form>
 </div>
 
@@ -1182,7 +1185,87 @@ $('#dashFilter').addEventListener('click',e=>{const c=e.target.closest('.df-chip
 $('#wkToggle').addEventListener('click',()=>{const w=$('#wkWidget'),o=$('#wkOverlay'),t=$('#wkToggle');const isOpen=w.classList.contains('open');w.classList.toggle('open');o.classList.toggle('open');t.classList.toggle('open')});
 $('#wkOverlay').addEventListener('click',()=>{$('#wkWidget').classList.remove('open');$('#wkOverlay').classList.remove('open');$('#wkToggle').classList.remove('open')});
 $('#catAddBtn').addEventListener('click',()=>openCatEdit(null));$('#catClose').addEventListener('click',closeCatMgr);$('#ovCat').addEventListener('click',closeCatMgr);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();closeCatMgr();$('#cfWrap').classList.remove('open')}const tg=document.activeElement.tagName;if(e.key==='n'&&tg!=='INPUT'&&tg!=='TEXTAREA'&&tg!=='SELECT')openM()});
+document.addEventListener('keydown',e=>{
+  const modal=$('#modal');
+  const isModalOpen=modal&&modal.classList.contains('open');
+  // Ctrl+Enter saves from anywhere in modal
+  if(isModalOpen&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();$('#form').requestSubmit();return}
+  // Escape closes
+  if(e.key==='Escape'){closeM();closeCatMgr();$('#cfWrap').classList.remove('open');$('#wkWidget').classList.remove('open');$('#wkOverlay').classList.remove('open');$('#wkToggle').classList.remove('open');return}
+  // N to open new task
+  if(!isModalOpen){const tg=document.activeElement.tagName;if(e.key==='n'&&tg!=='INPUT'&&tg!=='TEXTAREA'&&tg!=='SELECT')openM();return}
+  // Inside modal keyboard navigation
+  const ae=document.activeElement;
+  // Title field: Enter moves to category
+  if(ae&&ae.id==='fT'&&e.key==='Enter'){e.preventDefault();$('#fCWrap').focus();$('#fCWrap').classList.add('open');return}
+  // Category picker keyboard
+  if(ae&&(ae.id==='fCWrap'||ae.closest&&ae.closest('#fCWrap'))){
+    const menu=$('#fCMenu');const opts=[...menu.querySelectorAll('.cs-opt')];
+    if(!opts.length)return;
+    let cur=opts.findIndex(o=>o.classList.contains('kb-hl'));
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault();
+      if(!$('#fCWrap').classList.contains('open'))$('#fCWrap').classList.add('open');
+      opts.forEach(o=>o.classList.remove('kb-hl'));
+      if(e.key==='ArrowDown')cur=cur<opts.length-1?cur+1:0;else cur=cur>0?cur-1:opts.length-1;
+      opts[cur].classList.add('kb-hl');opts[cur].scrollIntoView({block:'nearest'});
+      return;
+    }
+    if(e.key==='Enter'){
+      e.preventDefault();
+      if(cur>=0){const v=opts[cur].dataset.v;fCCat=v;renderCatPicker();$('#fCWrap').classList.remove('open');opts.forEach(o=>o.classList.remove('kb-hl'));}
+      else{$('#fCWrap').classList.remove('open')}
+      setTimeout(()=>$$('#fP [data-v]')[0]?.focus(),50);
+      return;
+    }
+    if(e.key==='Tab'){$('#fCWrap').classList.remove('open');opts.forEach(o=>o.classList.remove('kb-hl'));return}
+  }
+  // Priority/Status seg keyboard
+  const seg=ae&&ae.closest&&ae.closest('.pick-seg');
+  if(seg){
+    const btns=[...seg.querySelectorAll('[data-v]')];
+    const idx=btns.indexOf(ae);
+    if(e.key==='ArrowLeft'&&idx>0){e.preventDefault();btns[idx-1].focus();return}
+    if(e.key==='ArrowRight'&&idx<btns.length-1){e.preventDefault();btns[idx+1].focus();return}
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();ae.click();return}
+    if(e.key==='Tab'&&!e.shiftKey){
+      if(seg.id==='fP'){e.preventDefault();$$('#fS [data-v]')[0]?.focus();return}
+      if(seg.id==='fS'){e.preventDefault();$('#fD').focus();return}
+    }
+  }
+  // Date field: Tab to time chips
+  if(ae&&ae.id==='fD'&&e.key==='Tab'&&!e.shiftKey){e.preventDefault();$$('.time-chip')[0]?.focus();return}
+  // Time chips keyboard
+  if(ae&&ae.classList.contains('time-chip')){
+    const chips=[...$$('.time-chip')];const idx=chips.indexOf(ae);
+    if(e.key==='ArrowLeft'&&idx>0){e.preventDefault();chips[idx-1].focus();return}
+    if(e.key==='ArrowRight'&&idx<chips.length-1){e.preventDefault();chips[idx+1].focus();return}
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();ae.click();return}
+    if(e.key==='Tab'&&!e.shiftKey){e.preventDefault();$('#addSub').focus();return}
+  }
+  // Subtask input: Enter adds new, Tab on last goes to deps
+  if(ae&&ae.closest&&ae.closest('.sub-edit-row')&&ae.tagName==='INPUT'){
+    if(e.key==='Enter'){e.preventDefault();mSubs.push({text:'',done:false});renderMSubs();const ins=$$('#subList input');if(ins.length)ins[ins.length-1].focus();return}
+    if(e.key==='Backspace'&&ae.value===''){ 
+      const rows=$$('#subList input');const idx=[...rows].indexOf(ae);
+      if(mSubs.length>0){e.preventDefault();mSubs.splice(idx,1);renderMSubs();const ins=$$('#subList input');if(ins.length){const fi=Math.max(0,idx-1);ins[fi]?.focus()}else{$('#addSub').focus()}}
+      return;
+    }
+  }
+  // Add subtask btn: Enter creates subtask
+  if(ae&&ae.id==='addSub'&&e.key==='Enter'){e.preventDefault();ae.click();return}
+  // Dep search: Enter selects first result
+  if(ae&&ae.id==='depSearch'&&e.key==='Enter'){
+    e.preventDefault();
+    const first=$('#depResults .dep-result');
+    if(first){first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}))}
+    return;
+  }
+  // Notes: Tab goes to save
+  if(ae&&ae.id==='fN'&&e.key==='Tab'&&!e.shiftKey){
+    if(!e.ctrlKey){e.preventDefault();$('#form').querySelector('[type=submit]')?.focus();return}
+  }
+});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 setGreeting();render();
 </script>
