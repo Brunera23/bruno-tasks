@@ -137,6 +137,14 @@
     /* ===== TASK LIST ===== */
     .tl{background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;transition:background var(--dur-smooth);overscroll-behavior:contain}
     .tl:empty{box-shadow:none;background:transparent}
+    /* Done toggle */
+    .done-toggle{display:flex;align-items:center;gap:7px;width:100%;padding:12px 18px;background:transparent;border:none;border-top:.5px solid var(--sep);color:var(--label3);font-size:.78rem;font-weight:500;cursor:pointer;font-family:inherit;transition:color var(--dur-fast)}
+    .done-toggle:hover{color:var(--label2)}
+    .done-toggle svg{width:14px;height:14px;transition:transform var(--dur-norm) var(--ease-spring)}
+    .done-toggle.open svg{transform:rotate(90deg)}
+    .done-toggle .dt-count{background:var(--fill);padding:1px 7px;border-radius:5px;font-size:.7rem;font-weight:600}
+    .done-section{display:none}
+    .done-section.open{display:block}
     .task-empty{display:flex;flex-direction:column;align-items:center;padding:56px 20px;color:var(--label3)}
     .task-empty .ei{width:52px;height:52px;border-radius:50%;background:var(--fill);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
     .task-empty .ei svg{width:22px;height:22px;color:var(--label3)}
@@ -499,7 +507,7 @@ const DEF_CATS=[{id:'familia',name:'Família',icon:'i-heart',color:'#FF2D55'},{i
 const DEF_TASKS=[{id:uid(),title:'Efetivar o empréstimo',category:'financeiro',priority:'alta',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-864e5,completedAt:null},{id:uid(),title:'Tarefa PID',category:'solvay',priority:'media',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-72e6,completedAt:null},{id:uid(),title:'Adicionar WhatsApp do site',category:'manual',priority:'media',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-5e7,completedAt:null},{id:uid(),title:'Agrupar métricas e dashboards do site',category:'manual',priority:'media',status:'todo',date:'',notes:'',subtasks:[],createdAt:Date.now()-3e7,completedAt:null}];
 
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
-let aCat='all',aSt='all',qry='',delId=null,mSubs=[],curView='tasks',editingCatId=null,dashCat='all';
+let aCat='all',aSt='all',qry='',delId=null,mSubs=[],curView='tasks',editingCatId=null,dashCat='all',showDone=false;
 const DAILY_CAP=480;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -562,17 +570,26 @@ function renderCatNav(){
   $('#fC').innerHTML=cats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
 }
 
+function renderItem(t,i){
+  const c=ci(t.category);const od=isOD(t.date)&&t.status!=='done';const subs=t.subtasks||[];const sd=subs.filter(s=>s.done).length;
+  const etTag=t.estimatedTime?`<span class="tag-time"><svg><use href="#i-clock"/></svg>${fmtTime(t.estimatedTime)}</span>`:'';
+  return`<div class="item ${t.status==='done'?'completed':''}" style="--i:${i}"><div class="item-row"><button class="ck ${t.status==='done'?'on':''}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span><span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>${etTag}${t.date?`<span class="tag-meta ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:''}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-acts"><button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
+}
+
 function renderTasks(){
   let list=tasks.filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'&&t.status!==aSt)return false;if(qry){const s=qry.toLowerCase();return t.title.toLowerCase().includes(s)||(t.notes||'').toLowerCase().includes(s)}return true});
   const pr={alta:0,media:1,baixa:2};
-  list.sort((a,b)=>{if(a.status==='done'&&b.status!=='done')return 1;if(a.status!=='done'&&b.status==='done')return-1;if(pr[a.priority]!==pr[b.priority])return pr[a.priority]-pr[b.priority];if(a.date&&b.date)return a.date.localeCompare(b.date);if(a.date)return-1;return 1});
+  list.sort((a,b)=>{if(pr[a.priority]!==pr[b.priority])return pr[a.priority]-pr[b.priority];if(a.date&&b.date)return a.date.localeCompare(b.date);if(a.date)return-1;return 1});
   if(aCat!=='all'){$('#pageTitle').textContent=ci(aCat).name}else{$('#pageTitle').textContent='Tarefas'}
-  if(!list.length){$('#list').innerHTML=`<div class="task-empty"><div class="ei"><svg><use href="#i-inbox"/></svg></div><h3>${qry?'Nada encontrado':'Nenhuma tarefa'}</h3><p>${qry?'Tente outra busca':'Crie uma nova tarefa para começar'}</p></div>`;return}
-  $('#list').innerHTML=list.map((t,i)=>{
-    const c=ci(t.category);const od=isOD(t.date)&&t.status!=='done';const subs=t.subtasks||[];const sd=subs.filter(s=>s.done).length;
-    const etTag=t.estimatedTime?`<span class="tag-time"><svg><use href="#i-clock"/></svg>${fmtTime(t.estimatedTime)}</span>`:'';
-    return`<div class="item ${t.status==='done'?'completed':''}" style="--i:${i}"><div class="item-row"><button class="ck ${t.status==='done'?'on':''}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span><span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>${etTag}${t.date?`<span class="tag-meta ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:''}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-acts"><button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
-  }).join('');
+  const pending=list.filter(t=>t.status!=='done');
+  const done=list.filter(t=>t.status==='done');
+  if(!pending.length&&!done.length){$('#list').innerHTML=`<div class="task-empty"><div class="ei"><svg><use href="#i-inbox"/></svg></div><h3>${qry?'Nada encontrado':'Nenhuma tarefa'}</h3><p>${qry?'Tente outra busca':'Crie uma nova tarefa para começar'}</p></div>`;return}
+  let html=pending.map((t,i)=>renderItem(t,i)).join('');
+  if(done.length){
+    html+=`<button class="done-toggle ${showDone?'open':''}" id="doneToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>Concluídas<span class="dt-count">${done.length}</span></button>`;
+    html+=`<div class="done-section ${showDone?'open':''}">${done.map((t,i)=>renderItem(t,i)).join('')}</div>`;
+  }
+  $('#list').innerHTML=html;
 }
 
 function render(){renderCatNav();renderTasks();if(curView==='dash')renderDash()}
@@ -696,7 +713,7 @@ $('#fab').addEventListener('click',()=>openM());$('#btnAdd').addEventListener('c
 $('#addSub').addEventListener('click',()=>{mSubs.push({text:'',done:false});renderMSubs();const ins=$$('#subList input');if(ins.length)ins[ins.length-1].focus()});
 $('#timeChips').addEventListener('click',e=>{const chip=e.target.closest('.time-chip');if(!chip)return;const val=chip.dataset.min;if(val==='custom'){setTimeChip('custom')}else{setTimeChip(parseInt(val))}});
 $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').value;const isNew=!id;const etVal=parseInt($('#fET').value)||0;const data={id:id||uid(),title:$('#fT').value.trim(),category:$('#fC').value,priority:$('#fP').value,date:$('#fD').value,status:$('#fS').value,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,createdAt:isNew?Date.now():(tasks.find(t=>t.id===id)?.createdAt||Date.now()),completedAt:$('#fS').value==='done'?Date.now():null};if(!data.title)return;if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
-$('#list').addEventListener('click',e=>{const ck=e.target.closest('.ck');if(ck){e.stopPropagation();toggle(ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
+$('#list').addEventListener('click',e=>{const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();toggle(ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;renderTasks()})});
