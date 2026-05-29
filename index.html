@@ -159,6 +159,19 @@
     .a-btn.del:hover{color:#FF3B30}
     .a-btn svg{width:14px;height:14px}
 
+    /* ===== ESTIMATED TIME SELECTOR ===== */
+    .time-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+    .time-chip{padding:6px 12px;border-radius:8px;border:1px solid var(--sep);background:var(--fill);color:var(--label2);font-size:.78rem;font-weight:500;cursor:pointer;transition:all .18s;font-family:inherit}
+    .time-chip:hover{background:var(--card-hover);border-color:var(--label3)}
+    .time-chip.active{background:var(--label);color:var(--bg);border-color:transparent}
+    .time-custom-wrap{display:none;margin-top:6px;flex-direction:row;align-items:center;gap:6px}
+    .time-custom-wrap.show{display:flex}
+    .time-custom-wrap input{width:80px;padding:7px 10px;background:var(--bg);border:1px solid var(--sep);border-radius:8px;color:var(--label);font-family:inherit;font-size:.82rem;outline:none;text-align:center}
+    .time-custom-wrap input:focus{border-color:var(--blue)}
+    .time-custom-wrap span{font-size:.78rem;color:var(--label3)}
+    .tag-time{font-size:.66rem;font-weight:600;color:var(--label3);display:inline-flex;align-items:center;gap:3px;background:var(--fill);padding:2px 6px;border-radius:4px}
+    .tag-time svg{width:10px;height:10px}
+
     /* ===== DASHBOARD ===== */
     .dash{display:none}.dash.active{display:block}.tasks-view{display:none}.tasks-view.active{display:block}
     .dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:24px}
@@ -167,9 +180,34 @@
     .dash-card .dc-label svg{width:13px;height:13px}
     .dash-card .dc-val{font-size:1.6rem;font-weight:700;letter-spacing:-.03em;line-height:1}
     .dash-card .dc-sub{font-size:.7rem;color:var(--label3);margin-top:3px}
+    .dash-card.card-load .cap-bar{height:6px;background:var(--fill);border-radius:3px;margin-top:8px;overflow:hidden}
+    .dash-card.card-load .cap-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+    .dash-card.card-load .cap-status{font-size:.72rem;font-weight:600;margin-top:5px}
+    .dash-card.card-load .cap-status.tranquilo{color:#34C759}
+    .dash-card.card-load .cap-status.cheio{color:#FF9500}
+    .dash-card.card-load .cap-status.esgotado{color:#FF3B30}
     .dash-section{margin-bottom:24px}
     .dash-section h2{font-size:.95rem;font-weight:700;margin-bottom:12px;letter-spacing:-.01em}
     .chart-wrap{background:var(--card);border-radius:14px;padding:18px;box-shadow:var(--shadow);transition:background .3s}
+
+    /* Week Capacity Bars */
+    .week-load{display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:8px;position:relative}
+    .wl-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;height:100%}
+    .wl-bar-area{flex:1;width:100%;display:flex;flex-direction:column;justify-content:flex-end;position:relative;border-radius:6px 6px 0 0;overflow:visible}
+    .wl-stack{width:100%;display:flex;flex-direction:column-reverse;border-radius:6px 6px 0 0;overflow:hidden}
+    .wl-seg{width:100%;transition:height .5s cubic-bezier(.25,1,.5,1)}
+    .wl-val{font-size:.64rem;font-weight:600;color:var(--label2);text-align:center;min-height:14px}
+    .wl-lbl{font-size:.62rem;color:var(--label3);font-weight:500;text-align:center;white-space:nowrap}
+    .wl-day{font-size:.56rem;color:var(--label3);font-weight:500;text-align:center;margin-top:-1px}
+    .wl-col.today .wl-lbl{color:var(--label);font-weight:700}
+    .wl-col.today .wl-day{color:var(--label);font-weight:600}
+    .wl-col.today .wl-bar-area{background:var(--accent-soft);border-radius:6px}
+    .wl-col.over .wl-stack{box-shadow:0 0 12px rgba(255,59,48,.2)}
+    .wl-col.over .wl-val{color:#FF3B30}
+    .wl-cap-line{position:absolute;left:0;right:0;border-top:2px dashed var(--label3);opacity:.3;z-index:2;pointer-events:none}
+    .wl-cap-label{position:absolute;right:4px;top:-10px;font-size:.56rem;font-weight:600;color:var(--label3);opacity:.5}
+
+    /* Existing bar chart styles (for completed-per-week) */
     .bar-chart{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:8px}
     .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
     .bar{width:100%;border-radius:5px 5px 0 0;background:var(--label3);transition:height .5s cubic-bezier(.25,1,.5,1);min-height:2px;opacity:.6}
@@ -181,7 +219,7 @@
     .cat-bar-name svg{width:13px;height:13px}
     .cat-bar-track{flex:1;height:6px;background:var(--fill);border-radius:3px;overflow:hidden}
     .cat-bar-fill{height:100%;border-radius:3px;transition:width .5s ease;opacity:.7}
-    .cat-bar-num{font-size:.7rem;font-weight:600;color:var(--label3);width:24px;text-align:right}
+    .cat-bar-num{font-size:.7rem;font-weight:600;color:var(--label3);width:40px;text-align:right}
     .donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
     .donut{width:90px;height:90px;border-radius:50%;position:relative;flex-shrink:0}
     .donut-center{position:absolute;inset:16px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:700;transition:background .3s}
@@ -277,6 +315,8 @@
       .dash-grid{grid-template-columns:repeat(2,1fr)}
       .charts-row{grid-template-columns:1fr}.donut-wrap{justify-content:center}
       .toast{bottom:85px}.mob-theme-btn{display:flex}
+      .week-load{gap:5px;height:150px}
+      .wl-lbl{font-size:.56rem}
     }
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--sep);border-radius:3px}
   </style>
@@ -363,6 +403,8 @@
     <div class="dash" id="dashView">
       <div class="page-head"><div class="page-head-left"><div class="greeting" id="greeting2"></div><h1>Dashboard</h1></div></div>
       <div class="dash-grid" id="dashCards"></div>
+      <div class="dash-section"><h2>Carga da Semana</h2><div class="chart-wrap"><div class="week-load" id="weekLoad"></div></div></div>
+      <div class="dash-section"><h2>Tempo por Categoria (esta semana)</h2><div class="chart-wrap"><div class="cat-bars" id="timeCatChart"></div></div></div>
       <div class="dash-section"><h2>Concluídas por semana</h2><div class="chart-wrap"><div class="bar-chart" id="weekChart"></div></div></div>
       <div class="charts-row" id="chartsRow">
         <div class="dash-section" style="margin-bottom:0"><h2>Por categoria</h2><div class="chart-wrap"><div class="cat-bars" id="catChart"></div></div></div>
@@ -388,6 +430,7 @@
     <div class="fld"><label>Título</label><input type="text" id="fT" placeholder="O que precisa ser feito?" required></div>
     <div class="fld-row"><div class="fld"><label>Categoria</label><select id="fC"></select></div><div class="fld"><label>Prioridade</label><select id="fP"><option value="alta">Alta</option><option value="media" selected>Média</option><option value="baixa">Baixa</option></select></div></div>
     <div class="fld-row"><div class="fld"><label>Prazo</label><input type="date" id="fD"></div><div class="fld"><label>Status</label><select id="fS"><option value="todo">A Fazer</option><option value="doing">Fazendo</option><option value="done">Feita</option></select></div></div>
+    <div class="fld"><label>Tempo estimado</label><div class="time-chips" id="timeChips"><button type="button" class="time-chip" data-min="15">15min</button><button type="button" class="time-chip" data-min="30">30min</button><button type="button" class="time-chip" data-min="60">1h</button><button type="button" class="time-chip" data-min="120">2h</button><button type="button" class="time-chip" data-min="240">4h</button><button type="button" class="time-chip" data-min="custom">Outro</button></div><div class="time-custom-wrap" id="timeCustom"><input type="number" id="fET" min="1" max="960" placeholder="90"><span>minutos</span></div></div>
     <div class="sub-edit-section"><label>Subtarefas</label><div class="sub-edit-list" id="subList"></div><button type="button" class="add-sub-btn" id="addSub"><svg width="13" height="13"><use href="#i-plus"/></svg>Adicionar subtarefa</button></div>
     <div class="fld"><label>Notas</label><textarea id="fN" placeholder="Detalhes, links, anotações..."></textarea></div>
     <div class="m-btns"><button type="button" class="btn btn-sec" id="mCancel">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
@@ -412,6 +455,7 @@ const DEF_TASKS=[{id:uid(),title:'Efetivar o empréstimo',category:'financeiro',
 
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
 let aCat='all',aSt='all',qry='',delId=null,mSubs=[],curView='tasks',editingCatId=null;
+const DAILY_CAP=480; // 8h in minutes
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function $(s){return document.querySelector(s)}
@@ -425,6 +469,8 @@ function fDate(d){if(!d)return'';return new Date(d+'T00:00:00').toLocaleDateStri
 function isOD(d){if(!d)return false;const t=new Date();t.setHours(0,0,0,0);return new Date(d+'T00:00:00')<t}
 function addLog(type,t){log.unshift({type,taskId:t.id,title:t.title,category:t.category,ts:Date.now()});if(log.length>200)log=log.slice(0,200);sL()}
 function relTime(ts){const d=Date.now()-ts,s=d/1000,m=s/60,h=m/60,dy=h/24;if(s<60)return'agora';if(m<60)return Math.floor(m)+'min';if(h<24)return Math.floor(h)+'h';if(dy<7)return Math.floor(dy)+'d';return new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}
+function fmtTime(min){if(!min)return'';if(min<60)return min+'min';const h=Math.floor(min/60),m=min%60;return m?h+'h'+m+'m':h+'h'}
+function dateStr(d){const y=d.getFullYear(),mo=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0');return`${y}-${mo}-${da}`}
 
 // ===== THEME =====
 function getTheme(){return localStorage.getItem('bt-theme')||'light'}
@@ -473,26 +519,89 @@ function renderTasks(){
   if(!list.length){$('#list').innerHTML=`<div class="task-empty"><div class="ei"><svg><use href="#i-inbox"/></svg></div><h3>${qry?'Nada encontrado':'Nenhuma tarefa'}</h3><p>${qry?'Tente outra busca':'Crie uma nova tarefa para começar'}</p></div>`;return}
   $('#list').innerHTML=list.map((t,i)=>{
     const c=ci(t.category);const od=isOD(t.date)&&t.status!=='done';const subs=t.subtasks||[];const sd=subs.filter(s=>s.done).length;
-    // Subtle tag: 8% opacity bg, muted text color
-    return`<div class="item ${t.status==='done'?'completed':''}" style="animation-delay:${i*.03}s"><div class="item-row"><button class="ck ${t.status==='done'?'on':''}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat" style="--tag-bg:${c.color}12;--tag-c:${c.color}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span><span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>${t.date?`<span class="tag-meta ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:''}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-acts"><button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
+    const etTag=t.estimatedTime?`<span class="tag-time"><svg><use href="#i-clock"/></svg>${fmtTime(t.estimatedTime)}</span>`:'';
+    return`<div class="item ${t.status==='done'?'completed':''}" style="animation-delay:${i*.03}s"><div class="item-row"><button class="ck ${t.status==='done'?'on':''}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat" style="--tag-bg:${c.color}12;--tag-c:${c.color}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span><span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>${etTag}${t.date?`<span class="tag-meta ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:''}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-acts"><button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
   }).join('');
 }
 
 function render(){renderCatNav();renderTasks();if(curView==='dash')renderDash()}
 
 function renderDash(){
-  const total=tasks.length;const done=tasks.filter(t=>t.status==='done').length;const doing=tasks.filter(t=>t.status==='doing').length;const pending=tasks.filter(t=>t.status==='todo').length;
+  const total=tasks.length;const done=tasks.filter(t=>t.status==='done').length;
   const overdue=tasks.filter(t=>isOD(t.date)&&t.status!=='done').length;const pct=total?Math.round(done/total*100):0;
   let streak=0;const today=new Date();today.setHours(0,0,0,0);
   for(let i=0;i<60;i++){const d=new Date(today);d.setDate(d.getDate()-i);const ds=d.getTime();const de=ds+864e5;if(tasks.some(t=>t.completedAt&&t.completedAt>=ds&&t.completedAt<de))streak++;else if(i>0)break}
-  const comp=tasks.filter(t=>t.completedAt&&t.createdAt);let avgDays=0;if(comp.length)avgDays=Math.round(comp.reduce((s,t)=>s+(t.completedAt-t.createdAt),0)/comp.length/864e5);
+
+  // Today's load
+  const todayStr=dateStr(today);
+  const todayTasks=tasks.filter(t=>t.date===todayStr&&t.status!=='done'&&t.estimatedTime);
+  const todayMin=todayTasks.reduce((s,t)=>s+(t.estimatedTime||0),0);
+  const todayH=(todayMin/60).toFixed(1);
+  const capPct=Math.min(todayMin/DAILY_CAP*100,100);
+  const capColor=todayMin<=DAILY_CAP*0.7?'#34C759':todayMin<=DAILY_CAP?'#FF9500':'#FF3B30';
+  const capClass=todayMin<=DAILY_CAP*0.7?'tranquilo':todayMin<=DAILY_CAP?'cheio':'esgotado';
+  const capLabel=todayMin<=DAILY_CAP*0.7?'Tranquilo 😌':todayMin<=DAILY_CAP?'Cheio 😤':'Esgotado! 🔥';
+
+  // This week hours
+  const weekStart=new Date(today);weekStart.setDate(weekStart.getDate()-weekStart.getDay());
+  const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
+  let weekMin=0;
+  tasks.forEach(t=>{if(t.date&&t.status!=='done'&&t.estimatedTime){const td=new Date(t.date+'T00:00:00');if(td>=weekStart&&td<=weekEnd)weekMin+=t.estimatedTime}});
+  const weekH=(weekMin/60).toFixed(1);
+
   $('#dashCards').innerHTML=`
-    <div class="dash-card"><div class="dc-label"><svg><use href="#i-layers"/></svg>Total</div><div class="dc-val">${total}</div><div class="dc-sub">tarefas criadas</div></div>
-    <div class="dash-card"><div class="dc-label"><svg><use href="#i-inbox"/></svg>Pendentes</div><div class="dc-val">${pending}</div><div class="dc-sub">a fazer</div></div>
-    <div class="dash-card"><div class="dc-label"><svg><use href="#i-clock"/></svg>Em progresso</div><div class="dc-val">${doing}</div><div class="dc-sub">ativas agora</div></div>
+    <div class="dash-card card-load"><div class="dc-label"><svg><use href="#i-clock"/></svg>Carga de Hoje</div><div class="dc-val">${todayH}h</div><div class="dc-sub">de ${(DAILY_CAP/60)}h de capacidade</div><div class="cap-bar"><div class="cap-bar-fill" style="width:${capPct}%;background:${capColor}"></div></div><div class="cap-status ${capClass}">${capLabel}</div></div>
+    <div class="dash-card"><div class="dc-label"><svg><use href="#i-cal"/></svg>Esta Semana</div><div class="dc-val">${weekH}h</div><div class="dc-sub">estimadas</div></div>
     <div class="dash-card"><div class="dc-label"><svg><use href="#i-check"/></svg>Concluídas</div><div class="dc-val">${pct}%</div><div class="dc-sub">${done} de ${total}</div></div>
     <div class="dash-card"><div class="dc-label"><svg><use href="#i-fire"/></svg>Sequência</div><div class="dc-val">${streak}</div><div class="dc-sub">${streak===1?'dia':'dias'}</div></div>
     <div class="dash-card"><div class="dc-label"><svg><use href="#i-alert"/></svg>Atrasadas</div><div class="dc-val">${overdue}</div><div class="dc-sub">${overdue?'atenção':'tudo em dia'}</div></div>`;
+
+  // === WEEK CAPACITY VIEW ===
+  const days=[];
+  for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()+i);days.push({date:dateStr(d),label:d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.',''),dayNum:d.getDate(),isToday:i===0})}
+  // Gather tasks per day per category
+  const dayData=days.map(day=>{
+    const dTasks=tasks.filter(t=>t.date===day.date&&t.status!=='done'&&t.estimatedTime);
+    const byCat={};
+    dTasks.forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+t.estimatedTime});
+    const totalMin=dTasks.reduce((s,t)=>s+t.estimatedTime,0);
+    return{...day,byCat,totalMin};
+  });
+  const maxMin=Math.max(...dayData.map(d=>d.totalMin),DAILY_CAP);
+  const capLinePos=DAILY_CAP/maxMin*100; // percentage from bottom
+  let wlHtml='';
+  dayData.forEach(day=>{
+    const barH=day.totalMin>0?Math.max(day.totalMin/maxMin*100,3):0;
+    let segs='';
+    // Build stacked segments
+    const catEntries=Object.entries(day.byCat);
+    catEntries.forEach(([catId,min])=>{
+      const c=ci(catId);
+      const segH=day.totalMin>0?min/day.totalMin*100:0;
+      segs+=`<div class="wl-seg" style="height:${segH}%;background:${c.color};opacity:.25" title="${c.name}: ${fmtTime(min)}"></div>`;
+    });
+    const cls=['wl-col'];
+    if(day.isToday)cls.push('today');
+    if(day.totalMin>DAILY_CAP)cls.push('over');
+    wlHtml+=`<div class="${cls.join(' ')}"><div class="wl-val">${day.totalMin>0?fmtTime(day.totalMin):''}</div><div class="wl-bar-area"><div class="wl-stack" style="height:${barH}%">${segs}</div></div><div class="wl-lbl">${day.label}</div><div class="wl-day">${day.dayNum}</div></div>`;
+  });
+  // Add capacity line
+  wlHtml+=`<div class="wl-cap-line" style="bottom:${capLinePos}%"><span class="wl-cap-label">${DAILY_CAP/60}h</span></div>`;
+  $('#weekLoad').innerHTML=wlHtml;
+
+  // === TIME BY CATEGORY (this week) ===
+  const catTimeWeek={};
+  tasks.forEach(t=>{
+    if(t.date&&t.status!=='done'&&t.estimatedTime){
+      const td=new Date(t.date+'T00:00:00');
+      if(td>=weekStart&&td<=weekEnd)catTimeWeek[t.category]=(catTimeWeek[t.category]||0)+t.estimatedTime;
+    }
+  });
+  const maxCatTime=Math.max(...Object.values(catTimeWeek),1);
+  $('#timeCatChart').innerHTML=cats.filter(c=>catTimeWeek[c.id]).map(c=>`<div class="cat-bar-row"><div class="cat-bar-name"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:${Math.max((catTimeWeek[c.id]||0)/maxCatTime*100,2)}%;background:${c.color}"></div></div><div class="cat-bar-num">${fmtTime(catTimeWeek[c.id]||0)}</div></div>`).join('')||
+    '<div style="text-align:center;padding:12px;color:var(--label3);font-size:.8rem">Nenhuma tarefa com tempo estimado nesta semana</div>';
+
+  // Completed per week chart (kept)
   const weeks=[];for(let w=7;w>=0;w--){const end=new Date(today);end.setDate(end.getDate()-w*7);end.setHours(23,59,59,999);const start=new Date(end);start.setDate(start.getDate()-6);start.setHours(0,0,0,0);weeks.push({count:tasks.filter(t=>t.completedAt&&t.completedAt>=start.getTime()&&t.completedAt<=end.getTime()).length,lbl:start.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})})}
   const maxW=Math.max(...weeks.map(w=>w.count),1);
   $('#weekChart').innerHTML=weeks.map(w=>`<div class="bar-col"><div class="bar-val">${w.count}</div><div class="bar" style="height:${Math.max(w.count/maxW*110,2)}px"></div><div class="bar-lbl">${w.lbl}</div></div>`).join('');
@@ -505,7 +614,18 @@ function renderDash(){
 }
 
 // Modal
-function openM(task){const e=!!task;$('#mTitle').textContent=e?'Editar Tarefa':'Nova Tarefa';$('#fId').value=e?task.id:'';$('#fT').value=e?task.title:'';$('#fC').value=e?task.category:(aCat!=='all'?aCat:cats[0]?.id||'');$('#fP').value=e?task.priority:'media';$('#fD').value=e?task.date:'';$('#fS').value=e?task.status:'todo';$('#fN').value=e?(task.notes||''):'';mSubs=e?(task.subtasks||[]).map(s=>({...s})):[];renderMSubs();$('#ov').classList.add('open');$('#modal').classList.add('open');setTimeout(()=>$('#fT').focus(),300)}
+function setTimeChip(val){
+  $$('#timeChips .time-chip').forEach(c=>c.classList.remove('active'));
+  if(val==='custom'){$('#timeChips .time-chip[data-min="custom"]').classList.add('active');$('#timeCustom').classList.add('show')}
+  else{$('#timeCustom').classList.remove('show');if(val){const chip=$('#timeChips .time-chip[data-min="'+val+'"]');if(chip)chip.classList.add('active');$('#fET').value=val}else{$('#fET').value=''}}
+}
+function openM(task){const e=!!task;$('#mTitle').textContent=e?'Editar Tarefa':'Nova Tarefa';$('#fId').value=e?task.id:'';$('#fT').value=e?task.title:'';$('#fC').value=e?task.category:(aCat!=='all'?aCat:cats[0]?.id||'');$('#fP').value=e?task.priority:'media';$('#fD').value=e?task.date:'';$('#fS').value=e?task.status:'todo';$('#fN').value=e?(task.notes||''):'';mSubs=e?(task.subtasks||[]).map(s=>({...s})):[];
+  // Set estimated time
+  const et=e?(task.estimatedTime||0):0;
+  if(et&&[15,30,60,120,240].includes(et)){setTimeChip(et)}
+  else if(et){$('#fET').value=et;setTimeChip('custom')}
+  else{setTimeChip(null);$('#fET').value=''}
+  renderMSubs();$('#ov').classList.add('open');$('#modal').classList.add('open');setTimeout(()=>$('#fT').focus(),300)}
 function closeM(){$('#ov').classList.remove('open');$('#modal').classList.remove('open')}
 function renderMSubs(){$('#subList').innerHTML=mSubs.map((s,i)=>`<div class="sub-edit-row"><input type="text" value="${s.text}" placeholder="Subtarefa..." onchange="mSubs[${i}].text=this.value"><button type="button" class="sub-rm" onclick="mSubs.splice(${i},1);renderMSubs()"><svg width="13" height="13"><use href="#i-x"/></svg></button></div>`).join('')}
 function edit(id){const t=tasks.find(x=>x.id===id);if(t)openM(t)}
@@ -528,7 +648,8 @@ $('#ceBack').addEventListener('click',()=>{$('#catMgrView').style.display='';$('
 // Events
 $('#fab').addEventListener('click',()=>openM());$('#btnAdd').addEventListener('click',()=>openM());$('#mCancel').addEventListener('click',closeM);$('#ov').addEventListener('click',closeM);
 $('#addSub').addEventListener('click',()=>{mSubs.push({text:'',done:false});renderMSubs();const ins=$$('#subList input');if(ins.length)ins[ins.length-1].focus()});
-$('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').value;const isNew=!id;const data={id:id||uid(),title:$('#fT').value.trim(),category:$('#fC').value,priority:$('#fP').value,date:$('#fD').value,status:$('#fS').value,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),createdAt:isNew?Date.now():(tasks.find(t=>t.id===id)?.createdAt||Date.now()),completedAt:$('#fS').value==='done'?Date.now():null};if(!data.title)return;if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
+$('#timeChips').addEventListener('click',e=>{const chip=e.target.closest('.time-chip');if(!chip)return;const val=chip.dataset.min;if(val==='custom'){setTimeChip('custom')}else{setTimeChip(parseInt(val))}});
+$('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').value;const isNew=!id;const etVal=parseInt($('#fET').value)||0;const data={id:id||uid(),title:$('#fT').value.trim(),category:$('#fC').value,priority:$('#fP').value,date:$('#fD').value,status:$('#fS').value,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,createdAt:isNew?Date.now():(tasks.find(t=>t.id===id)?.createdAt||Date.now()),completedAt:$('#fS').value==='done'?Date.now():null};if(!data.title)return;if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
 $('#list').addEventListener('click',e=>{const ck=e.target.closest('.ck');if(ck){e.stopPropagation();toggle(ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
