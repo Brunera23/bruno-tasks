@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bruno-tasks-v4';
+const CACHE_NAME = 'bruno-tasks-v5';
 const ASSETS = ['./index.html'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));

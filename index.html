@@ -1178,6 +1178,7 @@ function renderPrazosWidget(){
     ${dueWeek.length?`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:var(--fill)"><span style="width:6px;height:6px;border-radius:50%;background:var(--label3);flex-shrink:0"></span><span style="font-size:.7rem;font-weight:600;color:var(--label3)">${dueWeek.length}</span><span style="font-size:.56rem;color:var(--label3);opacity:.7">semana</span></div>`:''}
     ${pTotal===0?'<span style="font-size:.72rem;color:var(--label3)">Nenhum prazo próximo 🎉</span>':''}
   </div>`;
+  const urgentCount=overdue.length+dueToday.length;
   return{badge:urgentCount?urgentCount.toString():'',summary:summaryHtml,full};
 }
 
