@@ -2,7 +2,7 @@
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Bruno Tasks — Gerenciador de tarefas pessoal">
   <meta name="theme-color" content="#f2f2f7" id="metaTheme">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,7 +24,7 @@
 
     /* ===== LIGHT THEME ===== */
     :root,[data-theme="light"]{
-      --bg:#f5f5f7;--card:#fff;--card-hover:#f8f8fa;
+      --bg:#f2f2f7;--card:#fff;--card-hover:#f8f8fa;
       --label:#1d1d1f;--label2:#6e6e73;--label3:#aeaeb2;
       --sep:rgba(60,60,67,.09);--fill:rgba(120,120,128,.06);
       --accent:#1d1d1f;--accent-soft:rgba(0,0,0,.03);
@@ -410,7 +410,7 @@
 
     /* Staggered list entry */
     @keyframes taskSlideIn{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
-    .item{padding:13px 18px;transition:background var(--dur-fast),opacity var(--dur-smooth) var(--ease-quint),transform var(--dur-smooth) var(--ease-quint);animation:taskSlideIn var(--dur-smooth) var(--ease-expo) both;animation-delay:calc(var(--i,0)*35ms)}
+    .item{padding:12px 16px;transition:background var(--dur-fast),opacity var(--dur-smooth) var(--ease-quint),transform var(--dur-smooth) var(--ease-quint);animation:taskSlideIn var(--dur-smooth) var(--ease-expo) both;animation-delay:calc(min(var(--i,0),8)*35ms)}
     .item+.item{border-top:.5px solid var(--sep)}
     .item:hover{background-color:var(--card-hover)}
     .item.completed{opacity:.3;transform:scale(.99);transition:opacity var(--dur-smooth) var(--ease-expo),transform var(--dur-smooth) var(--ease-expo)}
@@ -535,7 +535,7 @@
     /* ===== DASHBOARD ===== */
     .dash{display:none}.dash.active{display:block}.tasks-view{display:none}.tasks-view.active{display:block}
     .dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:24px}
-    .dash-card{background:var(--card);border-radius:14px;padding:16px;box-shadow:var(--shadow);transition:transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast),background var(--dur-smooth);animation:cardIn var(--dur-smooth) var(--ease-expo) both;animation-delay:calc(var(--i,0)*50ms)}
+    .dash-card{background:var(--card);border-radius:14px;padding:16px;box-shadow:var(--shadow);transition:transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast),background var(--dur-smooth);animation:cardIn var(--dur-smooth) var(--ease-expo) both;animation-delay:calc(min(var(--i,0),6)*50ms)}
     @keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
     .dash-card:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
     .dash-card .dc-label{font-size:.68rem;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;display:flex;align-items:center;gap:5px}
@@ -859,8 +859,12 @@
     .smart-suggest-item:hover,.smart-suggest-item.active{background:var(--fill)}
     .smart-suggest-item .ss-hint{color:var(--label3);font-size:.68rem;margin-left:6px}
 
+    /* Global focus-visible */
+    :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+    button:focus-visible{outline-offset:-2px}
+
     /* Reduced motion */
-    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}*{transition-property:color,background-color,border-color,opacity!important;transition-duration:200ms!important}}
   </style>
 </head>
 <body>
@@ -929,7 +933,7 @@
   <aside class="sidebar">
     <div class="sidebar-top">
       <div class="sidebar-logo"><div class="logo-icon"><svg><use href="#i-check"/></svg></div>Bruno Tasks</div>
-      <button class="theme-btn" id="themeBtn" title="Alternar tema"><svg id="themeIcon"><use href="#i-moon"/></svg></button>
+      <button class="theme-btn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema claro/escuro"><svg id="themeIcon"><use href="#i-moon"/></svg></button>
     </div>
     <div class="nav-section">
       <div class="nav-label">Menu</div>
@@ -1022,7 +1026,7 @@
   <button class="mob-tab" id="mobCatMgr"><svg><use href="#i-settings"/></svg>Categorias</button>
 </div></nav>
 
-<button class="fab" id="fab"><svg><use href="#i-plus"/></svg></button>
+<button class="fab" id="fab" aria-label="Nova tarefa"><svg><use href="#i-plus"/></svg></button>
 
 <div class="overlay" id="ov"></div>
 <div class="modal" id="modal">
@@ -1356,8 +1360,9 @@ const DAILY_CAP=480;
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function $(s){return document.querySelector(s)}
 function $$(s){return document.querySelectorAll(s)}
-function ld(k,def){const d=localStorage.getItem(k);if(d)return JSON.parse(d);sv(k,def);return JSON.parse(JSON.stringify(def))}
-function sv(k,d){localStorage.setItem(k,JSON.stringify(d))}
+function ld(k,def){try{const d=localStorage.getItem(k);if(d)return JSON.parse(d)}catch(e){console.warn('ld error',k,e)}sv(k,def);return JSON.parse(JSON.stringify(def))}
+function sv(k,d){try{localStorage.setItem(k,JSON.stringify(d))}catch(e){console.warn('sv error',k,e)}}
+function escapeHtml(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function sT(){
   // Auto-stamp updatedAt on any task that changed
   const now=Date.now();
@@ -1563,7 +1568,7 @@ function setTheme(t){
   const icon=t==='dark'?'i-sun':'i-moon';
   $('#themeIcon').innerHTML=`<use href="#${icon}"/>`;
   $('#mobThemeIcon').innerHTML=`<use href="#${icon}"/>`;
-  const meta=$('#metaTheme');if(meta)meta.content=t==='dark'?'#0a0a0a':'#f5f5f7';
+  const meta=$('#metaTheme');if(meta)meta.content=t==='dark'?'#0a0a0a':'#f2f2f7';
 }
 function toggleTheme(){
   const newTheme=getTheme()==='light'?'dark':'light';
@@ -1575,8 +1580,8 @@ setTheme(getTheme());
 
 // ===== GREETING =====
 function setGreeting(){
-  const h=new Date().getHours();let g='Boa noite, Bruno';
-  if(h>=5&&h<12)g='Bom dia, Bruno';else if(h>=12&&h<18)g='Boa tarde, Bruno';
+  const h=new Date().getHours();const userName=(currentUser&&currentUser.displayName)?currentUser.displayName.split(' ')[0]:'Bruno';let g='Boa noite, '+userName;
+  if(h>=5&&h<12)g='Bom dia, '+userName;else if(h>=12&&h<18)g='Boa tarde, '+userName;
   const ds=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
   const txt=g+' · '+ds.charAt(0).toUpperCase()+ds.slice(1);
   $('#greeting').textContent=txt;$('#greeting2').textContent=txt;
@@ -1768,7 +1773,7 @@ function renderTasks(){
   if(widgetFilter&&(wLabels[widgetFilter]||widgetFilter.startsWith('day:'))){
     let fName=wLabels[widgetFilter];
     if(widgetFilter.startsWith('day:')){const dd=new Date(widgetFilter.slice(4)+'T00:00:00');const dayN=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];fName=dd.toLocaleDateString('pt-BR')==new Date().toLocaleDateString('pt-BR')?'Hoje':dayN[dd.getDay()]+' '+dd.getDate()}
-    $('#pageTitle').innerHTML=fName+'<button class="wdg-filter-x" onclick="clearWidgetFilter()">&times;</button>';
+    $('#pageTitle').innerHTML=escapeHtml(fName)+'<button class="wdg-filter-x" onclick="clearWidgetFilter()">&times;</button>';
   }else if(aCat!=='all'){$('#pageTitle').textContent=ci(aCat).name}else{$('#pageTitle').textContent='Tarefas'}
   const pr={alta:0,media:1,baixa:2};
   switch(sortBy){
@@ -1779,7 +1784,7 @@ function renderTasks(){
     case 'time':list.sort((a,b)=>(a.estimatedTime||999)-(b.estimatedTime||999));break;
     default:list.sort((a,b)=>{const pa=pr[a.priority]??3,pb=pr[b.priority]??3;if(pa!==pb)return pa-pb;if(a.date&&b.date)return a.date.localeCompare(b.date);if(a.date)return-1;return 1});
   }
-  if(aCat!=='all'){$('#pageTitle').textContent=ci(aCat).name}else{$('#pageTitle').textContent='Tarefas'}
+  // pageTitle already set above — removed duplicate that was overwriting widget filter title
   const pending=list.filter(t=>t.status!=='done');
   const done=list.filter(t=>t.status==='done');
   if(!pending.length&&!done.length){$('#list').innerHTML=`<div class="task-empty"><div class="ei"><svg><use href="#i-inbox"/></svg></div><h3>${qry?'Nada encontrado':'Nenhuma tarefa'}</h3><p>${qry?'Tente outra busca':'Crie uma nova tarefa para começar'}</p></div>`;return}
@@ -2401,18 +2406,19 @@ function renderMSubs(){
   $('#subList').innerHTML=mSubs.map((s,i)=>`<div class="sub-edit-row" draggable="true" data-sub-idx="${i}"><div class="sub-grip" title="Arrastar para reordenar">${gripSvg}</div><input type="text" value="${s.text.replace(/"/g,'&quot;')}" placeholder="Subtarefa..." oninput="mSubs[${i}].text=this.value"><button type="button" class="sub-rm" onclick="mSubs.splice(${i},1);renderMSubs()"><svg width="13" height="13"><use href="#i-x"/></svg></button></div>`).join('');
   initSubDrag();
 }
+let _subDragAC=null;
 function initSubDrag(){
   const list=$('#subList');if(!list)return;
+  // Cleanup previous listeners to avoid memory leak
+  if(_subDragAC)_subDragAC.abort();
+  _subDragAC=new AbortController();
+  const sig={signal:_subDragAC.signal};
   let dragIdx=null;
   const rows=()=>[...list.querySelectorAll('.sub-edit-row')];
-  // Sync input values before any drag
   function syncInputs(){rows().forEach((r,i)=>{const inp=r.querySelector('input');if(inp&&mSubs[i])mSubs[i].text=inp.value})}
-  // HTML5 Drag
   list.querySelectorAll('.sub-edit-row').forEach(row=>{
     row.addEventListener('dragstart',e=>{
-      // Only allow drag from grip handle
       if(!e.target.closest('.sub-grip')&&e.target.tagName!=='DIV'){
-        // Allow dragging from the row itself but not from input/button
         if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON'||e.target.closest('.sub-rm')){e.preventDefault();return}
       }
       syncInputs();
@@ -2420,24 +2426,21 @@ function initSubDrag(){
       row.classList.add('sub-dragging');
       e.dataTransfer.effectAllowed='move';
       e.dataTransfer.setData('text/plain',dragIdx);
-    });
-    row.addEventListener('dragend',()=>{row.classList.remove('sub-dragging');rows().forEach(r=>r.classList.remove('sub-drag-over'));dragIdx=null});
-    row.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';const idx=parseInt(row.dataset.subIdx);if(idx!==dragIdx){rows().forEach(r=>r.classList.remove('sub-drag-over'));row.classList.add('sub-drag-over')}});
-    row.addEventListener('dragleave',()=>{row.classList.remove('sub-drag-over')});
-    row.addEventListener('drop',e=>{e.preventDefault();const toIdx=parseInt(row.dataset.subIdx);if(dragIdx!==null&&dragIdx!==toIdx){const item=mSubs.splice(dragIdx,1)[0];mSubs.splice(toIdx,0,item);renderMSubs()}});
+    },sig);
+    row.addEventListener('dragend',()=>{row.classList.remove('sub-dragging');rows().forEach(r=>r.classList.remove('sub-drag-over'));dragIdx=null},sig);
+    row.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';const idx=parseInt(row.dataset.subIdx);if(idx!==dragIdx){rows().forEach(r=>r.classList.remove('sub-drag-over'));row.classList.add('sub-drag-over')}},sig);
+    row.addEventListener('dragleave',()=>{row.classList.remove('sub-drag-over')},sig);
+    row.addEventListener('drop',e=>{e.preventDefault();const toIdx=parseInt(row.dataset.subIdx);if(dragIdx!==null&&dragIdx!==toIdx){const item=mSubs.splice(dragIdx,1)[0];mSubs.splice(toIdx,0,item);renderMSubs()}},sig);
   });
-  // Touch-friendly drag
-  let touchDragIdx=null,touchClone=null,touchStartY=0,touchRows=null;
+  let touchDragIdx=null;
   list.querySelectorAll('.sub-grip').forEach(grip=>{
     grip.addEventListener('touchstart',e=>{
       e.preventDefault();
       syncInputs();
       const row=grip.closest('.sub-edit-row');
       touchDragIdx=parseInt(row.dataset.subIdx);
-      touchStartY=e.touches[0].clientY;
-      touchRows=rows();
       row.classList.add('sub-dragging');
-    },{passive:false});
+    },{passive:false,...sig});
   });
   document.addEventListener('touchmove',e=>{
     if(touchDragIdx===null)return;
@@ -2446,7 +2449,7 @@ function initSubDrag(){
     allRows.forEach(r=>r.classList.remove('sub-drag-over'));
     const hoverEl=document.elementFromPoint(touch.clientX,touch.clientY);
     if(hoverEl){const hoverRow=hoverEl.closest('.sub-edit-row');if(hoverRow&&parseInt(hoverRow.dataset.subIdx)!==touchDragIdx)hoverRow.classList.add('sub-drag-over')}
-  },{passive:true});
+  },{passive:true,...sig});
   document.addEventListener('touchend',()=>{
     if(touchDragIdx===null)return;
     const allRows=rows();
@@ -2454,7 +2457,7 @@ function initSubDrag(){
     allRows.forEach(r=>{r.classList.remove('sub-dragging','sub-drag-over')});
     if(overRow){const toIdx=parseInt(overRow.dataset.subIdx);if(touchDragIdx!==toIdx){const item=mSubs.splice(touchDragIdx,1)[0];mSubs.splice(toIdx,0,item);renderMSubs()}}
     touchDragIdx=null;
-  });
+  },sig);
 }
 function edit(id){const t=tasks.find(x=>x.id===id);if(t)openM(t)}
 function quickChild(parentId){const parent=tasks.find(x=>x.id===parentId);if(!parent)return;openM(null);fCCat=parent.category;renderCatPicker();mDeps=[parentId];renderDepChips();toast('Nova subtarefa de: '+parent.title)}
@@ -2474,12 +2477,10 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
 function spawnBurst(x,y,colors,count,spread){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=(spread*.3)+Math.random()*spread;const w=4+Math.random()*10;const h=w*(Math.random()>.5?1:.4);p.style.width=w+'px';p.style.height=h+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-spread*.5)+'px');p.style.setProperty('--cr',(Math.random()*1080-540)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.3?'50%':'2px';p.style.animationDuration=(.8+Math.random()*1)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
 function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(52,199,89,.25),rgba(0,122,255,.08) 50%,transparent 70%);z-index:9998;pointer-events:none;animation:flashFade 1s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
 function celebrateDone(x,y){
+  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   const c1=['#FF3B30','#FF9500','#FFCC00','#34C759','#007AFF','#AF52DE','#FF2D55','#5AC8FA'];
-  spawnBurst(x,y,c1,60,180);
-  setTimeout(()=>spawnBurst(x-30,y-20,['#FFCC00','#34C759','#007AFF','#AF52DE'],35,220),120);
-  setTimeout(()=>spawnBurst(x+30,y-10,['#FF2D55','#FF9500','#5AC8FA','#34C759'],35,200),250);
-  setTimeout(()=>spawnBurst(x,y-30,['#FFCC00','#FF3B30','#007AFF','#FF2D55'],30,250),400);
-  setTimeout(()=>spawnBurst(x,y+10,c1,25,160),550);
+  spawnBurst(x,y,c1,12,180);
+  setTimeout(()=>spawnBurst(x,y-20,['#FFCC00','#34C759','#007AFF'],8,200),200);
 }
 function showStatusPop(ckEl,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
@@ -2518,7 +2519,8 @@ function showCatPop(el,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
   const rect=el.getBoundingClientRect();
   const pop=document.createElement('div');pop.className='iq-pop';pop.id='iqPop';
-  pop.innerHTML=cats.map(c=>`<div class="iq-opt ${t.category===c.id?'current':''}" data-cv="${c.id}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</div>`).join('');
+  const taskCats=(t.project==='nos'||projects.find(p=>p.id===t.project&&p.type==='shared'))?NOS_CATS:cats;
+  pop.innerHTML=taskCats.map(c=>`<div class="iq-opt ${t.category===c.id?'current':''}" data-cv="${c.id}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${escapeHtml(c.name)}</div>`).join('');
   pop.style.left=Math.min(rect.left,window.innerWidth-200)+'px';
   pop.style.top=(rect.bottom+6)+'px';
   document.body.appendChild(pop);
@@ -2613,7 +2615,8 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
   const recurFreq=$('#recurFreq .active')?.dataset.rf||null;const recurUntil=$('#recurUntil').value||null;
   const recurrence=(recurFreq?{freq:recurFreq,until:recurUntil}:null);
   const projVal=fFormProj;const assignVal=projVal==='nos'?getPickVal($('#fAssign')):null;
-  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,createdAt:isNew?Date.now():(tasks.find(t=>t.id===id)?.createdAt||Date.now()),completedAt:status==='done'?Date.now():null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
+  const existing=id?tasks.find(t=>t.id===id):null;
+  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
@@ -2788,7 +2791,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=45',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=46',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
