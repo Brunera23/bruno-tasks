@@ -83,12 +83,11 @@
     .proj-icon svg{width:14px;height:14px;color:#fff}
     .proj-info{flex:1;min-width:0;display:flex;flex-direction:column}
     .proj-name{font-weight:600;font-size:.8rem;color:var(--label);line-height:1.2}
-    .proj-type{font-size:.62rem;font-weight:500;color:var(--label3);display:flex;align-items:center;gap:3px;margin-top:1px}
-    .proj-type.shared{color:#FF2D55;font-weight:600}
-    .proj-actions{display:flex;align-items:center;gap:4px}
-    .proj-actions .a-btn{width:24px;height:24px;padding:0;background:var(--fill);border:none;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all var(--dur-fast)}
-    .proj-actions .a-btn:hover{background:var(--sep);color:var(--label)}
-    .proj-actions .a-btn svg{width:13px;height:13px}
+    .proj-actions{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity var(--dur-fast)}
+    .proj-item:hover .proj-actions{opacity:1}
+    .proj-actions .a-btn{width:24px;height:24px;padding:0;background:transparent;border:none;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all var(--dur-fast)}
+    .proj-actions .a-btn:hover{background:var(--fill);color:var(--label)}
+    .proj-actions .a-btn svg{width:16px;height:16px}
     .proj-badge{font-size:.68rem;font-weight:600;color:var(--label3);min-width:18px;text-align:center;margin-left:auto;margin-right:8px}
     .proj-toggle{width:34px;height:20px;border-radius:10px;background:var(--fill);position:relative;cursor:pointer;transition:background var(--dur-norm) var(--ease-spring);flex-shrink:0;border:none;padding:0}
     .proj-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform var(--dur-norm) var(--ease-spring)}
@@ -322,10 +321,12 @@
     /* ===== MOBILE CATS ===== */
     .mob-cats{display:none;gap:8px;padding:0 0 14px;overflow-x:auto;scrollbar-width:none;scroll-behavior:smooth;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
     .mob-cats::-webkit-scrollbar{display:none}
-    .m-chip{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;background:var(--card);border:1px solid var(--sep);color:var(--label2);font-size:.70rem;font-weight:500;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;box-shadow:var(--shadow);scroll-snap-align:start}
-    .m-chip:hover{background:var(--card-hover)}
+    .m-chip{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:16px;background:rgba(255,255,255,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);color:var(--label2);font-size:.74rem;font-weight:600;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.03);scroll-snap-align:start}
+    [data-theme="dark"] .m-chip{background:rgba(30,30,32,.5);border-color:rgba(255,255,255,.05)}
+    .m-chip:hover{background:rgba(255,255,255,.8);transform:translateY(-1px)}
+    [data-theme="dark"] .m-chip:hover{background:rgba(40,40,42,.6)}
     .m-chip:active{transform:scale(.96);transition-duration:80ms}
-    .m-chip.active{background:var(--label);color:var(--bg);border-color:transparent}
+    .m-chip.active{background:var(--label);color:var(--bg);border-color:transparent;box-shadow:0 2px 8px rgba(0,0,0,.15)}
     .m-chip .chip-dot{width:6px;height:6px;border-radius:50%}
     .m-chip.active .chip-dot{opacity:.5}
     .m-chip-add{border-style:dashed;color:var(--label3)}
@@ -857,6 +858,7 @@
   <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4h4v-4z"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 10 17 19 7"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
@@ -908,7 +910,7 @@
 <div class="shell" style="display:none">
   <aside class="sidebar">
     <div class="sidebar-top">
-      <div class="sidebar-logo"><div class="logo-icon"><svg><use href="#i-check"/></svg></div>Bruno Tasks</div>
+    .sidebar-logo"><div class="logo-icon"><svg><use href="#i-check"/></svg></div>Bruno Tasks</div>
       <button class="theme-btn" id="themeBtn" title="Alternar tema"><svg id="themeIcon"><use href="#i-moon"/></svg></button>
     </div>
     <div class="nav-section">
@@ -1048,6 +1050,14 @@
 <div class="cf-wrap" id="cfWrap"><div class="cf-box"><h3 id="cfTitle">Excluir</h3><p id="cfMsg">Essa ação não pode ser desfeita.</p><div class="m-btns"><button class="btn btn-sec" id="cfNo">Cancelar</button><button class="btn btn-red" id="cfYes">Excluir</button></div></div></div>
 <div class="toast" id="toast"></div>
 <div class="sync-dot" id="syncDot"></div>
+
+<div class="overlay" id="pActionSheet" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:300px;max-width:90vw;padding:12px;border-radius:20px;background:var(--card);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)">
+    <div style="font-size:0.85rem;font-weight:700;color:var(--label);text-align:center;padding:12px 0 8px;border-bottom:1px solid var(--sep);margin-bottom:8px" id="pasTitle">Opções do Projeto</div>
+    <div style="display:flex;flex-direction:column;gap:6px" id="pasContent"></div>
+    <button class="btn btn-sec" style="width:100%;margin-top:8px;border-radius:12px;padding:12px" onclick="$('#pActionSheet').classList.remove('open')">Cancelar</button>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -1207,23 +1217,49 @@ function renderProjNav(){
   let h='';
   projects.forEach(p=>{
     const count=tasks.filter(t=>(t.project||'bruno')===p.id&&t.status!=='done').length;
-    const isShared=p.type==='shared';
     h+=`<div class="proj-item${p.visible?' active':''}" data-proj="${p.id}">
       <div class="proj-icon" style="background:${p.gradient}"><svg><use href="#${p.icon}"/></svg></div>
       <div class="proj-info">
         <span class="proj-name">${p.name}</span>
-        <span class="proj-type${isShared?' shared':''}">${isShared?'Compartilhado':'Pessoal'}</span>
       </div>
-      <div class="proj-actions">
-        <button class="a-btn" title="Renomear" data-proj-edit="${p.id}"><svg><use href="#i-edit"/></svg></button>
-        ${isShared?`<button class="a-btn" title="Link de Convite" data-proj-share="${p.id}"><svg><use href="#i-users"/></svg></button>`:''}
-      </div>
-      <span class="proj-badge">${count||''}</span>
+      <button class="a-btn" title="Mais" data-proj-more="${p.id}"><svg><use href="#i-more"/></svg></button>
       <button class="proj-toggle${p.visible?' on':''}" data-proj-toggle="${p.id}"></button>
     </div>`;
   });
   el.innerHTML=h;
 }
+
+function showProjMore(id){
+  const p=projects.find(x=>x.id===id);
+  if(!p)return;
+  $('#pasTitle').textContent=p.name;
+  let content=`<button class="btn btn-sec" onclick="renProj('${id}')">Renomear</button>`;
+  if(p.type==='shared') content+=`<button class="btn btn-sec" onclick="shareProj('${id}')">Convidar</button>`;
+  $('#pasContent').innerHTML=content;
+  $('#pActionSheet').classList.add('open');
+}
+
+function renProj(id) {
+  $('#pActionSheet').classList.remove('open');
+  setTimeout(()=>{
+    const p=projects.find(x=>x.id===id);
+    if(p){
+      const nn=prompt('Novo nome do projeto:',p.name);
+      if(nn&&nn.trim()){p.name=nn.trim();saveUI();render();_fbDirectSave()}
+    }
+  }, 300);
+}
+function shareProj(id) {
+  $('#pActionSheet').classList.remove('open');
+  setTimeout(()=>{
+    const p=projects.find(x=>x.id===id);
+    if(p){
+      const link=location.origin+location.pathname+'?invite='+p.id+'&name='+encodeURIComponent(p.name);
+      prompt('Link de Convite: Copie e envie para a pessoa que você deseja convidar para o projeto.', link);
+    }
+  }, 300);
+}
+
 const expandedDeps=new Set();
 const collapsedGroups=new Set();
 const DAILY_CAP=480;
@@ -1264,7 +1300,8 @@ function _fbDirectSave(){
     log:JSON.stringify(myPLog.slice(0,100)),
     updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
     device:navigator.userAgent.includes('Mobile')?'mobile':'desktop',
-    taskCount:myPTasks.length
+    taskCount:myPTasks.length,
+    projects:JSON.stringify(projects)
   },{merge:true});
 
   const p2=db.collection('shared').doc('nos').set({
@@ -1394,7 +1431,6 @@ function setTheme(t){
   const icon=t==='dark'?'i-sun':'i-moon';
   $('#themeIcon').innerHTML=`<use href="#${icon}"/>`;
   $('#mobThemeIcon').innerHTML=`<use href="#${icon}"/>`;
-  $('#metaTheme').content=t==='dark'?'#0a0a0a':'#f5f5f7';
 }
 function toggleTheme(){
   const newTheme=getTheme()==='light'?'dark':'light';
@@ -2234,8 +2270,8 @@ function celebrateDone(x,y){
   setTimeout(()=>spawnBurst(x,y-30,['#FFCC00','#FF3B30','#007AFF','#FF2D55'],30,250),400);
   setTimeout(()=>spawnBurst(x,y+10,c1,25,160),550);
   spawnFlash();
-  document.body.style.animation='celebShake .5s ease';
-  setTimeout(()=>{document.body.style.animation=''},600);
+  document.body.animation='celebShake .5s ease';
+  setTimeout(()=>{document.body.animation=''},600);
 }
 function showStatusPop(ckEl,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
@@ -2523,7 +2559,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=20',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=21',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2587,23 +2623,19 @@ $('#logoutBtn').addEventListener('click',()=>{auth.signOut()});
 
 // Project toggle clicks
 $('#projNav').addEventListener('click',e=>{
-  const editBtn=e.target.closest('[data-proj-edit]');
-  if(editBtn){
+  const moreBtn=e.target.closest('[data-proj-more]');
+  if(moreBtn){
     e.stopPropagation();
-    const p=projects.find(x=>x.id===editBtn.dataset.projEdit);
+    const pid=moreBtn.dataset.projMore;
+    const p=projects.find(x=>x.id===pid);
     if(p){
-      const nn=prompt('Novo nome do projeto:',p.name);
-      if(nn&&nn.trim()){p.name=nn.trim();saveUI();render();_fbDirectSave()}
-    }
-    return;
-  }
-  const shareBtn=e.target.closest('[data-proj-share]');
-  if(shareBtn){
-    e.stopPropagation();
-    const p=projects.find(x=>x.id===shareBtn.dataset.projShare);
-    if(p){
-      const link=location.origin+location.pathname+'?invite='+p.id+'&name='+encodeURIComponent(p.name);
-      prompt('Link de Convite: Copie e envie para a pessoa que você deseja convidar para o projeto.', link);
+      $('#pasTitle').textContent = p.name;
+      let html = `<button class="btn" style="width:100%;text-align:left;justify-content:flex-start;padding:12px;border-radius:12px;background:var(--fill);color:var(--label);border:none" onclick="renProj('${p.id}')"><svg style="width:16px;height:16px;margin-right:8px;opacity:0.6"><use href="#i-edit"/></svg> Renomear Projeto</button>`;
+      if(p.type==='shared') {
+         html += `<button class="btn" style="width:100%;text-align:left;justify-content:flex-start;padding:12px;border-radius:12px;background:var(--fill);color:var(--label);border:none" onclick="shareProj('${p.id}')"><svg style="width:16px;height:16px;margin-right:8px;color:#FF2D55"><use href="#i-users"/></svg> Convidar Membro</button>`;
+      }
+      $('#pasContent').innerHTML = html;
+      $('#pActionSheet').classList.add('open');
     }
     return;
   }
