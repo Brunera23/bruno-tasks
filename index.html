@@ -233,13 +233,12 @@
     .st-dot.done{border-color:#34C759;background:#34C759}
     /* Reward animations */
     @keyframes rewardPulse{0%{box-shadow:0 0 0 0 rgba(255,149,0,.5)}50%{box-shadow:0 0 0 12px rgba(255,149,0,0)}100%{box-shadow:0 0 0 0 rgba(255,149,0,0)}}
-    @keyframes rewardDone{0%{transform:scale(1)}15%{transform:scale(1.35)}30%{transform:scale(.9)}45%{transform:scale(1.15)}60%{transform:scale(.97)}100%{transform:scale(1)}}
     .ck.reward-doing{animation:rewardPulse .6s var(--ease-expo)}
-    .ck.reward-done{animation:rewardDone .7s var(--ease-spring)}
     .confetti-burst{position:fixed;pointer-events:none;z-index:9999}
-    .confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall 1s var(--ease-expo) forwards}
-    @keyframes confettiFall{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}100%{opacity:0;transform:translate(var(--cx),var(--cy)) rotate(var(--cr)) scale(0)}}
+    .confetti-piece{position:absolute;border-radius:2px;animation:confettiFall 1.2s cubic-bezier(.25,.46,.45,.94) forwards}
+    @keyframes confettiFall{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}60%{opacity:1;transform:translate(calc(var(--cx)*.7),calc(var(--cy)*.5)) rotate(calc(var(--cr)*.6)) scale(.9)}100%{opacity:0;transform:translate(var(--cx),var(--cy)) rotate(var(--cr)) scale(0)}}
     @keyframes flashFade{0%{opacity:1}100%{opacity:0}}
+    @keyframes celebShake{0%,100%{transform:translateX(0)}10%{transform:translateX(-3px)}20%{transform:translateX(3px)}30%{transform:translateX(-2px)}40%{transform:translateX(2px)}50%{transform:translateX(-1px)}60%{transform:translateX(1px)}}
 
     .item-body{flex:1;min-width:0}
     .item-title{font-size:.86rem;font-weight:500;line-height:1.4;margin-bottom:5px}
@@ -269,7 +268,8 @@
     .tag-meta.doing{color:#FF9500}
     .pdot{width:5px;height:5px;border-radius:50%;display:inline-block}
     .pdot.alta{background:#FF3B30}.pdot.media{background:#FF9500}.pdot.baixa{background:#34C759}
-    .tag-time{font-size:.66rem;font-weight:600;color:var(--label3);display:inline-flex;align-items:center;gap:3px;background:var(--fill);padding:2px 6px;border-radius:4px}
+    .tag-time{font-size:.66rem;font-weight:600;color:var(--label3);display:inline-flex;align-items:center;gap:3px;background:var(--fill);padding:2px 6px;border-radius:4px;cursor:pointer;transition:background var(--dur-fast)}
+    .tag-time:hover{background:var(--fill2,rgba(120,120,128,.18))}
     .tag-time svg{width:10px;height:10px}
 
     .note-preview{margin:6px 0 0 34px;padding:6px 10px;background:var(--fill);border-radius:7px;font-size:.76rem;color:var(--label2);line-height:1.4}
@@ -745,7 +745,7 @@ function renderCatNav(){
 
 function renderItem(t,i,isChild=false,depsOpen=false){
   const c=ci(t.category);const od=isOD(t.date)&&t.status!=='done';const subs=t.subtasks||[];const sd=subs.filter(s=>s.done).length;
-  const etTag=t.estimatedTime?`<span class="tag-time"><svg><use href="#i-clock"/></svg>${fmtTime(t.estimatedTime)}</span>`:'';
+  const etTag=t.estimatedTime?`<span class="tag-time" data-id="${t.id}"><svg><use href="#i-clock"/></svg>${fmtTime(t.estimatedTime)}</span>`:'';
   const blocked=isBlocked(t)&&t.status!=='done';
   const waitTag=blocked?'<span class="tag-meta waiting">Aguardando</span>':'';
   const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');if(depsOpen)cls.push('deps-open');
@@ -945,17 +945,28 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   if(newSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),800)}}
   render();const msgs={todo:'A Fazer',doing:'Fazendo',done:'Conclu\u00edda'};
   if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('\u26a1 '+msgs[newSt])}
-  else if(newSt==='done'){if(ckRect){spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF3B30','#FF9500','#FFCC00','#34C759','#007AFF','#AF52DE','#FF2D55','#5AC8FA'],50,160);setTimeout(()=>spawnBurst(ckRect.left+ckRect.width/2,ckRect.top,['#FFCC00','#34C759','#007AFF','#AF52DE','#FF2D55'],30,200),150);setTimeout(()=>spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height,['#FF3B30','#FF9500','#5AC8FA','#34C759'],25,180),300);spawnFlash()}toast('\u2728 '+msgs[newSt]+'!')}
+  else if(newSt==='done'){if(ckRect)celebrateDone(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);toast('\u2728 '+msgs[newSt]+'!')}
   else{toast(msgs[newSt]||'')}}
-function spawnBurst(x,y,colors,count,spread){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=(spread*.3)+Math.random()*spread;const size=5+Math.random()*8;p.style.width=size+'px';p.style.height=size*(Math.random()>.5?1:0.5)+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-spread*.4)+'px');p.style.setProperty('--cr',(Math.random()*900-450)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.4?'50%':'2px';p.style.animationDuration=(.7+Math.random()*.8)+'s';p.style.animationDelay=(Math.random()*0.25)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2000)}
-function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle,rgba(52,199,89,.2),transparent 70%);z-index:9998;pointer-events:none;animation:flashFade .8s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),900)}
+function spawnBurst(x,y,colors,count,spread){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=(spread*.3)+Math.random()*spread;const w=4+Math.random()*10;const h=w*(Math.random()>.5?1:.4);p.style.width=w+'px';p.style.height=h+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-spread*.5)+'px');p.style.setProperty('--cr',(Math.random()*1080-540)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.3?'50%':'2px';p.style.animationDuration=(.8+Math.random()*1)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
+function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(52,199,89,.25),rgba(0,122,255,.08) 50%,transparent 70%);z-index:9998;pointer-events:none;animation:flashFade 1s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
+function celebrateDone(x,y){
+  const c1=['#FF3B30','#FF9500','#FFCC00','#34C759','#007AFF','#AF52DE','#FF2D55','#5AC8FA'];
+  spawnBurst(x,y,c1,60,180);
+  setTimeout(()=>spawnBurst(x-30,y-20,['#FFCC00','#34C759','#007AFF','#AF52DE'],35,220),120);
+  setTimeout(()=>spawnBurst(x+30,y-10,['#FF2D55','#FF9500','#5AC8FA','#34C759'],35,200),250);
+  setTimeout(()=>spawnBurst(x,y-30,['#FFCC00','#FF3B30','#007AFF','#FF2D55'],30,250),400);
+  setTimeout(()=>spawnBurst(x,y+10,c1,25,160),550);
+  spawnFlash();
+  document.body.style.animation='celebShake .5s ease';
+  setTimeout(()=>{document.body.style.animation=''},600);
+}
 function showStatusPop(ckEl,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
   if(isBlocked(t)&&t.status!=='done'){toast('Complete a tarefa anterior primeiro');return}
   closeStatusPop();
   const rect=ckEl.getBoundingClientRect();
   const pop=document.createElement('div');pop.className='st-pop';pop.id='stPop';
-  pop.innerHTML=['todo','doing','done'].map(s=>`<div class="st-opt ${t.status===s?'current':''}" data-st="${s}"><span class="st-dot ${s}"></span>${s==='todo'?'A Fazer':s==='doing'?'Fazendo':'Conclu\u00edda'}</div>`).join('');
+  pop.innerHTML=['todo','doing','done'].filter(s=>s!==t.status).map(s=>`<div class="st-opt" data-st="${s}"><span class="st-dot ${s}"></span>${s==='todo'?'A Fazer':s==='doing'?'Fazendo':'Conclu\u00edda'}</div>`).join('');
   pop.style.left=(rect.right+8)+'px';
   pop.style.top=(rect.top-4)+'px';
   document.body.appendChild(pop);
@@ -992,6 +1003,22 @@ function showCatPop(el,id){
   document.body.appendChild(pop);
   requestAnimationFrame(()=>pop.classList.add('show'));
   pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;t.category=o.dataset.cv;sT();render();closeInlinePop();toast('Categoria: '+cats.find(c=>c.id===o.dataset.cv)?.name)});
+  setTimeout(()=>document.addEventListener('click',e=>{if(!pop.contains(e.target))closeInlinePop()},{once:true}),10);
+}
+function showTimePop(el,id){
+  closeInlinePop();closeStatusPop();
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const rect=el.getBoundingClientRect();
+  const pop=document.createElement('div');pop.className='iq-pop';pop.id='iqPop';
+  const opts=[{v:15,n:'15min'},{v:30,n:'30min'},{v:60,n:'1 hora'},{v:120,n:'2 horas'},{v:240,n:'4 horas'}];
+  pop.innerHTML=opts.map(o=>`<div class="iq-opt ${t.estimatedTime===o.v?'current':''}" data-tv="${o.v}"><svg><use href="#i-clock"/></svg>${o.n}</div>`).join('')+`<div class="iq-sep"></div><div style="padding:4px 8px"><input type="number" class="iq-date-input" placeholder="Minutos..." min="1" value="${t.estimatedTime||''}" /></div><div class="iq-sep"></div><div class="iq-opt" data-tv="0"><svg><use href="#i-x"/></svg>Sem estimativa</div>`;
+  pop.style.left=Math.min(rect.left,window.innerWidth-200)+'px';
+  pop.style.top=(rect.bottom+6)+'px';
+  document.body.appendChild(pop);
+  requestAnimationFrame(()=>pop.classList.add('show'));
+  pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;const v=parseInt(o.dataset.tv);t.estimatedTime=v||null;sT();render();closeInlinePop();toast(v?'Tempo: '+fmtTime(v):'Estimativa removida')});
+  const inp=pop.querySelector('input[type=number]');
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=parseInt(inp.value);t.estimatedTime=v>0?v:null;sT();render();closeInlinePop();toast(v>0?'Tempo: '+fmtTime(v):'Estimativa removida')}});
   setTimeout(()=>document.addEventListener('click',e=>{if(!pop.contains(e.target))closeInlinePop()},{once:true}),10);
 }
 function toggleSub(tid,si){const t=tasks.find(x=>x.id===tid);if(!t||!t.subtasks||!t.subtasks[si])return;t.subtasks[si].done=!t.subtasks[si].done;sT();render()}
@@ -1031,7 +1058,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
-$('#list').addEventListener('click',e=>{if(e.target.closest('.iq-pop'))return;const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);renderTasks();return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const id_el=e.target.closest('.item-date[data-id]');if(id_el){e.stopPropagation();showDatePop(id_el,id_el.dataset.id);return}const ct=e.target.closest('.tag-cat[data-id]');if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
+$('#list').addEventListener('click',e=>{if(e.target.closest('.iq-pop'))return;const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);renderTasks();return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const tt=e.target.closest('.tag-time[data-id]');if(tt){e.stopPropagation();showTimePop(tt,tt.dataset.id);return}const id_el=e.target.closest('.item-date[data-id]');if(id_el){e.stopPropagation();showDatePop(id_el,id_el.dataset.id);return}const ct=e.target.closest('.tag-cat[data-id]');if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;renderTasks()})});
