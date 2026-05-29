@@ -2782,7 +2782,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=42',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=43',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2934,9 +2934,13 @@ $('#projNav').addEventListener('click',e=>{
   }
   const row=e.target.closest('[data-proj]');
   if(row){
-    // Click on row = select project (filter to just that one)
     const projId=row.dataset.proj;
-    projects.forEach(p=>p.visible=(p.id===projId));
+    if (e.ctrlKey || e.metaKey) {
+      const proj=projects.find(p=>p.id===projId);
+      if(proj) { proj.visible=!proj.visible; }
+    } else {
+      projects.forEach(p=>p.visible=(p.id===projId));
+    }
     saveUI();render();
   }
 });
