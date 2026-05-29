@@ -239,6 +239,7 @@
     .confetti-burst{position:fixed;pointer-events:none;z-index:9999}
     .confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall 1s var(--ease-expo) forwards}
     @keyframes confettiFall{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}100%{opacity:0;transform:translate(var(--cx),var(--cy)) rotate(var(--cr)) scale(0)}}
+    @keyframes flashFade{0%{opacity:1}100%{opacity:0}}
 
     .item-body{flex:1;min-width:0}
     .item-title{font-size:.86rem;font-weight:500;line-height:1.4;margin-bottom:5px}
@@ -265,10 +266,11 @@
     .sub-ck svg{width:9px;height:9px;stroke-width:3}
     .sub.done span{text-decoration:line-through;color:var(--label3)}
 
-    /* Action buttons — slide in from right */
-    .item-acts{display:flex;gap:0;flex-shrink:0;opacity:0;transform:translateX(4px);transition:opacity var(--dur-fast) var(--ease-expo),transform var(--dur-fast) var(--ease-expo)}
-    .item:hover .item-acts{opacity:1;transform:translateX(0)}
-    @media(hover:none){.item-acts{opacity:1;transform:translateX(0)}}
+    /* Action area — date always visible, buttons on hover */
+    .item-right{display:flex;align-items:center;gap:0;flex-shrink:0;margin-left:auto}
+    .item-acts{display:flex;gap:0;flex-shrink:0;max-width:0;opacity:0;overflow:hidden;transition:max-width var(--dur-norm) var(--ease-expo),opacity var(--dur-fast) var(--ease-expo)}
+    .item:hover .item-acts{max-width:80px;opacity:1}
+    @media(hover:none){.item-acts{max-width:80px;opacity:1}}
     .a-btn{width:28px;height:28px;border-radius:7px;border:none;background:transparent;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur-fast)}
     .a-btn:hover{background:var(--fill);color:var(--label)}
     .a-btn:active{transform:scale(.9);transition-duration:80ms}
@@ -485,7 +487,7 @@
       .item-date{display:none}
       .note-preview{display:none}
       .tag-time{display:none}
-      .item-acts{opacity:1;transform:none}
+      .item-acts{max-width:80px;opacity:1}
       .item-meta{gap:4px}
       .tag{padding:2px 6px;font-size:.64rem}
       .tag-meta{font-size:.66rem}
@@ -736,7 +738,7 @@ function renderItem(t,i,isChild=false,depsOpen=false){
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
   const dateTag=t.date?`<span class="item-date ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:'';
   const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
-  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><button class="ck ${ckCls}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button></div><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prioTag}${waitTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-acts">${dateTag}<button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
+  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><button class="ck ${ckCls}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button></div><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prioTag}${waitTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-right">${dateTag}<div class="item-acts"><button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
 }
 
 function getChildren(parentId,list){return list.filter(t=>t.blockedBy&&t.blockedBy.includes(parentId))}
