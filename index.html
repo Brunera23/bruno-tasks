@@ -147,10 +147,15 @@
     .grp-dd-opt.active{color:var(--blue);font-weight:600}
     .grp-dd-opt svg{width:13px;height:13px;color:var(--label3)}
     .grp-dd-opt.active svg{color:var(--blue)}
-    .grp-header{padding:10px 18px 4px;font-size:.72rem;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px;border-top:.5px solid var(--sep)}
+    .grp-header{padding:10px 18px 4px;font-size:.72rem;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px;border-top:.5px solid var(--sep);cursor:pointer;user-select:none;transition:color var(--dur-fast)}
+    .grp-header:hover{color:var(--label2)}
     .grp-header:first-child{border-top:none}
-    .grp-header .grp-count{background:var(--fill);padding:1px 6px;border-radius:4px;font-size:.66rem;font-weight:600}
+    .grp-header .grp-chev{width:10px;height:10px;flex-shrink:0;transition:transform var(--dur-norm) var(--ease-spring)}
+    .grp-header.collapsed .grp-chev{transform:rotate(-90deg)}
+    .grp-header .grp-count{background:var(--fill);padding:1px 6px;border-radius:4px;font-size:.66rem;font-weight:600;margin-left:auto}
     .grp-header .grp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .grp-section{overflow:hidden;transition:max-height var(--dur-smooth) var(--ease-expo),opacity var(--dur-norm)}
+    .grp-section.collapsed{max-height:0!important;opacity:0}
 
     /* ===== TASK LIST ===== */
     .tl{background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:visible;transition:background var(--dur-smooth);overscroll-behavior:contain}
@@ -195,10 +200,13 @@
     .dep-children{margin-left:28px;padding-left:16px;position:relative;display:none}
     .dep-children.open{display:block}
     .dep-children>.item,.dep-children>.dep-tree{position:relative}
-    .dep-children>.item::before,.dep-children>.dep-tree::before{content:'';position:absolute;left:-16px;top:23px;width:16px;height:0;border-top:2px solid var(--sep)}
-    .dep-children>.item::after,.dep-children>.dep-tree::after{content:'';position:absolute;left:-16px;top:0;bottom:0;width:2px;background:var(--sep)}
+    .dep-children>.item::before,.dep-children>.dep-tree::before{content:'';position:absolute;left:-16px;top:23px;width:16px;height:0;border-top:2px solid var(--sep);animation:depBranch var(--dur-smooth) var(--ease-expo) both}
+    .dep-children>.item::after,.dep-children>.dep-tree::after{content:'';position:absolute;left:-16px;top:0;bottom:0;width:2px;background:var(--sep);transform-origin:top;animation:depLine var(--dur-smooth) var(--ease-expo) both}
     .dep-children>.item:last-child::before,.dep-children>.dep-tree:last-child::before{display:none}
-    .dep-children>.item:last-child::after,.dep-children>.dep-tree:last-child::after{bottom:auto;height:23px;width:16px;background:none;border-left:2px solid var(--sep);border-bottom:2px solid var(--sep);border-bottom-left-radius:10px}
+    .dep-children>.item:last-child::after,.dep-children>.dep-tree:last-child::after{bottom:auto;height:23px;width:16px;background:none;border-left:2px solid var(--sep);border-bottom:2px solid var(--sep);border-bottom-left-radius:10px;animation:depCorner var(--dur-smooth) var(--ease-expo) both}
+    @keyframes depLine{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+    @keyframes depBranch{from{transform:scaleX(0);transform-origin:left}to{transform:scaleX(1);transform-origin:left}}
+    @keyframes depCorner{from{opacity:0;clip-path:inset(0 100% 100% 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
     .item-row{display:flex;align-items:flex-start;gap:12px}
     .item-date{flex-shrink:0;font-size:.7rem;font-weight:500;color:var(--label3);display:flex;align-items:center;gap:3px;margin-top:3px;white-space:nowrap}
     .item-date svg{width:11px;height:11px}
@@ -643,6 +651,7 @@ const DEF_TASKS=[{id:uid(),title:'Efetivar o empréstimo',category:'financeiro',
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
 let aCat='all',aSt='all',qry='',delId=null,mSubs=[],mDeps=[],curView='tasks',editingCatId=null,dashCat='all',showDone=false,fCCat='',groupBy='none';
 const expandedDeps=new Set();
+const collapsedGroups=new Set();
 const DAILY_CAP=480;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -757,19 +766,23 @@ function renderTasks(){
     roots.forEach(r=>renderTree(r));
     pending.filter(t=>!rendered.has(t.id)).forEach(t=>{rendered.add(t.id);html+=renderItem(t,idx++)});
   } else if(groupBy==='category'){
+    const chev='<svg class="grp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
     const groups={};pending.forEach(t=>{const k=t.category;if(!groups[k])groups[k]=[];groups[k].push(t)});
-    cats.forEach(c=>{if(!groups[c.id])return;html+=`<div class="grp-header"><span class="grp-dot" style="background:${c.color}"></span>${c.name}<span class="grp-count">${groups[c.id].length}</span></div>`;groups[c.id].forEach(t=>{html+=renderItem(t,idx++)})});
+    cats.forEach(c=>{if(!groups[c.id])return;const gk='cat-'+c.id;const col=collapsedGroups.has(gk);html+=`<div class="grp-header ${col?'collapsed':''}" data-grp="${gk}">${chev}<span class="grp-dot" style="background:${c.color}"></span>${c.name}<span class="grp-count">${groups[c.id].length}</span></div><div class="grp-section${col?' collapsed':''}" style="max-height:${col?0:9999}px">${groups[c.id].map(t=>renderItem(t,idx++)).join('')}</div>`});
     Object.keys(groups).filter(k=>!cats.find(c=>c.id===k)).forEach(k=>{groups[k].forEach(t=>{html+=renderItem(t,idx++)})});
   } else if(groupBy==='priority'){
+    const chev='<svg class="grp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
     const labels=[{k:'alta',n:'Alta',c:'#FF3B30'},{k:'media',n:'Média',c:'#FF9500'},{k:'baixa',n:'Baixa',c:'#34C759'},{k:'',n:'Sem prioridade',c:'var(--label3)'}];
-    labels.forEach(l=>{const g=pending.filter(t=>(t.priority||'')===l.k);if(!g.length)return;html+=`<div class="grp-header"><span class="grp-dot" style="background:${l.c}"></span>${l.n}<span class="grp-count">${g.length}</span></div>`;g.forEach(t=>{html+=renderItem(t,idx++)})});
+    labels.forEach(l=>{const g=pending.filter(t=>(t.priority||'')===l.k);if(!g.length)return;const gk='pri-'+l.k;const col=collapsedGroups.has(gk);html+=`<div class="grp-header ${col?'collapsed':''}" data-grp="${gk}">${chev}<span class="grp-dot" style="background:${l.c}"></span>${l.n}<span class="grp-count">${g.length}</span></div><div class="grp-section${col?' collapsed':''}" style="max-height:${col?0:9999}px">${g.map(t=>renderItem(t,idx++)).join('')}</div>`});
   } else if(groupBy==='today'){
+    const chev='<svg class="grp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
     const today=dateStr(new Date());const tom=dateStr(new Date(Date.now()+864e5));
     const buckets=[{n:'Atrasadas',f:t=>t.date&&t.date<today},{n:'Hoje',f:t=>t.date===today},{n:'Amanhã',f:t=>t.date===tom},{n:'Próximos dias',f:t=>t.date&&t.date>tom},{n:'Sem prazo',f:t=>!t.date}];
-    buckets.forEach(b=>{const g=pending.filter(b.f);if(!g.length)return;html+=`<div class="grp-header">${b.n}<span class="grp-count">${g.length}</span></div>`;g.forEach(t=>{html+=renderItem(t,idx++)})});
+    buckets.forEach((b,bi)=>{const g=pending.filter(b.f);if(!g.length)return;const gk='td-'+bi;const col=collapsedGroups.has(gk);html+=`<div class="grp-header ${col?'collapsed':''}" data-grp="${gk}">${chev}${b.n}<span class="grp-count">${g.length}</span></div><div class="grp-section${col?' collapsed':''}" style="max-height:${col?0:9999}px">${g.map(t=>renderItem(t,idx++)).join('')}</div>`});
   } else if(groupBy==='time'){
+    const chev='<svg class="grp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
     const ranges=[{n:'Rápidas (< 15min)',f:t=>t.estimatedTime&&t.estimatedTime<15},{n:'15 minutos',f:t=>t.estimatedTime===15},{n:'30 minutos',f:t=>t.estimatedTime===30},{n:'1 hora',f:t=>t.estimatedTime===60},{n:'2 horas',f:t=>t.estimatedTime===120},{n:'4 horas',f:t=>t.estimatedTime===240},{n:'Longas (> 4h)',f:t=>t.estimatedTime&&t.estimatedTime>240},{n:'Sem estimativa',f:t=>!t.estimatedTime}];
-    ranges.forEach(r=>{const g=pending.filter(r.f);if(!g.length)return;html+=`<div class="grp-header">${r.n}<span class="grp-count">${g.length}</span></div>`;g.forEach(t=>{html+=renderItem(t,idx++)})});
+    ranges.forEach((r,ri)=>{const g=pending.filter(r.f);if(!g.length)return;const gk='tm-'+ri;const col=collapsedGroups.has(gk);html+=`<div class="grp-header ${col?'collapsed':''}" data-grp="${gk}">${chev}${r.n}<span class="grp-count">${g.length}</span></div><div class="grp-section${col?' collapsed':''}" style="max-height:${col?0:9999}px">${g.map(t=>renderItem(t,idx++)).join('')}</div>`});
   }
   if(done.length){
     html+=`<button class="done-toggle ${showDone?'open':''}" id="doneToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>Concluídas<span class="dt-count">${done.length}</span></button>`;
@@ -955,7 +968,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
-$('#list').addEventListener('click',e=>{const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);renderTasks();return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
+$('#list').addEventListener('click',e=>{const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);renderTasks();return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;renderTasks()})});
