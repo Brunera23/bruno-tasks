@@ -181,13 +181,25 @@
     .item-date svg{width:11px;height:11px}
     .item-date.overdue{color:#FF3B30}
 
-    /* Checkbox — Apple Reminders style with glow */
+    /* Checkbox — tri-state with status popover */
+    .ck-wrap{position:relative;flex-shrink:0}
     .ck{flex-shrink:0;width:22px;height:22px;margin-top:1px;border-radius:50%;border:1.8px solid var(--label3);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:border-color var(--dur-norm) var(--ease-spring),background var(--dur-norm) var(--ease-spring),color var(--dur-fast),transform var(--dur-spring) var(--ease-spring),box-shadow var(--dur-norm)}
     .ck:hover{border-color:var(--label2);transform:scale(1.08);box-shadow:0 0 0 4px rgba(52,199,89,.06)}
     .ck.on{border-color:#34C759;background:#34C759;color:#fff;animation:ckBounce var(--dur-spring) var(--ease-spring),ckGlow .8s var(--ease-std)}
+    .ck.doing-st{border-color:#FF9500;border-width:2.5px;background:transparent;color:transparent}
+    .ck.doing-st::after{content:'';width:8px;height:8px;border-radius:50%;background:#FF9500}
     @keyframes ckBounce{0%{transform:scale(1)}25%{transform:scale(1.25)}50%{transform:scale(.95)}75%{transform:scale(1.05)}100%{transform:scale(1)}}
     @keyframes ckGlow{0%{box-shadow:0 0 0 0 rgba(52,199,89,.4)}70%{box-shadow:0 0 0 8px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}
     .ck svg{width:11px;height:11px;stroke-width:3}
+    .st-pop{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%) scale(.92);opacity:0;pointer-events:none;background:var(--card);border:1px solid var(--sep);border-radius:10px;box-shadow:var(--shadow2);z-index:50;min-width:140px;padding:4px;transition:opacity var(--dur-fast),transform var(--dur-fast) var(--ease-expo)}
+    .st-pop.show{opacity:1;transform:translateX(-50%) scale(1);pointer-events:all}
+    .st-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--label);transition:background var(--dur-fast);white-space:nowrap}
+    .st-opt:hover{background:var(--fill)}
+    .st-opt.current{font-weight:600;color:var(--blue)}
+    .st-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1.5px solid}
+    .st-dot.todo{border-color:var(--label3);background:transparent}
+    .st-dot.doing{border-color:#FF9500;background:#FF9500}
+    .st-dot.done{border-color:#34C759;background:#34C759}
 
     .item-body{flex:1;min-width:0}
     .item-title{font-size:.86rem;font-weight:500;line-height:1.4;margin-bottom:5px}
@@ -653,7 +665,8 @@ function renderItem(t,i,isChild=false){
   const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
   const dateTag=t.date?`<span class="item-date ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:'';
-  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><button class="ck ${t.status==='done'?'on':''}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prioTag}${waitTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-acts">${dateTag}<button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
+  const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
+  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><button class="ck ${ckCls}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button></div><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prioTag}${waitTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-acts">${dateTag}<button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
 }
 
 function getChildren(parentId,list){return list.filter(t=>t.blockedBy&&t.blockedBy.includes(parentId))}
@@ -820,11 +833,26 @@ function closeM(){$('#ov').classList.remove('open');$('#modal').classList.remove
 function renderMSubs(){$('#subList').innerHTML=mSubs.map((s,i)=>`<div class="sub-edit-row"><input type="text" value="${s.text}" placeholder="Subtarefa..." onchange="mSubs[${i}].text=this.value"><button type="button" class="sub-rm" onclick="mSubs.splice(${i},1);renderMSubs()"><svg width="13" height="13"><use href="#i-x"/></svg></button></div>`).join('')}
 function edit(id){const t=tasks.find(x=>x.id===id);if(t)openM(t)}
 function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t)addLog('delete',t);tasks=tasks.filter(t=>t.id!==delId);sT();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
-function toggle(id){const t=tasks.find(x=>x.id===id);if(!t)return;
+function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
+  if(isBlocked(t)&&newSt==='done'){toast('Complete a tarefa anterior primeiro');return}
+  const wasDone=t.status==='done';
+  t.status=newSt;t.completedAt=newSt==='done'?Date.now():null;
+  addLog(wasDone&&newSt!=='done'?'reopen':newSt==='done'?'complete':'edit',t);sT();
+  if(newSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),600)}}
+  render();const msgs={todo:'A Fazer',doing:'Fazendo',done:'Conclu\u00edda'};toast(msgs[newSt]||'')}
+function showStatusPop(ckEl,id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
   if(isBlocked(t)&&t.status!=='done'){toast('Complete a tarefa anterior primeiro');return}
-  const was=t.status==='done';t.status=was?'todo':'done';t.completedAt=was?null:Date.now();addLog(was?'reopen':'complete',t);sT();
-  if(!was){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),600)}}
-  render();toast(was?'Tarefa reaberta':'Tarefa concluída')}
+  closeStatusPop();
+  const wrap=ckEl.closest('.ck-wrap');
+  const pop=document.createElement('div');pop.className='st-pop';pop.id='stPop';
+  pop.innerHTML=['todo','doing','done'].map(s=>`<div class="st-opt ${t.status===s?'current':''}" data-st="${s}"><span class="st-dot ${s}"></span>${s==='todo'?'A Fazer':s==='doing'?'Fazendo':'Conclu\u00edda'}</div>`).join('');
+  wrap.appendChild(pop);
+  requestAnimationFrame(()=>pop.classList.add('show'));
+  pop.addEventListener('click',e=>{const o=e.target.closest('.st-opt');if(!o)return;setStatus(id,o.dataset.st);closeStatusPop()});
+  setTimeout(()=>document.addEventListener('click',closeStatusPop,{once:true}),10);
+}
+function closeStatusPop(){const p=$('#stPop');if(p)p.remove()}
 function toggleSub(tid,si){const t=tasks.find(x=>x.id===tid);if(!t||!t.subtasks||!t.subtasks[si])return;t.subtasks[si].done=!t.subtasks[si].done;sT();render()}
 
 // Cat manager
@@ -862,7 +890,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
-$('#list').addEventListener('click',e=>{const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();toggle(ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
+$('#list').addEventListener('click',e=>{const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;renderTasks()})});
