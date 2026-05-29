@@ -222,7 +222,7 @@
     @keyframes ckBounce{0%{transform:scale(1)}25%{transform:scale(1.25)}50%{transform:scale(.95)}75%{transform:scale(1.05)}100%{transform:scale(1)}}
     @keyframes ckGlow{0%{box-shadow:0 0 0 0 rgba(52,199,89,.4)}70%{box-shadow:0 0 0 8px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}
     .ck svg{width:11px;height:11px;stroke-width:3}
-    .st-pop{position:absolute;top:0;left:calc(100% + 8px);transform:scale(.92);opacity:0;pointer-events:none;background:var(--card);border:1px solid var(--sep);border-radius:10px;box-shadow:var(--shadow2);z-index:50;min-width:140px;padding:4px;transition:opacity var(--dur-fast),transform var(--dur-fast) var(--ease-expo)}
+    .st-pop{position:fixed;transform:scale(.92);opacity:0;pointer-events:none;background:var(--card);border:1px solid var(--sep);border-radius:10px;box-shadow:var(--shadow2);z-index:9999;min-width:140px;padding:4px;transition:opacity var(--dur-fast),transform var(--dur-fast) var(--ease-expo)}
     .st-pop.show{opacity:1;transform:scale(1);pointer-events:all}
     .st-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--label);transition:background var(--dur-fast);white-space:nowrap}
     .st-opt:hover{background:var(--fill)}
@@ -936,10 +936,12 @@ function showStatusPop(ckEl,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
   if(isBlocked(t)&&t.status!=='done'){toast('Complete a tarefa anterior primeiro');return}
   closeStatusPop();
-  const wrap=ckEl.closest('.ck-wrap');
+  const rect=ckEl.getBoundingClientRect();
   const pop=document.createElement('div');pop.className='st-pop';pop.id='stPop';
   pop.innerHTML=['todo','doing','done'].map(s=>`<div class="st-opt ${t.status===s?'current':''}" data-st="${s}"><span class="st-dot ${s}"></span>${s==='todo'?'A Fazer':s==='doing'?'Fazendo':'Conclu\u00edda'}</div>`).join('');
-  wrap.appendChild(pop);
+  pop.style.left=(rect.right+8)+'px';
+  pop.style.top=(rect.top-4)+'px';
+  document.body.appendChild(pop);
   requestAnimationFrame(()=>pop.classList.add('show'));
   pop.addEventListener('click',e=>{const o=e.target.closest('.st-opt');if(!o)return;setStatus(id,o.dataset.st);closeStatusPop()});
   setTimeout(()=>document.addEventListener('click',closeStatusPop,{once:true}),10);
