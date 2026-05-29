@@ -86,59 +86,61 @@
     .cat-nav-item svg{width:15px;height:15px;flex-shrink:0}
     .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
     .cat-nav-item .nav-badge{margin-left:auto;font-size:.7rem;font-weight:600;color:var(--label3)}
-    .main{flex:1;min-width:0;padding:28px 36px 40px;max-width:900px;transition:margin-right var(--dur-norm) var(--ease-expo)}
-    .main.wk-open{margin-right:290px}
-    /* Week sidebar */
-    .wk-sidebar{position:fixed;right:-290px;top:0;width:290px;height:100dvh;background:rgba(255,255,255,.94);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-left:1px solid var(--sep);padding:24px 20px 20px;display:flex;flex-direction:column;z-index:80;transition:right var(--dur-smooth) var(--ease-expo);overflow-y:auto;scrollbar-width:none}
-    [data-theme="dark"] .wk-sidebar{background:rgba(22,22,24,.94)}
-    .wk-sidebar::-webkit-scrollbar{display:none}
-    .wk-sidebar.open{right:0}
-    .wk-toggle{position:fixed;right:20px;top:50%;transform:translateY(-50%);height:38px;padding:0 14px 0 10px;background:var(--card);border:1px solid var(--sep);border-radius:19px;cursor:pointer;display:flex;align-items:center;gap:7px;z-index:81;box-shadow:var(--shadow2);transition:right var(--dur-smooth) var(--ease-expo),background var(--dur-fast),transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast);font-family:inherit;font-size:.72rem;font-weight:600;color:var(--label2);letter-spacing:.01em}
-    .wk-toggle:hover{background:var(--fill);box-shadow:0 6px 24px rgba(0,0,0,.12);transform:translateY(-50%) scale(1.04)}
-    .wk-toggle:active{transform:translateY(-50%) scale(.96)}
-    .wk-toggle svg{width:16px;height:16px;color:var(--blue);transition:transform var(--dur-norm) var(--ease-spring);flex-shrink:0}
-    .wk-toggle.open{right:300px}
-    .wk-toggle.open svg{transform:rotate(180deg)}
-    .wk-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--label3);margin-bottom:18px;display:flex;align-items:center;gap:7px}
-    .wk-title svg{width:15px;height:15px;color:var(--blue)}
-    .wk-day-row{padding:12px 0;border-bottom:1px solid var(--sep);opacity:0;transform:translateX(12px);transition:opacity var(--dur-norm) var(--ease-expo),transform var(--dur-norm) var(--ease-expo),background var(--dur-fast)}
-    .wk-sidebar.open .wk-day-row{opacity:1;transform:translateX(0)}
-    .wk-day-row:nth-child(1){transition-delay:50ms}
-    .wk-day-row:nth-child(2){transition-delay:100ms}
-    .wk-day-row:nth-child(3){transition-delay:150ms}
-    .wk-day-row:nth-child(4){transition-delay:200ms}
-    .wk-day-row:nth-child(5){transition-delay:250ms}
-    .wk-day-row:nth-child(6){transition-delay:300ms}
-    .wk-day-row:nth-child(7){transition-delay:350ms}
-    .wk-day-row:last-child{border-bottom:none}
-    .wk-day-row:hover{background:var(--fill);margin:0 -20px;padding:12px 20px;border-radius:10px}
-    .wk-day-row.is-today{background:linear-gradient(135deg,rgba(0,122,255,.06),rgba(0,122,255,.02));margin:0 -20px;padding:12px 20px;border-radius:12px;border-bottom:none}
-    .wk-day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
-    .wk-day-name{font-size:.8rem;font-weight:600;color:var(--label);display:flex;align-items:center;gap:6px}
-    .wk-day-row.is-today .wk-day-name{color:var(--blue)}
-    .wk-day-row.is-today .wk-day-name::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--blue);animation:wkPulse 2s ease-in-out infinite}
-    @keyframes wkPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
-    .wk-day-num{font-size:.66rem;color:var(--label3);font-weight:500;margin-left:4px}
-    .wk-day-total{font-size:.74rem;font-weight:700;color:var(--label)}
-    .wk-day-total.over{color:#FF3B30;animation:wkShake .4s ease}
-    @keyframes wkShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
-    .wk-bar-track{height:8px;border-radius:4px;background:var(--fill);overflow:hidden;display:flex;position:relative}
-    .wk-bar-seg{height:100%;min-width:3px;transition:width .8s cubic-bezier(.34,1.56,.64,1)}
-    .wk-bar-seg:first-child{border-radius:4px 0 0 4px}
-    .wk-bar-seg:last-child{border-radius:0 4px 4px 0}
-    .wk-bar-seg:only-child{border-radius:4px}
-    .wk-cats{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-    .wk-cat-tag{font-size:.62rem;font-weight:600;padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;color:var(--label2);background:var(--fill);transition:transform var(--dur-fast)}
-    .wk-cat-tag:hover{transform:scale(1.05)}
-    .wk-cat-tag svg{width:9px;height:9px}
-    .wk-pct{font-size:.6rem;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:4px}
-    .wk-pct.low{color:#34C759;background:rgba(52,199,89,.1)}
-    .wk-pct.mid{color:#FF9500;background:rgba(255,149,0,.1)}
-    .wk-pct.high{color:#FF3B30;background:rgba(255,59,48,.1)}
-    .wk-empty{font-size:.72rem;color:var(--label3);opacity:.5;display:flex;align-items:center;gap:5px}
-    .wk-empty::before{content:'';width:100%;height:4px;border-radius:2px;background:var(--fill);opacity:.5}
-    .wk-cap-info{margin-top:auto;padding-top:16px;border-top:1px solid var(--sep);font-size:.68rem;color:var(--label3);display:flex;align-items:center;gap:6px}
-    .wk-cap-info svg{width:12px;height:12px;flex-shrink:0;color:var(--blue)}
+    .main{flex:1;min-width:0;padding:28px 36px 40px;max-width:900px}
+    /* Week widget */
+    .wk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.15);z-index:89;opacity:0;pointer-events:none;transition:opacity var(--dur-norm)}
+    .wk-overlay.open{opacity:1;pointer-events:all}
+    .wk-widget{position:fixed;right:24px;top:50%;transform:translateY(-50%) scale(.92);opacity:0;pointer-events:none;width:320px;max-height:calc(100dvh - 48px);background:rgba(255,255,255,.98);backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);border-radius:22px;border:1px solid rgba(255,255,255,.6);box-shadow:0 8px 40px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.06);z-index:90;overflow:hidden;display:flex;flex-direction:column;transition:transform var(--dur-smooth) var(--ease-spring),opacity var(--dur-norm)}
+    [data-theme="dark"] .wk-widget{background:rgba(32,32,34,.96);border-color:rgba(255,255,255,.08);box-shadow:0 8px 40px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.15)}
+    .wk-widget.open{opacity:1;transform:translateY(-50%) scale(1);pointer-events:all}
+    .wk-toggle{position:fixed;right:24px;top:24px;height:36px;padding:0 14px 0 10px;background:var(--card);border:1px solid var(--sep);border-radius:18px;cursor:pointer;display:flex;align-items:center;gap:6px;z-index:91;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:all var(--dur-fast) var(--ease-spring);font-family:inherit;font-size:.74rem;font-weight:600;color:var(--label2);letter-spacing:.01em}
+    .wk-toggle:hover{background:var(--fill);box-shadow:0 4px 20px rgba(0,0,0,.1);transform:scale(1.03)}
+    .wk-toggle:active{transform:scale(.96)}
+    .wk-toggle.open{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .wk-toggle.open:hover{background:#0070e0}
+    .wk-toggle svg{width:15px;height:15px;flex-shrink:0;transition:color var(--dur-fast)}
+    .wk-toggle.open svg{color:#fff}
+    .wk-header{padding:20px 22px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--sep)}
+    .wk-header-left{display:flex;align-items:center;gap:8px}
+    .wk-header h3{font-size:.92rem;font-weight:700;letter-spacing:-.02em;margin:0}
+    .wk-header-icon{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#007AFF,#5AC8FA);display:flex;align-items:center;justify-content:center}
+    .wk-header-icon svg{width:16px;height:16px;color:#fff}
+    .wk-header-cap{font-size:.66rem;color:var(--label3);font-weight:500}
+    .wk-body{padding:6px 10px;overflow-y:auto;flex:1;scrollbar-width:none}
+    .wk-body::-webkit-scrollbar{display:none}
+    .wk-day{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;margin:2px 0;transition:background var(--dur-fast);cursor:default;opacity:0;transform:translateY(8px);transition:opacity var(--dur-norm) var(--ease-expo),transform var(--dur-norm) var(--ease-expo),background var(--dur-fast)}
+    .wk-widget.open .wk-day{opacity:1;transform:translateY(0)}
+    .wk-day:nth-child(1){transition-delay:60ms}.wk-day:nth-child(2){transition-delay:100ms}
+    .wk-day:nth-child(3){transition-delay:140ms}.wk-day:nth-child(4){transition-delay:180ms}
+    .wk-day:nth-child(5){transition-delay:220ms}.wk-day:nth-child(6){transition-delay:260ms}
+    .wk-day:nth-child(7){transition-delay:300ms}
+    .wk-day:hover{background:var(--fill)}
+    .wk-day.is-today{background:linear-gradient(135deg,rgba(0,122,255,.07),rgba(90,200,250,.04))}
+    .wk-day-ring{width:38px;height:38px;border-radius:50%;position:relative;flex-shrink:0}
+    .wk-day-ring svg{width:38px;height:38px;transform:rotate(-90deg)}
+    .wk-day-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
+    .wk-day-ring .ring-bg{stroke:var(--fill)}
+    .wk-day-ring .ring-fill{transition:stroke-dashoffset .8s cubic-bezier(.34,1.56,.64,1)}
+    .wk-day-ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .wk-day-ring-num{font-size:.72rem;font-weight:700;line-height:1;color:var(--label)}
+    .wk-day-ring-day{font-size:.52rem;font-weight:600;text-transform:uppercase;color:var(--label3);line-height:1;margin-top:1px}
+    .wk-day.is-today .wk-day-ring-num{color:var(--blue)}
+    .wk-day-info{flex:1;min-width:0}
+    .wk-day-label{font-size:.78rem;font-weight:600;color:var(--label);line-height:1.2}
+    .wk-day.is-today .wk-day-label{color:var(--blue)}
+    .wk-day-meta{display:flex;align-items:center;gap:4px;margin-top:3px;flex-wrap:wrap}
+    .wk-day-time{font-size:.66rem;font-weight:700;color:var(--label2)}
+    .wk-day-time.over{color:#FF3B30}
+    .wk-day-bar{flex:1;height:6px;border-radius:3px;background:var(--fill);overflow:hidden;display:flex;min-width:40px}
+    .wk-day-seg{height:100%;min-width:2px;transition:width .8s cubic-bezier(.34,1.56,.64,1)}
+    .wk-day-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+    .wk-day-pct{font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:6px}
+    .wk-day-pct.low{color:#34C759;background:rgba(52,199,89,.1)}
+    .wk-day-pct.mid{color:#FF9500;background:rgba(255,149,0,.1)}
+    .wk-day-pct.high{color:#FF3B30;background:rgba(255,59,48,.1)}
+    .wk-day-free{font-size:.62rem;color:var(--label3);font-weight:500}
+    .wk-footer{padding:12px 22px;border-top:1px solid var(--sep);display:flex;align-items:center;justify-content:space-between;font-size:.66rem;color:var(--label3)}
+    .wk-footer strong{color:var(--label2)}
 
     /* ===== PAGE HEADER ===== */
     .page-head{margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
@@ -540,7 +542,7 @@
     .mob-tab svg{width:20px;height:20px}
 
     @media(max-width:768px){
-      .sidebar{display:none}.main{padding:16px 16px 110px}.fab{display:flex}.wk-toggle,.wk-sidebar{display:none!important}
+      .sidebar{display:none}.main{padding:16px 16px 110px}.fab{display:flex}.wk-toggle,.wk-widget,.wk-overlay{display:none!important}
       .mob-nav{display:block}.btn-add{display:none}
       .page-head h1{font-size:1.4rem}.mob-cats{display:flex}
       .dash-grid{grid-template-columns:repeat(2,1fr)}
@@ -678,12 +680,13 @@
     </div>
   </main>
 
-  <button class="wk-toggle" id="wkToggle" title="Carga da Semana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Semana</button>
-  <aside class="wk-sidebar" id="wkSidebar">
-    <div class="wk-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Carga da Semana</div>
-    <div id="wkContent"></div>
-    <div class="wk-cap-info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Capacidade: <strong id="wkCapVal">8h</strong>/dia</div>
-  </aside>
+  <button class="wk-toggle" id="wkToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Semana</button>
+  <div class="wk-overlay" id="wkOverlay"></div>
+  <div class="wk-widget" id="wkWidget">
+    <div class="wk-header"><div class="wk-header-left"><div class="wk-header-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><h3>Carga da Semana</h3></div><span class="wk-header-cap" id="wkCapLabel"></span></div>
+    <div class="wk-body" id="wkContent"></div>
+    <div class="wk-footer"><span>Capacidade diária</span><strong id="wkCapVal">8h</strong></div>
+  </div>
 </div>
 
 <nav class="mob-nav"><div class="mob-nav-inner">
@@ -877,31 +880,36 @@ function renderTasks(){
 function renderWeekSidebar(){
   const el=document.getElementById('wkContent');if(!el)return;
   const today=new Date();
+  const dayAbbr=['dom','seg','ter','qua','qui','sex','sáb'];
   const dayNames=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-  let html='';
+  const R=15,C=2*Math.PI*R;
+  let html='',weekTotal=0;
   for(let i=0;i<7;i++){
     const d=new Date(today);d.setDate(d.getDate()+i);
     const ds=dateStr(d);const isToday=i===0;
     const dayLabel=isToday?'Hoje':i===1?'Amanhã':dayNames[d.getDay()];
-    const dayNum=d.getDate()+'/'+(d.getMonth()+1);
     const dTasks=tasks.filter(t=>t.date===ds&&t.status!=='done'&&t.estimatedTime);
     const byCat={};dTasks.forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+t.estimatedTime});
     const totalMin=dTasks.reduce((s,t)=>s+t.estimatedTime,0);
+    weekTotal+=totalMin;
     const pct=Math.round(totalMin/DAILY_CAP*100);
+    const pctCapped=Math.min(pct,100);
     const isOver=totalMin>DAILY_CAP;
     const pctCls=pct<=50?'low':pct<=100?'mid':'high';
+    const ringColor=pct<=50?'#34C759':pct<=100?'#FF9500':'#FF3B30';
+    const offset=C-(pctCapped/100)*C;
     let segs='';
-    if(totalMin>0){Object.entries(byCat).forEach(([catId,min])=>{const c=ci(catId);const w=min/Math.max(totalMin,DAILY_CAP)*100;segs+=`<div class="wk-bar-seg" style="width:${w}%;background:${c.color};opacity:.85" title="${c.name}: ${fmtTime(min)}"></div>`})}
-    let catTags='';
-    Object.entries(byCat).forEach(([catId,min])=>{const c=ci(catId);catTags+=`<span class="wk-cat-tag"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${fmtTime(min)}</span>`});
-    const totalDisplay=totalMin>0?`${fmtTime(totalMin)}<span class="wk-pct ${pctCls}">${pct}%</span>`:'';
-    html+=`<div class="wk-day-row ${isToday?'is-today':''}">
-      <div class="wk-day-head"><span class="wk-day-name">${dayLabel} <span class="wk-day-num">${dayNum}</span></span><span class="wk-day-total ${isOver?'over':''}">${totalDisplay}</span></div>
-      ${totalMin>0?`<div class="wk-bar-track">${segs}</div><div class="wk-cats">${catTags}</div>`:'<div class="wk-empty"></div>'}
+    if(totalMin>0){Object.entries(byCat).forEach(([catId,min])=>{const c=ci(catId);const w=min/Math.max(totalMin,DAILY_CAP)*100;segs+=`<div class="wk-day-seg" style="width:${w}%;background:${c.color}" title="${c.name}: ${fmtTime(min)}"></div>`})}
+    const freeMin=Math.max(DAILY_CAP-totalMin,0);
+    html+=`<div class="wk-day ${isToday?'is-today':''}">
+      <div class="wk-day-ring"><svg viewBox="0 0 38 38"><circle class="ring-bg" cx="19" cy="19" r="${R}"/><circle class="ring-fill" cx="19" cy="19" r="${R}" stroke="${ringColor}" stroke-dasharray="${C}" stroke-dashoffset="${offset}"/></svg><div class="wk-day-ring-label"><span class="wk-day-ring-num">${d.getDate()}</span><span class="wk-day-ring-day">${dayAbbr[d.getDay()]}</span></div></div>
+      <div class="wk-day-info"><div class="wk-day-label">${dayLabel}</div><div class="wk-day-meta">${totalMin>0?`<span class="wk-day-time ${isOver?'over':''}">${fmtTime(totalMin)}</span><div class="wk-day-bar">${segs}</div>`:`<span class="wk-day-free">Livre</span>`}</div></div>
+      ${totalMin>0?`<div class="wk-day-right"><span class="wk-day-pct ${pctCls}">${pct}%</span></div>`:''}
     </div>`;
   }
   el.innerHTML=html;
   const capEl=document.getElementById('wkCapVal');if(capEl)capEl.textContent=(DAILY_CAP/60)+'h';
+  const capLabel=document.getElementById('wkCapLabel');if(capLabel)capLabel.textContent=weekTotal>0?fmtTime(weekTotal)+' total':'Sem tarefas';
 }
 
 function render(){renderCatNav();renderTasks();renderWeekSidebar();if(curView==='dash')renderDash()}
@@ -1171,7 +1179,8 @@ $('#cfNo').addEventListener('click',()=>{delId=null;$('#cfWrap').classList.remov
 $('#cfWrap').addEventListener('click',e=>{if(e.target===$('#cfWrap')){delId=null;$('#cfWrap').classList.remove('open')}});
 $('#catMgrBtn').addEventListener('click',openCatMgr);$('#mobCatMgr').addEventListener('click',openCatMgr);
 $('#dashFilter').addEventListener('click',e=>{const c=e.target.closest('.df-chip');if(!c)return;dashCat=c.dataset.dc;renderDash()});
-$('#wkToggle').addEventListener('click',()=>{const sb=$('#wkSidebar'),tg=$('#wkToggle'),mn=document.querySelector('.main');sb.classList.toggle('open');tg.classList.toggle('open');mn.classList.toggle('wk-open')});
+$('#wkToggle').addEventListener('click',()=>{const w=$('#wkWidget'),o=$('#wkOverlay'),t=$('#wkToggle');const isOpen=w.classList.contains('open');w.classList.toggle('open');o.classList.toggle('open');t.classList.toggle('open')});
+$('#wkOverlay').addEventListener('click',()=>{$('#wkWidget').classList.remove('open');$('#wkOverlay').classList.remove('open');$('#wkToggle').classList.remove('open')});
 $('#catAddBtn').addEventListener('click',()=>openCatEdit(null));$('#catClose').addEventListener('click',closeCatMgr);$('#ovCat').addEventListener('click',closeCatMgr);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeM();closeCatMgr();$('#cfWrap').classList.remove('open')}const tg=document.activeElement.tagName;if(e.key==='n'&&tg!=='INPUT'&&tg!=='TEXTAREA'&&tg!=='SELECT')openM()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
