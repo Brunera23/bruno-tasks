@@ -997,7 +997,7 @@ function showCatPop(el,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
   const rect=el.getBoundingClientRect();
   const pop=document.createElement('div');pop.className='iq-pop';pop.id='iqPop';
-  pop.innerHTML=cats.map(c=>`<div class="iq-opt ${t.category===c.id?'current':''}" data-cv="${c.id}"><span class="iq-dot" style="background:${c.color}"></span><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</div>`).join('');
+  pop.innerHTML=cats.map(c=>`<div class="iq-opt ${t.category===c.id?'current':''}" data-cv="${c.id}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</div>`).join('');
   pop.style.left=Math.min(rect.left,window.innerWidth-200)+'px';
   pop.style.top=(rect.bottom+6)+'px';
   document.body.appendChild(pop);
