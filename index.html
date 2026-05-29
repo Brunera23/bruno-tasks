@@ -98,14 +98,20 @@
     .wdg-panel{position:fixed;right:0;top:0;width:340px;height:100dvh;padding:70px 16px 20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;z-index:85;pointer-events:none;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);scrollbar-width:none}
     .wdg-panel::-webkit-scrollbar{display:none}
     .wdg-panel.open{transform:translateX(0);pointer-events:all}
-    .wdg-card{background:rgba(255,255,255,.95);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border-radius:18px;border:1px solid rgba(255,255,255,.5);box-shadow:0 2px 16px rgba(0,0,0,.05);overflow:hidden;transition:all .3s ease;opacity:0;transform:translateY(12px);}
+    .wdg-card{background:rgba(255,255,255,.95);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border-radius:18px;border:1px solid rgba(255,255,255,.5);box-shadow:0 2px 16px rgba(0,0,0,.05);overflow:hidden;transition:all .3s ease,transform .2s,opacity .2s;opacity:0;transform:translateY(12px)}
     .wdg-panel.open .wdg-card{opacity:1;transform:translateY(0)}
     .wdg-card:nth-child(1){transition-delay:40ms}.wdg-card:nth-child(2){transition-delay:100ms}
     .wdg-card:nth-child(3){transition-delay:160ms}.wdg-card:nth-child(4){transition-delay:220ms}
     .wdg-card:nth-child(5){transition-delay:280ms}
     [data-theme="dark"] .wdg-card{background:rgba(32,32,34,.92);border-color:rgba(255,255,255,.08);box-shadow:0 2px 16px rgba(0,0,0,.25)}
+    .wdg-card.dragging{opacity:.6;transform:scale(.96)!important;z-index:100;box-shadow:0 12px 40px rgba(0,0,0,.15)}
+    .wdg-card.drag-over{border-top:2px solid var(--blue);margin-top:-2px}
     .wdg-head{padding:14px 16px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;transition:background var(--dur-fast)}
     .wdg-head:hover{background:var(--fill)}
+    .wdg-drag{width:16px;height:16px;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--label3);opacity:.4;transition:opacity var(--dur-fast);flex-shrink:0;margin-left:-4px;touch-action:none}
+    .wdg-drag:hover{opacity:.8}
+    .wdg-drag:active{cursor:grabbing}
+    .wdg-drag svg{width:12px;height:12px}
     .wdg-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .wdg-icon svg{width:14px;height:14px;color:#fff}
     .wdg-name{font-size:.78rem;font-weight:700;flex:1;color:var(--label);letter-spacing:-.01em}
@@ -113,10 +119,11 @@
     .wdg-toggle{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--label3);transition:transform .3s var(--ease-spring)}
     .wdg-toggle svg{width:12px;height:12px}
     .wdg-card.compact .wdg-toggle{transform:rotate(-90deg)}
-    .wdg-body{padding:0 16px 14px;overflow:hidden;transition:max-height .35s var(--ease-expo),opacity .25s,padding .3s}
-    .wdg-card.compact .wdg-body{max-height:0!important;opacity:0;padding-top:0;padding-bottom:0}
-    .wdg-compact-info{font-size:.72rem;font-weight:600;color:var(--label2);display:none}
-    .wdg-card.compact .wdg-compact-info{display:block}
+    .wdg-body{overflow:hidden;transition:max-height .35s var(--ease-expo),opacity .25s,padding .3s}
+    .wdg-body-full{padding:0 16px 14px}
+    .wdg-card.compact .wdg-body-full{max-height:0!important;opacity:0;overflow:hidden;padding-top:0;padding-bottom:0}
+    .wdg-summary{padding:0 16px 12px;display:none}
+    .wdg-card.compact .wdg-summary{display:block}
     /* Week widget items inside panel */
     .wk-day{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;margin:1px 0;transition:background var(--dur-fast);cursor:default}
     .wk-day:hover{background:var(--fill)}
@@ -939,40 +946,92 @@ function renderTasks(){
 }
 
 // ===== WIDGET PANEL SYSTEM =====
-let wdgState=ld('bt-wdg-state',{week:{open:true,compact:false},foco:{open:true,compact:false},prazos:{open:true,compact:false},streak:{open:true,compact:true},blocked:{open:true,compact:true}});
-function saveWdgState(){sv('bt-wdg-state',wdgState)}
+let wdgState=ld('bt-wdg-state',{week:{compact:false},foco:{compact:false},prazos:{compact:false},streak:{compact:true},blocked:{compact:true}});
+let wdgOrder=ld('bt-wdg-order',['week','foco','prazos','streak','blocked']);
+function saveWdgState(){sv('bt-wdg-state',wdgState);sv('bt-wdg-order',wdgOrder)}
+
+const wdgDefs={
+  week:{icon:'📅',name:'Carga da Semana',grad:'linear-gradient(135deg,#007AFF,#5AC8FA)',render:renderWeekWidget},
+  foco:{icon:'📋',name:'Foco do Dia',grad:'linear-gradient(135deg,#34C759,#30D158)',render:renderFocoWidget},
+  prazos:{icon:'⏰',name:'Prazos Próximos',grad:'linear-gradient(135deg,#FF9500,#FF6B00)',render:renderPrazosWidget},
+  streak:{icon:'🔥',name:'Streak',grad:'linear-gradient(135deg,#FF3B30,#FF6482)',render:renderStreakWidget},
+  blocked:{icon:'🚫',name:'Bloqueadas',grad:'linear-gradient(135deg,#8E8E93,#636366)',render:renderBlockedWidget}
+};
 
 function renderWidgets(){
   const panel=$('#wdgPanel');if(!panel)return;
+  // Ensure order has all keys
+  const allKeys=Object.keys(wdgDefs);
+  wdgOrder=wdgOrder.filter(k=>allKeys.includes(k));
+  allKeys.forEach(k=>{if(!wdgOrder.includes(k))wdgOrder.push(k)});
   let html='';
-  // 1) Carga da Semana
-  html+=buildWidgetCard('week','📅','Carga da Semana','linear-gradient(135deg,#007AFF,#5AC8FA)',renderWeekWidget);
-  // 2) Foco do Dia
-  html+=buildWidgetCard('foco','📋','Foco do Dia','linear-gradient(135deg,#34C759,#30D158)',renderFocoWidget);
-  // 3) Prazos Próximos
-  html+=buildWidgetCard('prazos','⏰','Prazos Próximos','linear-gradient(135deg,#FF9500,#FF6B00)',renderPrazosWidget);
-  // 4) Streak
-  html+=buildWidgetCard('streak','🔥','Streak','linear-gradient(135deg,#FF3B30,#FF6482)',renderStreakWidget);
-  // 5) Bloqueadas
-  html+=buildWidgetCard('blocked','🚫','Bloqueadas','linear-gradient(135deg,#8E8E93,#636366)',renderBlockedWidget);
+  wdgOrder.forEach(key=>{
+    const def=wdgDefs[key];if(!def)return;
+    html+=buildWidgetCard(key,def.icon,def.name,def.grad,def.render);
+  });
   panel.innerHTML=html;
+  initWidgetDrag();
 }
 
 function buildWidgetCard(key,icon,name,gradient,renderFn){
-  const st=wdgState[key]||{open:true,compact:false};
-  const {badge,compact,full}=renderFn();
+  const st=wdgState[key]||{compact:false};
+  const {badge,summary,full}=renderFn();
   const compactCls=st.compact?'compact':'';
   const chevSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
-  return`<div class="wdg-card ${compactCls}" data-wdg="${key}">
+  const dragSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>';
+  return`<div class="wdg-card ${compactCls}" data-wdg="${key}" draggable="true">
     <div class="wdg-head" data-wdg-toggle="${key}">
-      <div class="wdg-icon" style="background:${gradient}">${icon.startsWith('<')?icon:`<span style="font-size:14px">${icon}</span>`}</div>
+      <div class="wdg-drag" title="Arrastar">${dragSvg}</div>
+      <div class="wdg-icon" style="background:${gradient}"><span style="font-size:14px">${icon}</span></div>
       <span class="wdg-name">${name}</span>
       ${badge?`<span class="wdg-badge">${badge}</span>`:''}
-      <span class="wdg-compact-info">${compact}</span>
       <div class="wdg-toggle">${chevSvg}</div>
     </div>
-    <div class="wdg-body" style="max-height:600px">${full}</div>
+    <div class="wdg-body">
+      <div class="wdg-summary">${summary||''}</div>
+      <div class="wdg-body-full" style="max-height:600px">${full}</div>
+    </div>
   </div>`;
+}
+
+function initWidgetDrag(){
+  let dragEl=null;
+  const cards=$$('.wdg-card[draggable]');
+  cards.forEach(card=>{
+    card.addEventListener('dragstart',e=>{
+      // Only drag from the handle
+      if(!e.target.closest('.wdg-drag')&&e.target.closest('.wdg-head')){e.preventDefault();return}
+      dragEl=card;card.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain',card.dataset.wdg);
+    });
+    card.addEventListener('dragend',()=>{
+      if(dragEl)dragEl.classList.remove('dragging');
+      $$('.wdg-card').forEach(c=>c.classList.remove('drag-over'));
+      dragEl=null;
+    });
+    card.addEventListener('dragover',e=>{
+      e.preventDefault();e.dataTransfer.dropEffect='move';
+      if(card!==dragEl){
+        $$('.wdg-card').forEach(c=>c.classList.remove('drag-over'));
+        card.classList.add('drag-over');
+      }
+    });
+    card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+    card.addEventListener('drop',e=>{
+      e.preventDefault();
+      if(!dragEl||card===dragEl)return;
+      const fromKey=dragEl.dataset.wdg;
+      const toKey=card.dataset.wdg;
+      const fromIdx=wdgOrder.indexOf(fromKey);
+      const toIdx=wdgOrder.indexOf(toKey);
+      if(fromIdx<0||toIdx<0)return;
+      wdgOrder.splice(fromIdx,1);
+      wdgOrder.splice(toIdx,0,fromKey);
+      saveWdgState();
+      renderWidgets();
+    });
+  });
 }
 
 function renderWeekWidget(){
@@ -1003,7 +1062,9 @@ function renderWeekWidget(){
       ${totalMin>0?`<div class="wk-day-right"><span class="wk-day-pct ${pctCls}">${pct}%</span></div>`:''}
     </div>`;
   }
-  return{badge:weekTotal>0?fmtTime(weekTotal):'',compact:weekTotal>0?fmtTime(weekTotal)+' total':'Sem tarefas',full};
+  const todayRow=full.match(/<div class="wk-day is-today">.*?<\/div>\s*<\/div>/s)||[''];
+  const summaryHtml=`<div style="display:flex;align-items:center;gap:10px;font-size:.74rem;color:var(--label2)"><span style="font-weight:700">${weekTotal>0?fmtTime(weekTotal):'0min'}</span><span style="color:var(--label3)">esta semana</span></div>`;
+  return{badge:weekTotal>0?fmtTime(weekTotal):'',summary:summaryHtml,full};
 }
 
 function renderFocoWidget(){
@@ -1036,7 +1097,11 @@ function renderFocoWidget(){
   } else {
     full+='<div style="text-align:center;padding:8px;color:var(--label3);font-size:.76rem">Nenhuma tarefa para hoje</div>';
   }
-  return{badge:total?`${done}/${total}`:'',compact:`${done}/${total} concluídas`,full};
+  const summaryHtml=`<div class="foco-ring-wrap" style="margin-bottom:0">
+    <div class="foco-ring"><svg viewBox="0 0 56 56"><circle class="ring-bg" cx="28" cy="28" r="${R}"/><circle class="ring-fill" cx="28" cy="28" r="${R}" stroke="${ringColor}" stroke-dasharray="${C}" stroke-dashoffset="${offset}"/></svg><div class="foco-ring-center">${pct}%</div></div>
+    <div class="foco-stats"><div class="foco-stats-main">${done}/${total} concluídas</div><div class="foco-stats-sub">${remainMin>0?fmtTime(remainMin)+' restante':'Tudo concluído! 🎉'}</div></div>
+  </div>`;
+  return{badge:total?`${done}/${total}`:'',summary:summaryHtml,full};
 }
 
 function renderPrazosWidget(){
@@ -1065,7 +1130,8 @@ function renderPrazosWidget(){
   });
   full+='</div>';
   const urgentCount=overdue.length+dueToday.length;
-  return{badge:urgentCount?urgentCount.toString():'',compact:`${overdue.length} atrasada${overdue.length!==1?'s':''} · ${dueToday.length} hoje`,full};
+  const summaryHtml=`<div style="display:flex;align-items:center;gap:8px;font-size:.74rem">${overdue.length?`<span style="color:#FF3B30;font-weight:700">${overdue.length} atrasada${overdue.length!==1?'s':''}</span><span style="color:var(--label3)">·</span>`:''}<span style="color:var(--label2);font-weight:600">${dueToday.length} hoje</span></div>`;
+  return{badge:urgentCount?urgentCount.toString():'',summary:summaryHtml,full};
 }
 
 function renderStreakWidget(){
@@ -1104,7 +1170,8 @@ function renderStreakWidget(){
   let full=`<div class="streak-main"><span class="streak-flame">🔥</span><div><div class="streak-num">${streak}</div><div class="streak-label">${streak===1?'dia consecutivo':'dias consecutivos'}</div></div></div>`;
   full+=`<div class="streak-rate"><span class="streak-rate-label">Taxa da semana</span><span class="streak-rate-val">${rate}%</span></div>`;
   full+=chartHtml;
-  return{badge:streak?streak.toString():'0',compact:`${streak} ${streak===1?'dia':'dias'}`,full};
+  const summaryHtml=`<div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.2rem">🔥</span><span style="font-size:1rem;font-weight:800;color:var(--label)">${streak}</span><span style="font-size:.72rem;color:var(--label3)">${streak===1?'dia consecutivo':'dias consecutivos'}</span></div>`;
+  return{badge:streak?streak.toString():'0',summary:summaryHtml,full};
 }
 
 function renderBlockedWidget(){
@@ -1117,7 +1184,8 @@ function renderBlockedWidget(){
     full+=`<div class="block-item"><div class="block-item-title">${t.title}</div><div class="block-item-blocker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>${blockerNames}</div></div>`;
   });
   full+='</div>';
-  return{badge:blocked.length?blocked.length.toString():'',compact:`${blocked.length} bloqueada${blocked.length!==1?'s':''}`,full};
+  const summaryHtml=`<div style="display:flex;align-items:center;gap:6px;font-size:.74rem"><span style="color:var(--label2);font-weight:600">${blocked.length} bloqueada${blocked.length!==1?'s':''}</span></div>`;
+  return{badge:blocked.length?blocked.length.toString():'',summary:summaryHtml,full};
 }
 
 function render(){renderCatNav();renderTasks();renderWidgets();if(curView==='dash')renderDash()}
@@ -1388,7 +1456,7 @@ $('#cfWrap').addEventListener('click',e=>{if(e.target===$('#cfWrap')){delId=null
 $('#catMgrBtn').addEventListener('click',openCatMgr);$('#mobCatMgr').addEventListener('click',openCatMgr);
 $('#dashFilter').addEventListener('click',e=>{const c=e.target.closest('.df-chip');if(!c)return;dashCat=c.dataset.dc;renderDash()});
 $('#wkToggle').addEventListener('click',()=>{const p=$('#wdgPanel'),t=$('#wkToggle'),m=$('.main');p.classList.toggle('open');t.classList.toggle('open');m.classList.toggle('wdg-open',p.classList.contains('open'))});
-$('#wdgPanel').addEventListener('click',e=>{const hd=e.target.closest('[data-wdg-toggle]');if(!hd)return;const key=hd.dataset.wdgToggle;const card=hd.closest('.wdg-card');if(!card)return;card.classList.toggle('compact');wdgState[key].compact=card.classList.contains('compact');saveWdgState()});
+$('#wdgPanel').addEventListener('click',e=>{if(e.target.closest('.wdg-drag'))return;const hd=e.target.closest('[data-wdg-toggle]');if(!hd)return;const key=hd.dataset.wdgToggle;const card=hd.closest('.wdg-card');if(!card)return;if(!wdgState[key])wdgState[key]={compact:false};card.classList.toggle('compact');wdgState[key].compact=card.classList.contains('compact');saveWdgState()});
 $('#catAddBtn').addEventListener('click',()=>openCatEdit(null));$('#catClose').addEventListener('click',closeCatMgr);$('#ovCat').addEventListener('click',closeCatMgr);
 document.addEventListener('keydown',e=>{
   const modal=$('#modal');
