@@ -1651,7 +1651,18 @@ document.addEventListener('keydown',e=>{
     if(!e.ctrlKey){e.preventDefault();$('#form').querySelector('[type=submit]')?.focus();return}
   }
 });
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    // Force check for new SW on every page load
+    reg.update();
+    // Check for updates every 5 minutes
+    setInterval(()=>reg.update(),5*60*1000);
+  }).catch(()=>{});
+  // Auto-reload when new SW activates
+  navigator.serviceWorker.addEventListener('message',e=>{
+    if(e.data&&e.data.type==='SW_UPDATED')location.reload();
+  });
+}
 setGreeting();render();
 </script>
 </body>
