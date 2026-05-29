@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Bruno Tasks",
+        "supportEmail": "brunohsantos00@gmail.com"
+      }
+    }
+  }
+}
