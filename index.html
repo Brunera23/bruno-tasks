@@ -247,8 +247,22 @@
 
     /* Tags — minimal with icon */
     .tag{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:.68rem;font-weight:500;letter-spacing:.01em}
-    .tag-cat{background:var(--fill);color:var(--label2)}
+    .tag-cat{background:var(--fill);color:var(--label2);cursor:pointer;transition:background var(--dur-fast)}
+    .tag-cat:hover{background:var(--fill2,rgba(120,120,128,.18))}
     .tag-cat svg{width:12px;height:12px;flex-shrink:0}
+    .item-date{cursor:pointer;transition:color var(--dur-fast)}
+    .item-date:hover{color:var(--label2)}
+    /* Inline edit popovers */
+    .iq-pop{position:fixed;transform:scale(.92);opacity:0;pointer-events:none;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow2);z-index:9999;min-width:160px;padding:5px;transition:opacity var(--dur-fast),transform var(--dur-fast) var(--ease-expo)}
+    .iq-pop.show{opacity:1;transform:scale(1);pointer-events:all}
+    .iq-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--label);transition:background var(--dur-fast);white-space:nowrap}
+    .iq-opt:hover{background:var(--fill)}
+    .iq-opt.current{color:var(--blue);font-weight:600}
+    .iq-opt svg{width:13px;height:13px;flex-shrink:0}
+    .iq-opt .iq-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .iq-sep{height:1px;background:var(--sep);margin:4px 8px}
+    .iq-date-input{width:100%;padding:7px 10px;border:1px solid var(--sep);border-radius:8px;background:var(--bg);color:var(--label);font-size:.78rem;font-family:inherit;margin:4px 0;outline:none}
+    .iq-date-input:focus{border-color:var(--blue)}
     .tag-meta{font-size:.7rem;font-weight:500;color:var(--label3);display:inline-flex;align-items:center;gap:3px}
     .tag-meta svg{width:11px;height:11px}
     .tag-meta.overdue{color:#FF3B30}
@@ -736,9 +750,9 @@ function renderItem(t,i,isChild=false,depsOpen=false){
   const waitTag=blocked?'<span class="tag-meta waiting">Aguardando</span>':'';
   const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');if(depsOpen)cls.push('deps-open');
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
-  const dateTag=t.date?`<span class="item-date ${od?'overdue':''}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:'';
+  const dateTag=t.date?`<span class="item-date ${od?'overdue':''}" data-id="${t.id}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:`<span class="item-date" data-id="${t.id}" style="opacity:.4"><svg><use href="#i-cal"/></svg>Prazo</span>`;
   const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
-  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><button class="ck ${ckCls}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button></div><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prioTag}${waitTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-right">${dateTag}<div class="item-acts"><button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
+  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><button class="ck ${ckCls}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button></div><div class="item-body"><div class="item-title">${t.title}</div><div class="item-meta"><span class="tag tag-cat" data-id="${t.id}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prioTag}${waitTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-right">${dateTag}<div class="item-acts"><button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
 }
 
 function getChildren(parentId,list){return list.filter(t=>t.blockedBy&&t.blockedBy.includes(parentId))}
@@ -930,10 +944,11 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   addLog(wasDone&&newSt!=='done'?'reopen':newSt==='done'?'complete':'edit',t);sT();
   if(newSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),800)}}
   render();const msgs={todo:'A Fazer',doing:'Fazendo',done:'Conclu\u00edda'};
-  if(newSt==='doing'){const nk=document.querySelector(`.ck[data-id="${id}"]`);if(nk){nk.classList.add('reward-doing');nk.addEventListener('animationend',()=>nk.classList.remove('reward-doing'),{once:true})}toast(msgs[newSt])}
-  else if(newSt==='done'){if(ckRect)spawnConfetti(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);toast('\u2728 '+msgs[newSt]+'!')}
+  if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('\u26a1 '+msgs[newSt])}
+  else if(newSt==='done'){if(ckRect){spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF3B30','#FF9500','#FFCC00','#34C759','#007AFF','#AF52DE','#FF2D55','#5AC8FA'],50,160);setTimeout(()=>spawnBurst(ckRect.left+ckRect.width/2,ckRect.top,['#FFCC00','#34C759','#007AFF','#AF52DE','#FF2D55'],30,200),150);setTimeout(()=>spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height,['#FF3B30','#FF9500','#5AC8FA','#34C759'],25,180),300);spawnFlash()}toast('\u2728 '+msgs[newSt]+'!')}
   else{toast(msgs[newSt]||'')}}
-function spawnConfetti(x,y){const colors=['#FF3B30','#FF9500','#FFCC00','#34C759','#007AFF','#AF52DE','#FF2D55','#5AC8FA'];const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<20;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=40+Math.random()*80;p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-40)+'px');p.style.setProperty('--cr',(Math.random()*720-360)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.animationDelay=(Math.random()*0.15)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),1200)}
+function spawnBurst(x,y,colors,count,spread){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=(spread*.3)+Math.random()*spread;const size=5+Math.random()*8;p.style.width=size+'px';p.style.height=size*(Math.random()>.5?1:0.5)+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-spread*.4)+'px');p.style.setProperty('--cr',(Math.random()*900-450)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.4?'50%':'2px';p.style.animationDuration=(.7+Math.random()*.8)+'s';p.style.animationDelay=(Math.random()*0.25)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2000)}
+function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle,rgba(52,199,89,.2),transparent 70%);z-index:9998;pointer-events:none;animation:flashFade .8s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),900)}
 function showStatusPop(ckEl,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
   if(isBlocked(t)&&t.status!=='done'){toast('Complete a tarefa anterior primeiro');return}
@@ -949,6 +964,36 @@ function showStatusPop(ckEl,id){
   setTimeout(()=>document.addEventListener('click',closeStatusPop,{once:true}),10);
 }
 function closeStatusPop(){const p=$('#stPop');if(p)p.remove()}
+function closeInlinePop(){const p=document.getElementById('iqPop');if(p)p.remove()}
+function showDatePop(el,id){
+  closeInlinePop();closeStatusPop();
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const rect=el.getBoundingClientRect();
+  const today=dateStr(new Date()),tom=dateStr(new Date(Date.now()+864e5)),nw=dateStr(new Date(Date.now()+7*864e5));
+  const pop=document.createElement('div');pop.className='iq-pop';pop.id='iqPop';
+  pop.innerHTML=`<div class="iq-opt" data-dv="${today}"><svg><use href="#i-cal"/></svg>Hoje</div><div class="iq-opt" data-dv="${tom}"><svg><use href="#i-cal"/></svg>Amanh\u00e3</div><div class="iq-opt" data-dv="${nw}"><svg><use href="#i-cal"/></svg>Pr\u00f3xima semana</div><div class="iq-sep"></div><div style="padding:4px 8px"><input type="date" class="iq-date-input" value="${t.date||''}" /></div><div class="iq-sep"></div><div class="iq-opt" data-dv=""><svg><use href="#i-x"/></svg>Sem prazo</div>`;
+  pop.style.left=Math.min(rect.left,window.innerWidth-200)+'px';
+  pop.style.top=(rect.bottom+6)+'px';
+  document.body.appendChild(pop);
+  requestAnimationFrame(()=>pop.classList.add('show'));
+  pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;t.date=o.dataset.dv||'';sT();render();closeInlinePop();toast(t.date?'Prazo: '+fDate(t.date):'Prazo removido')});
+  const inp=pop.querySelector('.iq-date-input');
+  inp.addEventListener('change',()=>{t.date=inp.value;sT();render();closeInlinePop();toast('Prazo: '+fDate(t.date))});
+  setTimeout(()=>document.addEventListener('click',e=>{if(!pop.contains(e.target))closeInlinePop()},{once:true}),10);
+}
+function showCatPop(el,id){
+  closeInlinePop();closeStatusPop();
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const rect=el.getBoundingClientRect();
+  const pop=document.createElement('div');pop.className='iq-pop';pop.id='iqPop';
+  pop.innerHTML=cats.map(c=>`<div class="iq-opt ${t.category===c.id?'current':''}" data-cv="${c.id}"><span class="iq-dot" style="background:${c.color}"></span><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</div>`).join('');
+  pop.style.left=Math.min(rect.left,window.innerWidth-200)+'px';
+  pop.style.top=(rect.bottom+6)+'px';
+  document.body.appendChild(pop);
+  requestAnimationFrame(()=>pop.classList.add('show'));
+  pop.addEventListener('click',e=>{const o=e.target.closest('.iq-opt');if(!o)return;t.category=o.dataset.cv;sT();render();closeInlinePop();toast('Categoria: '+cats.find(c=>c.id===o.dataset.cv)?.name)});
+  setTimeout(()=>document.addEventListener('click',e=>{if(!pop.contains(e.target))closeInlinePop()},{once:true}),10);
+}
 function toggleSub(tid,si){const t=tasks.find(x=>x.id===tid);if(!t||!t.subtasks||!t.subtasks[si])return;t.subtasks[si].done=!t.subtasks[si].done;sT();render()}
 
 // Cat manager
@@ -986,7 +1031,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
-$('#list').addEventListener('click',e=>{const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);renderTasks();return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
+$('#list').addEventListener('click',e=>{if(e.target.closest('.iq-pop'))return;const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);renderTasks();return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const id_el=e.target.closest('.item-date[data-id]');if(id_el){e.stopPropagation();showDatePop(id_el,id_el.dataset.id);return}const ct=e.target.closest('.tag-cat[data-id]');if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;renderTasks()})});
