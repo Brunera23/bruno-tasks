@@ -176,17 +176,34 @@
     .foco-item-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
     .foco-item-title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .foco-item-time{font-size:.64rem;color:var(--label3);font-weight:500}
-    /* Prazos */
-    .prazo-list{display:flex;flex-direction:column;gap:3px}
-    .prazo-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:.74rem;transition:background var(--dur-fast)}
-    .prazo-item:hover{background:var(--fill)}
-    .prazo-item-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-    .prazo-item-title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--label)}
-    .prazo-item-tag{font-size:.64rem;font-weight:700;padding:2px 6px;border-radius:5px;flex-shrink:0;white-space:nowrap}
-    .prazo-item-tag.overdue{color:#FF3B30;background:rgba(255,59,48,.1)}
-    .prazo-item-tag.today{color:#007AFF;background:rgba(0,122,255,.1)}
-    .prazo-item-tag.tomorrow{color:#FF9500;background:rgba(255,149,0,.1)}
-    .prazo-item-tag.week{color:var(--label3);background:var(--fill)}
+    /* Próximas Prioridades */
+    .next-list{display:flex;flex-direction:column;gap:0}
+    .next-item{display:flex;align-items:flex-start;gap:10px;padding:10px 10px;border-radius:10px;font-size:.76rem;transition:background var(--dur-fast)}
+    .next-item:hover{background:var(--fill)}
+    .next-item+.next-item{border-top:.5px solid var(--sep)}
+    .next-item-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+    .next-item-dot.alta{background:#FF3B30}
+    .next-item-dot.media{background:#FF9500}
+    .next-item-dot.baixa{background:#34C759}
+    .next-item-dot.none{background:var(--label3)}
+    .next-item-body{flex:1;min-width:0}
+    .next-item-title{font-weight:600;color:var(--label);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .next-meta{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap}
+    .next-meta-cat{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;color:var(--label3);font-weight:500}
+    .next-meta-cat svg{width:11px;height:11px}
+    .next-meta-date{font-size:.66rem;color:var(--label3);font-weight:500}
+    .next-tag{display:inline-flex;align-items:center;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:5px;flex-shrink:0;white-space:nowrap}
+    .next-tag.doing{color:#FF9500;background:rgba(255,149,0,.1)}
+    .next-tag.overdue{color:#FF3B30;background:rgba(255,59,48,.1)}
+    .next-tag.quickwin{color:#007AFF;background:rgba(0,122,255,.08)}
+    .next-summary-row{display:flex;align-items:center;gap:8px;padding:3px 0}
+    .next-summary-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .next-summary-dot.alta{background:#FF3B30}
+    .next-summary-dot.media{background:#FF9500}
+    .next-summary-dot.baixa{background:#34C759}
+    .next-summary-dot.none{background:var(--label3)}
+    .next-summary-title{flex:1;font-size:.72rem;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .next-summary-info{font-size:.64rem;color:var(--label3);font-weight:500;flex-shrink:0}
     /* Streak */
     .streak-main{display:flex;align-items:center;gap:12px;margin-bottom:8px}
     .streak-flame{font-size:1.6rem;line-height:1}
@@ -1077,7 +1094,7 @@ function renderTasks(){
     const weekEndDs=dateStr(new Date(Date.now()+7*864e5));
     switch(widgetFilter){
       case 'foco':list=list.filter(t=>t.date===todayDs);break;
-      case 'prazos':list=list.filter(t=>t.date&&t.date<=weekEndDs&&t.status!=='done');break;
+      case 'next':list=list.filter(t=>t.status!=='done'&&!isBlocked(t));break;
       case 'blocked':list=list.filter(t=>t.status!=='done'&&isBlocked(t));break;
       case 'streak':list=list.filter(t=>t.completedAt&&t.completedAt>=Date.now()-7*864e5);break;
       case 'habits':list=list.filter(t=>t.recurrence&&t.recurrence.freq);break;
@@ -1086,7 +1103,7 @@ function renderTasks(){
     }
   }
   // Update page title to reflect active filter
-  const wLabels={foco:'Foco do Dia',prazos:'Prazos Próximos',blocked:'Bloqueadas',streak:'Concluídas',habits:'Hábitos & Rotinas'};
+  const wLabels={foco:'Foco do Dia',next:'Próximas Prioridades',blocked:'Bloqueadas',streak:'Concluídas',habits:'Hábitos & Rotinas'};
   if(widgetFilter&&(wLabels[widgetFilter]||widgetFilter.startsWith('day:'))){
     let fName=wLabels[widgetFilter];
     if(widgetFilter.startsWith('day:')){const dd=new Date(widgetFilter.slice(4)+'T00:00:00');const dayN=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];fName=dd.toLocaleDateString('pt-BR')==new Date().toLocaleDateString('pt-BR')?'Hoje':dayN[dd.getDay()]+' '+dd.getDate()}
@@ -1155,14 +1172,14 @@ function renderTasks(){
 }
 
 // ===== WIDGET PANEL SYSTEM =====
-let wdgState=ld('bt-wdg-state',{week:{compact:false},foco:{compact:false},prazos:{compact:false},streak:{compact:true},blocked:{compact:true},habits:{compact:false}});
-let wdgOrder=ld('bt-wdg-order',['week','foco','prazos','streak','blocked','habits']);
+let wdgState=ld('bt-wdg-state',{week:{compact:false},foco:{compact:false},next:{compact:false},streak:{compact:true},blocked:{compact:true},habits:{compact:false}});
+let wdgOrder=ld('bt-wdg-order',['week','foco','next','streak','blocked','habits']);
 function saveWdgState(){sv('bt-wdg-state',wdgState);sv('bt-wdg-order',wdgOrder)}
 
 const wdgDefs={
   week:{icon:'📅',name:'Carga da Semana',grad:'linear-gradient(135deg,#007AFF,#5AC8FA)',render:renderWeekWidget},
   foco:{icon:'📋',name:'Foco do Dia',grad:'linear-gradient(135deg,#34C759,#30D158)',render:renderFocoWidget},
-  prazos:{icon:'⏰',name:'Prazos Próximos',grad:'linear-gradient(135deg,#FF9500,#FF6B00)',render:renderPrazosWidget},
+  next:{icon:'⚡',name:'Próximas Prioridades',grad:'linear-gradient(135deg,#007AFF,#5856D6)',render:renderNextWidget},
   streak:{icon:'🔥',name:'Streak',grad:'linear-gradient(135deg,#FF3B30,#FF6482)',render:renderStreakWidget},
   blocked:{icon:'🚫',name:'Bloqueadas',grad:'linear-gradient(135deg,#8E8E93,#636366)',render:renderBlockedWidget},
   habits:{icon:'🔄',name:'Hábitos & Rotinas',grad:'linear-gradient(135deg,#AF52DE,#5856D6)',render:renderHabitsWidget}
@@ -1360,41 +1377,55 @@ function renderFocoWidget(){
   return{badge:total?`${done}/${total}`:'',summary:summaryHtml,full};
 }
 
-function renderPrazosWidget(){
+function scoreTask(t){
   const today=dateStr(new Date());
   const tom=dateStr(new Date(Date.now()+864e5));
-  const weekEnd=dateStr(new Date(Date.now()+7*864e5));
-  const withDate=tasks.filter(t=>t.date&&t.status!=='done');
-  const overdue=withDate.filter(t=>t.date<today).sort((a,b)=>a.date.localeCompare(b.date));
-  const dueToday=withDate.filter(t=>t.date===today);
-  const dueTom=withDate.filter(t=>t.date===tom);
-  const dueWeek=withDate.filter(t=>t.date>tom&&t.date<=weekEnd).sort((a,b)=>a.date.localeCompare(b.date));
-  function countdown(d){
-    if(d<today)return'ATRASADA';
-    if(d===today)return'hoje';
-    if(d===tom)return'amanhã';
-    const diff=Math.ceil((new Date(d+'T00:00:00')-new Date(today+'T00:00:00'))/864e5);
-    return diff+' dias';
+  const in3=dateStr(new Date(Date.now()+3*864e5));
+  let s=0;
+  if(t.priority==='alta')s+=30;else if(t.priority==='media')s+=20;else if(t.priority==='baixa')s+=10;
+  if(t.date){
+    if(t.date<today)s+=50;
+    else if(t.date===today)s+=40;
+    else if(t.date===tom)s+=25;
+    else if(t.date<=in3)s+=15;
   }
-  function tagCls(d){if(d<today)return'overdue';if(d===today)return'today';if(d===tom)return'tomorrow';return'week'}
-  let full='<div class="prazo-list">';
-  const all=[...overdue,...dueToday,...dueTom,...dueWeek].slice(0,10);
-  if(!all.length)full+='<div style="text-align:center;padding:8px;color:var(--label3);font-size:.76rem">Nenhum prazo próximo</div>';
-  all.forEach(t=>{
+  if(t.status==='doing')s+=35;
+  if(t.estimatedTime&&t.estimatedTime<=30)s+=5;
+  return s;
+}
+
+function renderNextWidget(){
+  const today=dateStr(new Date());
+  const pending=tasks.filter(t=>t.status!=='done'&&!isBlocked(t));
+  const scored=pending.map(t=>({...t,_score:scoreTask(t)})).filter(t=>t._score>0).sort((a,b)=>b._score-a._score);
+  const top5=scored.slice(0,5);
+  const top3=scored.slice(0,3);
+  const prioDot=p=>p==='alta'?'alta':p==='media'?'media':p==='baixa'?'baixa':'none';
+
+  // === FULL VIEW ===
+  let full='<div class="next-list">';
+  if(!top5.length)full+='<div style="text-align:center;padding:16px 8px;color:var(--label3);font-size:.76rem">Nenhuma tarefa pendente. Tudo em dia! 🎉</div>';
+  top5.forEach(t=>{
     const c=ci(t.category);
-    full+=`<div class="prazo-item"><span class="prazo-item-dot" style="background:${c.color}"></span><span class="prazo-item-title">${t.title}</span><span class="prazo-item-tag ${tagCls(t.date)}">${countdown(t.date)}</span></div>`;
+    const od=t.date&&t.date<today;
+    let tags='';
+    if(t.status==='doing')tags+='<span class="next-tag doing">Fazendo</span>';
+    if(od)tags+='<span class="next-tag overdue">Atrasada</span>';
+    if(t.estimatedTime&&t.estimatedTime<=15)tags+='<span class="next-tag quickwin">Quick Win ⚡</span>';
+    full+=`<div class="next-item"><span class="next-item-dot ${prioDot(t.priority)}"></span><div class="next-item-body"><div class="next-item-title">${t.title}</div><div class="next-meta"><span class="next-meta-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${t.date?'<span class="next-meta-date">'+fDate(t.date)+'</span>':''}${tags}</div></div></div>`;
   });
   full+='</div>';
-  const pTotal=overdue.length+dueToday.length+dueTom.length+dueWeek.length;
-  const summaryHtml=`<div style="display:flex;align-items:center;gap:4px;padding:2px 0;flex-wrap:wrap">
-    ${overdue.length?`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:rgba(255,59,48,.1)"><span style="width:6px;height:6px;border-radius:50%;background:#FF3B30;flex-shrink:0"></span><span style="font-size:.7rem;font-weight:700;color:#FF3B30">${overdue.length}</span><span style="font-size:.56rem;color:#FF3B30;opacity:.7">atrasada${overdue.length!==1?'s':''}</span></div>`:''}
-    ${dueToday.length?`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:rgba(0,122,255,.08)"><span style="width:6px;height:6px;border-radius:50%;background:#007AFF;flex-shrink:0"></span><span style="font-size:.7rem;font-weight:700;color:#007AFF">${dueToday.length}</span><span style="font-size:.56rem;color:#007AFF;opacity:.7">hoje</span></div>`:''}
-    ${dueTom.length?`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:rgba(255,149,0,.08)"><span style="width:6px;height:6px;border-radius:50%;background:#FF9500;flex-shrink:0"></span><span style="font-size:.7rem;font-weight:700;color:#FF9500">${dueTom.length}</span><span style="font-size:.56rem;color:#FF9500;opacity:.7">amanhã</span></div>`:''}
-    ${dueWeek.length?`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:var(--fill)"><span style="width:6px;height:6px;border-radius:50%;background:var(--label3);flex-shrink:0"></span><span style="font-size:.7rem;font-weight:600;color:var(--label3)">${dueWeek.length}</span><span style="font-size:.56rem;color:var(--label3);opacity:.7">semana</span></div>`:''}
-    ${pTotal===0?'<span style="font-size:.72rem;color:var(--label3)">Nenhum prazo próximo 🎉</span>':''}
-  </div>`;
-  const urgentCount=overdue.length+dueToday.length;
-  return{badge:urgentCount?urgentCount.toString():'',summary:summaryHtml,full};
+
+  // === SUMMARY VIEW ===
+  let summaryHtml='<div style="display:flex;flex-direction:column;gap:2px">';
+  if(!top3.length)summaryHtml+='<span style="font-size:.72rem;color:var(--label3)">Tudo em dia! 🎉</span>';
+  top3.forEach(t=>{
+    const info=t.estimatedTime?fmtTime(t.estimatedTime):(t.date?fDate(t.date):'');
+    summaryHtml+=`<div class="next-summary-row"><span class="next-summary-dot ${prioDot(t.priority)}"></span><span class="next-summary-title">${t.title}</span>${info?'<span class="next-summary-info">'+info+'</span>':''}</div>`;
+  });
+  summaryHtml+='</div>';
+
+  return{badge:scored.length?scored.length.toString():'',summary:summaryHtml,full};
 }
 
 function renderStreakWidget(){
@@ -2002,7 +2033,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=10',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=11',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
