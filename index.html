@@ -1448,31 +1448,43 @@ function switchView(v){
   if(document.startViewTransition){document.startViewTransition(apply)}else{apply()}
 }
 
+function getActiveContextProject() {
+  const vis=projects.filter(p=>p.visible);
+  return vis.length===1?vis[0].id:'all';
+}
+
 function renderCatNav(){
+  const ap=getActiveContextProject();
   const cnt={};tasks.forEach(t=>{if(t.status!=='done'&&(!t.project||t.project==='bruno'))cnt[t.category]=(cnt[t.category]||0)+1});
+  // Also count tasks for the active context project
+  const pCnt={};tasks.forEach(t=>{if(t.status!=='done'&&(t.project||'bruno')===ap)pCnt[t.category]=(pCnt[t.category]||0)+1});
   
   let catsToShow = [];
-  if (activeProject === 'bruno') {
+  if (ap === 'bruno') {
     catsToShow = cats;
-  } else if (activeProject === 'nos' || projects.find(p=>p.id===activeProject)?.type==='shared') {
-    catsToShow = NOS_CATS; // TODO: or specific shared cats
+  } else if (ap === 'nos' || projects.find(p=>p.id===ap)?.type==='shared') {
+    catsToShow = getCatsForProject(ap);
   } else {
     catsToShow = cats; // fallback
   }
 
-  const all=tasks.filter(t=>t.status!=='done'&&(activeProject==='all'||t.project===activeProject||(!t.project&&activeProject==='bruno'))).length;
+  const all=tasks.filter(t=>t.status!=='done'&&(ap==='all'||(t.project||'bruno')===ap)).length;
   $('#navBadge').textContent=all;
-  const sorted=[...catsToShow].sort((a,b)=>(cnt[b.id]||0)-(cnt[a.id]||0));
+  
+  // Use appropriate counts for sorting and display
+  const activeCounts = ap==='all'?cnt:pCnt;
+  const sorted=[...catsToShow].sort((a,b)=>(activeCounts[b.id]||0)-(activeCounts[a.id]||0));
+  
   let h=`<button class="cat-nav-item ${aCat==='all'?'active':''}" data-c="all"><span class="cat-dot" style="background:var(--label3)"></span>Todas<span class="nav-badge">${all}</span></button>`;
-  sorted.forEach(c=>{h+=`<button class="cat-nav-item ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${c.name}<span class="nav-badge">${cnt[c.id]||0}</span></button>`});
+  sorted.forEach(c=>{h+=`<button class="cat-nav-item ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${c.name}<span class="nav-badge">${activeCounts[c.id]||0}</span></button>`});
   $('#catNav').innerHTML=h;
   let mc=`<button class="m-chip ${aCat==='all'?'active':''}" data-c="all"><span class="chip-dot" style="background:var(--label3)"></span>Todas</button>`;
   sorted.forEach(c=>{mc+=`<button class="m-chip ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="chip-dot" style="background:${c.color}"></span>${c.name}</button>`});
-  if(activeProject==='bruno'||activeProject==='all'){
+  if(ap==='bruno'||ap==='all'){
     mc+=`<button class="m-chip m-chip-add" id="mobAddCat"><svg><use href="#i-plus"/></svg></button>`;
   }
   $('#mobCats').innerHTML=mc;
-  renderCatPicker();
+  // Don't renderCatPicker here because it's form specific
 }
 
 function renderItem(t,i,isChild=false,depsOpen=false){
@@ -2151,7 +2163,30 @@ function renderDepChips(){
   $('#depChips').innerHTML=mDeps.map(bid=>{const bt=tasks.find(x=>x.id===bid);if(!bt)return'';const c=ci(bt.category);
     return`<div class="dep-chip"><span class="dc-dot" style="background:${c.color}"></span><span class="dc-title">${bt.title}</span><button type="button" class="dc-rm" data-dep-rm="${bid}"><svg><use href="#i-x"/></svg></button></div>`}).join('');
 }
-function openM(task){const e=!!task;$('#mTitle').textContent=e?'Editar Tarefa':'Nova Tarefa';$('#fId').value=e?task.id:'';$('#fT').value=e?task.title:'';fCCat=e?task.category:(aCat!=='all'?aCat:cats[0]?.id||'');renderCatPicker();pickVal($('#fP'),e?(task.priority||''):'');$('#fD').value=e?task.date:'';pickVal($('#fS'),e?task.status:'todo');$('#fN').value=e?(task.notes||''):'';mSubs=e?(task.subtasks||[]).map(s=>({...s})):[];mDeps=e?(task.blockedBy||[]).filter(id=>tasks.some(x=>x.id===id)):[];
+function openM(task){
+  const e=!!task;
+  $('#mTitle').textContent=e?'Editar Tarefa':'Nova Tarefa';
+  $('#fId').value=e?task.id:'';
+  $('#fT').value=e?task.title:'';
+  
+  // Project handling first, so categories can be rendered correctly
+  const ap=getActiveContextProject();
+  fFormProj=e?(task.project||'bruno'):(ap==='all'?'bruno':ap);
+  renderFormProjects();
+  pickVal($('#fProj'),fFormProj);
+  updateFormProject();
+
+  // Category uses correct project
+  const projCats=getCatsForProject(fFormProj);
+  fCCat=e?task.category:(aCat!=='all'&&projCats.some(c=>c.id===aCat)?aCat:projCats[0]?.id||'');
+  renderCatPicker();
+
+  pickVal($('#fP'),e?(task.priority||''):'');
+  $('#fD').value=e?task.date:'';
+  pickVal($('#fS'),e?task.status:'todo');
+  $('#fN').value=e?(task.notes||''):'';
+  mSubs=e?(task.subtasks||[]).map(s=>({...s})):[];
+  mDeps=e?(task.blockedBy||[]).filter(id=>tasks.some(x=>x.id===id)):[];
   const et=e?(task.estimatedTime||0):0;
   if(et&&[15,30,60,120,240].includes(et)){setTimeChip(et)}
   else if(et){$('#fET').value=et;setTimeChip('custom')}
@@ -2163,13 +2198,7 @@ function openM(task){const e=!!task;$('#mTitle').textContent=e?'Editar Tarefa':'
   $('#recurUntil').value=rec?.until||'';$('#recurPop').classList.remove('show');
   $('#depSearch').value='';$('#depResults').classList.remove('show');
   renderDepChips();renderMSubs();
-  // Project handling
-  renderFormProjects();
-  fFormProj=e?(task.project||'bruno'):(activeProject==='all'?'bruno':activeProject);
-  const visProjs=projects.filter(p=>p.visible);
-  if(!e&&visProjs.length===1)fFormProj=visProjs[0].id;
-  pickVal($('#fProj'),fFormProj);
-  updateFormProject();
+  
   // Assignment (for shared project)
   if(e&&task.assignedTo)pickVal($('#fAssign'),task.assignedTo);
   else pickVal($('#fAssign'),'bruno');
@@ -2553,7 +2582,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=22',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=23',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
