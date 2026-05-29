@@ -666,12 +666,23 @@
     @media(max-width:768px){
       .sidebar{display:none}.main{padding:16px 16px 110px}.fab{display:flex}.wk-toggle,.wdg-panel{display:none!important}
       .mob-nav{display:block}.btn-add{display:none}
-      .page-head h1{font-size:1.4rem}.mob-cats{display:flex}
+      .page-head h1{font-size:1.25rem}.mob-cats{display:flex}
       .dash-grid{grid-template-columns:repeat(2,1fr)}
       .charts-row{grid-template-columns:1fr}.donut-wrap{justify-content:center}
       .toast{bottom:85px}.mob-theme-btn{display:flex}
       .week-load{gap:5px;height:150px}
       .wl-lbl{font-size:.56rem}
+      /* Mobile compact chrome */
+      .greeting{display:none}
+      .page-head{margin-bottom:8px}
+      .mob-cats{gap:6px;padding:0 0 8px}
+      .m-chip{padding:5px 11px;border-radius:16px;font-size:.72rem;border:none;box-shadow:none}
+      .m-chip.active{box-shadow:none}
+      .seg{display:none}
+      .grp-bar{display:none}
+      .toolbar{margin-bottom:6px;gap:6px}
+      .mob-more-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:none;background:transparent;color:var(--label2);cursor:pointer;transition:all var(--dur-fast)}
+      .mob-more-btn:hover{background:var(--fill)}
       /* Mobile: compact items */
       .item{padding:11px 14px}
       .item-date{display:none}
@@ -688,7 +699,6 @@
       .dep-children>.item::before,.dep-children>.dep-tree::before{left:-12px;width:12px}
       .dep-children>.item::after,.dep-children>.dep-tree::after{left:-12px}
       .dep-children>.item:last-child::after,.dep-children>.dep-tree:last-child::after{height:23px;width:12px}
-      .grp-bar{font-size:.7rem;margin-bottom:8px;flex-wrap:wrap;gap:6px}
       .sync-dot{bottom:90px}
     }
 
@@ -723,6 +733,27 @@
     .habit-dot.done{background:#34C759;color:#fff}
     .habit-dot.undone{background:var(--fill);color:var(--label3)}
     .habit-empty{text-align:center;padding:12px;color:var(--label3);font-size:.76rem}
+
+    /* ===== MOBILE MORE BUTTON (hidden on desktop) ===== */
+    .mob-more-btn{display:none}
+
+    /* ===== MOBILE BOTTOM SHEET ===== */
+    .mob-sheet-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+    .mob-sheet-ov.open{display:block}
+    .mob-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;z-index:201;padding:8px 20px 40px;transform:translateY(100%);transition:transform .35s cubic-bezier(.16,1,.3,1);max-height:70vh;overflow-y:auto}
+    .mob-sheet.open{transform:translateY(0)}
+    .mob-sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--sep);margin:0 auto 16px}
+    .mob-sheet-title{font-size:1rem;font-weight:700;color:var(--label);margin-bottom:20px;text-align:center}
+    .mob-sheet-section{margin-bottom:20px}
+    .mob-sheet-label{font-size:.7rem;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+    .mob-sheet-seg{display:flex;gap:6px;flex-wrap:wrap}
+    .mob-sheet-seg button{padding:8px 16px;border-radius:10px;border:1px solid var(--sep);background:transparent;color:var(--label2);font-size:.78rem;font-weight:500;cursor:pointer;font-family:inherit;transition:all var(--dur-fast)}
+    .mob-sheet-seg button.active{background:var(--label);color:var(--bg);border-color:var(--label)}
+    .mob-sheet-opts{display:flex;flex-direction:column;gap:2px}
+    .mob-sheet-opts button{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:none;background:transparent;color:var(--label);font-size:.82rem;font-weight:500;cursor:pointer;font-family:inherit;text-align:left;transition:background var(--dur-fast)}
+    .mob-sheet-opts button.active{background:var(--fill);font-weight:600;color:var(--blue)}
+    .mob-sheet-opts button svg{width:16px;height:16px;color:var(--label3)}
+    [data-theme="dark"] .mob-sheet{background:rgba(32,32,34,.98);border-top:1px solid rgba(255,255,255,.08)}
 
     /* Reduced motion */
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -795,6 +826,11 @@
           <h1 id="pageTitle">Tarefas</h1>
         </div>
         <button class="theme-btn mob-theme-btn" id="mobThemeBtn" title="Alternar tema"><svg id="mobThemeIcon"><use href="#i-moon"/></svg></button>
+        <button class="mob-more-btn" id="mobMore" title="Opções">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+          </svg>
+        </button>
       </div>
       <div class="mob-cats" id="mobCats"></div>
       <div class="toolbar">
@@ -889,6 +925,23 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<div class="mob-sheet-ov" id="mobSheetOv"></div>
+<div class="mob-sheet" id="mobSheet">
+  <div class="mob-sheet-handle"></div>
+  <div class="mob-sheet-title">Opções</div>
+  <div class="mob-sheet-section">
+    <div class="mob-sheet-label">Status</div>
+    <div class="mob-sheet-seg" id="mobSheetSeg"></div>
+  </div>
+  <div class="mob-sheet-section">
+    <div class="mob-sheet-label">Agrupar por</div>
+    <div class="mob-sheet-opts" id="mobSheetGrp"></div>
+  </div>
+  <div class="mob-sheet-section">
+    <div class="mob-sheet-label">Ordenar por</div>
+    <div class="mob-sheet-opts" id="mobSheetSort"></div>
+  </div>
+</div>
 <script>
 const ICONS=['i-heart','i-building','i-droplet','i-rocket','i-home','i-wallet','i-user','i-briefcase','i-star','i-book','i-cart','i-code','i-car','i-globe','i-coffee','i-bulb','i-flag','i-music','i-camera','i-target','i-zap','i-fire','i-layers','i-activity'];
 const COLORS=['#007AFF','#34C759','#FF9500','#FF3B30','#FF2D55','#AF52DE','#32ADE6','#5856D6','#5AC8FA','#00C7BE','#8E8E93','#A2845E','#FFCC00','#30B0C7','#FF6482'];
@@ -2117,6 +2170,31 @@ function processRecurring(){
 })();
 processRecurring();
 setGreeting();render();fbInit();
+
+// ===== MOBILE BOTTOM SHEET =====
+$('#mobMore').addEventListener('click', openMobSheet);
+$('#mobSheetOv').addEventListener('click', closeMobSheet);
+
+function openMobSheet(){
+  const sheet=$('#mobSheet'), ov=$('#mobSheetOv');
+  const statuses=[{s:'all',n:'Todas'},{s:'todo',n:'A fazer'},{s:'doing',n:'Fazendo'},{s:'done',n:'Feitas'}];
+  $('#mobSheetSeg').innerHTML=statuses.map(st=>`<button class="${aSt===st.s?'active':''}" data-ms="${st.s}">${st.n}</button>`).join('');
+  const groups=[{g:'none',n:'Padr\u00e3o'},{g:'category',n:'Categoria'},{g:'priority',n:'Prioridade'},{g:'today',n:'Hoje'},{g:'time',n:'Tempo estimado'}];
+  $('#mobSheetGrp').innerHTML=groups.map(g=>`<button class="${groupBy===g.g?'active':''}" data-mg="${g.g}">${g.n}</button>`).join('');
+  const sorts=[{so:'priority',n:'Prioridade'},{so:'date',n:'Prazo'},{so:'alpha',n:'A-Z'},{so:'recent',n:'Recentes'},{so:'time',n:'Tempo'}];
+  $('#mobSheetSort').innerHTML=sorts.map(s=>`<button class="${sortBy===s.so?'active':''}" data-mso="${s.so}">${s.n}</button>`).join('');
+  sheet.classList.add('open');ov.classList.add('open');
+}
+function closeMobSheet(){$('#mobSheet').classList.remove('open');$('#mobSheetOv').classList.remove('open')}
+
+$('#mobSheet').addEventListener('click',e=>{
+  const ms=e.target.closest('[data-ms]');
+  if(ms){aSt=ms.dataset.ms;saveUI();closeMobSheet();renderTasks();return}
+  const mg=e.target.closest('[data-mg]');
+  if(mg){groupBy=mg.dataset.mg;saveUI();closeMobSheet();renderTasks();return}
+  const mso=e.target.closest('[data-mso]');
+  if(mso){sortBy=mso.dataset.mso;saveUI();closeMobSheet();renderTasks();return}
+});
 </script>
 </body>
 </html>
