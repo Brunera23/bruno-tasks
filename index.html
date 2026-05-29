@@ -87,39 +87,58 @@
     .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
     .cat-nav-item .nav-badge{margin-left:auto;font-size:.7rem;font-weight:600;color:var(--label3)}
     .main{flex:1;min-width:0;padding:28px 36px 40px;max-width:900px;transition:margin-right var(--dur-norm) var(--ease-expo)}
-    .main.wk-open{margin-right:280px}
+    .main.wk-open{margin-right:290px}
     /* Week sidebar */
-    .wk-sidebar{position:fixed;right:-280px;top:0;width:280px;height:100dvh;background:rgba(255,255,255,.92);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-left:1px solid var(--sep);padding:24px 18px 20px;display:flex;flex-direction:column;z-index:80;transition:right var(--dur-norm) var(--ease-expo);overflow-y:auto;scrollbar-width:none}
-    [data-theme="dark"] .wk-sidebar{background:rgba(22,22,24,.92)}
+    .wk-sidebar{position:fixed;right:-290px;top:0;width:290px;height:100dvh;background:rgba(255,255,255,.94);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-left:1px solid var(--sep);padding:24px 20px 20px;display:flex;flex-direction:column;z-index:80;transition:right var(--dur-smooth) var(--ease-expo);overflow-y:auto;scrollbar-width:none}
+    [data-theme="dark"] .wk-sidebar{background:rgba(22,22,24,.94)}
     .wk-sidebar::-webkit-scrollbar{display:none}
     .wk-sidebar.open{right:0}
-    .wk-toggle{position:fixed;right:0;top:50%;transform:translateY(-50%);width:28px;height:56px;background:var(--card);border:1px solid var(--sep);border-right:none;border-radius:8px 0 0 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:81;box-shadow:var(--shadow);transition:right var(--dur-norm) var(--ease-expo),background var(--dur-fast)}
-    .wk-toggle:hover{background:var(--fill)}
-    .wk-toggle svg{width:14px;height:14px;color:var(--label2);transition:transform var(--dur-norm) var(--ease-spring)}
-    .wk-toggle.open{right:280px}
+    .wk-toggle{position:fixed;right:20px;top:50%;transform:translateY(-50%);height:38px;padding:0 14px 0 10px;background:var(--card);border:1px solid var(--sep);border-radius:19px;cursor:pointer;display:flex;align-items:center;gap:7px;z-index:81;box-shadow:var(--shadow2);transition:right var(--dur-smooth) var(--ease-expo),background var(--dur-fast),transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast);font-family:inherit;font-size:.72rem;font-weight:600;color:var(--label2);letter-spacing:.01em}
+    .wk-toggle:hover{background:var(--fill);box-shadow:0 6px 24px rgba(0,0,0,.12);transform:translateY(-50%) scale(1.04)}
+    .wk-toggle:active{transform:translateY(-50%) scale(.96)}
+    .wk-toggle svg{width:16px;height:16px;color:var(--blue);transition:transform var(--dur-norm) var(--ease-spring);flex-shrink:0}
+    .wk-toggle.open{right:300px}
     .wk-toggle.open svg{transform:rotate(180deg)}
-    .wk-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--label3);margin-bottom:16px;display:flex;align-items:center;gap:6px}
-    .wk-title svg{width:14px;height:14px}
-    .wk-day-row{padding:10px 0;border-bottom:1px solid var(--sep)}
+    .wk-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--label3);margin-bottom:18px;display:flex;align-items:center;gap:7px}
+    .wk-title svg{width:15px;height:15px;color:var(--blue)}
+    .wk-day-row{padding:12px 0;border-bottom:1px solid var(--sep);opacity:0;transform:translateX(12px);transition:opacity var(--dur-norm) var(--ease-expo),transform var(--dur-norm) var(--ease-expo),background var(--dur-fast)}
+    .wk-sidebar.open .wk-day-row{opacity:1;transform:translateX(0)}
+    .wk-day-row:nth-child(1){transition-delay:50ms}
+    .wk-day-row:nth-child(2){transition-delay:100ms}
+    .wk-day-row:nth-child(3){transition-delay:150ms}
+    .wk-day-row:nth-child(4){transition-delay:200ms}
+    .wk-day-row:nth-child(5){transition-delay:250ms}
+    .wk-day-row:nth-child(6){transition-delay:300ms}
+    .wk-day-row:nth-child(7){transition-delay:350ms}
     .wk-day-row:last-child{border-bottom:none}
-    .wk-day-row.is-today{background:var(--fill);margin:0 -18px;padding:10px 18px;border-radius:0}
-    .wk-day-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
-    .wk-day-name{font-size:.78rem;font-weight:600;color:var(--label)}
+    .wk-day-row:hover{background:var(--fill);margin:0 -20px;padding:12px 20px;border-radius:10px}
+    .wk-day-row.is-today{background:linear-gradient(135deg,rgba(0,122,255,.06),rgba(0,122,255,.02));margin:0 -20px;padding:12px 20px;border-radius:12px;border-bottom:none}
+    .wk-day-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+    .wk-day-name{font-size:.8rem;font-weight:600;color:var(--label);display:flex;align-items:center;gap:6px}
     .wk-day-row.is-today .wk-day-name{color:var(--blue)}
-    .wk-day-num{font-size:.66rem;color:var(--label3);font-weight:500}
-    .wk-day-total{font-size:.72rem;font-weight:700;color:var(--label)}
-    .wk-day-total.over{color:#FF3B30}
-    .wk-bar-track{height:10px;border-radius:5px;background:var(--fill);overflow:hidden;display:flex}
-    .wk-bar-seg{height:100%;transition:width var(--dur-norm) var(--ease-expo)}
-    .wk-bar-seg:first-child{border-radius:5px 0 0 5px}
-    .wk-bar-seg:last-child{border-radius:0 5px 5px 0}
-    .wk-bar-seg:only-child{border-radius:5px}
-    .wk-cats{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
-    .wk-cat-tag{font-size:.6rem;font-weight:500;padding:1px 5px;border-radius:3px;display:inline-flex;align-items:center;gap:3px;color:var(--label2)}
+    .wk-day-row.is-today .wk-day-name::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--blue);animation:wkPulse 2s ease-in-out infinite}
+    @keyframes wkPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+    .wk-day-num{font-size:.66rem;color:var(--label3);font-weight:500;margin-left:4px}
+    .wk-day-total{font-size:.74rem;font-weight:700;color:var(--label)}
+    .wk-day-total.over{color:#FF3B30;animation:wkShake .4s ease}
+    @keyframes wkShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+    .wk-bar-track{height:8px;border-radius:4px;background:var(--fill);overflow:hidden;display:flex;position:relative}
+    .wk-bar-seg{height:100%;min-width:3px;transition:width .8s cubic-bezier(.34,1.56,.64,1)}
+    .wk-bar-seg:first-child{border-radius:4px 0 0 4px}
+    .wk-bar-seg:last-child{border-radius:0 4px 4px 0}
+    .wk-bar-seg:only-child{border-radius:4px}
+    .wk-cats{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+    .wk-cat-tag{font-size:.62rem;font-weight:600;padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;color:var(--label2);background:var(--fill);transition:transform var(--dur-fast)}
+    .wk-cat-tag:hover{transform:scale(1.05)}
     .wk-cat-tag svg{width:9px;height:9px}
-    .wk-empty{font-size:.7rem;color:var(--label3);font-style:italic}
-    .wk-cap-info{margin-top:auto;padding-top:14px;border-top:1px solid var(--sep);font-size:.66rem;color:var(--label3);display:flex;align-items:center;gap:6px}
-    .wk-cap-info svg{width:12px;height:12px;flex-shrink:0}
+    .wk-pct{font-size:.6rem;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:4px}
+    .wk-pct.low{color:#34C759;background:rgba(52,199,89,.1)}
+    .wk-pct.mid{color:#FF9500;background:rgba(255,149,0,.1)}
+    .wk-pct.high{color:#FF3B30;background:rgba(255,59,48,.1)}
+    .wk-empty{font-size:.72rem;color:var(--label3);opacity:.5;display:flex;align-items:center;gap:5px}
+    .wk-empty::before{content:'';width:100%;height:4px;border-radius:2px;background:var(--fill);opacity:.5}
+    .wk-cap-info{margin-top:auto;padding-top:16px;border-top:1px solid var(--sep);font-size:.68rem;color:var(--label3);display:flex;align-items:center;gap:6px}
+    .wk-cap-info svg{width:12px;height:12px;flex-shrink:0;color:var(--blue)}
 
     /* ===== PAGE HEADER ===== */
     .page-head{margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
@@ -659,7 +678,7 @@
     </div>
   </main>
 
-  <button class="wk-toggle" id="wkToggle" title="Carga da Semana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <button class="wk-toggle" id="wkToggle" title="Carga da Semana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Semana</button>
   <aside class="wk-sidebar" id="wkSidebar">
     <div class="wk-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Carga da Semana</div>
     <div id="wkContent"></div>
@@ -857,7 +876,7 @@ function renderTasks(){
 
 function renderWeekSidebar(){
   const el=document.getElementById('wkContent');if(!el)return;
-  const today=new Date();const todayStr=dateStr(today);
+  const today=new Date();
   const dayNames=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   let html='';
   for(let i=0;i<7;i++){
@@ -868,15 +887,17 @@ function renderWeekSidebar(){
     const dTasks=tasks.filter(t=>t.date===ds&&t.status!=='done'&&t.estimatedTime);
     const byCat={};dTasks.forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+t.estimatedTime});
     const totalMin=dTasks.reduce((s,t)=>s+t.estimatedTime,0);
-    const pct=Math.min(totalMin/DAILY_CAP*100,100);
+    const pct=Math.round(totalMin/DAILY_CAP*100);
     const isOver=totalMin>DAILY_CAP;
+    const pctCls=pct<=50?'low':pct<=100?'mid':'high';
     let segs='';
-    if(totalMin>0){Object.entries(byCat).forEach(([catId,min])=>{const c=ci(catId);const w=min/Math.max(totalMin,DAILY_CAP)*100;segs+=`<div class="wk-bar-seg" style="width:${w}%;background:${c.color};opacity:.7" title="${c.name}: ${fmtTime(min)}"></div>`})}
+    if(totalMin>0){Object.entries(byCat).forEach(([catId,min])=>{const c=ci(catId);const w=min/Math.max(totalMin,DAILY_CAP)*100;segs+=`<div class="wk-bar-seg" style="width:${w}%;background:${c.color};opacity:.85" title="${c.name}: ${fmtTime(min)}"></div>`})}
     let catTags='';
     Object.entries(byCat).forEach(([catId,min])=>{const c=ci(catId);catTags+=`<span class="wk-cat-tag"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${fmtTime(min)}</span>`});
+    const totalDisplay=totalMin>0?`${fmtTime(totalMin)}<span class="wk-pct ${pctCls}">${pct}%</span>`:'';
     html+=`<div class="wk-day-row ${isToday?'is-today':''}">
-      <div class="wk-day-head"><span class="wk-day-name">${dayLabel} <span class="wk-day-num">${dayNum}</span></span><span class="wk-day-total ${isOver?'over':''}">${totalMin>0?fmtTime(totalMin):''}</span></div>
-      ${totalMin>0?`<div class="wk-bar-track">${segs}</div><div class="wk-cats">${catTags}</div>`:'<div class="wk-empty">Livre</div>'}
+      <div class="wk-day-head"><span class="wk-day-name">${dayLabel} <span class="wk-day-num">${dayNum}</span></span><span class="wk-day-total ${isOver?'over':''}">${totalDisplay}</span></div>
+      ${totalMin>0?`<div class="wk-bar-track">${segs}</div><div class="wk-cats">${catTags}</div>`:'<div class="wk-empty"></div>'}
     </div>`;
   }
   el.innerHTML=html;
