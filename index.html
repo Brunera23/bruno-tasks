@@ -1231,16 +1231,34 @@ function sL(){fbSave()}
 // Local storage is only a cache for offline use.
 function showSync(msg,ok){const el=$('#syncDot');if(!el)return;el.className='sync-dot'+(ok?' synced':' saving');if(ok)setTimeout(()=>{el.className='sync-dot'},1500)}
 let _fbTimer=null,_fbInitDone=false;
+let pTasks=[],sTasks=[],pCats=[],pLog=[],sLog=[];
+let _unsubP=null,_unsubS=null;
 
 function _fbDirectSave(){
-  return db.collection('data').doc(FB_DOC).set({
-    tasks:JSON.stringify(tasks),
+  if(!currentUser) return Promise.resolve();
+  const uid=currentUser.uid;
+  const myPTasks=tasks.filter(t=>t.project!=='nos');
+  const mySTasks=tasks.filter(t=>t.project==='nos');
+  const myPLog=log.filter(l=>l.project!=='nos');
+  const mySLog=log.filter(l=>l.project==='nos');
+
+  const p1=db.collection('users').doc(uid).set({
+    tasks:JSON.stringify(myPTasks),
     cats:JSON.stringify(cats),
-    log:JSON.stringify(log.slice(0,100)),
+    log:JSON.stringify(myPLog.slice(0,100)),
     updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
     device:navigator.userAgent.includes('Mobile')?'mobile':'desktop',
-    taskCount:tasks.length
-  });
+    taskCount:myPTasks.length
+  },{merge:true});
+
+  const p2=db.collection('shared').doc('nos').set({
+    tasks:JSON.stringify(mySTasks),
+    log:JSON.stringify(mySLog.slice(0,100)),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    taskCount:mySTasks.length
+  },{merge:true});
+
+  return Promise.all([p1,p2]);
 }
 
 function fbSave(){
@@ -1254,88 +1272,84 @@ function fbSave(){
 }
 
 function fbInit(){
+  if(!currentUser) return;
   showSync('Conectando...');
-  // Save what we have locally in case we need to migrate
-  const localTasks=JSON.parse(JSON.stringify(tasks));
-  const localCats=JSON.parse(JSON.stringify(cats));
-  const localLog=JSON.parse(JSON.stringify(log));
-  const hasLocalData=localTasks.length>0;
-
-  db.collection('data').doc(FB_DOC).get().then(snap=>{
+  
+  // Check for legacy single-document migration
+  db.collection('data').doc('bruno-main').get().then(snap=>{
     if(snap.exists){
+      console.log('Migrating legacy data to new collaborative architecture...');
       const d=snap.data();
-      // CLOUD IS TRUTH — always use cloud data
       tasks=JSON.parse(d.tasks||'[]');
       cats=JSON.parse(d.cats||'[]');
       log=JSON.parse(d.log||'[]');
-      _fbReady=true;_fbInitDone=true;
-      // Clear old localStorage core keys (no longer needed)
-      localStorage.removeItem('bt-v5');
-      localStorage.removeItem('bt-cats');
-      localStorage.removeItem('bt-log');
-      localStorage.removeItem('bt-v5-backup');
-      if(typeof render==='function')render();
-      showSync('Sincronizado ✓',true);
-      fbListen();
-    } else if(hasLocalData){
-      // Cloud is empty but we have local data — MIGRATE to cloud
-      console.log('Migrating local data to cloud...',localTasks.length,'tasks');
-      tasks=localTasks;cats=localCats;log=localLog;
-      _fbReady=true;
-      showSync('Migrando dados para nuvem...');
+      
+      _fbReady=true; _fbInitDone=true;
+      showSync('Migrando banco de dados...');
       _fbDirectSave().then(()=>{
-        _fbInitDone=true;
-        // Clear localStorage after successful migration
-        localStorage.removeItem('bt-v5');
-        localStorage.removeItem('bt-cats');
-        localStorage.removeItem('bt-log');
-        localStorage.removeItem('bt-v5-backup');
-        showSync('Dados migrados para nuvem ✓',true);
+        db.collection('data').doc('bruno-main').delete().catch(console.warn);
+        showSync('Sincronizado ✓',true);
         fbListen();
-      }).catch(e=>{
-        _fbInitDone=true;
-        showSync('Erro na migração',false);
-        console.warn('Migration error',e);
-        fbListen();
-      });
+      }).catch(e=>{console.warn('Migration save error',e);fbListen()});
     } else {
-      // No data anywhere — fresh start
-      _fbReady=true;_fbInitDone=true;
+      _fbReady=true; _fbInitDone=true;
       showSync('Pronto',true);
       fbListen();
     }
   }).catch(e=>{
-    // Offline — enablePersistence will serve cached Firestore data
-    // Fallback to localStorage only if Firestore cache is also empty
     showSync('Offline',true);
     console.warn('FB init error',e);
-    _fbReady=true;_fbInitDone=true;
-  })
+    _fbReady=true; _fbInitDone=true;
+    fbListen();
+  });
+}
+
+function combineData(){
+  if(_fbSaving||!_fbInitDone)return;
+  const newTasks=[...pTasks,...sTasks];
+  if(JSON.stringify(newTasks)===JSON.stringify(tasks))return;
+  tasks=newTasks;
+  cats=[...pCats];
+  log=[...pLog,...sLog].sort((a,b)=>b.ts-a.ts);
+  if(typeof render==='function')render();
+  showSync('Atualizado ✓',true);
 }
 
 function fbListen(){
-  if(_fbListening)return;
-  _fbListening=true;
-  db.collection('data').doc(FB_DOC).onSnapshot(snap=>{
-    if(!snap.exists||_fbSaving||!_fbInitDone)return;
-    const d=snap.data();
-    const cloudTasks=JSON.parse(d.tasks||'[]');
-    // If identical, skip
-    if(JSON.stringify(cloudTasks)===JSON.stringify(tasks))return;
-    // ACCEPT cloud data — cloud is truth
-    tasks=cloudTasks;
-    cats=JSON.parse(d.cats||'[]');
-    log=JSON.parse(d.log||'[]');
-    // No localStorage — Firestore persistence handles offline cache
-    if(typeof render==='function')render();
-    showSync('Atualizado ✓',true);
-  },e=>{console.warn('FB listener error',e)});
+  if(!currentUser) return;
+  const uid=currentUser.uid;
+  if(_unsubP) _unsubP();
+  if(_unsubS) _unsubS();
+  
+  let pLoaded=false, sLoaded=false;
+
+  _unsubP=db.collection('users').doc(uid).onSnapshot(snap=>{
+    pLoaded=true;
+    if(snap.exists&&!_fbSaving){
+      const d=snap.data();
+      pTasks=JSON.parse(d.tasks||'[]');
+      pCats=JSON.parse(d.cats||'[]');
+      pLog=JSON.parse(d.log||'[]');
+    }
+    if(pLoaded&&sLoaded) combineData();
+  },e=>console.warn('FB pListener error',e));
+
+  _unsubS=db.collection('shared').doc('nos').onSnapshot(snap=>{
+    sLoaded=true;
+    if(snap.exists&&!_fbSaving){
+      const d=snap.data();
+      sTasks=JSON.parse(d.tasks||'[]');
+      sLog=JSON.parse(d.log||'[]');
+    }
+    if(pLoaded&&sLoaded) combineData();
+  },e=>console.warn('FB sListener error',e));
 }
+
 function ci(id){return cats.find(c=>c.id===id)||NOS_CATS.find(c=>c.id===id)||{name:id,icon:'i-layers',color:'#8E8E93'}}
 function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
 function fDate(d){if(!d)return'';return new Date(d+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}
 function isOD(d){if(!d)return false;const t=new Date();t.setHours(0,0,0,0);return new Date(d+'T00:00:00')<t}
-function addLog(type,t){log.unshift({type,taskId:t.id,title:t.title,category:t.category,ts:Date.now()});if(log.length>200)log=log.slice(0,200);sL()}
+function addLog(type,t){log.unshift({type,taskId:t.id,title:t.title,category:t.category,project:t.project||'bruno',ts:Date.now()});if(log.length>200)log=log.slice(0,200);fbSave()}
 function relTime(ts){const d=Date.now()-ts,s=d/1000,m=s/60,h=m/60,dy=h/24;if(s<60)return'agora';if(m<60)return Math.floor(m)+'min';if(h<24)return Math.floor(h)+'h';if(dy<7)return Math.floor(dy)+'d';return new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}
 function fmtTime(min){if(!min)return'';if(min<60)return min+'min';const h=Math.floor(min/60),m=min%60;return m?h+'h'+m+'m':h+'h'}
 function isBlocked(t){if(!t.blockedBy||!t.blockedBy.length)return false;return t.blockedBy.some(bid=>{const bt=tasks.find(x=>x.id===bid);return bt&&bt.status!=='done'})}
@@ -2464,7 +2478,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=17',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=18',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
