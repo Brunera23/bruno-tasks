@@ -910,7 +910,7 @@
 <div class="shell" style="display:none">
   <aside class="sidebar">
     <div class="sidebar-top">
-    .sidebar-logo"><div class="logo-icon"><svg><use href="#i-check"/></svg></div>Bruno Tasks</div>
+      <div class="sidebar-logo"><div class="logo-icon"><svg><use href="#i-check"/></svg></div>Bruno Tasks</div>
       <button class="theme-btn" id="themeBtn" title="Alternar tema"><svg id="themeIcon"><use href="#i-moon"/></svg></button>
     </div>
     <div class="nav-section">
@@ -1222,21 +1222,14 @@ function renderProjNav(){
       <div class="proj-info">
         <span class="proj-name">${p.name}</span>
       </div>
-      <button class="a-btn" title="Mais" data-proj-more="${p.id}"><svg><use href="#i-more"/></svg></button>
+      <div class="proj-actions">
+        <button class="a-btn" title="Mais" data-proj-more="${p.id}"><svg><use href="#i-more"/></svg></button>
+      </div>
+      <span class="proj-badge">${count||''}</span>
       <button class="proj-toggle${p.visible?' on':''}" data-proj-toggle="${p.id}"></button>
     </div>`;
   });
   el.innerHTML=h;
-}
-
-function showProjMore(id){
-  const p=projects.find(x=>x.id===id);
-  if(!p)return;
-  $('#pasTitle').textContent=p.name;
-  let content=`<button class="btn btn-sec" onclick="renProj('${id}')">Renomear</button>`;
-  if(p.type==='shared') content+=`<button class="btn btn-sec" onclick="shareProj('${id}')">Convidar</button>`;
-  $('#pasContent').innerHTML=content;
-  $('#pActionSheet').classList.add('open');
 }
 
 function renProj(id) {
@@ -1431,6 +1424,7 @@ function setTheme(t){
   const icon=t==='dark'?'i-sun':'i-moon';
   $('#themeIcon').innerHTML=`<use href="#${icon}"/>`;
   $('#mobThemeIcon').innerHTML=`<use href="#${icon}"/>`;
+  const meta=$('#metaTheme');if(meta)meta.content=t==='dark'?'#0a0a0a':'#f5f5f7';
 }
 function toggleTheme(){
   const newTheme=getTheme()==='light'?'dark':'light';
@@ -2270,8 +2264,8 @@ function celebrateDone(x,y){
   setTimeout(()=>spawnBurst(x,y-30,['#FFCC00','#FF3B30','#007AFF','#FF2D55'],30,250),400);
   setTimeout(()=>spawnBurst(x,y+10,c1,25,160),550);
   spawnFlash();
-  document.body.animation='celebShake .5s ease';
-  setTimeout(()=>{document.body.animation=''},600);
+  document.body.style.animation='celebShake .5s ease';
+  setTimeout(()=>{document.body.style.animation=''},600);
 }
 function showStatusPop(ckEl,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
@@ -2559,7 +2553,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=21',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=22',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
