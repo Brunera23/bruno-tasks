@@ -318,7 +318,7 @@
     /* ===== MOBILE CATS ===== */
     .mob-cats{display:none;gap:8px;padding:0 0 14px;overflow-x:auto;scrollbar-width:none;scroll-behavior:smooth;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
     .mob-cats::-webkit-scrollbar{display:none}
-    .m-chip{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:18px;background:var(--card);border:1px solid var(--sep);color:var(--label2);font-size:.76rem;font-weight:500;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;box-shadow:var(--shadow);scroll-snap-align:start}
+    .m-chip{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;background:var(--card);border:1px solid var(--sep);color:var(--label2);font-size:.70rem;font-weight:500;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;box-shadow:var(--shadow);scroll-snap-align:start}
     .m-chip:hover{background:var(--card-hover)}
     .m-chip:active{transform:scale(.96);transition-duration:80ms}
     .m-chip.active{background:var(--label);color:var(--bg);border-color:transparent}
@@ -753,7 +753,7 @@
       .greeting{display:none}
       .page-head{margin-bottom:8px}
       .mob-cats{gap:6px;padding:0 0 8px}
-      .m-chip{padding:5px 11px;border-radius:16px;font-size:.72rem;border:none;box-shadow:none}
+      .m-chip{padding:4px 10px;border-radius:14px;font-size:.70rem;border:none;box-shadow:none}
       .m-chip.active{box-shadow:none}
       .seg{display:none}
       .grp-bar{display:none}
@@ -1136,10 +1136,18 @@ function doGoogleLogin(){
 }
 
 let _authBooted=false;
+let _pendingInvite=null;
+
 auth.onAuthStateChanged(user=>{
   currentUser=user;
   if(user){
     console.log('Auth OK:',user.uid,user.displayName);
+    const params=new URLSearchParams(location.search);
+    const inv=params.get('invite');
+    if(inv){
+      _pendingInvite={id:inv,name:params.get('name')||'Compartilhado',icon:'i-heart',color:'#FF2D55',gradient:'linear-gradient(135deg,#FF2D55,#FF6482)',type:'shared',visible:true,order:9};
+      window.history.replaceState({},document.title,window.location.pathname);
+    }
     updateSidebarUser(user);
     showApp();
     if(!_authBooted){
@@ -1201,7 +1209,10 @@ function renderProjNav(){
         <span class="proj-name">${p.name}</span>
         <span class="proj-type${isShared?' shared':''}">${isShared?'Compartilhado':'Pessoal'}</span>
       </div>
-      ${isShared?'<div class="proj-avatars"><div class="proj-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)">B</div><div class="proj-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)">?</div></div>':''}
+      <div class="proj-actions">
+        <button class="a-btn" title="Renomear" data-proj-edit="${p.id}"><svg><use href="#i-edit"/></svg></button>
+        ${isShared?`<button class="a-btn" title="Link de Convite" data-proj-share="${p.id}"><svg><use href="#i-users"/></svg></button>`:''}
+      </div>
       <span class="proj-badge">${count||''}</span>
       <button class="proj-toggle${p.visible?' on':''}" data-proj-toggle="${p.id}"></button>
     </div>`;
@@ -1330,7 +1341,19 @@ function fbListen(){
       pTasks=JSON.parse(d.tasks||'[]');
       pCats=JSON.parse(d.cats||'[]');
       pLog=JSON.parse(d.log||'[]');
+      if(d.projects) projects=JSON.parse(d.projects);
     }
+    
+    // Process pending invite
+    if(_pendingInvite){
+      if(!projects.find(p=>p.id===_pendingInvite.id)){
+         projects.push(_pendingInvite);
+         toast(`Você entrou no projeto ${_pendingInvite.name}!`);
+         _fbDirectSave();
+      }
+      _pendingInvite=null;
+    }
+
     if(pLoaded&&sLoaded) combineData();
   },e=>console.warn('FB pListener error',e));
 
@@ -1391,15 +1414,28 @@ function switchView(v){
 }
 
 function renderCatNav(){
-  const cnt={};tasks.forEach(t=>{if(t.status!=='done')cnt[t.category]=(cnt[t.category]||0)+1});
-  const all=tasks.filter(t=>t.status!=='done').length;$('#navBadge').textContent=all;
-  const sorted=[...cats].sort((a,b)=>(cnt[b.id]||0)-(cnt[a.id]||0));
+  const cnt={};tasks.forEach(t=>{if(t.status!=='done'&&(!t.project||t.project==='bruno'))cnt[t.category]=(cnt[t.category]||0)+1});
+  
+  let catsToShow = [];
+  if (activeProject === 'bruno') {
+    catsToShow = cats;
+  } else if (activeProject === 'nos' || projects.find(p=>p.id===activeProject)?.type==='shared') {
+    catsToShow = NOS_CATS; // TODO: or specific shared cats
+  } else {
+    catsToShow = cats; // fallback
+  }
+
+  const all=tasks.filter(t=>t.status!=='done'&&(activeProject==='all'||t.project===activeProject||(!t.project&&activeProject==='bruno'))).length;
+  $('#navBadge').textContent=all;
+  const sorted=[...catsToShow].sort((a,b)=>(cnt[b.id]||0)-(cnt[a.id]||0));
   let h=`<button class="cat-nav-item ${aCat==='all'?'active':''}" data-c="all"><span class="cat-dot" style="background:var(--label3)"></span>Todas<span class="nav-badge">${all}</span></button>`;
   sorted.forEach(c=>{h+=`<button class="cat-nav-item ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="cat-dot" style="background:${c.color}"></span>${c.name}<span class="nav-badge">${cnt[c.id]||0}</span></button>`});
   $('#catNav').innerHTML=h;
   let mc=`<button class="m-chip ${aCat==='all'?'active':''}" data-c="all"><span class="chip-dot" style="background:var(--label3)"></span>Todas</button>`;
   sorted.forEach(c=>{mc+=`<button class="m-chip ${aCat===c.id?'active':''}" data-c="${c.id}"><span class="chip-dot" style="background:${c.color}"></span>${c.name}</button>`});
-  mc+=`<button class="m-chip m-chip-add" id="mobAddCat"><svg><use href="#i-plus"/></svg></button>`;
+  if(activeProject==='bruno'||activeProject==='all'){
+    mc+=`<button class="m-chip m-chip-add" id="mobAddCat"><svg><use href="#i-plus"/></svg></button>`;
+  }
   $('#mobCats').innerHTML=mc;
   renderCatPicker();
 }
@@ -2058,9 +2094,13 @@ function getPickVal(container){
   return container.querySelector('[data-v].active')?.dataset.v||'';
 }
 function updateFormProject(){
-  const isShared=fFormProj==='nos';
+  const isShared=projects.find(p=>p.id===fFormProj)?.type==='shared';
   $('#sharedBanner').style.display=isShared?'flex':'none';
   $('#fAssignWrap').style.display=isShared?'':'none';
+}
+
+function renderFormProjects(){
+  $('#fProj').innerHTML=projects.map(p=>`<button type="button" data-v="${p.id}" class="${p.id===fFormProj?'active':''}"><span class="pick-dot" style="background:${p.color}"></span>${p.name}</button>`).join('');
 }
 
 function renderCatPicker(){
@@ -2089,8 +2129,8 @@ function openM(task){const e=!!task;$('#mTitle').textContent=e?'Editar Tarefa':'
   $('#depSearch').value='';$('#depResults').classList.remove('show');
   renderDepChips();renderMSubs();
   // Project handling
-  fFormProj=e?(task.project||'bruno'):'bruno';
-  // If only one project visible, default to that
+  renderFormProjects();
+  fFormProj=e?(task.project||'bruno'):(activeProject==='all'?'bruno':activeProject);
   const visProjs=projects.filter(p=>p.visible);
   if(!e&&visProjs.length===1)fFormProj=visProjs[0].id;
   pickVal($('#fProj'),fFormProj);
@@ -2478,7 +2518,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=18',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=19',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2542,6 +2582,26 @@ $('#logoutBtn').addEventListener('click',()=>{auth.signOut()});
 
 // Project toggle clicks
 $('#projNav').addEventListener('click',e=>{
+  const editBtn=e.target.closest('[data-proj-edit]');
+  if(editBtn){
+    e.stopPropagation();
+    const p=projects.find(x=>x.id===editBtn.dataset.projEdit);
+    if(p){
+      const nn=prompt('Novo nome do projeto:',p.name);
+      if(nn&&nn.trim()){p.name=nn.trim();saveUI();render();_fbDirectSave()}
+    }
+    return;
+  }
+  const shareBtn=e.target.closest('[data-proj-share]');
+  if(shareBtn){
+    e.stopPropagation();
+    const p=projects.find(x=>x.id===shareBtn.dataset.projShare);
+    if(p){
+      const link=location.origin+location.pathname+'?invite='+p.id+'&name='+encodeURIComponent(p.name);
+      prompt('Link de Convite: Copie e envie para a pessoa que você deseja convidar para o projeto.', link);
+    }
+    return;
+  }
   const toggle=e.target.closest('[data-proj-toggle]');
   if(toggle){
     e.stopPropagation();
