@@ -1440,6 +1440,7 @@ $('#depResults').addEventListener('mousedown',e=>{const r=e.target.closest('.dep
   mDeps.push(depId);$('#depSearch').value='';$('#depResults').classList.remove('show');renderDepChips();
 });
 $('#depChips').addEventListener('click',e=>{const rm=e.target.closest('.dc-rm');if(!rm)return;const bid=rm.dataset.depRm;mDeps=mDeps.filter(d=>d!==bid);renderDepChips()});
+$('#form').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.ctrlKey&&!e.metaKey&&document.activeElement.tagName!=='TEXTAREA'){e.preventDefault()}});
 $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').value;const isNew=!id;const etVal=parseInt($('#fET').value)||0;const cat=fCCat;const prio=getPickVal($('#fP'));const status=getPickVal($('#fS'));let title=$('#fT').value.trim();if(!title)return;
   // Deduplicate title
   const others=tasks.filter(t=>t.id!==id);
