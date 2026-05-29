@@ -104,7 +104,7 @@
     .sfb-text{display:flex;flex-direction:column}
     .sfb-title{font-size:.78rem;font-weight:600;color:var(--label)}
     .sfb-sub{font-size:.64rem;color:var(--label3);margin-top:1px}
-    .assign-avatar{width:22px;height:22px;border-radius:50%;color:#fff;font-size:.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .assign-avatar{width:26px;height:26px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 5px rgba(0,0,0,.15)}
     .assign-mini{width:16px;height:16px;border-radius:50%;color:#fff;font-size:.5rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:3px}
     .assign-tag{display:flex;align-items:center;gap:0}
     .proj-dot-nos{width:6px;height:6px;border-radius:50%;background:#FF2D55;display:inline-block;margin-right:5px;flex-shrink:0;vertical-align:middle}
@@ -618,10 +618,9 @@
     .fld textarea{resize:vertical;min-height:48px}
 
     /* Custom select */
-    .cs-wrap{position:relative;width:100%;font-size:.84rem;color:var(--label);font-family:inherit;outline:none}
-    .cs-val{width:100%;padding:10px 13px;background:var(--bg);border:1px solid var(--sep);border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all var(--dur-fast)}
-    .cs-val:hover{border-color:var(--label3)}
-    .cs-wrap.open .cs-val{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.1)}
+    .cs-wrap{position:relative;width:100%;font-size:.9rem;color:var(--label);font-family:inherit;outline:none;border-radius:12px;background:var(--fill2, var(--fill));transition:all var(--dur-fast)}
+    .cs-val{width:100%;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+    .cs-wrap.open{box-shadow:0 0 0 3px rgba(0,122,255,.15);background:var(--card)}
     .cs-val-inner{display:flex;align-items:center;gap:7px;overflow:hidden;white-space:nowrap}
     .cs-val-inner svg{width:14px;height:14px;flex-shrink:0}
     .cs-arrow{width:14px;height:14px;color:var(--label3);transition:transform var(--dur-fast)}
@@ -634,10 +633,10 @@
     .cs-opt svg{width:14px;height:14px;flex-shrink:0}
 
     /* Custom selectors — Apple style */
-    .pick-seg{display:flex;background:var(--fill);border-radius:10px;padding:3px;width:100%}
-    .pick-seg button{flex:1;padding:8px 6px;font-size:.78rem;font-weight:500;color:var(--label2);background:transparent;border:none;border-radius:8px;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+    .pick-seg{display:flex;background:var(--fill2, var(--fill));border-radius:12px;padding:4px;width:100%}
+    .pick-seg button{flex:1;padding:10px 8px;font-size:.85rem;font-weight:500;color:var(--label2);background:transparent;border:none;border-radius:10px;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
     .pick-seg button:active{transform:scale(.96);transition-duration:80ms}
-    .pick-seg button.active{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .pick-seg button.active{background:var(--card);color:var(--label);box-shadow:0 1px 4px rgba(0,0,0,.06)}
     .pick-seg button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
     .pick-seg .pick-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 
@@ -646,8 +645,13 @@
 
     /* Express Form */
     .form-express .adv-field { display: none !important; }
+    
+    .assign-seg { background: var(--fill2, var(--fill)); padding: 6px; border-radius: 16px; gap: 4px; }
+    .assign-seg button { padding: 8px 4px; border: 2px solid transparent; border-radius: 12px; font-size: .88rem; }
+    .assign-seg button.active { border-color: var(--blue); box-shadow: 0 2px 5px rgba(0,0,0,0.08); background: var(--card); }
+
     .ap-icons{display:flex;gap:8px;flex-wrap:wrap}
-    .ap-opt{width:36px;height:36px;border-radius:10px;background:var(--fill);border:2px solid transparent;color:var(--label);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--dur-fast)}
+    .ap-opt{width:36px;height:36px;border-radius:10px;background:var(--fill2, var(--fill));border:2px solid transparent;color:var(--label);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--dur-fast)}
     .ap-opt:hover{background:var(--fill2, rgba(120,120,128,.18))}
     .ap-opt.active{border-color:var(--blue);background:rgba(0,122,255,.1);color:var(--blue)}
     .ap-opt svg{width:18px;height:18px}
@@ -869,6 +873,8 @@
   <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4h4v-4z"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></symbol>
+  <symbol id="i-woman" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M15.5 5.5A4.5 4.5 0 0116 10v3"/><path d="M8.5 5.5A4.5 4.5 0 008 10v3"/></symbol>
+  <symbol id="i-couple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3"/><path d="M2 20v-2a4 4 0 014-4h2"/><circle cx="17" cy="7" r="3"/><path d="M22 20v-2a4 4 0 00-4-4h-2"/><path d="M12 15.5l-3-3a2.5 2.5 0 113.5-3.5A2.5 2.5 0 1115 12.5l-3 3z" fill="currentColor"/></symbol>
   <symbol id="i-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 13 10 17 19 7"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
@@ -1031,9 +1037,9 @@
       <button type="button" data-v="nos"><span class="pick-dot" style="background:#FF2D55"></span>Nós 💑</button>
     </div></div>
     <div class="fld" id="fAssignWrap" style="display:none"><label>Para quem?</label><div class="pick-seg assign-seg" id="fAssign">
-      <button type="button" data-v="bruno" class="active"><span class="assign-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="12" height="12"><use href="#i-user"/></svg></span>Bruno</button>
-      <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="12" height="12"><use href="#i-user"/></svg></span>Parceira</button>
-      <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="12" height="12"><use href="#i-users"/></svg></span>Ambos</button>
+      <button type="button" data-v="bruno" class="active"><span class="assign-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Bruno</button>
+      <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="14" height="14"><use href="#i-woman"/></svg></span>Parceira</button>
+      <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-couple"/></svg></span>Ambos</button>
     </div></div>
     <div class="fld"><label>Título</label><input type="text" id="fT" placeholder="O que precisa ser feito?" required></div>
     <div class="fld"><label>Categoria</label>
@@ -1673,7 +1679,7 @@ function renderItem(t,i,isChild=false,depsOpen=false,isLast=false){
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
   const dateTag=t.date?`<span class="item-date ${od?'overdue':''}" data-id="${t.id}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:`<span class="item-date" data-id="${t.id}" style="opacity:.4"><svg><use href="#i-cal"/></svg>Prazo</span>`;
   const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
-  const assignTag=t.project==='nos'&&t.assignedTo?`<span class="tag-meta assign-tag"><span class="assign-mini" style="background:${t.assignedTo==='bruno'?'linear-gradient(135deg,#007AFF,#5AC8FA)':t.assignedTo==='parceira'?'linear-gradient(135deg,#FF2D55,#FF6482)':'linear-gradient(135deg,#AF52DE,#5856D6)'}"><svg width="10" height="10"><use href="${t.assignedTo==='ambos'?'#i-users':'#i-user'}"/></svg></span>${t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Parceira':'Ambos'}</span>`:'';
+  const assignTag=t.project==='nos'&&t.assignedTo?`<span class="tag-meta assign-tag"><span class="assign-mini" style="background:${t.assignedTo==='bruno'?'linear-gradient(135deg,#007AFF,#5AC8FA)':t.assignedTo==='parceira'?'linear-gradient(135deg,#FF2D55,#FF6482)':'linear-gradient(135deg,#AF52DE,#5856D6)'}"><svg width="10" height="10"><use href="${t.assignedTo==='ambos'?'#i-couple':t.assignedTo==='parceira'?'#i-woman':'#i-user'}"/></svg></span>${t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Parceira':'Ambos'}</span>`:'';
   const projDot=t.project==='nos'?'<span class="proj-dot-nos" title="Nós"></span>':'';
   return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><button class="ck ${ckCls}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button></div><div class="item-body"><div class="item-title">${projDot}${t.title}</div><div class="item-meta"><span class="tag tag-cat" data-id="${t.id}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${assignTag}${prioTag}${waitTag}${recurTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-right">${dateTag}<div class="item-acts">${t.status!=='done'?`<button class="a-btn" onclick="quickChild('${t.id}')" title="Adicionar subtarefa"><svg><use href="#i-plus"/></svg></button>`:''}<button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${t.notes}</div>`:''}</div>`;
 }
@@ -2782,7 +2788,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=43',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=44',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
