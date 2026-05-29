@@ -133,11 +133,20 @@
     .btn-add:hover{transform:translateY(-1px) scale(1.02);box-shadow:0 6px 20px rgba(0,0,0,.1)}
     .btn-add:active{transform:translateY(.5px) scale(.98);box-shadow:0 1px 4px rgba(0,0,0,.06);transition-duration:80ms}
     .btn-add svg{width:16px;height:16px}
-    .grp-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:.72rem;color:var(--label3);font-weight:500}
-    .grp-bar span{white-space:nowrap}
-    .grp-seg{display:flex;background:var(--fill);border-radius:8px;padding:2px}
-    .grp-seg button{padding:5px 10px;font-size:.72rem;font-weight:500;color:var(--label3);background:transparent;border:none;border-radius:6px;cursor:pointer;transition:all var(--dur-fast);font-family:inherit;white-space:nowrap}
-    .grp-seg button.active{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .grp-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:.74rem;color:var(--label3);font-weight:500}
+    .grp-bar>span{white-space:nowrap}
+    .grp-dd{position:relative}
+    .grp-dd-val{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--fill);border-radius:8px;cursor:pointer;font-size:.74rem;font-weight:500;color:var(--label);transition:all var(--dur-fast);border:none;font-family:inherit}
+    .grp-dd-val:hover{background:var(--sep)}
+    .grp-dd-val svg{width:12px;height:12px;color:var(--label3);transition:transform var(--dur-fast)}
+    .grp-dd.open .grp-dd-val svg{transform:rotate(180deg)}
+    .grp-dd-menu{position:absolute;top:calc(100% + 4px);left:0;background:var(--card);border:1px solid var(--sep);border-radius:10px;box-shadow:var(--shadow2);z-index:30;min-width:170px;padding:4px;display:none}
+    .grp-dd.open .grp-dd-menu{display:block}
+    .grp-dd-opt{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;cursor:pointer;font-size:.76rem;font-weight:500;color:var(--label);transition:background var(--dur-fast);white-space:nowrap}
+    .grp-dd-opt:hover{background:var(--fill)}
+    .grp-dd-opt.active{color:var(--blue);font-weight:600}
+    .grp-dd-opt svg{width:13px;height:13px;color:var(--label3)}
+    .grp-dd-opt.active svg{color:var(--blue)}
     .grp-header{padding:10px 18px 4px;font-size:.72rem;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:6px;border-top:.5px solid var(--sep)}
     .grp-header:first-child{border-top:none}
     .grp-header .grp-count{background:var(--fill);padding:1px 6px;border-radius:4px;font-size:.66rem;font-weight:600}
@@ -524,7 +533,18 @@
         <div class="seg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="done">Feitas</button></div>
         <button class="btn-add" id="btnAdd"><svg><use href="#i-plus"/></svg>Nova tarefa</button>
       </div>
-      <div class="grp-bar"><span>Agrupar por:</span><div class="grp-seg" id="grpSeg"><button class="active" data-g="none">Padrão</button><button data-g="category">Categoria</button><button data-g="priority">Prioridade</button><button data-g="date">Prazo</button></div></div>
+      <div class="grp-bar"><span>Agrupar por:</span>
+        <div class="grp-dd" id="grpDd" tabindex="0">
+          <button class="grp-dd-val" id="grpVal"><span>Padrão</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="grp-dd-menu" id="grpMenu">
+            <div class="grp-dd-opt active" data-g="none"><svg><use href="#i-layers"/></svg>Padrão</div>
+            <div class="grp-dd-opt" data-g="category"><svg><use href="#i-star"/></svg>Categoria</div>
+            <div class="grp-dd-opt" data-g="priority"><svg><use href="#i-flag"/></svg>Prioridade</div>
+            <div class="grp-dd-opt" data-g="today"><svg><use href="#i-cal"/></svg>Hoje</div>
+            <div class="grp-dd-opt" data-g="time"><svg><use href="#i-clock"/></svg>Tempo estimado</div>
+          </div>
+        </div>
+      </div>
       <div class="tl" id="list"></div>
     </div>
 
@@ -701,10 +721,13 @@ function renderTasks(){
   } else if(groupBy==='priority'){
     const labels=[{k:'alta',n:'Alta',c:'#FF3B30'},{k:'media',n:'Média',c:'#FF9500'},{k:'baixa',n:'Baixa',c:'#34C759'},{k:'',n:'Sem prioridade',c:'var(--label3)'}];
     labels.forEach(l=>{const g=pending.filter(t=>(t.priority||'')===l.k);if(!g.length)return;html+=`<div class="grp-header"><span class="grp-dot" style="background:${l.c}"></span>${l.n}<span class="grp-count">${g.length}</span></div>`;g.forEach(t=>{html+=renderItem(t,idx++)})});
-  } else if(groupBy==='date'){
+  } else if(groupBy==='today'){
     const today=dateStr(new Date());const tom=dateStr(new Date(Date.now()+864e5));
-    const buckets=[{n:'Atrasadas',f:t=>t.date&&t.date<today},{n:'Hoje',f:t=>t.date===today},{n:'Amanhã',f:t=>t.date===tom},{n:'Próximos',f:t=>t.date&&t.date>tom},{n:'Sem prazo',f:t=>!t.date}];
+    const buckets=[{n:'Atrasadas',f:t=>t.date&&t.date<today},{n:'Hoje',f:t=>t.date===today},{n:'Amanhã',f:t=>t.date===tom},{n:'Próximos dias',f:t=>t.date&&t.date>tom},{n:'Sem prazo',f:t=>!t.date}];
     buckets.forEach(b=>{const g=pending.filter(b.f);if(!g.length)return;html+=`<div class="grp-header">${b.n}<span class="grp-count">${g.length}</span></div>`;g.forEach(t=>{html+=renderItem(t,idx++)})});
+  } else if(groupBy==='time'){
+    const ranges=[{n:'Rápidas (< 15min)',f:t=>t.estimatedTime&&t.estimatedTime<15},{n:'15 minutos',f:t=>t.estimatedTime===15},{n:'30 minutos',f:t=>t.estimatedTime===30},{n:'1 hora',f:t=>t.estimatedTime===60},{n:'2 horas',f:t=>t.estimatedTime===120},{n:'4 horas',f:t=>t.estimatedTime===240},{n:'Longas (> 4h)',f:t=>t.estimatedTime&&t.estimatedTime>240},{n:'Sem estimativa',f:t=>!t.estimatedTime}];
+    ranges.forEach(r=>{const g=pending.filter(r.f);if(!g.length)return;html+=`<div class="grp-header">${r.n}<span class="grp-count">${g.length}</span></div>`;g.forEach(t=>{html+=renderItem(t,idx++)})});
   }
   if(done.length){
     html+=`<button class="done-toggle ${showDone?'open':''}" id="doneToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>Concluídas<span class="dt-count">${done.length}</span></button>`;
@@ -894,7 +917,12 @@ $('#list').addEventListener('click',e=>{const dt=e.target.closest('.done-toggle'
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;renderTasks()})});
-$('#grpSeg').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;$$('#grpSeg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');groupBy=b.dataset.g;renderTasks()});
+$('#grpDd').addEventListener('click',()=>$('#grpDd').classList.toggle('open'));
+$('#grpDd').addEventListener('blur',()=>setTimeout(()=>$('#grpDd').classList.remove('open'),150));
+$('#grpMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.grp-dd-opt');if(!o)return;e.preventDefault();
+  $$('#grpMenu .grp-dd-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active');
+  groupBy=o.dataset.g;$('#grpVal span').textContent=o.textContent;$('#grpDd').classList.remove('open');renderTasks();
+});
 $$('.nav-item').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
 $$('.mob-tab[data-view]').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
 $('#q').addEventListener('input',e=>{qry=e.target.value;renderTasks()});
