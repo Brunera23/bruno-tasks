@@ -1040,19 +1040,28 @@ $('#timeChips').addEventListener('click',e=>{const chip=e.target.closest('.time-
 
 $('#fP').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;if(b.classList.contains('active')){b.classList.remove('active')}else{pickVal($('#fP'),b.dataset.v)}});
 $('#fS').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;pickVal($('#fS'),b.dataset.v)});
-$('#depSearch').addEventListener('input',e=>{const q=e.target.value.toLowerCase().trim();const editId=$('#fId').value;if(!q){$('#depResults').classList.remove('show');return}
-  const results=tasks.filter(t=>t.id!==editId&&!mDeps.includes(t.id)&&t.title.toLowerCase().includes(q)&&t.status!=='done').slice(0,6);
+function showDepResults(q){
+  const editId=$('#fId').value;
+  const query=(q||'').toLowerCase().trim();
+  const results=tasks.filter(t=>t.id!==editId&&!mDeps.includes(t.id)&&t.status!=='done'&&(!query||t.title.toLowerCase().includes(query))).slice(0,8);
   if(!results.length){$('#depResults').classList.remove('show');return}
   $('#depResults').innerHTML=results.map(t=>{const c=ci(t.category);return`<div class="dep-result" data-dep-add="${t.id}"><span class="dr-cat" style="background:${c.color}"></span><span class="dr-title">${t.title}</span></div>`}).join('');
   $('#depResults').classList.add('show');
-});
+}
+$('#depSearch').addEventListener('input',e=>showDepResults(e.target.value));
+$('#depSearch').addEventListener('focus',()=>showDepResults($('#depSearch').value));
 $('#depSearch').addEventListener('blur',()=>setTimeout(()=>$('#depResults').classList.remove('show'),200));
 $('#depResults').addEventListener('mousedown',e=>{const r=e.target.closest('.dep-result');if(!r)return;e.preventDefault();const depId=r.dataset.depAdd;const editId=$('#fId').value||'__new__';
   if(editId!=='__new__'&&hasCircular(depId,editId)){toast('Dependência circular detectada');return}
   mDeps.push(depId);$('#depSearch').value='';$('#depResults').classList.remove('show');renderDepChips();
 });
 $('#depChips').addEventListener('click',e=>{const rm=e.target.closest('.dc-rm');if(!rm)return;const bid=rm.dataset.depRm;mDeps=mDeps.filter(d=>d!==bid);renderDepChips()});
-$('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').value;const isNew=!id;const etVal=parseInt($('#fET').value)||0;const cat=fCCat;const prio=getPickVal($('#fP'));const status=getPickVal($('#fS'));const data={id:id||uid(),title:$('#fT').value.trim(),category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,createdAt:isNew?Date.now():(tasks.find(t=>t.id===id)?.createdAt||Date.now()),completedAt:status==='done'?Date.now():null};if(!data.title)return;if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
+$('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').value;const isNew=!id;const etVal=parseInt($('#fET').value)||0;const cat=fCCat;const prio=getPickVal($('#fP'));const status=getPickVal($('#fS'));let title=$('#fT').value.trim();if(!title)return;
+  // Deduplicate title
+  const others=tasks.filter(t=>t.id!==id);
+  let base=title,n=1;
+  while(others.some(t=>t.title===title)){title=base+' ('+n+')';n++}
+  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,createdAt:isNew?Date.now():(tasks.find(t=>t.id===id)?.createdAt||Date.now()),completedAt:status==='done'?Date.now():null};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
