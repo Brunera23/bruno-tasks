@@ -607,7 +607,7 @@
     .overlay.open{opacity:1;pointer-events:all;backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%)}
     .modal{position:fixed;z-index:201;top:50%;left:50%;transform:translate(-50%,-46%) scale(.95);opacity:0;background:var(--card);border-radius:16px;padding:24px;max-width:440px;width:92%;max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;box-shadow:0 24px 80px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);pointer-events:none;transition:transform var(--dur-spring) var(--ease-spring),opacity var(--dur-smooth) var(--ease-expo)}
     .modal.open, .overlay.open .modal{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all}
-    @media(max-width:640px){.modal{top:auto;bottom:0;left:0;right:0;transform:translateY(100%);border-radius:16px 16px 0 0;width:100%;max-width:100%;max-height:92dvh;transition:transform var(--dur-spring) var(--ease-spring),opacity var(--dur-norm)}.modal.open, .overlay.open .modal{transform:translateY(0);opacity:1}}
+    @media(max-width:640px){.modal{top:auto;bottom:0;left:0;right:0;transform:translateY(100%);border-radius:16px 16px 0 0;width:100%;max-width:100%;max-height:92dvh;overflow-x:hidden;transition:transform var(--dur-spring) var(--ease-spring),opacity var(--dur-norm)}.modal.open, .overlay.open .modal{transform:translateY(0);opacity:1}}
     .m-bar{width:36px;height:4px;border-radius:2px;background:var(--fill);margin:0 auto 14px}
     @media(min-width:641px){.m-bar{display:none}}
     .m-title{font-size:1rem;font-weight:700;letter-spacing:-.02em;margin-bottom:18px}
@@ -634,7 +634,7 @@
 
     /* Custom selectors — Apple style */
     .pick-seg{display:flex;background:var(--fill2, var(--fill));border-radius:12px;padding:4px;width:100%}
-    .pick-seg button{flex:1;padding:10px 8px;font-size:.85rem;font-weight:500;color:var(--label2);background:transparent;border:none;border-radius:10px;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+    .pick-seg button{flex:1;padding:10px 8px;font-size:.85rem;font-weight:500;color:var(--label2);background:transparent;border:none;border-radius:10px;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;min-width:0;overflow:hidden}
     .pick-seg button:active{transform:scale(.96);transition-duration:80ms}
     .pick-seg button.active{background:var(--card);color:var(--label);box-shadow:0 1px 4px rgba(0,0,0,.06)}
     .pick-seg button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
@@ -676,7 +676,8 @@
     .dep-chip .dc-rm{width:20px;height:20px;border-radius:5px;border:none;background:transparent;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur-fast);flex-shrink:0}
     .dep-chip .dc-rm:hover{color:#FF3B30;background:rgba(255,59,48,.06)}
     .dep-chip .dc-rm svg{width:11px;height:11px}
-    .fld-row{display:flex;gap:10px}.fld-row .fld{flex:1}
+    .fld-row{display:flex;gap:10px}.fld-row .fld{flex:1;min-width:0}
+    @media(max-width:400px){.fld-row{flex-direction:column;gap:0}.fld-row .fld{flex:none}}
     .sub-edit-section{margin-bottom:12px}
     .sub-edit-section>label{display:block;font-size:.7rem;font-weight:600;color:var(--label3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
     .sub-edit-list{display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
@@ -790,6 +791,9 @@
       .item-meta{gap:4px}
       .tag{padding:2px 6px;font-size:.64rem}
       .tag-meta{font-size:.66rem}
+      /* Compact form segments on mobile */
+      .pick-seg button{padding:8px 4px;font-size:.76rem;gap:4px}
+      .pick-seg{padding:3px}
       /* Bigger touch targets for mobile */
       .ck{width:26px;height:26px;position:relative}
       .ck::after{content:'';position:absolute;inset:-9px}
@@ -812,7 +816,7 @@
       .sync-dot{bottom:90px}
     }
     /* Lock body scroll when modal is open */
-    body.modal-open{overflow:hidden;position:fixed;width:100%;touch-action:none}
+    body.modal-open{overflow:hidden;position:fixed;width:100%;touch-action:none;overscroll-behavior:none}
 
     /* Scrollbar */
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--sep);border-radius:3px}
@@ -1320,7 +1324,7 @@ function renderProjNav(){
     let mp=`<button class="mob-proj-pill${allVis?' active':''}" data-mp="all">Todos</button>`;
     projects.forEach(p=>{
       const isActive=p.visible&&!allVis;
-      mp+=`<button class="mob-proj-pill${isActive?' active':''}" data-mp="${p.id}"><span class="proj-icon">${p.icon?'':''}</span>${escapeHtml(p.name)}</button>`;
+      mp+=`<button class="mob-proj-pill${isActive?' active':''}" data-mp="${p.id}"><svg class="proj-pill-icon" style="width:14px;height:14px;flex-shrink:0"><use href="#${p.icon||'i-layers'}"/></svg>${escapeHtml(p.name)}</button>`;
     });
     mobProjs.innerHTML=mp;
     mobProjs.style.display='flex';
@@ -2831,7 +2835,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=49',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=50',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
