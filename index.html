@@ -447,7 +447,7 @@
     .ck:hover{border-color:var(--label2);transform:scale(1.08);box-shadow:0 0 0 4px rgba(52,199,89,.06)}
     .ck.on{border-color:#34C759;background:#34C759;color:#fff;animation:ckBounce var(--dur-spring) var(--ease-spring),ckGlow .8s var(--ease-std)}
     .ck.doing-st{border-color:#FF9500;border-width:2px;background:transparent;color:transparent}
-    .ck.doing-st::after{content:'';width:10px;height:10px;border-radius:50%;background:#FF9500}
+    .ck.doing-st::after{content:'';width:8px;height:8px;border-radius:50%;background:#FF9500}
     @keyframes ckBounce{0%{transform:scale(1)}25%{transform:scale(1.25)}50%{transform:scale(.95)}75%{transform:scale(1.05)}100%{transform:scale(1)}}
     @keyframes ckGlow{0%{box-shadow:0 0 0 0 rgba(52,199,89,.4)}70%{box-shadow:0 0 0 8px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}
     .ck svg{width:11px;height:11px;stroke-width:3}
@@ -3786,7 +3786,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=85',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=86',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -3816,20 +3816,21 @@ function processAlerts(){
   let changed=false;
   tasks.forEach(t=>{
     if(t.type!=='alert'||!t.nextFireAt||t.status==='done')return;
+    // Only fire on the recipient's device
+    if(t.assignedTo!==myRole&&t.assignedTo!=='ambos')return;
     // Check if until date has passed
     if(t.recurrence?.until&&dateStr(new Date())>t.recurrence.until){
       t.status='done';t.updatedAt=Date.now();changed=true;return;
     }
     // Check if it's time to fire
     if(now>=t.nextFireAt){
-      // Determine notification text based on who's viewing
-      const forMe=t.assignedTo===myRole||t.assignedTo==='ambos';
-      const targetName=t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'';
-      const title=forMe?'Alerta':('Alerta para '+targetName);
-      toast(title+' — '+t.title);
+      // Simple notification: "CreatorName: message"
+      const creatorName=(t.assignedTo==='bruno')?'Clara':(t.assignedTo==='parceira')?'Bruno':'Alerta';
+      const title=creatorName+': '+t.title;
+      toast(title);
       if(Notification.permission==='granted'){
         try{
-          const n=new Notification(title,{
+          const n=new Notification(creatorName,{
             body:t.title,
             tag:'alert-'+t.id,
             renotify:true,
