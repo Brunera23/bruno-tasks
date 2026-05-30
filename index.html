@@ -1817,6 +1817,13 @@ const collapsedGroups=new Set();
 const DAILY_CAP=480;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+// Central role detector — used everywhere to determine current user's role
+function getMyRole(){
+  const email=(currentUser?.email||'').toLowerCase();
+  if(!email)return null;
+  if(email.includes('clara'))return'parceira';
+  return'bruno'; // Bruno is the default/fallback
+}
 function $(s){return document.querySelector(s)}
 function $$(s){return document.querySelectorAll(s)}
 function ld(k,def){try{const d=localStorage.getItem(k);if(d)return JSON.parse(d)}catch(e){console.warn('ld error',k,e)}sv(k,def);return JSON.parse(JSON.stringify(def))}
@@ -1943,8 +1950,8 @@ function combineData(){
 
   // Detect new alerts/notes — but SKIP first load (all items look "new" on first sync)
   if(!_firstCombine){
-    const myEmail=currentUser?.email?.toLowerCase()||'';
-    const myRole=myEmail.includes('brunohsantos')||myEmail.includes('bruno')?'bruno':'parceira';
+    const myRole=getMyRole();
+    if(!myRole)return; // Not logged in, skip
     const oldIds=new Set(tasks.map(t=>t.id));
     const newItems=newTasks.filter(t=>!oldIds.has(t.id));
     const recentCutoff=Date.now()-60000;
@@ -3457,8 +3464,8 @@ $$('.nb-chip[data-nbf]').forEach(c=>c.addEventListener('click',()=>{
 function nbAddNote(){
   const txt=$('#nbInput').value.trim();if(!txt)return;
   const dur=nbDurDays==='custom'?(parseInt($('#nbDurDays').value)||0):nbDurDays;
-  const myEmail=currentUser?.email?.toLowerCase()||'';
-  const myRole=myEmail.includes('brunohsantos')||myEmail.includes('bruno')?'bruno':'parceira';
+  const myRole=getMyRole();
+  if(!myRole)return;
   const note={id:uid(),type:'note',title:txt,project:'nos',assignedTo:myRole,expiresAt:dur>0?Date.now()+dur*86400000:null,status:'todo',category:'social',createdAt:Date.now(),updatedAt:Date.now()};
   tasks.unshift(note);addLog('create',note);sT();render();
   $('#nbInput').value='';
@@ -3786,7 +3793,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=94',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=95',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -3809,12 +3816,15 @@ if('serviceWorker' in navigator){
 // ===== ALERT SCHEDULER — fires notifications at the exact scheduled time =====
 // Fires on ANY device that's online. Without server push, we need at least one open tab.
 function processAlerts(){
-  if(!currentUser||!_fbInitDone)return; // Wait for auth + data
+  if(!currentUser||!_fbInitDone)return;
+  const myRole=getMyRole();
+  if(!myRole)return;
   const now=Date.now();
   let changed=false;
   tasks.forEach(t=>{
     if(t.type!=='alert'||!t.nextFireAt||t.status==='done')return;
-    // Check if until date has passed
+    // Only fire on the RECIPIENT's device
+    if(t.assignedTo!==myRole&&t.assignedTo!=='ambos')return;
     if(t.recurrence?.until&&dateStr(new Date())>t.recurrence.until){
       t.status='done';t.updatedAt=Date.now();changed=true;return;
     }
