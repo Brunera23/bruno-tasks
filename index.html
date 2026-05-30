@@ -984,9 +984,10 @@
     .nb-who-name{font-size:.6rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--label3)}
     .nb-actions{display:flex;gap:2px}
     @media(hover:hover){.nb-actions{opacity:0;transition:opacity .15s}.nb-card:hover .nb-actions{opacity:1}}
-    .nb-del-btn{width:22px;height:22px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--label3);padding:0;transition:all .15s;-webkit-tap-highlight-color:transparent}
-    .nb-del-btn:active{background:rgba(255,59,48,.1);color:#FF3B30}
-    .nb-del-btn svg{width:11px;height:11px}
+    .nb-del-btn{width:28px;height:28px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--label3);padding:0;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .nb-del-btn:hover{background:rgba(255,59,48,.08);color:#FF3B30}
+    .nb-del-btn:active{background:rgba(255,59,48,.15);color:#FF3B30;transform:scale(.9)}
+    .nb-del-btn svg{width:13px;height:13px}
     .nb-text{font-size:.85rem;line-height:1.5;color:var(--label);font-weight:400;word-break:break-word;white-space:pre-wrap}
     .nb-footer{margin-top:6px;display:flex;align-items:center;justify-content:space-between}
     .nb-expire{font-size:.6rem;color:var(--label3);font-weight:500}
@@ -1835,9 +1836,11 @@ function _fbDirectSave(){
 
 function fbSave(){
   if(!_fbReady||!_fbInitDone)return;
+  // Set saving flag IMMEDIATELY to prevent combineData from overwriting local changes
+  // during the debounce window (this was causing deleted notes to reappear)
+  _fbSaving=true;
   clearTimeout(_fbTimer);
   _fbTimer=setTimeout(()=>{
-    _fbSaving=true;
     showSync('Salvando...');
     _fbDirectSave().then(()=>{showSync('Sincronizado ✓',true);_fbSaving=false}).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
   },400);
@@ -3676,7 +3679,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=71',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=72',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
