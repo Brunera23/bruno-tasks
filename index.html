@@ -941,9 +941,8 @@
     .alert-bar.open .alert-bar-body{max-height:600px;transition:max-height .5s var(--ease-spring)}
     .alert-bar-list{padding:0 10px 10px}
     .alert-bar-list .item{margin-bottom:4px;border-radius:10px;padding:10px 14px}
-    .item.alert-item{border-left:3px solid #FF9500}
-    .item.alert-item .alert-icon{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#FF9500,#FFCC00);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .item.alert-item .alert-icon svg{width:12px;height:12px;color:#fff}
+    .item.alert-item{border-left:none}
+    .item.alert-item .alert-icon{display:none}
     .alert-time{font-size:.72rem;color:#FF9500;font-weight:600}
     .alert-freq{font-size:.66rem;color:var(--label3)}
     .alert-sched{font-size:.66rem;color:#34C759;font-weight:600;padding:2px 6px;background:rgba(52,199,89,.08);border-radius:6px}
@@ -2202,7 +2201,7 @@ function renderItem(t,i,isChild=false,depsOpen=false,isLast=false){
     }
     const untilTag=t.recurrence?.until?`<span class="alert-until">até ${fDate(t.recurrence.until)}</span>`:'';
     const statusTag=t.lastFiredAt?'<span class="alert-status sent">Enviado</span>':'<span class="alert-status pending">Pendente</span>';
-    return`<div class="item alert-item" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><div class="alert-icon"><svg><use href="#i-bell"/></svg></div></div><div class="item-body"><div class="item-title">${escapeHtml(t.title)}</div><div class="item-meta">${assignTag}${statusTag}<span class="alert-time">${freqLabel}</span>${schedTag}${untilTag}</div></div><div class="item-right"><div class="item-acts"><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div></div>`;
+    return`<div class="item alert-item" style="--i:${i}"><div class="item-row"><div class="item-body"><div class="item-title">${escapeHtml(t.title)}</div><div class="item-meta">${assignTag}${statusTag}<span class="alert-time">${freqLabel}</span>${schedTag}${untilTag}</div></div><div class="item-right"><div class="item-acts"><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div></div>`;
   }
 
   // Note/Reminder item — distinct rendering
@@ -3789,7 +3788,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=83',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=84',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
