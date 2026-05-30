@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bruno-tasks-v88';
+const CACHE_NAME = 'bruno-tasks-v89';
 const ASSETS = ['./index.html'];
 
 self.addEventListener('install', e => {
