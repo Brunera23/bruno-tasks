@@ -607,7 +607,7 @@
     .overlay.open{opacity:1;pointer-events:all;backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%)}
     .modal{position:fixed;z-index:201;top:50%;left:50%;transform:translate(-50%,-46%) scale(.95);opacity:0;background:var(--card);border-radius:16px;padding:24px;max-width:440px;width:92%;max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;box-shadow:0 24px 80px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);pointer-events:none;transition:transform var(--dur-spring) var(--ease-spring),opacity var(--dur-smooth) var(--ease-expo)}
     .modal.open, .overlay.open .modal{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all}
-    @media(max-width:640px){.modal{top:auto;bottom:0;left:0;right:0;transform:translateY(100%);border-radius:16px 16px 0 0;width:100%;max-width:100%;transition:transform var(--dur-spring) var(--ease-spring),opacity var(--dur-norm)}.modal.open, .overlay.open .modal{transform:translateY(0);opacity:1}}
+    @media(max-width:640px){.modal{top:auto;bottom:0;left:0;right:0;transform:translateY(100%);border-radius:16px 16px 0 0;width:100%;max-width:100%;max-height:92dvh;transition:transform var(--dur-spring) var(--ease-spring),opacity var(--dur-norm)}.modal.open, .overlay.open .modal{transform:translateY(0);opacity:1}}
     .m-bar{width:36px;height:4px;border-radius:2px;background:var(--fill);margin:0 auto 14px}
     @media(min-width:641px){.m-bar{display:none}}
     .m-title{font-size:1rem;font-weight:700;letter-spacing:-.02em;margin-bottom:18px}
@@ -781,15 +781,28 @@
       .toolbar{margin-bottom:6px;gap:6px}
       .mob-more-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:none;background:transparent;color:var(--label2);cursor:pointer;transition:all var(--dur-fast)}
       .mob-more-btn:hover{background:var(--fill)}
-      /* Mobile: compact items */
-      .item{padding:11px 14px}
-      .item-date{display:none}
+      /* Mobile: items — show dates, bigger touch targets */
+      .item{padding:12px 16px}
+      .item-date{display:flex!important;font-size:.64rem;padding:3px 8px}
       .note-preview{display:none}
       .tag-time{display:none}
       .item-acts{max-width:80px;opacity:1}
       .item-meta{gap:4px}
       .tag{padding:2px 6px;font-size:.64rem}
       .tag-meta{font-size:.66rem}
+      /* Bigger touch targets for mobile */
+      .ck{width:26px;height:26px;position:relative}
+      .ck::after{content:'';position:absolute;inset:-9px}
+      .a-btn{width:32px;height:32px;position:relative}
+      .a-btn::after{content:'';position:absolute;inset:-6px}
+      .sub-ck{width:18px;height:18px;position:relative}
+      .sub-ck::after{content:'';position:absolute;inset:-13px}
+      /* Project pills on mobile */
+      .mob-proj-bar{display:flex;gap:6px;padding:0 0 6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+      .mob-proj-bar::-webkit-scrollbar{display:none}
+      .mob-proj-pill{flex-shrink:0;padding:5px 12px;border-radius:20px;border:none;background:var(--fill);color:var(--label2);font-size:.72rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all var(--dur-fast);display:flex;align-items:center;gap:4px}
+      .mob-proj-pill.active{background:var(--label);color:var(--card)}
+      .mob-proj-pill .proj-icon{font-size:.7rem}
       .dep-toggle{margin-left:12px;padding-left:12px}
       .dep-children{margin-left:25px}
       .dep-node:last-child::before, .dep-node.is-last::before{height:22px;width:12px;border-bottom-left-radius:10px}
@@ -798,6 +811,8 @@
       .dep-node .dep-children{margin-left:37px}
       .sync-dot{bottom:90px}
     }
+    /* Lock body scroll when modal is open */
+    body.modal-open{overflow:hidden;position:fixed;width:100%;touch-action:none}
 
     /* Scrollbar */
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--sep);border-radius:3px}
@@ -969,6 +984,7 @@
           </svg>
         </button>
       </div>
+      <div class="mob-proj-bar" id="mobProjs" style="display:none"></div>
       <div class="mob-cats" id="mobCats"></div>
       <div class="toolbar">
         <div class="search-box"><svg class="si"><use href="#i-search"/></svg><input type="text" id="q" placeholder="Buscar ou filtrar (hoje, alta, atrasada...)" autocomplete="off"><div class="smart-suggest" id="smartSuggest"></div></div>
@@ -1297,6 +1313,19 @@ function renderProjNav(){
     </div>`;
   });
   el.innerHTML=h;
+  // Mobile project pills
+  const mobProjs=$('#mobProjs');
+  if(mobProjs&&projects.length>1){
+    const allVis=projects.every(p=>p.visible);
+    let mp=`<button class="mob-proj-pill${allVis?' active':''}" data-mp="all">Todos</button>`;
+    projects.forEach(p=>{
+      const isActive=p.visible&&!allVis;
+      mp+=`<button class="mob-proj-pill${isActive?' active':''}" data-mp="${p.id}"><span class="proj-icon">${p.icon?'':''}</span>${escapeHtml(p.name)}</button>`;
+    });
+    mobProjs.innerHTML=mp;
+    mobProjs.style.display='flex';
+    mobProjs.onclick=e=>{const btn=e.target.closest('.mob-proj-pill');if(!btn)return;const mp=btn.dataset.mp;if(mp==='all'){projects.forEach(p=>p.visible=true)}else{projects.forEach(p=>p.visible=(p.id===mp))}saveUI();render()};
+  }else if(mobProjs){mobProjs.style.display='none'}
 }
 
 function renProj(id) {
@@ -2399,8 +2428,15 @@ function openM(task){
   // Assignment (for shared project)
   if(e&&task.assignedTo)pickVal($('#fAssign'),task.assignedTo);
   else pickVal($('#fAssign'),'bruno');
-  $('#ov').classList.add('open');$('#modal').classList.add('open');setTimeout(()=>$('#fT').focus(),300)}
-function closeM(){$('#ov').classList.remove('open');$('#modal').classList.remove('open')}
+  $('#ov').classList.add('open');$('#modal').classList.add('open');
+  // Lock body scroll on mobile to prevent horizontal swipe
+  const scrollY=window.scrollY;document.body.style.top='-'+scrollY+'px';document.body.classList.add('modal-open');document.body.dataset.scrollY=scrollY;
+  setTimeout(()=>$('#fT').focus(),300)}
+function closeM(){
+  $('#ov').classList.remove('open');$('#modal').classList.remove('open');
+  // Restore body scroll
+  document.body.classList.remove('modal-open');document.body.style.top='';window.scrollTo(0,parseInt(document.body.dataset.scrollY||'0'));
+}
 function renderMSubs(){
   const gripSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg>';
   $('#subList').innerHTML=mSubs.map((s,i)=>`<div class="sub-edit-row" draggable="true" data-sub-idx="${i}"><div class="sub-grip" title="Arrastar para reordenar">${gripSvg}</div><input type="text" value="${s.text.replace(/"/g,'&quot;')}" placeholder="Subtarefa..." oninput="mSubs[${i}].text=this.value"><button type="button" class="sub-rm" onclick="mSubs.splice(${i},1);renderMSubs()"><svg width="13" height="13"><use href="#i-x"/></svg></button></div>`).join('');
@@ -2791,7 +2827,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=47',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=48',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
