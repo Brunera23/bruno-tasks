@@ -996,6 +996,16 @@
     .nbk-thanks{color:#FF9500;font-weight:600}
     .nbk-celebrate{color:#FF9F0A;font-weight:700}
     .nbk-kiss{color:#FF6482;font-weight:600}
+    .nbk-rage{color:#FF3B30;font-weight:700;text-decoration:line-through;text-decoration-style:wavy;text-decoration-color:rgba(255,59,48,.5)}
+    .nbk-joy{color:#FFD60A;font-weight:700;text-shadow:0 0 8px rgba(255,214,10,.35)}
+    [data-theme="dark"] .nbk-joy{text-shadow:0 0 12px rgba(255,214,10,.5)}
+    .nbk-cute{color:#FF6482;font-weight:600}
+    .nbk-lazy{color:var(--label3);font-style:italic;letter-spacing:.03em}
+    .nbk-food{color:#FF9500;font-weight:600}
+    .nbk-urgent{color:#FF3B30;font-weight:800;text-transform:uppercase;animation:nbPulse 1.2s ease-in-out infinite}
+    @keyframes nbPulse{0%,100%{opacity:1}50%{opacity:.6}}
+    .nbk-travel{color:#007AFF;font-weight:600}
+    .nbk-sorry{color:#AF52DE;font-weight:500}
     /* ===== SMART SUGGEST AUTOCOMPLETE ===== */
     .smart-suggest{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow2);z-index:50;padding:4px;margin-top:4px;display:none}
     .smart-suggest.show{display:block}
@@ -1523,6 +1533,7 @@ function getCatsForProject(projId){
 function getVisibleTasks(){
   const visibleProjs=new Set(projects.filter(p=>p.visible).map(p=>p.id));
   return tasks.filter(t=>{
+    if(t.type==='note') return false;
     const proj=t.project||'bruno';
     return visibleProjs.has(proj);
   });
@@ -1532,7 +1543,7 @@ function renderProjNav(){
   const el=$('#projNav');if(!el)return;
   let h='';
   projects.forEach(p=>{
-    const count=tasks.filter(t=>(t.project||'bruno')===p.id&&t.status!=='done').length;
+    const count=tasks.filter(t=>(t.project||'bruno')===p.id&&t.status!=='done'&&t.type!=='note').length;
     h+=`<div class="proj-item${p.visible?' active':''}" data-proj="${p.id}">
       <div class="proj-icon" style="background:${p.gradient}"><svg><use href="#${p.icon}"/></svg></div>
       <div class="proj-info">
@@ -2916,7 +2927,7 @@ function closeFabMenu(){$('#fabMenu').classList.remove('open');$('#fabMenuOv').c
 $('#fabMenuOv').addEventListener('click',closeFabMenu);
 $('#fmTask').addEventListener('click',()=>{closeFabMenu();openM()});
 $('#fmAlert').addEventListener('click',()=>{closeFabMenu();openAlertForm()});
-$('#fmNote').addEventListener('click',()=>{closeFabMenu();openNotesBoard()});
+// fmNote removed from FAB — board accessible via nav tabs
 
 // Alert Form
 function openAlertForm(){
@@ -3026,28 +3037,47 @@ function nbDeleteNote(id){
 // Render board
 // Keyword magic for Notes Board
 function nbMagicText(raw){
-  // Escape first so we don't inject HTML from the raw text
   let t=escapeHtml(raw);
-  // Define keyword rules (case-insensitive), most specific first
   const rules=[
-    // "te amo" / "te amo muito" / "amo você" — rose + floating hearts
+    // Love — rose + floating heart
     {re:/\b(te\s+amo(?:\s+muito)?|amo\s+voc[eê]|amor(?:\s+da\s+minha\s+vida)?)\b/gi,
-     fn:m=>`<span class="nbk-love">${m}<span class="nbk-heart" aria-hidden="true">♥</span></span>`},
-    // "saudade" — soft purple/lilac
-    {re:/\b(saudade(?:s)?)\b/gi,
+     fn:m=>`<span class="nbk-love">${m}<span class="nbk-heart">\u2665</span></span>`},
+    // Saudade — lilac italic
+    {re:/\b(saudade(?:s)?|sinto\s+(?:sua\s+)?falta)\b/gi,
      fn:m=>`<span class="nbk-saudade">${m}</span>`},
-    // "obrigad" — warm amber
+    // Thanks — amber glow
     {re:/\b(obrigad[ao]s?)\b/gi,
-     fn:m=>`<span class="nbk-thanks">${m}</span>`},
-    // "parabéns" / "feliz aniversário" — golden confetti feel
-    {re:/\b(parab[ée]ns|feliz\s+anivers[áa]rio)\b/gi,
-     fn:m=>`<span class="nbk-celebrate">${m} 🎉</span>`},
-    // "beijo" / "beijos" — light pink
-    {re:/\b(beijos?)\b/gi,
-     fn:m=>`<span class="nbk-kiss">${m}</span>`},
-    // "sinto falta" — gentle blue
-    {re:/\b(sinto\s+falta)\b/gi,
-     fn:m=>`<span class="nbk-saudade">${m}</span>`},
+     fn:m=>`<span class="nbk-thanks">${m} \u2728</span>`},
+    // Celebrate — gold + confetti
+    {re:/\b(parab[eé]ns|feliz\s+anivers[aá]rio)\b/gi,
+     fn:m=>`<span class="nbk-celebrate">${m} \ud83c\udf89</span>`},
+    // Kiss
+    {re:/\b(beijos?|beijinho)\b/gi,
+     fn:m=>`<span class="nbk-kiss">${m} \ud83d\udc8b</span>`},
+    // Raiva — humor\u00edstico: texto riscado + vermelho
+    {re:/\b((?:que\s+)?raiva|odeio|estress(?:e|ada|ado)|irrita(?:da|do)?)\b/gi,
+     fn:m=>`<span class="nbk-rage">${m}</span>`},
+    // Alegria — dourado brilhante
+    {re:/\b((?:que\s+)?alegria|feliz(?:idade)?|happy|animad[ao])\b/gi,
+     fn:m=>`<span class="nbk-joy">${m} \ud83c\udf1f</span>`},
+    // Fofura
+    {re:/\b(fof[oa]|fofur?a|lind[ao]|gatinho|princesa|gostosa)\b/gi,
+     fn:m=>`<span class="nbk-cute">${m} \ud83e\udee7</span>`},
+    // Pregui\u00e7a (humor)
+    {re:/\b(pregui[cç]a|pregui[cç]os[ao]|moleza|sono(?:lent[ao])?)\b/gi,
+     fn:m=>`<span class="nbk-lazy">${m} \ud83d\ude34</span>`},
+    // Comida
+    {re:/\b(fome|comer|comida|almo[cç]ar|jantar|pizza|sushi|sorvete|caf[eé])\b/gi,
+     fn:m=>`<span class="nbk-food">${m} \ud83c\udf7d\ufe0f</span>`},
+    // Urgente — vermelho pulsante
+    {re:/\b(urgente|socorro|importante|agora)\b/gi,
+     fn:m=>`<span class="nbk-urgent">${m}</span>`},
+    // Viagem
+    {re:/\b(viagem|viajar|f[eé]rias|passeio|praia)\b/gi,
+     fn:m=>`<span class="nbk-travel">${m} \u2708\ufe0f</span>`},
+    // Desculpa
+    {re:/\b(desculp[ae]|perd[aã]o|me\s+perdoa)\b/gi,
+     fn:m=>`<span class="nbk-sorry">${m} \ud83e\udd7a</span>`},
   ];
   rules.forEach(r=>{t=t.replace(r.re,r.fn)});
   return t;
@@ -3314,7 +3344,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=56',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=57',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
