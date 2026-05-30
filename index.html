@@ -893,6 +893,18 @@
     .fab-menu-ov{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.15);backdrop-filter:blur(4px);display:none}
     .fab-menu-ov.open{display:block}
 
+    /* Desktop: alert/note sheets as centered modals */
+    @media(min-width:641px){
+      .mob-sheet{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.95);bottom:auto;right:auto;border-radius:16px;max-width:480px;width:92%;max-height:80dvh;padding:24px;z-index:201;opacity:0;pointer-events:none;transition:transform .3s var(--ease-spring),opacity .2s}
+      .mob-sheet.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all}
+      .mob-sheet-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+      .mob-sheet-ov.open{display:block}
+      .mob-sheet-handle{display:none}
+      .fab-menu{bottom:auto;right:auto;top:50%;left:50%;transform:translate(-50%,-50%) translateY(20px);flex-direction:column;gap:12px}
+      .fab-menu.open{transform:translate(-50%,-50%) translateY(0)}
+      .fab-menu-item{flex-direction:row;gap:12px}
+    }
+
     /* ===== ALERT ITEMS ===== */
     .item.alert-item{border-left:3px solid #FF9500}
     .item.alert-item .alert-icon{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#FF9500,#FFCC00);display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -2769,7 +2781,11 @@ $('#fab').addEventListener('click',()=>{
   const isShared=ap==='nos'||projects.find(p=>p.id===ap&&p.type==='shared');
   if(isShared){openFabMenu()}else{openM()}
 });
-$('#btnAdd').addEventListener('click',()=>openM());$('#mCancel').addEventListener('click',closeM);$('#ov').addEventListener('click',closeM);
+$('#btnAdd').addEventListener('click',()=>{
+  const ap=getActiveContextProject();
+  const isShared=ap==='nos'||projects.find(p=>p.id===ap&&p.type==='shared');
+  if(isShared){openFabMenu()}else{openM()}
+});$('#mCancel').addEventListener('click',closeM);$('#ov').addEventListener('click',closeM);
 
 // FAB Menu
 function openFabMenu(){$('#fabMenu').classList.add('open');$('#fabMenuOv').classList.add('open')}
@@ -3038,7 +3054,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=53',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=54',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
