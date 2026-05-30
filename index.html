@@ -872,6 +872,40 @@
     .mob-sheet-opts button svg{width:16px;height:16px;color:var(--label3)}
     [data-theme="dark"] .mob-sheet{background:rgba(32,32,34,.98);border-top:1px solid rgba(255,255,255,.08)}
 
+    /* ===== FAB ACTION MENU ===== */
+    .fab-menu{position:fixed;bottom:90px;right:20px;z-index:100;display:flex;flex-direction:column-reverse;gap:10px;opacity:0;pointer-events:none;transform:translateY(20px);transition:all .3s var(--ease-spring)}
+    .fab-menu.open{opacity:1;pointer-events:all;transform:translateY(0)}
+    .fab-menu-item{display:flex;align-items:center;gap:10px;flex-direction:row-reverse;animation:fabItemIn .3s var(--ease-spring) both}
+    .fab-menu-item:nth-child(1){animation-delay:0ms}
+    .fab-menu-item:nth-child(2){animation-delay:60ms}
+    .fab-menu-item:nth-child(3){animation-delay:120ms}
+    @keyframes fabItemIn{from{opacity:0;transform:translateY(10px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .fab-menu-btn{width:48px;height:48px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.12);transition:transform var(--dur-fast)}
+    .fab-menu-btn:active{transform:scale(.9)}
+    .fab-menu-btn svg{width:20px;height:20px;color:#fff}
+    .fab-menu-btn.fm-task{background:linear-gradient(135deg,#007AFF,#5AC8FA)}
+    .fab-menu-btn.fm-alert{background:linear-gradient(135deg,#FF9500,#FFCC00)}
+    .fab-menu-btn.fm-note{background:linear-gradient(135deg,#34C759,#30D158)}
+    .fab-menu-label{background:var(--card);padding:6px 12px;border-radius:8px;font-size:.76rem;font-weight:600;color:var(--label);box-shadow:0 2px 10px rgba(0,0,0,.08);white-space:nowrap}
+    .fab-menu-ov{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.15);backdrop-filter:blur(4px);display:none}
+    .fab-menu-ov.open{display:block}
+
+    /* ===== ALERT ITEMS ===== */
+    .item.alert-item{border-left:3px solid #FF9500}
+    .item.alert-item .alert-icon{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#FF9500,#FFCC00);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .item.alert-item .alert-icon svg{width:12px;height:12px;color:#fff}
+    .alert-time{font-size:.72rem;color:#FF9500;font-weight:600}
+    .alert-freq{font-size:.66rem;color:var(--label3)}
+
+    /* ===== NOTE/REMINDER ITEMS ===== */
+    .item.note-item{border-left:3px solid #34C759;background:rgba(52,199,89,.03)}
+    [data-theme="dark"] .item.note-item{background:rgba(52,199,89,.05)}
+    .note-icon{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#34C759,#30D158);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .note-icon svg{width:12px;height:12px;color:#fff}
+    .note-expires{font-size:.66rem;color:#34C759;font-weight:500}
+    .note-body{font-size:.82rem;color:var(--label);line-height:1.4}
+
+
     /* ===== SMART SUGGEST AUTOCOMPLETE ===== */
     .smart-suggest{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow2);z-index:50;padding:4px;margin-top:4px;display:none}
     .smart-suggest.show{display:block}
@@ -911,6 +945,7 @@
   <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></symbol>
   <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
   <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
   <symbol id="i-fire" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1012 0c0-1.532-1.056-3.94-2-5-1.786 3-2 4-4 2z"/></symbol>
   <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
@@ -1048,6 +1083,61 @@
 </div></nav>
 
 <button class="fab" id="fab" aria-label="Nova tarefa"><svg><use href="#i-plus"/></svg></button>
+
+<!-- FAB Action Menu (for Nós project) -->
+<div class="fab-menu-ov" id="fabMenuOv"></div>
+<div class="fab-menu" id="fabMenu">
+  <div class="fab-menu-item"><button class="fab-menu-btn fm-task" id="fmTask"><svg><use href="#i-check"/></svg></button><span class="fab-menu-label">Nova Tarefa</span></div>
+  <div class="fab-menu-item"><button class="fab-menu-btn fm-alert" id="fmAlert"><svg><use href="#i-bell"/></svg></button><span class="fab-menu-label">Novo Alerta</span></div>
+  <div class="fab-menu-item"><button class="fab-menu-btn fm-note" id="fmNote"><svg><use href="#i-edit"/></svg></button><span class="fab-menu-label">Novo Lembrete</span></div>
+</div>
+
+<!-- Quick Alert Form -->
+<div class="mob-sheet-ov" id="alertOv"></div>
+<div class="mob-sheet" id="alertSheet">
+  <div class="mob-sheet-handle"></div>
+  <div class="mob-sheet-title">🔔 Novo Alerta</div>
+  <form id="alertForm">
+    <div class="fld"><label>Qual o recado?</label><input type="text" id="aMsg" placeholder="Ex: Passa no mercado voltando do trabalho..." required></div>
+    <div class="fld"><label>Pra quem?</label><div class="pick-seg" id="aAssign">
+      <button type="button" data-v="bruno" class="active"><span class="assign-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Bruno</button>
+      <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Clara</button>
+      <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-users"/></svg></span>Ambos</button>
+    </div></div>
+    <div class="fld-row">
+      <div class="fld"><label>Horário</label><input type="time" id="aTime" value="18:00"></div>
+      <div class="fld"><label>Repetir</label><div class="pick-seg" id="aFreq">
+        <button type="button" data-v="once" class="active">Uma vez</button>
+        <button type="button" data-v="daily">Diário</button>
+        <button type="button" data-v="weekdays">Dias úteis</button>
+      </div></div>
+    </div>
+    <div class="fld"><label>Data (se for uma vez)</label><input type="date" id="aDate"></div>
+    <div class="m-btns"><button type="button" class="btn btn-sec" id="aCan">Cancelar</button><button type="submit" class="btn btn-primary">Criar Alerta</button></div>
+  </form>
+</div>
+
+<!-- Quick Reminder Form -->
+<div class="mob-sheet-ov" id="noteOv"></div>
+<div class="mob-sheet" id="noteSheet">
+  <div class="mob-sheet-handle"></div>
+  <div class="mob-sheet-title">📝 Novo Lembrete</div>
+  <form id="noteForm">
+    <div class="fld"><label>Anotação</label><textarea id="nMsg" rows="3" placeholder="Ex: A Clara quer aquele livro da livraria cultura..."></textarea></div>
+    <div class="fld"><label>Pra quem?</label><div class="pick-seg" id="nAssign">
+      <button type="button" data-v="bruno" class="active"><span class="assign-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Bruno</button>
+      <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Clara</button>
+      <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-users"/></svg></span>Ambos</button>
+    </div></div>
+    <div class="fld"><label>Duração</label><div class="pick-seg" id="nDur">
+      <button type="button" data-v="1">1 dia</button>
+      <button type="button" data-v="3" class="active">3 dias</button>
+      <button type="button" data-v="7">1 semana</button>
+      <button type="button" data-v="0">Permanente</button>
+    </div></div>
+    <div class="m-btns"><button type="button" class="btn btn-sec" id="nCan">Cancelar</button><button type="submit" class="btn btn-primary">Criar Lembrete</button></div>
+  </form>
+</div>
 
 <div class="overlay" id="ov"></div>
 <div class="modal" id="modal">
@@ -1709,6 +1799,29 @@ function renderCatNav(){
 }
 
 function renderItem(t,i,isChild=false,depsOpen=false,isLast=false){
+  // Filter out expired notes
+  if(t.type==='note'&&t.expiresAt&&t.expiresAt<Date.now())return'';
+
+  // Alert item — distinct rendering
+  if(t.type==='alert'){
+    const assignName=t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'Ambos';
+    const freqLabel={once:'Uma vez',daily:'Diário',weekdays:'Dias úteis',weekly:'Semanal'}[t.recurrence?.freq]||'';
+    const timeStr=t.alertTime||'';
+    const assignTag=`<span class="tag-meta assign-tag"><span class="assign-mini" style="background:${t.assignedTo==='bruno'?'linear-gradient(135deg,#007AFF,#5AC8FA)':t.assignedTo==='parceira'?'linear-gradient(135deg,#FF2D55,#FF6482)':'linear-gradient(135deg,#AF52DE,#5856D6)'}"><svg width="10" height="10"><use href="${t.assignedTo==='ambos'?'#i-users':'#i-user'}"/></svg></span>${assignName}</span>`;
+    return`<div class="item alert-item" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><div class="alert-icon"><svg><use href="#i-bell"/></svg></div></div><div class="item-body"><div class="item-title">${escapeHtml(t.title)}</div><div class="item-meta">${assignTag}<span class="alert-time">${timeStr}</span><span class="alert-freq">${freqLabel}</span></div></div><div class="item-right"><div class="item-acts"><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div></div>`;
+  }
+
+  // Note/Reminder item — distinct rendering
+  if(t.type==='note'){
+    const assignName=t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'Ambos';
+    const expiresStr=t.expiresAt?'Expira '+relTime(t.expiresAt-(Date.now()-t.createdAt)):'Permanente';
+    const remaining=t.expiresAt?Math.max(0,Math.ceil((t.expiresAt-Date.now())/86400000)):null;
+    const expLabel=remaining!==null?(remaining<=0?'Expira hoje':remaining===1?'Expira amanhã':'Expira em '+remaining+' dias'):'Permanente';
+    const assignTag=`<span class="tag-meta assign-tag"><span class="assign-mini" style="background:${t.assignedTo==='bruno'?'linear-gradient(135deg,#007AFF,#5AC8FA)':t.assignedTo==='parceira'?'linear-gradient(135deg,#FF2D55,#FF6482)':'linear-gradient(135deg,#AF52DE,#5856D6)'}"><svg width="10" height="10"><use href="${t.assignedTo==='ambos'?'#i-users':'#i-user'}"/></svg></span>${assignName}</span>`;
+    return`<div class="item note-item" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><div class="note-icon"><svg><use href="#i-edit"/></svg></div></div><div class="item-body"><div class="item-title">${escapeHtml(t.title)}</div><div class="item-meta">${assignTag}<span class="note-expires">${expLabel}</span></div></div><div class="item-right"><div class="item-acts"><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div></div>`;
+  }
+
+  // Normal task rendering
   const c=ci(t.category);const od=isOD(t.date)&&t.status!=='done';const subs=t.subtasks||[];const sd=subs.filter(s=>s.done).length;
   const etTag=t.estimatedTime?`<span class="tag-time" data-id="${t.id}"><svg><use href="#i-clock"/></svg>${fmtTime(t.estimatedTime)}</span>`:'';
   const blocked=isBlocked(t)&&t.status!=='done';
@@ -2266,14 +2379,37 @@ function renderHabitsWidget(){
 function render(){renderProjNav();renderCatNav();renderTasks();renderWidgets();if(curView==='dash')renderDash()}
 
 function renderDashFilter(){
+  // Project pills (same as task list)
+  let ph='';
+  if(projects.length>1){
+    const allVis=projects.every(p=>p.visible);
+    ph+=`<button class="df-chip ${allVis?'active':''}" data-dp="all">Todos</button>`;
+    projects.forEach(p=>{
+      const isActive=p.visible&&!allVis;
+      ph+=`<button class="df-chip ${isActive?'active':''}" data-dp="${p.id}"><svg style="width:12px;height:12px"><use href="#${p.icon||'i-layers'}"/></svg>${escapeHtml(p.name)}</button>`;
+    });
+    ph+='<span style="width:1px;height:20px;background:var(--sep);flex-shrink:0;margin:0 4px"></span>';
+  }
+  // Category pills
   let h=`<button class="df-chip ${dashCat==='all'?'active':''}" data-dc="all">Todas</button>`;
-  cats.forEach(c=>{h+=`<button class="df-chip ${dashCat===c.id?'active':''}" data-dc="${c.id}"><span class="df-dot" style="background:${c.color}"></span>${c.name}</button>`});
-  $('#dashFilter').innerHTML=h;
+  const activeCats=getCatsForVisibleProjects();
+  activeCats.forEach(c=>{h+=`<button class="df-chip ${dashCat===c.id?'active':''}" data-dc="${c.id}"><span class="df-dot" style="background:${c.color}"></span>${c.name}</button>`});
+  $('#dashFilter').innerHTML=ph+h;
+}
+function getCatsForVisibleProjects(){
+  const visProjs=projects.filter(p=>p.visible).map(p=>p.id);
+  const hasBruno=visProjs.some(id=>id==='bruno'||projects.find(p=>p.id===id&&p.type!=='shared'));
+  const hasShared=visProjs.some(id=>id==='nos'||projects.find(p=>p.id===id&&p.type==='shared'));
+  let result=[];
+  if(hasBruno)result=result.concat(cats);
+  if(hasShared)result=result.concat(NOS_CATS.filter(c=>!result.some(r=>r.id===c.id)));
+  return result.length?result:cats;
 }
 
 function renderDash(){
   renderDashFilter();
-  const ft=dashCat==='all'?tasks:tasks.filter(t=>t.category===dashCat);
+  const visTasks=getVisibleTasks();
+  const ft=dashCat==='all'?visTasks:visTasks.filter(t=>t.category===dashCat);
   const fl=dashCat==='all'?log:log.filter(l=>l.category===dashCat);
   const total=ft.length;const done=ft.filter(t=>t.status==='done').length;
   const overdue=ft.filter(t=>isOD(t.date)&&t.status!=='done').length;const pct=total?Math.round(done/total*100):0;
@@ -2619,7 +2755,46 @@ $('#ceSave').addEventListener('click',()=>{const name=$('#ceN').value.trim();if(
 $('#ceBack').addEventListener('click',()=>{$('#catMgrView').style.display='';$('#catEditView').style.display='none';$('#catModalTitle').textContent='Categorias'});
 
 // Events
-$('#fab').addEventListener('click',()=>openM());$('#btnAdd').addEventListener('click',()=>openM());$('#mCancel').addEventListener('click',closeM);$('#ov').addEventListener('click',closeM);
+// FAB: show menu for shared projects, direct openM for personal
+$('#fab').addEventListener('click',()=>{
+  const ap=getActiveContextProject();
+  const isShared=ap==='nos'||projects.find(p=>p.id===ap&&p.type==='shared');
+  if(isShared){openFabMenu()}else{openM()}
+});
+$('#btnAdd').addEventListener('click',()=>openM());$('#mCancel').addEventListener('click',closeM);$('#ov').addEventListener('click',closeM);
+
+// FAB Menu
+function openFabMenu(){$('#fabMenu').classList.add('open');$('#fabMenuOv').classList.add('open')}
+function closeFabMenu(){$('#fabMenu').classList.remove('open');$('#fabMenuOv').classList.remove('open')}
+$('#fabMenuOv').addEventListener('click',closeFabMenu);
+$('#fmTask').addEventListener('click',()=>{closeFabMenu();openM()});
+$('#fmAlert').addEventListener('click',()=>{closeFabMenu();openAlertForm()});
+$('#fmNote').addEventListener('click',()=>{closeFabMenu();openNoteForm()});
+
+// Alert Form
+function openAlertForm(){$('#alertSheet').classList.add('open');$('#alertOv').classList.add('open');$('#aMsg').value='';$('#aDate').value='';pickVal($('#aAssign'),'bruno');pickVal($('#aFreq'),'once');setTimeout(()=>$('#aMsg').focus(),300)}
+function closeAlertForm(){$('#alertSheet').classList.remove('open');$('#alertOv').classList.remove('open')}
+$('#alertOv').addEventListener('click',closeAlertForm);
+$('#aCan').addEventListener('click',closeAlertForm);
+$('#alertForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const msg=$('#aMsg').value.trim();if(!msg)return;
+  const data={id:uid(),type:'alert',title:msg,project:getActiveContextProject()||'nos',assignedTo:getPickVal($('#aAssign')),alertTime:$('#aTime').value||'18:00',recurrence:{freq:getPickVal($('#aFreq'))},date:$('#aDate').value||null,status:'todo',category:'casa',createdAt:Date.now(),updatedAt:Date.now()};
+  tasks.unshift(data);addLog('create',data);sT();closeAlertForm();render();toast('🔔 Alerta criado!');
+});
+
+// Reminder/Note Form
+function openNoteForm(){$('#noteSheet').classList.add('open');$('#noteOv').classList.add('open');$('#nMsg').value='';pickVal($('#nAssign'),'bruno');pickVal($('#nDur'),'3');setTimeout(()=>$('#nMsg').focus(),300)}
+function closeNoteForm(){$('#noteSheet').classList.remove('open');$('#noteOv').classList.remove('open')}
+$('#noteOv').addEventListener('click',closeNoteForm);
+$('#nCan').addEventListener('click',closeNoteForm);
+$('#noteForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const msg=$('#nMsg').value.trim();if(!msg)return;
+  const dur=parseInt(getPickVal($('#nDur')))||0;
+  const data={id:uid(),type:'note',title:msg,project:getActiveContextProject()||'nos',assignedTo:getPickVal($('#nAssign')),expiresAt:dur>0?Date.now()+dur*86400000:null,status:'todo',category:'social',createdAt:Date.now(),updatedAt:Date.now()};
+  tasks.unshift(data);addLog('create',data);sT();closeNoteForm();render();toast('📝 Lembrete criado!');
+});
 $('#addSub').addEventListener('click',()=>{mSubs.push({text:'',done:false});renderMSubs();const ins=$$('#subList input');if(ins.length)ins[ins.length-1].focus()});
 $('#recurBtn').addEventListener('click',()=>{$('#recurPop').classList.toggle('show')});
 $('#recurFreq').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#recurFreq button').forEach(x=>x.classList.remove('active'));if(b.dataset.rf){b.classList.add('active');$('#recurBtn').classList.add('active');$('#recurLabel').textContent=b.textContent}else{$('#recurBtn').classList.remove('active');$('#recurLabel').textContent='Repetir'}$('#recurPop').classList.remove('show')});
@@ -2689,7 +2864,10 @@ $('#mobCatMgr').addEventListener('click',()=>{
   // Open a settings sheet instead of just category manager
   openMobSettings();
 });
-$('#dashFilter').addEventListener('click',e=>{const c=e.target.closest('.df-chip');if(!c)return;dashCat=c.dataset.dc;renderDash()});
+$('#dashFilter').addEventListener('click',e=>{const c=e.target.closest('.df-chip');if(!c)return;
+  if(c.dataset.dp){const dp=c.dataset.dp;if(dp==='all'){projects.forEach(p=>p.visible=true)}else{projects.forEach(p=>p.visible=(p.id===dp))}saveUI();dashCat='all';renderDash();renderProjNav();return}
+  if(c.dataset.dc){dashCat=c.dataset.dc;renderDash()}
+});
 $('#wkToggle').addEventListener('click',()=>{const p=$('#wdgPanel'),t=$('#wkToggle'),m=$('.main');p.classList.toggle('open');t.classList.toggle('open');m.classList.toggle('wdg-open',p.classList.contains('open'))});
 $('#wdgPanel').addEventListener('click',e=>{
   if(e.target.closest('.wdg-drag'))return;
@@ -2836,7 +3014,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=51',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=52',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
