@@ -1664,7 +1664,10 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
+// Firestore is the SINGLE SOURCE OF TRUTH.
+// localStorage is ONLY a fallback cache for offline/first-paint.
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
+let _fbSynced=false; // true after first successful Firestore sync
 const _ui=ld('bt-ui',{});
 let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null;
 
@@ -1814,7 +1817,7 @@ function sL(){fbSave()}
 // Like Todoist/Notion: Firebase is the single source of truth.
 // Local storage is only a cache for offline use.
 function showSync(msg,ok){const el=$('#syncDot');if(!el)return;el.className='sync-dot'+(ok?' synced':' saving');if(ok)setTimeout(()=>{el.className='sync-dot'},1500)}
-let _fbTimer=null,_fbInitDone=false,_fbSaveTs=0;
+let _fbTimer=null,_fbInitDone=false,_fbSaveTs=0,_fbSaveCompletedAt=0;
 let pTasks=[],pCats=[],pLog=[];
 let _unsubP=null;
 const _unsubShared={};
@@ -1856,18 +1859,20 @@ function _fbDirectSave(){
 
 function fbSave(){
   if(!_fbReady||!_fbInitDone)return;
-  // Set saving flag + timestamp IMMEDIATELY to prevent combineData from overwriting
-  // local changes with stale Firestore snapshots during debounce + write + confirmation
+  // Set saving flag IMMEDIATELY to block combineData during the entire save cycle
   _fbSaving=true;
   _fbSaveTs=Date.now();
   clearTimeout(_fbTimer);
   _fbTimer=setTimeout(()=>{
     showSync('Salvando...');
+    // Snapshot current state to localStorage as offline cache
+    try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50))}catch(e){}
     _fbDirectSave().then(()=>{
       showSync('Sincronizado ✓',true);
-      // Keep _fbSaving true for a grace period AFTER save completes
-      // because onSnapshot fires twice (local cache + server confirmation)
-      setTimeout(()=>{_fbSaving=false},600);
+      _fbSaveCompletedAt=Date.now();
+      // Grace period: onSnapshot fires twice after write (cache + server)
+      // Block combineData for 800ms after write completes
+      setTimeout(()=>{_fbSaving=false},800);
     }).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
   },300);
 }
@@ -1908,15 +1913,15 @@ function fbInit(){
 let _firstCombine=true;
 function combineData(){
   if(_fbSaving||!_fbInitDone)return;
-  // Extra guard: ignore snapshots that arrive too soon after a save
-  // (onSnapshot double-fires: once from cache, once from server confirmation)
-  if(_fbSaveTs && (Date.now()-_fbSaveTs)<1200)return;
+  // Guard: ignore snapshots that arrive too close to a save completion
+  // (onSnapshot fires twice: local cache echo + server confirmation)
+  if(_fbSaveCompletedAt && (Date.now()-_fbSaveCompletedAt)<800)return;
   const newTasks=[...pTasks];
   for (let pid in sharedTasksMap) {
     if(Array.isArray(sharedTasksMap[pid])) newTasks.push(...sharedTasksMap[pid]);
   }
   
-  if(JSON.stringify(newTasks)===JSON.stringify(tasks)){return}
+  if(JSON.stringify(newTasks)===JSON.stringify(tasks)){_fbSynced=true;return}
 
   // Detect new alerts/notes — but SKIP first load (all items look "new" on first sync)
   if(!_firstCombine){
@@ -1924,7 +1929,6 @@ function combineData(){
     const myRole=myEmail.includes('brunohsantos')||myEmail.includes('bruno')?'bruno':'parceira';
     const oldIds=new Set(tasks.map(t=>t.id));
     const newItems=newTasks.filter(t=>!oldIds.has(t.id));
-    // Only notify for items created in the last 60 seconds (not old data)
     const recentCutoff=Date.now()-60000;
     newItems.forEach(t=>{
       if((t.type==='alert'||t.type==='note')&&t.createdAt>recentCutoff){
@@ -1944,7 +1948,9 @@ function combineData(){
     });
   }
   _firstCombine=false;
+  _fbSynced=true;
 
+  // === FIRESTORE IS TRUTH: overwrite local state ===
   tasks=newTasks;
   cats=[...pCats];
   
@@ -1953,6 +1959,9 @@ function combineData(){
     if(Array.isArray(sharedLogMap[pid])) newLog.push(...sharedLogMap[pid]);
   }
   log=newLog.sort((a,b)=>b.ts-a.ts);
+  
+  // Update localStorage cache for offline fallback
+  try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50))}catch(e){}
   
   if(typeof render==='function')render();
   showSync('Atualizado ✓',true);
@@ -3715,7 +3724,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=80',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=81',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
