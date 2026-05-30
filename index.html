@@ -924,13 +924,28 @@
     }
 
     /* ===== ALERT ITEMS ===== */
+    /* ===== ALERT BAR — collapsible summary ===== */
+    .alert-bar{background:var(--card);border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);border:1px solid var(--sep);transition:box-shadow var(--dur-norm)}
+    .alert-bar:hover{box-shadow:var(--shadow)}
+    .alert-bar-header{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+    .alert-bar-icon{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#FF9500,#FFCC00);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .alert-bar-icon svg{width:16px;height:16px;color:#fff;stroke-width:2}
+    .alert-bar-info{flex:1;min-width:0}
+    .alert-bar-title{font-size:.82rem;font-weight:600;color:var(--label)}
+    .alert-bar-sub{font-size:.68rem;color:var(--label3);margin-top:1px}
+    .alert-bar-chevron{width:20px;height:20px;color:var(--label3);transition:transform var(--dur-norm) var(--ease-spring);flex-shrink:0}
+    .alert-bar.open .alert-bar-chevron{transform:rotate(180deg)}
+    .alert-bar-body{max-height:0;overflow:hidden;transition:max-height .4s var(--ease-expo)}
+    .alert-bar.open .alert-bar-body{max-height:600px;transition:max-height .5s var(--ease-spring)}
+    .alert-bar-list{padding:0 10px 10px}
+    .alert-bar-list .item{margin-bottom:4px;border-radius:10px;padding:10px 14px}
     .item.alert-item{border-left:3px solid #FF9500}
     .item.alert-item .alert-icon{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#FF9500,#FFCC00);display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .item.alert-item .alert-icon svg{width:12px;height:12px;color:#fff}
     .alert-time{font-size:.72rem;color:#FF9500;font-weight:600}
     .alert-freq{font-size:.66rem;color:var(--label3)}
     .alert-sched{font-size:.66rem;color:#34C759;font-weight:600;padding:2px 6px;background:rgba(52,199,89,.08);border-radius:6px}
-    .alert-sched.alert-today{color:#FF9500;background:rgba(255,149,0,.08);animation:nbPulse 2s ease-in-out infinite}
+    .alert-sched.alert-today{color:#FF9500;background:rgba(255,149,0,.08)}
     .alert-until{font-size:.62rem;color:var(--label3);font-style:italic}
 
     /* ===== NOTE/REMINDER ITEMS ===== */
@@ -1681,6 +1696,7 @@ let activeProject='all'; // 'all', 'bruno', 'nos'
 let fFormProj='bruno'; // project selected in the form
 let editProjId = null; // Currently editing project
 let catNavExpanded = false; // "Ver mais" state
+let _alertBarOpen = false; // Alert bar collapsed by default
 
 // Categorias específicas do projeto 'Nós'
 const NOS_CATS=[
@@ -2038,7 +2054,7 @@ function ci(id){return cats.find(c=>c.id===id)||NOS_CATS.find(c=>c.id===id)||{na
 function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
 function fDate(d){if(!d)return'';return new Date(d+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}
 function isOD(d){if(!d)return false;const t=new Date();t.setHours(0,0,0,0);return new Date(d+'T00:00:00')<t}
-function addLog(type,t){log.unshift({type,taskId:t.id,title:t.title,category:t.category,project:t.project||'bruno',ts:Date.now()});if(log.length>200)log=log.slice(0,200);fbSave()}
+function addLog(type,t){log.unshift({type,taskId:t.id,title:t.title,category:t.category,project:t.project||'bruno',ts:Date.now()});if(log.length>200)log=log.slice(0,200)}
 function relTime(ts){const d=Date.now()-ts,s=d/1000,m=s/60,h=m/60,dy=h/24;if(s<60)return'agora';if(m<60)return Math.floor(m)+'min';if(h<24)return Math.floor(h)+'h';if(dy<7)return Math.floor(dy)+'d';return new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}
 function fmtTime(min){if(!min)return'';if(min<60)return min+'min';const h=Math.floor(min/60),m=min%60;return m?h+'h'+m+'m':h+'h'}
 function isBlocked(t){if(!t.blockedBy||!t.blockedBy.length)return false;return t.blockedBy.some(bid=>{const bt=tasks.find(x=>x.id===bid);return bt&&bt.status!=='done'})}
@@ -2304,10 +2320,38 @@ function renderTasks(){
     default:list.sort((a,b)=>{const pa=pr[a.priority]??3,pb=pr[b.priority]??3;if(pa!==pb)return pa-pb;if(a.date&&b.date)return a.date.localeCompare(b.date);if(a.date)return-1;return 1});
   }
   // pageTitle already set above — removed duplicate that was overwriting widget filter title
-  const pending=list.filter(t=>t.status!=='done');
-  const done=list.filter(t=>t.status==='done');
-  if(!pending.length&&!done.length){$('#list').innerHTML=`<div class="task-empty"><div class="ei"><svg><use href="#i-inbox"/></svg></div><h3>${qry?'Nada encontrado':'Nenhuma tarefa'}</h3><p>${qry?'Tente outra busca':'Crie uma nova tarefa para começar'}</p></div>`;return}
-  let html='';let idx=0;
+  // Separate alerts from regular tasks
+  const alerts=list.filter(t=>t.type==='alert'&&t.status!=='done');
+  const nonAlerts=list.filter(t=>t.type!=='alert'||t.status==='done');
+  const pending=nonAlerts.filter(t=>t.status!=='done');
+  const done=nonAlerts.filter(t=>t.status==='done');
+  // Alert bar HTML (collapsible)
+  let alertBarHtml='';
+  if(alerts.length){
+    const nextFire=alerts.filter(t=>t.nextFireAt).sort((a,b)=>a.nextFireAt-b.nextFireAt)[0];
+    let nextLabel='';
+    if(nextFire){
+      const nf=new Date(nextFire.nextFireAt);
+      const isToday=dateStr(nf)===dateStr(new Date());
+      const isTomorrow=dateStr(nf)===dateStr(new Date(Date.now()+864e5));
+      const dayL=isToday?'Hoje':isTomorrow?'Amanhã':nf.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+      nextLabel=dayL+' '+nextFire.alertTime;
+    }
+    const isOpen=_alertBarOpen?'open':'';
+    alertBarHtml=`<div class="alert-bar ${isOpen}" id="alertBar">
+      <div class="alert-bar-header" onclick="toggleAlertBar()">
+        <div class="alert-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <div class="alert-bar-info">
+          <div class="alert-bar-title">${alerts.length} alerta${alerts.length>1?'s':''} ativo${alerts.length>1?'s':''}</div>
+          <div class="alert-bar-sub">${nextLabel?'Próximo: '+nextLabel:'Sem horário definido'}</div>
+        </div>
+        <svg class="alert-bar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="alert-bar-body"><div class="alert-bar-list">${alerts.map((t,i)=>renderItem(t,i)).join('')}</div></div>
+    </div>`;
+  }
+  if(!pending.length&&!done.length&&!alerts.length){$('#list').innerHTML=`<div class="task-empty"><div class="ei"><svg><use href="#i-inbox"/></svg></div><h3>${qry?'Nada encontrado':'Nenhuma tarefa'}</h3><p>${qry?'Tente outra busca':'Crie uma nova tarefa para começar'}</p></div>`;return}
+  let html=alertBarHtml;let idx=0;
   if(groupBy==='none'){
     const pendingIds=new Set(pending.map(t=>t.id));
     const roots=pending.filter(t=>!t.blockedBy||!t.blockedBy.some(bid=>pendingIds.has(bid)));
@@ -2746,6 +2790,12 @@ function renderHabitsWidget(){
     </div>
   </div>`;
   return{badge:uniqueHabits.length?uniqueHabits.length.toString():'',summary:summaryHtml,full};
+}
+
+function toggleAlertBar(){
+  _alertBarOpen=!_alertBarOpen;
+  const bar=$('#alertBar');
+  if(bar) bar.classList.toggle('open',_alertBarOpen);
 }
 
 function render(){renderProjNav();renderCatNav();renderTasks();renderWidgets();if(curView==='dash')renderDash()}
@@ -3417,7 +3467,9 @@ _nbSend.addEventListener('click',e=>{if(_nbTouchFired)return;nbAddNote()});
 $('#nbInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();nbAddNote()}});
 // Delete note from board
 function nbDeleteNote(id){
-  tasks=tasks.filter(t=>t.id!==id);addLog('delete',{id});sT();render();nbRender();
+  const t=tasks.find(x=>x.id===id);
+  if(t) addLog('delete',t);
+  tasks=tasks.filter(t=>t.id!==id);sT();render();nbRender();
 }
 // Render board
 // Keyword magic for Notes Board — safe single-pass (no HTML corruption)
@@ -3724,7 +3776,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=81',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=82',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
