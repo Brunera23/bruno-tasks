@@ -3247,8 +3247,8 @@ function openMobSettings(){
   `;
   sheet.innerHTML=settingsHtml;
   sheet.classList.add('open');ov.classList.add('open');
-  $('#msCategories').onclick=()=>{closeMobSheet();openCatMgr()};
-  $('#msProjects').onclick=()=>{closeMobSheet();openProjManager()};
+  $('#msCategories').onclick=()=>{closeMobSheet();setTimeout(openCatMgr,350)};
+  $('#msProjects').onclick=()=>{closeMobSheet();setTimeout(openProjManager,350)};
   $('#msToggleDone').onclick=()=>{showDone=!showDone;saveUI();closeMobSheet();render()};
   $('#msTheme').onclick=()=>{toggleTheme();closeMobSheet();};
 }
