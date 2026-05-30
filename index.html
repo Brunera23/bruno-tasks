@@ -1039,7 +1039,7 @@
 <nav class="mob-nav"><div class="mob-nav-inner">
   <button class="mob-tab active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas</button>
   <button class="mob-tab" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
-  <button class="mob-tab" id="mobCatMgr"><svg><use href="#i-settings"/></svg>Categorias</button>
+  <button class="mob-tab" id="mobCatMgr"><svg><use href="#i-settings"/></svg>Mais</button>
 </div></nav>
 
 <button class="fab" id="fab" aria-label="Nova tarefa"><svg><use href="#i-plus"/></svg></button>
@@ -2679,7 +2679,11 @@ $('#q').addEventListener('blur',()=>hideSmartSuggest());
 $('#smartSuggest').addEventListener('mousedown',e=>{const item=e.target.closest('.smart-suggest-item');if(!item)return;e.preventDefault();const term=item.dataset.term;$('#q').value=term;qry=term;$('#smartSuggest').classList.remove('show');$('#smartSuggest').innerHTML='';renderTasks()});
 $('#cfNo').addEventListener('click',()=>{delId=null;$('#cfWrap').classList.remove('open')});
 $('#cfWrap').addEventListener('click',e=>{if(e.target===$('#cfWrap')){delId=null;$('#cfWrap').classList.remove('open')}});
-$('#catMgrBtn').addEventListener('click',openCatMgr);$('#mobCatMgr').addEventListener('click',openCatMgr);
+$('#catMgrBtn').addEventListener('click',openCatMgr);
+$('#mobCatMgr').addEventListener('click',()=>{
+  // Open a settings sheet instead of just category manager
+  openMobSettings();
+});
 $('#dashFilter').addEventListener('click',e=>{const c=e.target.closest('.df-chip');if(!c)return;dashCat=c.dataset.dc;renderDash()});
 $('#wkToggle').addEventListener('click',()=>{const p=$('#wdgPanel'),t=$('#wkToggle'),m=$('.main');p.classList.toggle('open');t.classList.toggle('open');m.classList.toggle('wdg-open',p.classList.contains('open'))});
 $('#wdgPanel').addEventListener('click',e=>{
@@ -2827,7 +2831,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=48',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=49',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -2992,6 +2996,23 @@ $('#mobSheetOv').addEventListener('click', closeMobSheet);
 
 function openMobSheet(){
   const sheet=$('#mobSheet'), ov=$('#mobSheetOv');
+  // Rebuild filter content (settings may have replaced innerHTML)
+  sheet.innerHTML=`
+    <div class="mob-sheet-handle"></div>
+    <div class="mob-sheet-title">Filtros</div>
+    <div class="mob-sheet-section">
+      <div class="mob-sheet-label">Status</div>
+      <div class="mob-sheet-seg" id="mobSheetSeg"></div>
+    </div>
+    <div class="mob-sheet-section">
+      <div class="mob-sheet-label">Agrupar por</div>
+      <div class="mob-sheet-opts" id="mobSheetGrp"></div>
+    </div>
+    <div class="mob-sheet-section">
+      <div class="mob-sheet-label">Ordenar por</div>
+      <div class="mob-sheet-opts" id="mobSheetSort"></div>
+    </div>
+  `;
   const statuses=[{s:'all',n:'Todas'},{s:'todo',n:'A fazer'},{s:'doing',n:'Fazendo'},{s:'done',n:'Feitas'}];
   $('#mobSheetSeg').innerHTML=statuses.map(st=>`<button class="${aSt===st.s?'active':''}" data-ms="${st.s}">${st.n}</button>`).join('');
   const groups=[{g:'none',n:'Padr\u00e3o'},{g:'category',n:'Categoria'},{g:'priority',n:'Prioridade'},{g:'today',n:'Hoje'},{g:'time',n:'Tempo estimado'}];
@@ -3001,6 +3022,47 @@ function openMobSheet(){
   sheet.classList.add('open');ov.classList.add('open');
 }
 function closeMobSheet(){$('#mobSheet').classList.remove('open');$('#mobSheetOv').classList.remove('open')}
+
+function openMobSettings(){
+  const sheet=$('#mobSheet'), ov=$('#mobSheetOv');
+  const settingsHtml=`
+    <div class="mob-sheet-handle"></div>
+    <div class="mob-sheet-title">Configurações</div>
+    <div class="mob-sheet-section">
+      <div class="mob-sheet-label">Ações rápidas</div>
+      <div class="mob-sheet-opts">
+        <button id="msCategories"><svg><use href="#i-layers"/></svg>Gerenciar categorias</button>
+        <button id="msProjects"><svg><use href="#i-home"/></svg>Gerenciar projetos</button>
+        <button id="msToggleDone"><svg><use href="#i-check"/></svg>${showDone?'Ocultar tarefas feitas':'Mostrar tarefas feitas'}</button>
+        <button id="msTheme"><svg><use href="#${getTheme()==='dark'?'i-sun':'i-moon'}"/></svg>${getTheme()==='dark'?'Tema claro':'Tema escuro'}</button>
+      </div>
+    </div>
+  `;
+  sheet.innerHTML=settingsHtml;
+  sheet.classList.add('open');ov.classList.add('open');
+  $('#msCategories').onclick=()=>{closeMobSheet();openCatMgr()};
+  $('#msProjects').onclick=()=>{closeMobSheet();openProjManager()};
+  $('#msToggleDone').onclick=()=>{showDone=!showDone;saveUI();closeMobSheet();render()};
+  $('#msTheme').onclick=()=>{toggleTheme();closeMobSheet();};
+}
+
+function openProjManager(){
+  // Reuse category manager modal style for projects
+  const projHtml=projects.map(p=>`
+    <div class="cat-mgr-item">
+      <svg style="color:${p.gradient?.includes('#')?'#007AFF':p.gradient}"><use href="#${p.icon||'i-layers'}"/></svg>
+      <span class="cat-mgr-name">${escapeHtml(p.name)}</span>
+      <div class="cat-mgr-actions">
+        <button class="a-btn" onclick="$('#catMgrWrap').classList.remove('open');renProj('${p.id}')" title="Editar"><svg><use href="#i-edit"/></svg></button>
+        ${p.id!=='bruno'?`<button class="a-btn" onclick="$('#catMgrWrap').classList.remove('open');shareProj('${p.id}')" title="Compartilhar"><svg><use href="#i-share"/></svg></button>`:''}
+      </div>
+    </div>
+  `).join('');
+  const addBtn=`<button class="btn-add" style="display:flex;margin-top:8px" onclick="$('#catMgrWrap').classList.remove('open');$('#addProjWrap').classList.add('open')"><svg><use href="#i-plus"/></svg>Novo projeto</button>`;
+  $('#catMgrTitle').textContent='Projetos';
+  $('#catMgrList').innerHTML=projHtml+addBtn;
+  $('#catMgrWrap').classList.add('open');
+}
 
 $('#mobSheet').addEventListener('click',e=>{
   const ms=e.target.closest('[data-ms]');
