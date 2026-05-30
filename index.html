@@ -1477,7 +1477,16 @@ try{
 
 // Request permission and get token
 async function requestNotifPermission(){
-  if(!messaging){toast('Notificações não suportadas neste navegador');return false}
+  if(!messaging){
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if (isIOS && !isStandalone) {
+      toast('Adicione à Tela Inicial (Compartilhar > Adicionar à Tela Inicial) para ativar notificações.');
+    } else {
+      toast('Notificações não suportadas neste navegador.');
+    }
+    return false;
+  }
   try{
     const permission=await Notification.requestPermission();
     if(permission!=='granted'){toast('Permissão de notificação negada');return false}
@@ -3547,7 +3556,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=65',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=66',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
