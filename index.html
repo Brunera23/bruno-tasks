@@ -938,83 +938,83 @@
     /* ===== QUADRO DE LEMBRETES — Apple HIG Premium ===== */
     .notes-board-wrap{position:fixed;inset:0;z-index:300;pointer-events:none}
     .notes-board-wrap.open{pointer-events:all}
-    .notes-board-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);opacity:0;transition:opacity .3s}
+    .notes-board-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);opacity:0;transition:opacity .35s ease}
     .notes-board-wrap.open .notes-board-backdrop{opacity:1}
-    .notes-board{position:absolute;top:0;right:0;bottom:0;width:min(480px,100vw);background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .45s cubic-bezier(.32,1,.23,1);box-shadow:-8px 0 40px rgba(0,0,0,.12)}
+    .notes-board{position:absolute;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .5s cubic-bezier(.32,1,.23,1);box-shadow:-4px 0 24px rgba(0,0,0,.08)}
     .notes-board-wrap.open .notes-board{transform:translateX(0)}
     @media(max-width:640px){
       .notes-board{top:0;left:0;right:0;bottom:0;width:100%;border-radius:0;transform:translateY(100%)}
       .notes-board-wrap.open .notes-board{transform:translateY(0)}
     }
-    /* Header — Apple large title style */
-    .nb-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:.5px solid var(--sep);background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-    @media(max-width:640px){.nb-header{padding:calc(env(safe-area-inset-top,12px) + 8px) 20px 12px}}
-    .nb-title-block{display:flex;flex-direction:column;gap:1px}
-    .nb-title{font-size:1.1rem;font-weight:700;letter-spacing:-.02em;color:var(--label)}
-    .nb-sub{font-size:.68rem;color:var(--label3);font-weight:500;letter-spacing:.01em}
-    .nb-close-btn{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--label3);transition:all var(--dur-fast);flex-shrink:0}
-    .nb-close-btn svg{width:14px;height:14px}
-    .nb-close-btn:hover{background:var(--sep);color:var(--label)}
-    .nb-count-badge{font-size:.58rem;background:rgba(255,45,85,.12);color:#FF2D55;padding:2px 6px;border-radius:8px;font-weight:700;margin-left:6px;vertical-align:middle}
-    /* Filter pills — just below header */
-    .nb-filter-row{display:flex;gap:6px;padding:12px 20px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+    /* Header — Apple style clean */
+    .nb-header{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--card);border-bottom:.5px solid var(--sep)}
+    @media(max-width:640px){.nb-header{padding:calc(env(safe-area-inset-top,14px) + 10px) 20px 12px}}
+    .nb-title-block{display:flex;flex-direction:column;gap:2px}
+    .nb-title{font-size:1.05rem;font-weight:700;letter-spacing:-.025em;color:var(--label)}
+    .nb-sub{font-size:.65rem;color:var(--label3);font-weight:400;letter-spacing:.02em}
+    .nb-close-btn{width:28px;height:28px;border-radius:50%;border:none;background:var(--fill);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--label3);transition:all .2s;flex-shrink:0}
+    .nb-close-btn svg{width:12px;height:12px}
+    .nb-close-btn:active{transform:scale(.92);background:var(--sep)}
+    .nb-count-badge{font-size:.55rem;background:var(--fill);color:var(--label2);padding:1px 6px;border-radius:6px;font-weight:600;margin-left:6px;vertical-align:middle}
+    /* Filter pills */
+    .nb-filter-row{display:flex;gap:6px;padding:10px 20px 6px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
     .nb-filter-row::-webkit-scrollbar{display:none}
-    .nb-chip{padding:6px 14px;border-radius:20px;border:none;background:var(--fill);color:var(--label2);font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all var(--dur-fast);white-space:nowrap}
+    .nb-chip{padding:5px 14px;border-radius:16px;border:none;background:var(--fill);color:var(--label2);font-size:.7rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
     .nb-chip.active{background:var(--label);color:var(--bg)}
+    .nb-chip:active{transform:scale(.95)}
     /* Cards area */
-    .nb-cards{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-    @media(max-width:640px){.nb-cards{padding-bottom:calc(220px + env(safe-area-inset-bottom,20px))}}
-    .nb-card{border-radius:14px;padding:14px 16px 12px;position:relative;overflow:hidden;animation:nbIn .3s var(--ease-spring) both;transition:transform .2s,box-shadow .2s}
-    @keyframes nbIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-    .nb-card.nb-bruno{background:rgba(0,122,255,.06);border:1px solid rgba(0,122,255,.1)}
-    .nb-card.nb-parceira{background:rgba(255,45,85,.06);border:1px solid rgba(255,45,85,.1)}
-    .nb-card.nb-ambos{background:rgba(175,82,222,.06);border:1px solid rgba(175,82,222,.1)}
-    [data-theme="dark"] .nb-card.nb-bruno{background:rgba(0,122,255,.1);border-color:rgba(0,122,255,.18)}
-    [data-theme="dark"] .nb-card.nb-parceira{background:rgba(255,45,85,.1);border-color:rgba(255,45,85,.18)}
-    [data-theme="dark"] .nb-card.nb-ambos{background:rgba(175,82,222,.1);border-color:rgba(175,82,222,.18)}
-    .nb-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-    .nb-who{display:flex;align-items:center;gap:6px}
-    .nb-av{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .nb-av svg{width:10px;height:10px;color:#fff}
-    .nb-who-name{font-size:.62rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--label3)}
+    .nb-cards{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 16px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+    @media(max-width:640px){.nb-cards{padding-bottom:calc(190px + env(safe-area-inset-bottom,20px))}}
+    /* Cards — clean, minimal, Apple-style */
+    .nb-card{border-radius:12px;padding:12px 14px 10px;position:relative;background:var(--card);border:1px solid var(--sep);animation:nbIn .3s ease both;transition:transform .15s,box-shadow .15s}
+    .nb-card:active{transform:scale(.985)}
+    @keyframes nbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .nb-card.nb-bruno{border-left:2.5px solid rgba(0,122,255,.4)}
+    .nb-card.nb-parceira{border-left:2.5px solid rgba(255,45,85,.35)}
+    .nb-card.nb-ambos{border-left:2.5px solid rgba(175,82,222,.35)}
+    .nb-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+    .nb-who{display:flex;align-items:center;gap:5px}
+    .nb-av{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.55rem;font-weight:700;color:#fff}
+    .nb-who-name{font-size:.6rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--label3)}
     .nb-actions{display:flex;gap:2px}
-    @media(hover:hover){.nb-actions{opacity:0;transition:opacity var(--dur-fast)}.nb-card:hover .nb-actions{opacity:1}}
-    .nb-del-btn{width:24px;height:24px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--label3);padding:0;transition:all var(--dur-fast)}
-    .nb-del-btn:hover{background:rgba(255,59,48,.1);color:#FF3B30}
-    .nb-del-btn svg{width:12px;height:12px}
-    .nb-text{font-size:.88rem;line-height:1.5;color:var(--label);font-weight:500;word-break:break-word;white-space:pre-wrap}
-    .nb-footer{margin-top:8px;display:flex;align-items:center;justify-content:space-between}
-    .nb-expire{font-size:.62rem;color:var(--label3);font-weight:500}
+    @media(hover:hover){.nb-actions{opacity:0;transition:opacity .15s}.nb-card:hover .nb-actions{opacity:1}}
+    .nb-del-btn{width:22px;height:22px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--label3);padding:0;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .nb-del-btn:active{background:rgba(255,59,48,.1);color:#FF3B30}
+    .nb-del-btn svg{width:11px;height:11px}
+    .nb-text{font-size:.85rem;line-height:1.5;color:var(--label);font-weight:400;word-break:break-word;white-space:pre-wrap}
+    .nb-footer{margin-top:6px;display:flex;align-items:center;justify-content:space-between}
+    .nb-expire{font-size:.6rem;color:var(--label3);font-weight:500}
     .nb-expire.nb-soon{color:#FF9500;font-weight:600}
     .nb-expire.nb-today{color:#FF3B30;font-weight:600}
-    .nb-topbar{position:absolute;top:0;left:0;right:0;height:3px}
-    .nb-empty{display:flex;flex-direction:column;align-items:center;padding:80px 20px;gap:12px;text-align:center}
-    .nb-empty-emoji{font-size:3rem}
-    .nb-empty-title{font-size:.95rem;font-weight:700;color:var(--label)}
-    .nb-empty-sub{font-size:.78rem;color:var(--label3);line-height:1.5}
-    /* Bottom composer — iMessage style */
-    .nb-composer{position:absolute;bottom:0;left:0;right:0;background:rgba(245,245,247,.92);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:.5px solid var(--sep);padding:10px 16px calc(env(safe-area-inset-bottom,8px) + 8px);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
-    [data-theme="dark"] .nb-composer{background:rgba(28,28,30,.92)}
-    .nb-comp-row{display:flex;gap:8px;align-items:flex-end}
-    .nb-comp-input{flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--sep);border-radius:20px;font-size:.88rem;color:var(--label);font-family:inherit;outline:none;transition:all var(--dur-fast);box-sizing:border-box;min-width:0;resize:none;max-height:80px;line-height:1.4}
-    .nb-comp-input:focus{border-color:rgba(255,45,85,.4);box-shadow:0 0 0 3px rgba(255,45,85,.06)}
-    .nb-comp-send{width:34px;height:34px;border-radius:50%;border:none;background:linear-gradient(135deg,#FF2D55,#FF6482);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .15s,opacity .15s;box-shadow:0 2px 8px rgba(255,45,85,.3)}
-    .nb-comp-send:active{transform:scale(.9)}
-    .nb-comp-send:disabled{opacity:.4;cursor:default}
-    .nb-comp-send svg{width:16px;height:16px;transform:rotate(-45deg) translate(1px,-1px)}
-    .nb-comp-opts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-    .nb-opt-chip{padding:4px 10px;border-radius:14px;border:1px solid var(--sep);background:transparent;color:var(--label2);font-size:.66rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all var(--dur-fast);white-space:nowrap;display:flex;align-items:center;gap:3px}
-    .nb-opt-chip.active{border-color:transparent}
-    .nb-opt-chip.active.nb-av-bruno{background:rgba(0,122,255,.1);color:#007AFF}
-    .nb-opt-chip.active.nb-av-parceira{background:rgba(255,45,85,.1);color:#FF2D55}
-    .nb-opt-chip.active.nb-av-ambos{background:rgba(175,82,222,.1);color:#AF52DE}
+    .nb-topbar{display:none}
+    .nb-empty{display:flex;flex-direction:column;align-items:center;padding:80px 20px;gap:10px;text-align:center}
+    .nb-empty-emoji{font-size:2.4rem}
+    .nb-empty-title{font-size:.88rem;font-weight:700;color:var(--label)}
+    .nb-empty-sub{font-size:.75rem;color:var(--label3);line-height:1.5}
+    /* Bottom composer */
+    .nb-composer{position:absolute;bottom:0;left:0;right:0;background:rgba(245,245,247,.95);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid var(--sep);padding:8px 16px calc(env(safe-area-inset-bottom,6px) + 6px);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+    [data-theme="dark"] .nb-composer{background:rgba(28,28,30,.95)}
+    .nb-comp-row{display:flex;gap:8px;align-items:center}
+    .nb-comp-input{flex:1;padding:9px 14px;background:var(--bg);border:1px solid var(--sep);border-radius:18px;font-size:16px;color:var(--label);font-family:inherit;outline:none;transition:border-color .2s;box-sizing:border-box;min-width:0;line-height:1.35}
+    .nb-comp-input:focus{border-color:rgba(0,0,0,.18)}
+    [data-theme="dark"] .nb-comp-input:focus{border-color:rgba(255,255,255,.18)}
+    .nb-comp-send{width:32px;height:32px;border-radius:50%;border:none;background:var(--label);color:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .12s,opacity .12s}
+    .nb-comp-send:active{transform:scale(.88)}
+    .nb-comp-send svg{width:14px;height:14px;transform:rotate(-45deg) translate(1px,-1px)}
+    .nb-comp-opts{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+    .nb-opt-chip{padding:4px 10px;border-radius:12px;border:1px solid var(--sep);background:transparent;color:var(--label3);font-size:.64rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent}
+    .nb-opt-chip:active{transform:scale(.94)}
+    .nb-opt-chip.active{border-color:transparent;color:var(--label)}
+    .nb-opt-chip.active[data-nba="bruno"]{background:rgba(0,122,255,.08);color:#007AFF}
+    .nb-opt-chip.active[data-nba="parceira"]{background:rgba(255,45,85,.08);color:#FF2D55}
+    .nb-opt-chip.active[data-nba="ambos"]{background:rgba(175,82,222,.08);color:#AF52DE}
     .nb-opt-chip.nb-dur.active{background:var(--label);color:var(--bg);border-color:var(--label)}
-    .nb-opt-sep{width:1px;height:16px;background:var(--sep);flex-shrink:0;margin:0 2px}
+    .nb-opt-sep{width:1px;height:14px;background:var(--sep);flex-shrink:0;margin:0 2px}
     .nb-dur-custom{display:none;align-items:center;gap:4px;flex-shrink:0}
     .nb-dur-custom.show{display:flex}
-    .nb-dur-custom input{width:48px;padding:4px 6px;border:1px solid var(--sep);border-radius:8px;font-size:.78rem;font-family:inherit;background:var(--bg);color:var(--label);outline:none;text-align:center;box-sizing:border-box}
+    .nb-dur-custom input{width:44px;padding:3px 5px;border:1px solid var(--sep);border-radius:8px;font-size:.75rem;font-family:inherit;background:var(--bg);color:var(--label);outline:none;text-align:center;box-sizing:border-box}
     .nb-dur-custom input:focus{border-color:var(--blue)}
-    .nb-dur-custom span{font-size:.66rem;color:var(--label3);font-weight:600}
+    .nb-dur-custom span{font-size:.62rem;color:var(--label3);font-weight:600}
 
     /* Keyword magic effects */
     .nbk-love{color:#FF2D55;font-weight:700;position:relative;display:inline}
@@ -1235,9 +1235,9 @@
     <!-- Bottom composer -->
     <div class="nb-composer">
       <div class="nb-comp-opts" id="nbCompOpts">
-        <button class="nb-opt-chip nb-av-bruno active" data-nba="bruno"><span class="nb-av" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="9" height="9"><use href="#i-user"/></svg></span>Bruno</button>
-        <button class="nb-opt-chip nb-av-parceira" data-nba="parceira"><span class="nb-av" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="9" height="9"><use href="#i-user"/></svg></span>Clara</button>
-        <button class="nb-opt-chip nb-av-ambos" data-nba="ambos"><span class="nb-av" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="9" height="9"><use href="#i-users"/></svg></span>Ambos</button>
+        <button class="nb-opt-chip active" data-nba="bruno">Bruno</button>
+        <button class="nb-opt-chip" data-nba="parceira">Clara</button>
+        <button class="nb-opt-chip" data-nba="ambos">Ambos</button>
         <div class="nb-opt-sep"></div>
         <button class="nb-opt-chip nb-dur" data-nbd="1">1d</button>
         <button class="nb-opt-chip nb-dur active" data-nbd="3">3d</button>
@@ -3277,22 +3277,21 @@ function nbRender(){
     $('#nbCards').innerHTML=`<div class="nb-empty"><div class="nb-empty-emoji">💌</div><div class="nb-empty-title">Nenhuma nota ainda</div><div class="nb-empty-sub">Escreva algo fofo para o casal<br>e vai aparecer aqui 💕</div></div>`;
     return;
   }
-  const who={bruno:{grad:'linear-gradient(135deg,#007AFF,#5AC8FA)',name:'Bruno',cls:'nb-bruno',topbar:'#007AFF'},parceira:{grad:'linear-gradient(135deg,#FF2D55,#FF6482)',name:'Clara',cls:'nb-parceira',topbar:'#FF2D55'},ambos:{grad:'linear-gradient(135deg,#AF52DE,#5856D6)',name:'Ambos',cls:'nb-ambos',topbar:'#AF52DE'}};
+  const who={bruno:{name:'Bruno',cls:'nb-bruno',init:'B',bg:'rgba(0,122,255,.12)'},parceira:{name:'Clara',cls:'nb-parceira',init:'C',bg:'rgba(255,45,85,.1)'},ambos:{name:'Ambos',cls:'nb-ambos',init:'♡',bg:'rgba(175,82,222,.1)'}};
   $('#nbCards').innerHTML=filtered.map((n,i)=>{
     const w=who[n.assignedTo]||who.ambos;
     const now=Date.now();
     let expHtml='';
     if(n.expiresAt){
       const diff=n.expiresAt-now,days=Math.ceil(diff/86400000);
-      if(days<=0)expHtml=`<span class="nb-expire nb-today">Expira hoje!</span>`;
-      else if(days<=2)expHtml=`<span class="nb-expire nb-soon">Expira em ${days}d</span>`;
-      else expHtml=`<span class="nb-expire">Expira em ${days}d</span>`;
-    }else{expHtml=`<span class="nb-expire">Permanente</span>`}
-    return`<div class="nb-card ${w.cls}" style="animation-delay:${i*0.04}s">
-      <div class="nb-topbar" style="background:${w.topbar}"></div>
+      if(days<=0)expHtml=`<span class="nb-expire nb-today">Expira hoje</span>`;
+      else if(days<=2)expHtml=`<span class="nb-expire nb-soon">${days}d restante${days>1?'s':''}</span>`;
+      else expHtml=`<span class="nb-expire">${days}d</span>`;
+    }else{expHtml=`<span class="nb-expire">∞</span>`}
+    return`<div class="nb-card ${w.cls}" style="animation-delay:${i*0.03}s">
       <div class="nb-card-top">
         <div class="nb-who">
-          <span class="nb-av" style="background:${w.grad}"><svg width="11" height="11"><use href="#i-user"/></svg></span>
+          <span class="nb-av" style="background:${w.bg};color:${n.assignedTo==='bruno'?'#007AFF':n.assignedTo==='parceira'?'#FF2D55':'#AF52DE'}">${w.init}</span>
           <span class="nb-who-name">${w.name}</span>
         </div>
         <div class="nb-actions">
@@ -3530,7 +3529,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=61',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=62',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
