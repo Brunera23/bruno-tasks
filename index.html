@@ -6,7 +6,7 @@
   <meta name="description" content="Bruno Tasks — Gerenciador de tarefas pessoal">
   <meta name="theme-color" content="#f2f2f7" id="metaTheme">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <title>Bruno Tasks</title>
@@ -509,14 +509,15 @@
     .sub.done span{text-decoration:line-through;color:var(--label3)}
 
     /* Action area — date always visible, buttons on hover */
-    .item-right{display:flex;align-items:center;gap:0;flex-shrink:0;margin-left:auto}
+    .item-right{display:flex;align-items:center;gap:2px;flex-shrink:0;margin-left:auto}
     .item-acts{display:flex;gap:0;flex-shrink:0;max-width:0;opacity:0;overflow:hidden;transition:max-width var(--dur-norm) var(--ease-expo),opacity var(--dur-fast) var(--ease-expo)}
     .item:hover .item-acts{max-width:80px;opacity:1}
     @media(hover:none){.item-acts{max-width:80px;opacity:1}}
-    .a-btn{width:28px;height:28px;border-radius:7px;border:none;background:transparent;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur-fast)}
+    .a-btn{width:28px;height:28px;border-radius:7px;border:none;background:transparent;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur-fast);-webkit-tap-highlight-color:transparent}
     .a-btn:hover{background:var(--fill);color:var(--label)}
     .a-btn:active{transform:scale(.9);transition-duration:80ms}
     .a-btn.del:hover{color:#FF3B30}
+    .a-btn.del:active{color:#FF3B30}
     .a-btn svg{width:14px;height:14px}
     .a-btn[title="Adicionar subtarefa"]:active svg{animation:quickChildPop var(--dur-norm) var(--ease-spring)}
     @keyframes quickChildPop{0%{transform:rotate(0) scale(1)}40%{transform:rotate(90deg) scale(1.2)}100%{transform:rotate(90deg) scale(1)}}
@@ -746,7 +747,7 @@
     .color-opt.active::after{content:'';position:absolute;inset:3px;border-radius:50%;border:2px solid var(--card)}
 
     /* ===== CONFIRM — bounce in ===== */
-    .cf-wrap{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.25);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center}
+    .cf-wrap{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.25);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center}
     .cf-wrap.open{display:flex}
     .cf-box{background:var(--card);border-radius:14px;padding:24px;text-align:center;max-width:280px;width:85%;box-shadow:0 20px 60px rgba(0,0,0,.12)}
     .cf-box h3{font-size:.92rem;font-weight:600;margin-bottom:4px}
@@ -812,8 +813,8 @@
       /* Bigger touch targets for mobile */
       .ck{width:26px;height:26px;position:relative}
       .ck::after{content:'';position:absolute;inset:-9px}
-      .a-btn{width:32px;height:32px;position:relative}
-      .a-btn::after{content:'';position:absolute;inset:-6px}
+      .a-btn{width:32px;height:32px;border-radius:8px;position:relative}
+      .a-btn::after{content:'';position:absolute;inset:-4px}
       .sub-ck{width:18px;height:18px;position:relative}
       .sub-ck::after{content:'';position:absolute;inset:-13px}
       /* Project pills on mobile */
@@ -3724,7 +3725,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=76',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=77',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
