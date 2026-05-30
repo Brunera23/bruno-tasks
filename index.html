@@ -1890,16 +1890,21 @@ function combineData(){
 
   // Detect new alerts/notes — but SKIP first load (all items look "new" on first sync)
   if(!_firstCombine){
-    const myRole=localStorage.getItem('btUserRole')||'bruno';
+    const myEmail=currentUser?.email?.toLowerCase()||'';
+    const myRole=myEmail.includes('brunohsantos')||myEmail.includes('bruno')?'bruno':'parceira';
     const oldIds=new Set(tasks.map(t=>t.id));
     const newItems=newTasks.filter(t=>!oldIds.has(t.id));
     // Only notify for items created in the last 60 seconds (not old data)
     const recentCutoff=Date.now()-60000;
     newItems.forEach(t=>{
-      if((t.type==='alert'||t.type==='note')&&(t.assignedTo===myRole||t.assignedTo==='ambos')&&t.createdAt>recentCutoff){
-        const who=t.assignedTo==='ambos'?'para vocês':'para você';
+      if((t.type==='alert'||t.type==='note')&&t.createdAt>recentCutoff){
+        // Only notify if the OTHER person wrote it (not yourself)
+        // assignedTo = who wrote it. So notify when assignedTo !== myRole
+        const wroteIt=t.assignedTo===myRole;
+        if(wroteIt) return; // Don't notify yourself
+        // Also notify for "ambos" items only if someone else created them
         const icon=t.type==='alert'?'🔔':'📝';
-        const ntitle=icon+' Nova '+(t.type==='alert'?'alerta':'nota')+' '+who;
+        const ntitle=icon+' Nova '+(t.type==='alert'?'alerta':'nota');
         toast(ntitle+': '+t.title);
         if(Notification.permission==='granted'){
           try{
@@ -3689,7 +3694,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=74',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=75',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
