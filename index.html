@@ -446,8 +446,10 @@
     .ck{flex-shrink:0;width:22px;height:22px;margin-top:1px;border-radius:50%;border:1.8px solid var(--label3);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:border-color var(--dur-norm) var(--ease-spring),background var(--dur-norm) var(--ease-spring),color var(--dur-fast),transform var(--dur-spring) var(--ease-spring),box-shadow var(--dur-norm)}
     .ck:hover{border-color:var(--label2);transform:scale(1.08);box-shadow:0 0 0 4px rgba(52,199,89,.06)}
     .ck.on{border-color:#34C759;background:#34C759;color:#fff;animation:ckBounce var(--dur-spring) var(--ease-spring),ckGlow .8s var(--ease-std)}
-    .ck.doing-st{border-color:#FF9500;border-width:2.5px;background:transparent;color:transparent}
-    .ck.doing-st::after{content:'';width:8px;height:8px;border-radius:50%;background:#FF9500}
+    .ck.doing-st{border-color:transparent;border-width:2.5px;background:transparent;color:transparent;position:relative}
+    .ck.doing-st::before{content:'';position:absolute;inset:0;border-radius:50%;border:2.5px solid rgba(255,149,0,.2)}
+    .ck.doing-st::after{content:'';position:absolute;inset:0;border-radius:50%;border:2.5px solid transparent;border-top-color:#FF9500;animation:ckSpin 1s linear infinite}
+    @keyframes ckSpin{to{transform:rotate(360deg)}}
     @keyframes ckBounce{0%{transform:scale(1)}25%{transform:scale(1.25)}50%{transform:scale(.95)}75%{transform:scale(1.05)}100%{transform:scale(1)}}
     @keyframes ckGlow{0%{box-shadow:0 0 0 0 rgba(52,199,89,.4)}70%{box-shadow:0 0 0 8px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}
     .ck svg{width:11px;height:11px;stroke-width:3}
@@ -947,6 +949,9 @@
     .alert-sched{font-size:.66rem;color:#34C759;font-weight:600;padding:2px 6px;background:rgba(52,199,89,.08);border-radius:6px}
     .alert-sched.alert-today{color:#FF9500;background:rgba(255,149,0,.08)}
     .alert-until{font-size:.62rem;color:var(--label3);font-style:italic}
+    .alert-status{font-size:.62rem;font-weight:600;padding:2px 7px;border-radius:6px;letter-spacing:.01em}
+    .alert-status.sent{color:#34C759;background:rgba(52,199,89,.1)}
+    .alert-status.pending{color:#FF9500;background:rgba(255,149,0,.1)}
 
     /* ===== NOTE/REMINDER ITEMS ===== */
     .item.note-item{border-left:3px solid #34C759;background:rgba(52,199,89,.03)}
@@ -2196,7 +2201,8 @@ function renderItem(t,i,isChild=false,depsOpen=false,isLast=false){
       schedTag=`<span class="alert-sched ${isToday?'alert-today':''}">${dayLabel} ${timeStr}</span>`;
     }
     const untilTag=t.recurrence?.until?`<span class="alert-until">até ${fDate(t.recurrence.until)}</span>`:'';
-    return`<div class="item alert-item" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><div class="alert-icon"><svg><use href="#i-bell"/></svg></div></div><div class="item-body"><div class="item-title">${escapeHtml(t.title)}</div><div class="item-meta">${assignTag}<span class="alert-time">${freqLabel}</span>${schedTag}${untilTag}</div></div><div class="item-right"><div class="item-acts"><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div></div>`;
+    const statusTag=t.lastFiredAt?'<span class="alert-status sent">Enviado</span>':'<span class="alert-status pending">Pendente</span>';
+    return`<div class="item alert-item" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><div class="alert-icon"><svg><use href="#i-bell"/></svg></div></div><div class="item-body"><div class="item-title">${escapeHtml(t.title)}</div><div class="item-meta">${assignTag}${statusTag}<span class="alert-time">${freqLabel}</span>${schedTag}${untilTag}</div></div><div class="item-right"><div class="item-acts"><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div></div>`;
   }
 
   // Note/Reminder item — distinct rendering
@@ -3299,9 +3305,16 @@ function openNotesBoard(){
 }
 function closeNotesBoard(){
   const board=$('#notesBoard');
+  const wrap=$('#notesBoardWrap');
   board.style.transition='transform .35s cubic-bezier(.32,1,.23,1)';
-  board.style.transform='';
-  $('#notesBoardWrap').classList.remove('open');
+  const isMob=window.innerWidth<=640;
+  board.style.transform=isMob?'translateY(100%)':'translateX(100%)';
+  // Remove open class after transition to clean up backdrop
+  setTimeout(()=>{
+    wrap.classList.remove('open');
+    board.style.transition='';
+    board.style.transform='';
+  },360);
 }
 $('#nbClose').addEventListener('click',closeNotesBoard);
 $('#notesBoardBd').addEventListener('click',closeNotesBoard);
@@ -3776,7 +3789,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=82',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=83',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -3797,23 +3810,25 @@ if('serviceWorker' in navigator){
   }).catch(()=>{});
 }
 // ===== ALERT SCHEDULER — fires notifications at the exact scheduled time =====
+// Alerts fire on ANY device that's online (since we don't have server push).
+// Notification wording adapts based on who the alert is for vs who's viewing.
 function processAlerts(){
   const now=Date.now();
-  const myRole=localStorage.getItem('btUserRole')||'bruno';
+  const myEmail=currentUser?.email?.toLowerCase()||'';
+  const myRole=myEmail.includes('brunohsantos')||myEmail.includes('bruno')?'bruno':'parceira';
   let changed=false;
   tasks.forEach(t=>{
     if(t.type!=='alert'||!t.nextFireAt||t.status==='done')return;
-    // Check if this alert is for me
-    if(t.assignedTo!==myRole&&t.assignedTo!=='ambos')return;
     // Check if until date has passed
     if(t.recurrence?.until&&dateStr(new Date())>t.recurrence.until){
       t.status='done';t.updatedAt=Date.now();changed=true;return;
     }
     // Check if it's time to fire
     if(now>=t.nextFireAt){
-      // Fire notification!
-      const senderName=myRole==='parceira'?'Bruno':'Clara';
-      const title='Alerta de '+senderName;
+      // Determine notification text based on who's viewing
+      const forMe=t.assignedTo===myRole||t.assignedTo==='ambos';
+      const targetName=t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'';
+      const title=forMe?'Alerta':('Alerta para '+targetName);
       toast(title+' — '+t.title);
       if(Notification.permission==='granted'){
         try{
@@ -3832,7 +3847,6 @@ function processAlerts(){
       if(freq==='once'){
         t.status='done';t.updatedAt=now;
       }else{
-        // Calculate next occurrence
         const nextDate=new Date(t.nextFireAt);
         switch(freq){
           case 'daily': nextDate.setDate(nextDate.getDate()+1);break;
@@ -3843,7 +3857,6 @@ function processAlerts(){
           case 'weekly': nextDate.setDate(nextDate.getDate()+7);break;
         }
         t.nextFireAt=nextDate.getTime();
-        // Check if next fire is past the until date
         if(t.recurrence?.until&&dateStr(nextDate)>t.recurrence.until){
           t.status='done';
         }
@@ -3854,8 +3867,8 @@ function processAlerts(){
   });
   if(changed){sT();render()}
 }
-// Run scheduler every 30 seconds
-setInterval(processAlerts,30000);
+// Run scheduler every 15 seconds (was 30s, more responsive now)
+setInterval(processAlerts,15000);
 // Also run once on load after a short delay
 setTimeout(processAlerts,3000);
 
