@@ -2,7 +2,7 @@
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="description" content="Bruno Tasks — Gerenciador de tarefas pessoal">
   <meta name="theme-color" content="#f2f2f7" id="metaTheme">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1281,9 +1281,9 @@
         <button type="button" data-v="weekdays">Dias úteis</button>
       </div></div>
     </div>
-    <div class="fld-row">
-      <div class="fld"><label>Quando (data)</label><input type="date" id="aDate"></div>
-      <div class="fld" id="aUntilWrap"><label>Até quando</label><input type="date" id="aUntil"></div>
+    <div class="fld-row" id="aDateRow">
+      <div class="fld"><label id="aDateLabel">Data</label><input type="date" id="aDate"></div>
+      <div class="fld" id="aUntilWrap" style="display:none"><label>Até quando</label><input type="date" id="aUntil"></div>
     </div>
     <div class="m-btns"><button type="button" class="btn btn-sec" id="aCan">Cancelar</button><button type="submit" class="btn btn-primary">Criar Alerta</button></div>
   </form>
@@ -1858,6 +1858,7 @@ function fbInit(){
   });
 }
 
+let _firstCombine=true;
 function combineData(){
   if(_fbSaving||!_fbInitDone)return;
   const newTasks=[...pTasks];
@@ -1867,26 +1868,29 @@ function combineData(){
   
   if(JSON.stringify(newTasks)===JSON.stringify(tasks)){return}
 
-  // Detect new alerts/notes for current user — show notification
-  const myRole=localStorage.getItem('btUserRole')||'bruno';
-  const oldIds=new Set(tasks.map(t=>t.id));
-  const newItems=newTasks.filter(t=>!oldIds.has(t.id));
-  newItems.forEach(t=>{
-    if((t.type==='alert'||t.type==='note')&&(t.assignedTo===myRole||t.assignedTo==='ambos')){
-      const who=t.assignedTo==='ambos'?'para vocês':'para você';
-      const icon=t.type==='alert'?'🔔':'📝';
-      const ntitle=icon+' Nova '+(t.type==='alert'?'alerta':'nota')+' '+who;
-      // In-app toast
-      toast(ntitle+': '+t.title);
-      // Browser notification (works even in background tab)
-      if(Notification.permission==='granted'){
-        try{
-          const n=new Notification(ntitle,{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});
-          n.onclick=()=>{window.focus();n.close()};
-        }catch(e){/* mobile may throw */}
+  // Detect new alerts/notes — but SKIP first load (all items look "new" on first sync)
+  if(!_firstCombine){
+    const myRole=localStorage.getItem('btUserRole')||'bruno';
+    const oldIds=new Set(tasks.map(t=>t.id));
+    const newItems=newTasks.filter(t=>!oldIds.has(t.id));
+    // Only notify for items created in the last 60 seconds (not old data)
+    const recentCutoff=Date.now()-60000;
+    newItems.forEach(t=>{
+      if((t.type==='alert'||t.type==='note')&&(t.assignedTo===myRole||t.assignedTo==='ambos')&&t.createdAt>recentCutoff){
+        const who=t.assignedTo==='ambos'?'para vocês':'para você';
+        const icon=t.type==='alert'?'🔔':'📝';
+        const ntitle=icon+' Nova '+(t.type==='alert'?'alerta':'nota')+' '+who;
+        toast(ntitle+': '+t.title);
+        if(Notification.permission==='granted'){
+          try{
+            const n=new Notification(ntitle,{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});
+            n.onclick=()=>{window.focus();n.close()};
+          }catch(e){}
+        }
       }
-    }
-  });
+    });
+  }
+  _firstCombine=false;
 
   tasks=newTasks;
   cats=[...pCats];
@@ -3157,8 +3161,17 @@ $('#nDurChips').addEventListener('click',e=>{const c=e.target.closest('.time-chi
 // Set initial active on nDurChips
 (()=>{const chip=$('#nDurChips .time-chip[data-days="3"]');if(chip)chip.classList.add('active')})();
 // Pick-seg handlers for alert/note forms
-['aAssign','aFreq','nAssign'].forEach(id=>{
+['aAssign','nAssign'].forEach(id=>{
   const el=$('#'+id);if(el)el.addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;pickVal(el,b.dataset.v)});
+});
+// aFreq — special handler: toggle 'Até quando' and date label
+$('#aFreq').addEventListener('click',e=>{
+  const b=e.target.closest('[data-v]');if(!b)return;
+  pickVal($('#aFreq'),b.dataset.v);
+  const isOnce=b.dataset.v==='once';
+  $('#aUntilWrap').style.display=isOnce?'none':'';
+  $('#aDateLabel').textContent=isOnce?'Data':'A partir de';
+  if(isOnce)$('#aUntil').value='';
 });
 
 // ===== NOTES BOARD =====
@@ -3529,7 +3542,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=62',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=63',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
