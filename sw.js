@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bruno-tasks-v64';
+const CACHE_NAME = 'bruno-tasks-v65';
 const ASSETS = ['./index.html'];
 
 self.addEventListener('install', e => {
@@ -72,7 +72,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   
   // Never cache the SW itself
-  if(url.pathname.endsWith('sw.js')) {
+  if(url.pathname.endsWith('sw.js?v=65')) {
     e.respondWith(fetch(e.request));
     return;
   }
