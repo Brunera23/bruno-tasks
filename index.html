@@ -1024,34 +1024,49 @@
     .nb-dur-custom input:focus{border-color:var(--blue)}
     .nb-dur-custom span{font-size:.62rem;color:var(--label3);font-weight:600}
 
-    /* Keyword magic effects */
-    .nbk-love{color:#FF2D55;font-weight:700;position:relative;display:inline}
-    .nbk-heart{font-size:.7rem;color:#FF2D55;animation:nbHeartPop .5s var(--ease-spring) both;display:inline-block;margin-left:1px}
-    @keyframes nbHeartPop{0%{opacity:0;transform:scale(0)}70%{transform:scale(1.4)}100%{opacity:1;transform:scale(1)}}
-    .nbk-saudade{color:#AF52DE;font-weight:600;font-style:italic}
-    .nbk-thanks{color:#FF9500;font-weight:600}
-    .nbk-celebrate{color:#FF9F0A;font-weight:700}
-    .nbk-kiss{color:#FF6482;font-weight:600}
-    .nbk-rage{color:#FF3B30;font-weight:700;text-decoration:line-through;text-decoration-style:wavy;text-decoration-color:rgba(255,59,48,.5)}
-    .nbk-joy{color:#FFD60A;font-weight:700;text-shadow:0 0 8px rgba(255,214,10,.35)}
-    [data-theme="dark"] .nbk-joy{text-shadow:0 0 12px rgba(255,214,10,.5)}
-    .nbk-cute{color:#FF6482;font-weight:600}
-    .nbk-lazy{color:var(--label3);font-style:italic;letter-spacing:.03em}
-    .nbk-food{color:#FF9500;font-weight:600}
-    .nbk-urgent{color:#FF3B30;font-weight:800;text-transform:uppercase;animation:nbPulse 1.2s ease-in-out infinite}
-    @keyframes nbPulse{0%,100%{opacity:1}50%{opacity:.6}}
-    .nbk-travel{color:#007AFF;font-weight:600}
-    .nbk-sorry{color:#AF52DE;font-weight:500}
-    /* Family keyword effects */
-    .nbk-family{color:#34C759;font-weight:600}
-    .nbk-mama{color:#FF6482;font-weight:700}
-    .nbk-papa{color:#007AFF;font-weight:700}
-    .nbk-vovo{color:#AF52DE;font-weight:600;font-style:italic}
-    /* Bernardo / Ber — SPECIAL rainbow animated */
-    .nbk-ber{font-weight:800;background:linear-gradient(90deg,#FF2D55,#FF9500,#FFD60A,#34C759,#007AFF,#AF52DE,#FF2D55);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:nbRainbow 3s linear infinite;display:inline;position:relative}
-    @keyframes nbRainbow{to{background-position:200% center}}
-    .nbk-ber-emoji{display:inline-block;animation:nbBounce 1s ease-in-out infinite;font-style:normal;margin-left:2px}
-    @keyframes nbBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+    /* ===== KEYWORD MAGIC — PREMIUM EFFECTS ===== */
+    /* Love — warm pink gradient + pulsing glow */
+    .nbk-love{font-weight:700;background:linear-gradient(135deg,#FF2D55,#FF6B9D);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 6px rgba(255,45,85,.3))}
+    .nbk-heart{font-size:.75rem;display:inline-block;margin-left:2px;animation:nbHeartBeat 1.2s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(255,45,85,.5))}
+    @keyframes nbHeartBeat{0%,100%{transform:scale(1)}14%{transform:scale(1.3)}28%{transform:scale(1)}42%{transform:scale(1.2)}70%{transform:scale(1)}}
+    /* Saudade — dreamy purple gradient + float */
+    .nbk-saudade{font-weight:600;font-style:italic;background:linear-gradient(135deg,#AF52DE,#BF5AF2,#8944AB);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 5px rgba(175,82,222,.25))}
+    /* Thanks — warm amber shimmer */
+    .nbk-thanks{font-weight:600;background:linear-gradient(90deg,#FF9500,#FFD60A,#FF9500);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:nbShimmer 2.5s ease infinite;display:inline}
+    @keyframes nbShimmer{to{background-position:200% center}}
+    /* Celebrate — gold confetti burst */
+    .nbk-celebrate{font-weight:700;background:linear-gradient(135deg,#FFD60A,#FF9F0A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 4px rgba(255,214,10,.4))}
+    /* Kiss — soft pink glow */
+    .nbk-kiss{font-weight:600;background:linear-gradient(135deg,#FF6482,#FF2D55);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 4px rgba(255,100,130,.3))}
+    /* Rage — red wavy strike with shake */
+    .nbk-rage{color:#FF3B30;font-weight:700;text-decoration:line-through;text-decoration-style:wavy;text-decoration-color:rgba(255,59,48,.5);animation:nbShake .4s ease both}
+    @keyframes nbShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+    /* Joy — warm gold glow */
+    .nbk-joy{font-weight:700;background:linear-gradient(135deg,#FFD60A,#FF9F0A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 6px rgba(255,214,10,.4))}
+    [data-theme="dark"] .nbk-joy{filter:drop-shadow(0 0 8px rgba(255,214,10,.5))}
+    /* Cute — soft pink with sparkle */
+    .nbk-cute{font-weight:600;background:linear-gradient(135deg,#FF6482,#FF85A1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline}
+    /* Lazy — faded italic drift */
+    .nbk-lazy{color:var(--label3);font-style:italic;letter-spacing:.04em;opacity:.75}
+    /* Food — warm orange */
+    .nbk-food{font-weight:600;background:linear-gradient(135deg,#FF9500,#FF6B00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline}
+    /* Urgent — red pulse with glow */
+    .nbk-urgent{font-weight:800;text-transform:uppercase;color:#FF3B30;animation:nbUrgentPulse 1s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(255,59,48,.3))}
+    @keyframes nbUrgentPulse{0%,100%{opacity:1;filter:drop-shadow(0 0 4px rgba(255,59,48,.3))}50%{opacity:.7;filter:drop-shadow(0 0 8px rgba(255,59,48,.6))}}
+    /* Travel — sky blue gradient */
+    .nbk-travel{font-weight:600;background:linear-gradient(135deg,#007AFF,#5AC8FA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline}
+    /* Sorry — soft purple */
+    .nbk-sorry{font-weight:500;background:linear-gradient(135deg,#AF52DE,#DA8FFF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline}
+    /* ===== FAMILY EFFECTS — PREMIUM ===== */
+    .nbk-family{font-weight:700;background:linear-gradient(135deg,#34C759,#30D158);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 3px rgba(52,199,89,.3))}
+    .nbk-mama{font-weight:700;background:linear-gradient(135deg,#FF2D55,#FF6482,#FF85A1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 4px rgba(255,45,85,.25))}
+    .nbk-papa{font-weight:700;background:linear-gradient(135deg,#007AFF,#5AC8FA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 4px rgba(0,122,255,.25))}
+    .nbk-vovo{font-weight:600;font-style:italic;background:linear-gradient(135deg,#AF52DE,#BF5AF2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline}
+    /* Bernardo / Ber — SPECIAL: large rainbow gradient + sparkle bounce + glow */
+    .nbk-ber{font-weight:800;font-size:1.05em;background:linear-gradient(90deg,#FF2D55,#FF9500,#FFD60A,#34C759,#007AFF,#AF52DE,#FF2D55);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:nbRainbow 2.5s linear infinite;display:inline;position:relative;filter:drop-shadow(0 0 6px rgba(175,82,222,.3))}
+    @keyframes nbRainbow{to{background-position:300% center}}
+    .nbk-ber-emoji{display:inline-block;animation:nbBounce .8s cubic-bezier(.36,.07,.19,.97) infinite;font-style:normal;margin-left:3px;font-size:1.1em;filter:drop-shadow(0 2px 4px rgba(0,0,0,.15))}
+    @keyframes nbBounce{0%,100%{transform:translateY(0) scale(1)}30%{transform:translateY(-5px) scale(1.1)}60%{transform:translateY(-2px) scale(1.05)}}
     /* ===== SMART SUGGEST AUTOCOMPLETE ===== */
     .smart-suggest{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow2);z-index:50;padding:4px;margin-top:4px;display:none}
     .smart-suggest.show{display:block}
@@ -1803,7 +1818,7 @@ function sL(){fbSave()}
 // Like Todoist/Notion: Firebase is the single source of truth.
 // Local storage is only a cache for offline use.
 function showSync(msg,ok){const el=$('#syncDot');if(!el)return;el.className='sync-dot'+(ok?' synced':' saving');if(ok)setTimeout(()=>{el.className='sync-dot'},1500)}
-let _fbTimer=null,_fbInitDone=false;
+let _fbTimer=null,_fbInitDone=false,_fbSaveTs=0;
 let pTasks=[],pCats=[],pLog=[];
 let _unsubP=null;
 const _unsubShared={};
@@ -1845,14 +1860,20 @@ function _fbDirectSave(){
 
 function fbSave(){
   if(!_fbReady||!_fbInitDone)return;
-  // Set saving flag IMMEDIATELY to prevent combineData from overwriting local changes
-  // during the debounce window (this was causing deleted notes to reappear)
+  // Set saving flag + timestamp IMMEDIATELY to prevent combineData from overwriting
+  // local changes with stale Firestore snapshots during debounce + write + confirmation
   _fbSaving=true;
+  _fbSaveTs=Date.now();
   clearTimeout(_fbTimer);
   _fbTimer=setTimeout(()=>{
     showSync('Salvando...');
-    _fbDirectSave().then(()=>{showSync('Sincronizado ✓',true);_fbSaving=false}).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
-  },400);
+    _fbDirectSave().then(()=>{
+      showSync('Sincronizado ✓',true);
+      // Keep _fbSaving true for a grace period AFTER save completes
+      // because onSnapshot fires twice (local cache + server confirmation)
+      setTimeout(()=>{_fbSaving=false},600);
+    }).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
+  },300);
 }
 
 function fbInit(){
@@ -1891,6 +1912,9 @@ function fbInit(){
 let _firstCombine=true;
 function combineData(){
   if(_fbSaving||!_fbInitDone)return;
+  // Extra guard: ignore snapshots that arrive too soon after a save
+  // (onSnapshot double-fires: once from cache, once from server confirmation)
+  if(_fbSaveTs && (Date.now()-_fbSaveTs)<1200)return;
   const newTasks=[...pTasks];
   for (let pid in sharedTasksMap) {
     if(Array.isArray(sharedTasksMap[pid])) newTasks.push(...sharedTasksMap[pid]);
@@ -3725,7 +3749,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=77',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=78',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
