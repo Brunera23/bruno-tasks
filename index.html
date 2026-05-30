@@ -921,6 +921,72 @@
     .note-body{font-size:.82rem;color:var(--label);line-height:1.4}
 
 
+    /* ===== QUADRO DE LEMBRETES ===== */
+    .notes-board-wrap{position:fixed;inset:0;z-index:300;pointer-events:none}
+    .notes-board-wrap.open{pointer-events:all}
+    .notes-board-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);opacity:0;transition:opacity .35s}
+    .notes-board-wrap.open .notes-board-backdrop{opacity:1}
+    .notes-board{position:absolute;top:0;right:0;bottom:0;width:min(520px,100vw);background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);box-shadow:-20px 0 60px rgba(0,0,0,.15)}
+    .notes-board-wrap.open .notes-board{transform:translateX(0)}
+    @media(max-width:640px){.notes-board{top:0;left:0;right:0;bottom:0;width:100%;transform:translateY(100%)}.notes-board-wrap.open .notes-board{transform:translateY(0)}}
+    .nb-header{padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .nb-title-block{display:flex;align-items:center;gap:10px}
+    .nb-emoji{font-size:1.6rem;line-height:1}
+    .nb-title{font-size:1.15rem;font-weight:800;letter-spacing:-.03em;color:var(--label)}
+    .nb-sub{font-size:.7rem;color:var(--label3);margin-top:1px}
+    .nb-close-btn{width:32px;height:32px;border-radius:50%;border:none;background:var(--fill);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--label2);transition:all var(--dur-fast);font-size:1.1rem;line-height:1}
+    .nb-close-btn:hover{background:var(--sep)}
+    .nb-add-row{margin:14px 20px 8px;display:flex;gap:8px;align-items:center}
+    .nb-add-input{flex:1;padding:10px 14px;background:var(--fill);border:1.5px solid transparent;border-radius:12px;font-size:1rem;color:var(--label);font-family:inherit;outline:none;transition:all var(--dur-fast);box-sizing:border-box;min-width:0}
+    .nb-add-input:focus{background:var(--card);border-color:rgba(255,45,85,.4);box-shadow:0 0 0 3px rgba(255,45,85,.08)}
+    .nb-add-btn{padding:10px 14px;background:linear-gradient(135deg,#FF2D55,#FF6482);border:none;border-radius:12px;color:#fff;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;font-family:inherit;transition:transform .15s;box-shadow:0 4px 12px rgba(255,45,85,.25);display:flex;align-items:center;gap:5px;flex-shrink:0}
+    .nb-add-btn:active{transform:scale(.95)}
+    .nb-add-btn svg{width:13px;height:13px}
+    .nb-assign-row,.nb-dur-row,.nb-filter-row{display:flex;gap:6px;padding:0 20px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+    .nb-assign-row::-webkit-scrollbar,.nb-dur-row::-webkit-scrollbar,.nb-filter-row::-webkit-scrollbar{display:none}
+    .nb-av-btn,.nb-dur-chip,.nb-chip{padding:5px 10px;border-radius:20px;border:1.5px solid var(--sep);background:transparent;font-size:.7rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--label2);transition:all var(--dur-fast);white-space:nowrap}
+    .nb-av-btn.active.nb-av-bruno{background:rgba(0,122,255,.1);color:#007AFF;border-color:rgba(0,122,255,.25)}
+    .nb-av-btn.active.nb-av-parceira{background:rgba(255,45,85,.1);color:#FF2D55;border-color:rgba(255,45,85,.25)}
+    .nb-av-btn.active.nb-av-ambos{background:rgba(175,82,222,.1);color:#AF52DE;border-color:rgba(175,82,222,.25)}
+    .nb-dur-chip.active,.nb-chip.active{background:var(--label);color:var(--bg);border-color:var(--label)}
+    .nb-dur-custom{display:none;align-items:center;gap:6px;padding:0 20px 8px;flex-shrink:0}
+    .nb-dur-custom.show{display:flex}
+    .nb-dur-custom input{width:64px;padding:6px 8px;border:1.5px solid var(--sep);border-radius:8px;font-size:1rem;font-family:inherit;background:var(--bg);color:var(--label);outline:none;text-align:center;box-sizing:border-box}
+    .nb-dur-custom input:focus{border-color:var(--blue)}
+    .nb-dur-custom span{font-size:.72rem;color:var(--label3);font-weight:600}
+    .nb-divider{height:1px;background:var(--sep);margin:2px 20px 10px;flex-shrink:0}
+    .nb-cards{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 16px 100px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+    .nb-card{border-radius:16px;padding:16px 16px 12px;position:relative;overflow:hidden;animation:nbIn .3s var(--ease-spring) both;transition:transform .2s,box-shadow .2s}
+    .nb-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+    @keyframes nbIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .nb-card.nb-bruno{background:linear-gradient(135deg,rgba(0,122,255,.07),rgba(90,200,250,.11));border:1px solid rgba(0,122,255,.12)}
+    .nb-card.nb-parceira{background:linear-gradient(135deg,rgba(255,45,85,.07),rgba(255,100,130,.11));border:1px solid rgba(255,45,85,.12)}
+    .nb-card.nb-ambos{background:linear-gradient(135deg,rgba(175,82,222,.07),rgba(88,86,214,.11));border:1px solid rgba(175,82,222,.12)}
+    [data-theme="dark"] .nb-card.nb-bruno{background:linear-gradient(135deg,rgba(0,122,255,.11),rgba(90,200,250,.06));border-color:rgba(0,122,255,.22)}
+    [data-theme="dark"] .nb-card.nb-parceira{background:linear-gradient(135deg,rgba(255,45,85,.11),rgba(255,100,130,.06));border-color:rgba(255,45,85,.22)}
+    [data-theme="dark"] .nb-card.nb-ambos{background:linear-gradient(135deg,rgba(175,82,222,.11),rgba(88,86,214,.06));border-color:rgba(175,82,222,.22)}
+    .nb-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .nb-who{display:flex;align-items:center;gap:6px}
+    .nb-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .nb-av svg{width:11px;height:11px;color:#fff}
+    .nb-who-name{font-size:.64rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--label3)}
+    .nb-actions{display:flex;gap:2px;opacity:0;transition:opacity var(--dur-fast)}
+    .nb-card:hover .nb-actions,.nb-card:focus-within .nb-actions{opacity:1}
+    @media(hover:none){.nb-actions{opacity:1}}
+    .nb-del-btn{width:26px;height:26px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--label3);padding:0;transition:all var(--dur-fast)}
+    .nb-del-btn:hover{background:rgba(255,59,48,.12);color:#FF3B30}
+    .nb-del-btn svg{width:13px;height:13px}
+    .nb-text{font-size:.9rem;line-height:1.55;color:var(--label);font-weight:500;word-break:break-word;white-space:pre-wrap}
+    .nb-footer{margin-top:10px;display:flex;align-items:center;justify-content:space-between}
+    .nb-expire{font-size:.64rem;color:var(--label3);font-weight:500}
+    .nb-expire.nb-soon{color:#FF9500;font-weight:700}
+    .nb-expire.nb-today{color:#FF3B30;font-weight:700}
+    .nb-topbar{position:absolute;top:0;left:0;right:0;height:3px}
+    .nb-empty{display:flex;flex-direction:column;align-items:center;padding:60px 20px;gap:12px;text-align:center}
+    .nb-empty-emoji{font-size:3.5rem}
+    .nb-empty-title{font-size:1rem;font-weight:700;color:var(--label)}
+    .nb-empty-sub{font-size:.8rem;color:var(--label3);line-height:1.5}
+    .nb-count-badge{font-size:.62rem;background:rgba(255,45,85,.12);color:#FF2D55;padding:2px 7px;border-radius:10px;font-weight:700;margin-left:6px;vertical-align:middle}
     /* ===== SMART SUGGEST AUTOCOMPLETE ===== */
     .smart-suggest{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow2);z-index:50;padding:4px;margin-top:4px;display:none}
     .smart-suggest.show{display:block}
@@ -1099,12 +1165,54 @@
 
 <button class="fab" id="fab" aria-label="Nova tarefa"><svg><use href="#i-plus"/></svg></button>
 
-<!-- FAB Action Menu (for Nós project) -->
+<!-- Notes Board Panel -->
+<div class="notes-board-wrap" id="notesBoardWrap">
+  <div class="notes-board-backdrop" id="notesBoardBd"></div>
+  <div class="notes-board" id="notesBoard">
+    <div class="nb-header">
+      <div class="nb-title-block">
+        <span class="nb-emoji">📝</span>
+        <div><div class="nb-title">Nosso Quadro <span class="nb-count-badge" id="nbCount">0</span></div><div class="nb-sub">Lembretes do casal ✨</div></div>
+      </div>
+      <button class="nb-close-btn" id="nbClose">✕</button>
+    </div>
+    <div class="nb-add-row">
+      <input class="nb-add-input" id="nbInput" placeholder="Escreva uma nota rápida..." type="text">
+      <button class="nb-add-btn" id="nbAddBtn"><svg width="13" height="13"><use href="#i-plus"/></svg>Anotar</button>
+    </div>
+    <div class="nb-assign-row" id="nbAssignRow">
+      <button class="nb-av-btn nb-av-bruno active" data-nba="bruno"><span class="nb-av" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="11" height="11"><use href="#i-user"/></svg></span>&nbsp;Bruno</button>
+      <button class="nb-av-btn nb-av-parceira" data-nba="parceira"><span class="nb-av" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="11" height="11"><use href="#i-user"/></svg></span>&nbsp;Clara</button>
+      <button class="nb-av-btn nb-av-ambos" data-nba="ambos"><span class="nb-av" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="11" height="11"><use href="#i-users"/></svg></span>&nbsp;Ambos</button>
+    </div>
+    <div class="nb-dur-row">
+      <button class="nb-dur-chip" data-nbd="1">1 dia</button>
+      <button class="nb-dur-chip active" data-nbd="3">3 dias</button>
+      <button class="nb-dur-chip" data-nbd="7">1 semana</button>
+      <button class="nb-dur-chip" data-nbd="0">Permanente</button>
+      <button class="nb-dur-chip" data-nbd="custom">Outro</button>
+    </div>
+    <div class="nb-dur-custom" id="nbDurCustom">
+      <input type="number" id="nbDurDays" min="1" max="365" placeholder="14">
+      <span>dias</span>
+    </div>
+    <div class="nb-divider"></div>
+    <div class="nb-filter-row">
+      <button class="nb-chip active" data-nbf="all">Todas</button>
+      <button class="nb-chip" data-nbf="bruno">Bruno</button>
+      <button class="nb-chip" data-nbf="parceira">Clara</button>
+      <button class="nb-chip" data-nbf="ambos">Ambos</button>
+    </div>
+    <div class="nb-cards" id="nbCards"></div>
+  </div>
+</div>
+
+<!-- FAB Action Menu (for Nos project) -->
 <div class="fab-menu-ov" id="fabMenuOv"></div>
 <div class="fab-menu" id="fabMenu">
   <div class="fab-menu-item"><button class="fab-menu-btn fm-task" id="fmTask"><svg><use href="#i-check"/></svg></button><span class="fab-menu-label">Nova Tarefa</span></div>
   <div class="fab-menu-item"><button class="fab-menu-btn fm-alert" id="fmAlert"><svg><use href="#i-bell"/></svg></button><span class="fab-menu-label">Novo Alerta</span></div>
-  <div class="fab-menu-item"><button class="fab-menu-btn fm-note" id="fmNote"><svg><use href="#i-edit"/></svg></button><span class="fab-menu-label">Novo Lembrete</span></div>
+  <div class="fab-menu-item"><button class="fab-menu-btn fm-note" id="fmNote" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg><use href="#i-edit"/></svg></button><span class="fab-menu-label">Quadro de Notas</span></div>
 </div>
 
 <!-- Quick Alert Form -->
@@ -1144,11 +1252,16 @@
       <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Clara</button>
       <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-users"/></svg></span>Ambos</button>
     </div></div>
-    <div class="fld"><label>Duração</label><div class="pick-seg" id="nDur">
-      <button type="button" data-v="1">1 dia</button>
-      <button type="button" data-v="3" class="active">3 dias</button>
-      <button type="button" data-v="7">1 semana</button>
-      <button type="button" data-v="0">Permanente</button>
+    <div class="fld"><label>Duração</label><div class="time-chips" id="nDurChips">
+      <button type="button" class="time-chip" data-days="1">1 dia</button>
+      <button type="button" class="time-chip" data-days="3" class="active">3 dias</button>
+      <button type="button" class="time-chip" data-days="7">1 semana</button>
+      <button type="button" class="time-chip" data-days="0">Permanente</button>
+      <button type="button" class="time-chip" data-days="custom">Outro</button>
+    </div>
+    <div class="time-custom-wrap" id="nDurCustom" style="display:none">
+      <input type="number" id="nDurDays" min="1" max="365" placeholder="14">
+      <span>dias</span>
     </div></div>
     <div class="m-btns"><button type="button" class="btn btn-sec" id="nCan">Cancelar</button><button type="submit" class="btn btn-primary">Criar Lembrete</button></div>
   </form>
@@ -1180,7 +1293,7 @@
     </div>
     <div class="fld-row"><div class="fld"><label>Qual a urgência?</label><div class="pick-seg" id="fP"><button type="button" data-v="alta"><span class="pick-dot" style="background:#FF3B30"></span>Alta</button><button type="button" data-v="media" class="active"><span class="pick-dot" style="background:#FF9500"></span>Média</button><button type="button" data-v="baixa"><span class="pick-dot" style="background:#34C759"></span>Baixa</button></div></div><div class="fld"><label>Em que pé está?</label><div class="pick-seg" id="fS"><button type="button" data-v="todo" class="active">A Fazer</button><button type="button" data-v="doing">Fazendo</button><button type="button" data-v="done">Feita</button></div></div></div>
     <div class="fld"><label>Até quando?</label><input type="date" id="fD"><div class="adv-field" style="position:relative"><button type="button" class="recur-btn" id="recurBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg><span id="recurLabel">Repetir</span></button><div class="recur-pop" id="recurPop"><div class="recur-freq" id="recurFreq"><button type="button" data-rf="daily">Diário</button><button type="button" data-rf="weekdays">Dias úteis</button><button type="button" data-rf="weekly">Semanal</button><button type="button" data-rf="monthly">Mensal</button><button type="button" data-rf="">Nenhum</button></div><div class="recur-until"><span>Até:</span><input type="date" id="recurUntil"></div></div></div></div>
-    <div class="fld adv-field"><label>Tempo estimado</label><div class="time-chips" id="timeChips"><button type="button" class="time-chip" data-min="15">15min</button><button type="button" class="time-chip" data-min="30">30min</button><button type="button" class="time-chip" data-min="60">1h</button><button type="button" class="time-chip" data-min="120">2h</button><button type="button" class="time-chip" data-min="240">4h</button><button type="button" class="time-chip" data-min="custom">Outro</button></div><div class="time-custom-wrap" id="timeCustom"><input type="number" id="fET" min="1" max="960" placeholder="90"><span>minutos</span></div></div>
+    <div class="fld"><label>Tempo estimado</label><div class="time-chips" id="timeChips"><button type="button" class="time-chip" data-min="15">15min</button><button type="button" class="time-chip" data-min="30">30min</button><button type="button" class="time-chip" data-min="60">1h</button><button type="button" class="time-chip" data-min="120">2h</button><button type="button" class="time-chip" data-min="240">4h</button><button type="button" class="time-chip" data-min="custom">Outro</button></div><div class="time-custom-wrap" id="timeCustom"><input type="number" id="fET" min="1" max="960" placeholder="90"><span>minutos</span></div></div>
     <div class="sub-edit-section adv-field"><label>Subtarefas</label><div class="sub-edit-list" id="subList"></div><button type="button" class="add-sub-btn" id="addSub"><svg width="13" height="13"><use href="#i-plus"/></svg>Adicionar subtarefa</button></div>
     <div class="fld adv-field"><label>Depende de</label><div class="dep-picker" id="depPicker"><input type="text" class="dep-search" id="depSearch" placeholder="Buscar tarefa..." autocomplete="off"><div class="dep-results" id="depResults"></div></div><div class="dep-chips" id="depChips"></div></div>
     <div class="fld adv-field"><label>Notas</label><textarea id="fN" placeholder="Detalhes, links, anotações..."></textarea></div>
@@ -2793,7 +2906,7 @@ function closeFabMenu(){$('#fabMenu').classList.remove('open');$('#fabMenuOv').c
 $('#fabMenuOv').addEventListener('click',closeFabMenu);
 $('#fmTask').addEventListener('click',()=>{closeFabMenu();openM()});
 $('#fmAlert').addEventListener('click',()=>{closeFabMenu();openAlertForm()});
-$('#fmNote').addEventListener('click',()=>{closeFabMenu();openNoteForm()});
+$('#fmNote').addEventListener('click',()=>{closeFabMenu();openNotesBoard()});
 
 // Alert Form
 function openAlertForm(){
@@ -2827,14 +2940,117 @@ $('#nCan').addEventListener('click',closeNoteForm);
 $('#noteForm').addEventListener('submit',e=>{
   e.preventDefault();
   const msg=$('#nMsg').value.trim();if(!msg)return;
-  const dur=parseInt(getPickVal($('#nDur')))||0;
+  // Read duration from the new nDurChips
+  const durChip=$('#nDurChips .time-chip.active');
+  let dur=0;
+  if(durChip){const dv=durChip.dataset.days;dur=dv==='custom'?(parseInt($('#nDurDays').value)||0):parseInt(dv)||0}
   const data={id:uid(),type:'note',title:msg,project:getActiveContextProject()||'nos',assignedTo:getPickVal($('#nAssign')),expiresAt:dur>0?Date.now()+dur*86400000:null,status:'todo',category:'social',createdAt:Date.now(),updatedAt:Date.now()};
   tasks.unshift(data);addLog('create',data);sT();closeNoteForm();render();toast('📝 Lembrete criado!');
 });
+// nDurChips click handler (Outro reveals custom input)
+$('#nDurChips').addEventListener('click',e=>{const c=e.target.closest('.time-chip');if(!c)return;$$('#nDurChips .time-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');$('#nDurCustom').style.display=c.dataset.days==='custom'?'flex':'none'});
+// Set initial active on nDurChips
+(()=>{const chip=$('#nDurChips .time-chip[data-days="3"]');if(chip)chip.classList.add('active')})();
 // Pick-seg handlers for alert/note forms
-['aAssign','aFreq','nAssign','nDur'].forEach(id=>{
+['aAssign','aFreq','nAssign'].forEach(id=>{
   const el=$('#'+id);if(el)el.addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;pickVal(el,b.dataset.v)});
 });
+
+// ===== NOTES BOARD =====
+let nbFilter='all',nbAssign='bruno',nbDurDays=3;
+
+function openNotesBoard(){
+  $('#notesBoardWrap').classList.add('open');
+  document.body.dataset.scrollY=window.scrollY;
+  document.body.style.top='-'+window.scrollY+'px';
+  document.body.classList.add('modal-open');
+  nbRender();
+  setTimeout(()=>$('#nbInput').focus(),350);
+}
+function closeNotesBoard(){
+  $('#notesBoardWrap').classList.remove('open');
+  document.body.classList.remove('modal-open');
+  document.body.style.top='';
+  window.scrollTo(0,parseInt(document.body.dataset.scrollY||'0'));
+}
+$('#nbClose').addEventListener('click',closeNotesBoard);
+$('#notesBoardBd').addEventListener('click',closeNotesBoard);
+
+// Assign row
+$('#nbAssignRow').addEventListener('click',e=>{
+  const b=e.target.closest('[data-nba]');if(!b)return;
+  $$('#nbAssignRow .nb-av-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  nbAssign=b.dataset.nba;
+});
+// Duration chips
+$$('.nb-dur-chip').forEach(c=>c.addEventListener('click',()=>{
+  $$('.nb-dur-chip').forEach(x=>x.classList.remove('active'));
+  c.classList.add('active');
+  nbDurDays=c.dataset.nbd==='custom'?'custom':parseInt(c.dataset.nbd);
+  $('#nbDurCustom').classList.toggle('show',c.dataset.nbd==='custom');
+}));
+// Filter chips
+$$('.nb-chip').forEach(c=>c.addEventListener('click',()=>{
+  $$('.nb-chip').forEach(x=>x.classList.remove('active'));
+  c.classList.add('active');
+  nbFilter=c.dataset.nbf;
+  nbRender();
+}));
+// Add note
+function nbAddNote(){
+  const txt=$('#nbInput').value.trim();if(!txt)return;
+  const dur=nbDurDays==='custom'?(parseInt($('#nbDurDays').value)||0):nbDurDays;
+  const note={id:uid(),type:'note',title:txt,project:'nos',assignedTo:nbAssign,expiresAt:dur>0?Date.now()+dur*86400000:null,status:'todo',category:'social',createdAt:Date.now(),updatedAt:Date.now()};
+  tasks.unshift(note);addLog('create',note);sT();render();
+  $('#nbInput').value='';
+  nbRender();
+  toast('📝 Nota adicionada!');
+}
+$('#nbAddBtn').addEventListener('click',nbAddNote);
+$('#nbInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();nbAddNote()}});
+// Delete note from board
+function nbDeleteNote(id){
+  tasks=tasks.filter(t=>t.id!==id);addLog('delete',{id});sT();render();nbRender();
+}
+// Render board
+function nbRender(){
+  const notes=tasks.filter(t=>t.type==='note'&&t.project==='nos'&&(t.expiresAt===null||t.expiresAt>Date.now()));
+  const filtered=nbFilter==='all'?notes:notes.filter(n=>n.assignedTo===nbFilter);
+  const count=notes.length;
+  $('#nbCount').textContent=count;
+  if(!filtered.length){
+    $('#nbCards').innerHTML=`<div class="nb-empty"><div class="nb-empty-emoji">💌</div><div class="nb-empty-title">Nenhuma nota ainda</div><div class="nb-empty-sub">Escreva algo fofo para o casal<br>e vai aparecer aqui 💕</div></div>`;
+    return;
+  }
+  const who={bruno:{grad:'linear-gradient(135deg,#007AFF,#5AC8FA)',name:'Bruno',cls:'nb-bruno',topbar:'#007AFF'},parceira:{grad:'linear-gradient(135deg,#FF2D55,#FF6482)',name:'Clara',cls:'nb-parceira',topbar:'#FF2D55'},ambos:{grad:'linear-gradient(135deg,#AF52DE,#5856D6)',name:'Ambos',cls:'nb-ambos',topbar:'#AF52DE'}};
+  $('#nbCards').innerHTML=filtered.map((n,i)=>{
+    const w=who[n.assignedTo]||who.ambos;
+    const now=Date.now();
+    let expHtml='';
+    if(n.expiresAt){
+      const diff=n.expiresAt-now,days=Math.ceil(diff/86400000);
+      if(days<=0)expHtml=`<span class="nb-expire nb-today">Expira hoje!</span>`;
+      else if(days<=2)expHtml=`<span class="nb-expire nb-soon">Expira em ${days}d</span>`;
+      else expHtml=`<span class="nb-expire">Expira em ${days}d</span>`;
+    }else{expHtml=`<span class="nb-expire">Permanente</span>`}
+    return`<div class="nb-card ${w.cls}" style="animation-delay:${i*0.04}s">
+      <div class="nb-topbar" style="background:${w.topbar}"></div>
+      <div class="nb-card-top">
+        <div class="nb-who">
+          <span class="nb-av" style="background:${w.grad}"><svg width="11" height="11"><use href="#i-user"/></svg></span>
+          <span class="nb-who-name">${w.name}</span>
+        </div>
+        <div class="nb-actions">
+          <button class="nb-del-btn" onclick="nbDeleteNote('${n.id}')" title="Apagar"><svg><use href="#i-trash"/></svg></button>
+        </div>
+      </div>
+      <div class="nb-text">${escapeHtml(n.title)}</div>
+      <div class="nb-footer">${expHtml}<span class="nb-expire">${relTime(n.createdAt)}</span></div>
+    </div>`;
+  }).join('');
+}
+// Also open board from settings sheet
 $('#addSub').addEventListener('click',()=>{mSubs.push({text:'',done:false});renderMSubs();const ins=$$('#subList input');if(ins.length)ins[ins.length-1].focus()});
 $('#recurBtn').addEventListener('click',()=>{$('#recurPop').classList.toggle('show')});
 $('#recurFreq').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#recurFreq button').forEach(x=>x.classList.remove('active'));if(b.dataset.rf){b.classList.add('active');$('#recurBtn').classList.add('active');$('#recurLabel').textContent=b.textContent}else{$('#recurBtn').classList.remove('active');$('#recurLabel').textContent='Repetir'}$('#recurPop').classList.remove('show')});
@@ -3054,7 +3270,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=54',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=55',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -3256,6 +3472,7 @@ function openMobSettings(){
       <div class="mob-sheet-opts">
         <button id="msCategories"><svg><use href="#i-layers"/></svg>Gerenciar categorias</button>
         <button id="msProjects"><svg><use href="#i-home"/></svg>Gerenciar projetos</button>
+        <button id="msNotes" style="background:linear-gradient(135deg,rgba(255,45,85,.08),rgba(255,100,130,.06));border-color:rgba(255,45,85,.15)!important;color:#FF2D55"><svg style="color:#FF2D55"><use href="#i-edit"/></svg>Nosso Quadro de Notas 📝</button>
         <button id="msToggleDone"><svg><use href="#i-check"/></svg>${showDone?'Ocultar tarefas feitas':'Mostrar tarefas feitas'}</button>
         <button id="msTheme"><svg><use href="#${getTheme()==='dark'?'i-sun':'i-moon'}"/></svg>${getTheme()==='dark'?'Tema claro':'Tema escuro'}</button>
       </div>
@@ -3265,6 +3482,7 @@ function openMobSettings(){
   sheet.classList.add('open');ov.classList.add('open');
   $('#msCategories').onclick=()=>{closeMobSheet();setTimeout(openCatMgr,350)};
   $('#msProjects').onclick=()=>{closeMobSheet();setTimeout(openProjManager,350)};
+  $('#msNotes').onclick=()=>{closeMobSheet();setTimeout(openNotesBoard,350)};
   $('#msToggleDone').onclick=()=>{showDone=!showDone;saveUI();closeMobSheet();render()};
   $('#msTheme').onclick=()=>{toggleTheme();closeMobSheet();};
 }
