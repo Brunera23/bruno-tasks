@@ -3795,7 +3795,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=91',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=92',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -3816,30 +3816,26 @@ if('serviceWorker' in navigator){
   }).catch(()=>{});
 }
 // ===== ALERT SCHEDULER — fires notifications at the exact scheduled time =====
-// Alerts fire on ANY device that's online (since we don't have server push).
-// Notification wording adapts based on who the alert is for vs who's viewing.
+// Fires on ANY device that's online. Without server push, we need at least one open tab.
 function processAlerts(){
+  if(!currentUser||!_fbInitDone)return; // Wait for auth + data
   const now=Date.now();
-  const myEmail=currentUser?.email?.toLowerCase()||'';
-  const myRole=myEmail.includes('brunohsantos')||myEmail.includes('bruno')?'bruno':'parceira';
   let changed=false;
   tasks.forEach(t=>{
     if(t.type!=='alert'||!t.nextFireAt||t.status==='done')return;
-    // Only fire on the recipient's device
-    if(t.assignedTo!==myRole&&t.assignedTo!=='ambos')return;
     // Check if until date has passed
     if(t.recurrence?.until&&dateStr(new Date())>t.recurrence.until){
       t.status='done';t.updatedAt=Date.now();changed=true;return;
     }
     // Check if it's time to fire
     if(now>=t.nextFireAt){
-      // Simple notification: "CreatorName: message"
-      const creatorName=(t.assignedTo==='bruno')?'Clara':(t.assignedTo==='parceira')?'Bruno':'Alerta';
-      const title=creatorName+': '+t.title;
+      // Simple notification: "Bruno: message" (show who the alert is FOR)
+      const targetName=t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'Alerta';
+      const title=targetName+': '+t.title;
       toast(title);
       if(Notification.permission==='granted'){
         try{
-          const n=new Notification(creatorName,{
+          const n=new Notification(targetName,{
             body:t.title,
             tag:'alert-'+t.id,
             renotify:true,
@@ -3874,10 +3870,10 @@ function processAlerts(){
   });
   if(changed){sT();render()}
 }
-// Run scheduler every 15 seconds (was 30s, more responsive now)
+// Run scheduler every 15 seconds
 setInterval(processAlerts,15000);
-// Also run once on load after a short delay
-setTimeout(processAlerts,3000);
+// Also run once on load after auth is likely ready
+setTimeout(processAlerts,5000);
 
 // ===== RECURRING TASK AUTO-GENERATION =====
 function processRecurring(){
