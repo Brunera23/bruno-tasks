@@ -1025,10 +1025,8 @@
     .nb-dur-custom span{font-size:.62rem;color:var(--label3);font-weight:600}
 
     /* ===== KEYWORD MAGIC — PREMIUM EFFECTS ===== */
-    /* Love — warm pink gradient + pulsing glow */
+    /* Love — warm pink gradient + glow */
     .nbk-love{font-weight:700;background:linear-gradient(135deg,#FF2D55,#FF6B9D);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 6px rgba(255,45,85,.3))}
-    .nbk-heart{font-size:.75rem;display:inline-block;margin-left:2px;animation:nbHeartBeat 1.2s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(255,45,85,.5))}
-    @keyframes nbHeartBeat{0%,100%{transform:scale(1)}14%{transform:scale(1.3)}28%{transform:scale(1)}42%{transform:scale(1.2)}70%{transform:scale(1)}}
     /* Saudade — dreamy purple gradient + float */
     .nbk-saudade{font-weight:600;font-style:italic;background:linear-gradient(135deg,#AF52DE,#BF5AF2,#8944AB);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 5px rgba(175,82,222,.25))}
     /* Thanks — warm amber shimmer */
@@ -1062,11 +1060,9 @@
     .nbk-mama{font-weight:700;background:linear-gradient(135deg,#FF2D55,#FF6482,#FF85A1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 4px rgba(255,45,85,.25))}
     .nbk-papa{font-weight:700;background:linear-gradient(135deg,#007AFF,#5AC8FA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline;filter:drop-shadow(0 0 4px rgba(0,122,255,.25))}
     .nbk-vovo{font-weight:600;font-style:italic;background:linear-gradient(135deg,#AF52DE,#BF5AF2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline}
-    /* Bernardo / Ber — SPECIAL: large rainbow gradient + sparkle bounce + glow */
+    /* Bernardo / Ber — SPECIAL: rainbow gradient + glow */
     .nbk-ber{font-weight:800;font-size:1.05em;background:linear-gradient(90deg,#FF2D55,#FF9500,#FFD60A,#34C759,#007AFF,#AF52DE,#FF2D55);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:nbRainbow 2.5s linear infinite;display:inline;position:relative;filter:drop-shadow(0 0 6px rgba(175,82,222,.3))}
     @keyframes nbRainbow{to{background-position:300% center}}
-    .nbk-ber-emoji{display:inline-block;animation:nbBounce .8s cubic-bezier(.36,.07,.19,.97) infinite;font-style:normal;margin-left:3px;font-size:1.1em;filter:drop-shadow(0 2px 4px rgba(0,0,0,.15))}
-    @keyframes nbBounce{0%,100%{transform:translateY(0) scale(1)}30%{transform:translateY(-5px) scale(1.1)}60%{transform:translateY(-2px) scale(1.05)}}
     /* ===== SMART SUGGEST AUTOCOMPLETE ===== */
     .smart-suggest{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow2);z-index:50;padding:4px;margin-top:4px;display:none}
     .smart-suggest.show{display:block}
@@ -3180,7 +3176,7 @@ $('#alertForm').addEventListener('submit',e=>{
   }
   const data={
     id:uid(),type:'alert',title:msg,
-    project:getActiveContextProject()||'nos',
+    project:(()=>{const p=getActiveContextProject();return p==='all'?'nos':p})(),
     assignedTo:getPickVal($('#aAssign')),
     alertTime:time,
     recurrence:{freq:freq,until:until},
@@ -3417,73 +3413,45 @@ function nbDeleteNote(id){
   tasks=tasks.filter(t=>t.id!==id);addLog('delete',{id});sT();render();nbRender();
 }
 // Render board
-// Keyword magic for Notes Board
+// Keyword magic for Notes Board — safe single-pass (no HTML corruption)
 function nbMagicText(raw){
-  let t=escapeHtml(raw);
+  const t=escapeHtml(raw);
   const rules=[
-    // Love — rose + floating heart
-    {re:/\b(te\s+amo(?:\s+muito)?|amo\s+voc[eê]|amor(?:\s+da\s+minha\s+vida)?)\b/gi,
-     fn:m=>`<span class="nbk-love">${m}<span class="nbk-heart">\u2665</span></span>`},
-    // Saudade — lilac italic
-    {re:/\b(saudade(?:s)?|sinto\s+(?:sua\s+)?falta)\b/gi,
-     fn:m=>`<span class="nbk-saudade">${m}</span>`},
-    // Thanks — amber glow
-    {re:/\b(obrigad[ao]s?)\b/gi,
-     fn:m=>`<span class="nbk-thanks">${m} \u2728</span>`},
-    // Celebrate — gold + confetti
-    {re:/\b(parab[eé]ns|feliz\s+anivers[aá]rio)\b/gi,
-     fn:m=>`<span class="nbk-celebrate">${m} \ud83c\udf89</span>`},
-    // Kiss
-    {re:/\b(beijos?|beijinho)\b/gi,
-     fn:m=>`<span class="nbk-kiss">${m} \ud83d\udc8b</span>`},
-    // Raiva — humor\u00edstico: texto riscado + vermelho
-    {re:/\b((?:que\s+)?raiva|odeio|estress(?:e|ada|ado)|irrita(?:da|do)?)\b/gi,
-     fn:m=>`<span class="nbk-rage">${m}</span>`},
-    // ===== FAMILY EFFECTS =====
-    // Bernardo / Ber — RAINBOW SPECIAL (must be before generic family)
-    {re:/\b(Bernardo|Bernardinho)\b/gi,
-     fn:m=>`<span class="nbk-ber">${m}</span><span class="nbk-ber-emoji">👶✨</span>`},
-    {re:/\b(Ber(?:zinho)?)\b/gi,
-     fn:m=>`<span class="nbk-ber">${m}</span><span class="nbk-ber-emoji">👶💫</span>`},
-    // Mãe / Mamãe
-    {re:/\b(m[aã]e|mam[aã]e|mainha)\b/gi,
-     fn:m=>`<span class="nbk-mama">${m} 👩‍👦</span>`},
-    // Pai / Papai
-    {re:/\b(pai|papai|painho)\b/gi,
-     fn:m=>`<span class="nbk-papa">${m} 👨‍👦</span>`},
-    // Filho / Filha / Bebê
-    {re:/\b(filh[oa]|filhinho|filhinha|beb[eê]|nen[eê]|neném)\b/gi,
-     fn:m=>`<span class="nbk-family">${m} 🍼</span>`},
-    // Avó / Vó / Avô / Vô
-    {re:/\b(av[oó]|v[oó]|vovó|vovô|av[oô])\b/gi,
-     fn:m=>`<span class="nbk-vovo">${m} 👴👵</span>`},
-    // Família
-    {re:/\b(fam[ií]lia)\b/gi,
-     fn:m=>`<span class="nbk-family">${m} 👨‍👩‍👦</span>`},
-    // Alegria — dourado brilhante
-    {re:/\b((?:que\s+)?alegria|feliz(?:idade)?|happy|animad[ao])\b/gi,
-     fn:m=>`<span class="nbk-joy">${m} \ud83c\udf1f</span>`},
-    // Fofura
-    {re:/\b(fof[oa]|fofur?a|lind[ao]|gatinho|princesa|gostosa)\b/gi,
-     fn:m=>`<span class="nbk-cute">${m} \ud83e\udee7</span>`},
-    // Pregui\u00e7a (humor)
-    {re:/\b(pregui[cç]a|pregui[cç]os[ao]|moleza|sono(?:lent[ao])?)\b/gi,
-     fn:m=>`<span class="nbk-lazy">${m} \ud83d\ude34</span>`},
-    // Comida
-    {re:/\b(fome|comer|comida|almo[cç]ar|jantar|pizza|sushi|sorvete|caf[eé])\b/gi,
-     fn:m=>`<span class="nbk-food">${m} \ud83c\udf7d\ufe0f</span>`},
-    // Urgente — vermelho pulsante
-    {re:/\b(urgente|socorro|importante|agora)\b/gi,
-     fn:m=>`<span class="nbk-urgent">${m}</span>`},
-    // Viagem
-    {re:/\b(viagem|viajar|f[eé]rias|passeio|praia)\b/gi,
-     fn:m=>`<span class="nbk-travel">${m} \u2708\ufe0f</span>`},
-    // Desculpa
-    {re:/\b(desculp[ae]|perd[aã]o|me\s+perdoa)\b/gi,
-     fn:m=>`<span class="nbk-sorry">${m} \ud83e\udd7a</span>`},
+    {re:/\b(te\s+amo(?:\s+muito)?|amo\s+voc[eê]|amor(?:\s+da\s+minha\s+vida)?)\b/gi, cls:'nbk-love'},
+    {re:/\b(saudade(?:s)?|sinto\s+(?:sua\s+)?falta)\b/gi, cls:'nbk-saudade'},
+    {re:/\b(obrigad[ao]s?)\b/gi, cls:'nbk-thanks'},
+    {re:/\b(parab[eé]ns|feliz\s+anivers[aá]rio)\b/gi, cls:'nbk-celebrate'},
+    {re:/\b(beijos?|beijinho)\b/gi, cls:'nbk-kiss'},
+    {re:/\b((?:que\s+)?raiva|odeio|estress(?:e|ada|ado)|irrita(?:da|do)?)\b/gi, cls:'nbk-rage'},
+    {re:/\b(Bernardo|Bernardinho|Berzinho)\b/gi, cls:'nbk-ber'},
+    {re:/\b(m[aã]e|mam[aã]e|mainha)\b/gi, cls:'nbk-mama'},
+    {re:/\b(pai|papai|painho)\b/gi, cls:'nbk-papa'},
+    {re:/\b(filh[oa]|filhinho|filhinha|beb[eê]|nen[eê]m?)\b/gi, cls:'nbk-family'},
+    {re:/\b(av[oóô]|v[oóô]|vov[oóô])\b/gi, cls:'nbk-vovo'},
+    {re:/\b(fam[ií]lia)\b/gi, cls:'nbk-family'},
+    {re:/\b((?:que\s+)?alegria|feliz(?:idade)?|animad[ao])\b/gi, cls:'nbk-joy'},
+    {re:/\b(fof[oa]|fofur?a|lind[ao]|gatinho|princesa|gostosa)\b/gi, cls:'nbk-cute'},
+    {re:/\b(pregui[cç]a|pregui[cç]os[ao]|moleza|sono(?:lent[ao])?)\b/gi, cls:'nbk-lazy'},
+    {re:/\b(fome|comer|comida|almo[cç]ar|jantar|pizza|sushi|sorvete|caf[eé])\b/gi, cls:'nbk-food'},
+    {re:/\b(urgente|socorro|importante)\b/gi, cls:'nbk-urgent'},
+    {re:/\b(viagem|viajar|f[eé]rias|passeio|praia)\b/gi, cls:'nbk-travel'},
+    {re:/\b(desculp[ae]|perd[aã]o|me\s+perdoa)\b/gi, cls:'nbk-sorry'},
   ];
-  rules.forEach(r=>{t=t.replace(r.re,r.fn)});
-  return t;
+  // Collect all matches with positions on the PLAIN escaped text
+  const matches=[];
+  rules.forEach(r=>{
+    let m; const re=new RegExp(r.re.source,r.re.flags);
+    while((m=re.exec(t))!==null) matches.push({start:m.index,end:m.index+m[0].length,text:m[0],cls:r.cls});
+  });
+  if(!matches.length) return t;
+  // Sort by position, remove overlaps (first match wins)
+  matches.sort((a,b)=>a.start-b.start);
+  const kept=[];let lastEnd=0;
+  matches.forEach(m=>{if(m.start>=lastEnd){kept.push(m);lastEnd=m.end}});
+  // Build HTML in one safe pass
+  let out='',pos=0;
+  kept.forEach(m=>{out+=t.slice(pos,m.start)+`<span class="${m.cls}">${m.text}</span>`;pos=m.end});
+  return out+t.slice(pos);
 }
 function nbRender(){
   const notes=tasks.filter(t=>t.type==='note'&&t.project==='nos'&&(t.expiresAt===null||t.expiresAt>Date.now()));
@@ -3749,7 +3717,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=78',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=79',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
