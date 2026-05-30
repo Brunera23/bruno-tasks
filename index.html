@@ -3504,7 +3504,10 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
   const recurrence=(recurFreq?{freq:recurFreq,until:recurUntil}:null);
   const projVal=fFormProj;const assignVal=projVal==='nos'?getPickVal($('#fAssign')):null;
   const existing=id?tasks.find(t=>t.id===id):null;
-  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada')}sT();closeM();render()});
+  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');
+    // Auto-expand parent deps so the new child is visible immediately
+    if(mDeps.length) mDeps.forEach(pid=>expandedDeps.add(pid));
+  }sT();closeM();render()});
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
@@ -3686,7 +3689,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=73',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=74',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
