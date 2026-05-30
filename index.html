@@ -874,6 +874,9 @@
     .mob-sheet-opts button{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:none;background:transparent;color:var(--label);font-size:.82rem;font-weight:500;cursor:pointer;font-family:inherit;text-align:left;transition:background var(--dur-fast)}
     .mob-sheet-opts button.active{background:var(--fill);font-weight:600;color:var(--blue)}
     .mob-sheet-opts button svg{width:16px;height:16px;color:var(--label3)}
+    .mob-sheet-role{border:1.5px solid var(--sep)!important;border-radius:12px!important;font-weight:600!important}
+    .mob-sheet-role.active{border-color:var(--blue)!important;background:rgba(0,122,255,.06)!important;color:var(--blue)!important}
+    #msRoleClara.active{border-color:#FF2D55!important;background:rgba(255,45,85,.06)!important;color:#FF2D55!important}
     [data-theme="dark"] .mob-sheet{background:rgba(32,32,34,.98);border-top:1px solid rgba(255,255,255,.08)}
 
     /* ===== FAB ACTION MENU ===== */
@@ -1398,6 +1401,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 <div class="mob-sheet-ov" id="mobSheetOv"></div>
 <div class="mob-sheet" id="mobSheet">
   <div class="mob-sheet-handle"></div>
@@ -1429,6 +1433,94 @@ const db=firebase.firestore();
 db.enablePersistence({synchronizeTabs:true}).catch(e=>{console.warn('Persistence failed:',e.code)});
 const FB_DOC='bruno-main';
 let _fbReady=false,_fbSaving=false,_fbListening=false;
+
+// ===== PUSH NOTIFICATIONS (FCM) =====
+let messaging=null;
+let pushToken=null;
+const VAPID_KEY=''; // Will be set after Firebase Console setup
+
+try{
+  if(firebase.messaging.isSupported()){
+    messaging=firebase.messaging();
+  }
+}catch(e){console.log('FCM not supported in this browser')}
+
+// Request permission and get token
+async function requestNotifPermission(){
+  if(!messaging){toast('Notificações não suportadas neste navegador');return false}
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted'){toast('Permissão de notificação negada');return false}
+    // Get SW registration for messaging
+    const swReg=await navigator.serviceWorker.getRegistration();
+    if(!swReg){toast('Service Worker não encontrado');return false}
+    const token=await messaging.getToken({
+      vapidKey:VAPID_KEY||undefined,
+      serviceWorkerRegistration:swReg
+    });
+    if(token){
+      pushToken=token;
+      await savePushToken(token);
+      toast('🔔 Notificações ativadas!');
+      return true;
+    }
+  }catch(err){
+    console.error('Push subscription failed:',err);
+    toast('Erro ao ativar notificações');
+  }
+  return false;
+}
+
+// Save FCM token to Firestore linked to current user role
+async function savePushToken(token){
+  if(!currentUser)return;
+  const userRole=localStorage.getItem('btUserRole')||'bruno';
+  try{
+    await db.collection('push_tokens').doc(userRole+'_'+currentUser.uid).set({
+      token:token,
+      role:userRole,
+      uid:currentUser.uid,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      platform:navigator.userAgent.includes('iPhone')?'ios':'other'
+    },{merge:true});
+    localStorage.setItem('btPushEnabled','1');
+  }catch(e){console.error('Token save failed:',e)}
+}
+
+// Send push notification to a user role (bruno/parceira/ambos)
+async function sendPushToRole(targetRole,title,body){
+  if(!currentUser)return;
+  try{
+    // Save notification request to Firestore — Cloud Function will pick it up
+    await db.collection('push_queue').add({
+      targetRole:targetRole,
+      title:title,
+      body:body,
+      sentBy:localStorage.getItem('btUserRole')||'bruno',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      processed:false
+    });
+  }catch(e){console.error('Push send failed:',e)}
+}
+
+// Foreground message handler
+if(messaging){
+  messaging.onMessage((payload)=>{
+    const {title,body}=payload.notification||{};
+    if(title){
+      // Show in-app toast
+      toast('🔔 '+title+(body?': '+body:''));
+      // Also show native notification if page is visible
+      if(Notification.permission==='granted'){
+        new Notification(title,{body:body||'',icon:'./manifest-icon.png',badge:'./manifest-icon.png'});
+      }
+    }
+  });
+}
+
+// Check if push is already enabled
+function isPushEnabled(){return localStorage.getItem('btPushEnabled')==='1'}
+
 
 // ===== AUTH =====
 const auth=firebase.auth();
@@ -2957,6 +3049,9 @@ $('#alertForm').addEventListener('submit',e=>{
   const msg=$('#aMsg').value.trim();if(!msg)return;
   const data={id:uid(),type:'alert',title:msg,project:getActiveContextProject()||'nos',assignedTo:getPickVal($('#aAssign')),alertTime:$('#aTime').value||'18:00',recurrence:{freq:getPickVal($('#aFreq'))},date:$('#aDate').value||null,status:'todo',category:'casa',createdAt:Date.now(),updatedAt:Date.now()};
   tasks.unshift(data);addLog('create',data);sT();closeAlertForm();render();toast('🔔 Alerta criado!');
+  // Send push notification to target
+  const senderName=localStorage.getItem('btUserRole')==='parceira'?'Clara':'Bruno';
+  sendPushToRole(data.assignedTo,'🔔 '+senderName+' criou um alerta',msg);
 });
 
 // Reminder/Note Form
@@ -3358,7 +3453,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=58',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=59',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -3561,8 +3656,21 @@ function openMobSettings(){
         <button id="msCategories"><svg><use href="#i-layers"/></svg>Gerenciar categorias</button>
         <button id="msProjects"><svg><use href="#i-home"/></svg>Gerenciar projetos</button>
         <button id="msNotes" style="background:linear-gradient(135deg,rgba(255,45,85,.08),rgba(255,100,130,.06));border-color:rgba(255,45,85,.15)!important;color:#FF2D55"><svg style="color:#FF2D55"><use href="#i-edit"/></svg>Nosso Quadro de Notas 📝</button>
-        <button id="msToggleDone"><svg><use href="#i-check"/></svg>${showDone?'Ocultar tarefas feitas':'Mostrar tarefas feitas'}</button>
+        <button id="msNotif" style="background:linear-gradient(135deg,rgba(255,149,0,.08),rgba(255,214,10,.06));border-color:rgba(255,149,0,.15)!important;color:#FF9500"><svg style="color:#FF9500"><use href="#i-bell"/></svg>${isPushEnabled()?'✅ Notificações ativas':'🔔 Ativar notificações'}</button>
+      </div>
+    </div>
+    <div class="mob-sheet-section">
+      <div class="mob-sheet-label">Eu sou</div>
+      <div class="mob-sheet-opts" style="flex-direction:row;gap:8px">
+        <button id="msRoleBruno" class="mob-sheet-role ${(localStorage.getItem('btUserRole')||'bruno')==='bruno'?'active':''}" style="flex:1;justify-content:center;gap:6px"><span class="assign-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA);width:22px;height:22px"><svg width="12" height="12" style="color:#fff"><use href="#i-user"/></svg></span>Bruno</button>
+        <button id="msRoleClara" class="mob-sheet-role ${(localStorage.getItem('btUserRole')||'bruno')==='parceira'?'active':''}" style="flex:1;justify-content:center;gap:6px"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482);width:22px;height:22px"><svg width="12" height="12" style="color:#fff"><use href="#i-user"/></svg></span>Clara</button>
+      </div>
+    </div>
+    <div class="mob-sheet-section">
+      <div class="mob-sheet-label">Aparência</div>
+      <div class="mob-sheet-opts">
         <button id="msTheme"><svg><use href="#${getTheme()==='dark'?'i-sun':'i-moon'}"/></svg>${getTheme()==='dark'?'Tema claro':'Tema escuro'}</button>
+        <button id="msToggleDone"><svg><use href="#i-check"/></svg>${showDone?'Ocultar tarefas feitas':'Mostrar tarefas feitas'}</button>
       </div>
     </div>
   `;
@@ -3571,6 +3679,9 @@ function openMobSettings(){
   $('#msCategories').onclick=()=>{closeMobSheet();setTimeout(openCatMgr,350)};
   $('#msProjects').onclick=()=>{closeMobSheet();setTimeout(openProjManager,350)};
   $('#msNotes').onclick=()=>{closeMobSheet();setTimeout(openNotesBoard,350)};
+  $('#msNotif').onclick=async()=>{closeMobSheet();await requestNotifPermission()};
+  $('#msRoleBruno').onclick=()=>{localStorage.setItem('btUserRole','bruno');toast('Você é Bruno ✅');closeMobSheet()};
+  $('#msRoleClara').onclick=()=>{localStorage.setItem('btUserRole','parceira');toast('Você é Clara ✅');closeMobSheet()};
   $('#msToggleDone').onclick=()=>{showDone=!showDone;saveUI();closeMobSheet();render()};
   $('#msTheme').onclick=()=>{toggleTheme();closeMobSheet();};
 }
