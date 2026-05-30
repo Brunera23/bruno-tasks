@@ -921,73 +921,87 @@
     .note-expires{font-size:.66rem;color:#34C759;font-weight:500}
     .note-body{font-size:.82rem;color:var(--label);line-height:1.4}
 
-
-    /* ===== QUADRO DE LEMBRETES ===== */
+    /* ===== QUADRO DE LEMBRETES — Apple HIG Premium ===== */
     .notes-board-wrap{position:fixed;inset:0;z-index:300;pointer-events:none}
     .notes-board-wrap.open{pointer-events:all}
-    .notes-board-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);opacity:0;transition:opacity .35s}
+    .notes-board-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);opacity:0;transition:opacity .3s}
     .notes-board-wrap.open .notes-board-backdrop{opacity:1}
-    .notes-board{position:absolute;top:0;right:0;bottom:0;width:min(520px,100vw);background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);box-shadow:-20px 0 60px rgba(0,0,0,.15)}
+    .notes-board{position:absolute;top:0;right:0;bottom:0;width:min(480px,100vw);background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .45s cubic-bezier(.32,1,.23,1);box-shadow:-8px 0 40px rgba(0,0,0,.12)}
     .notes-board-wrap.open .notes-board{transform:translateX(0)}
-    @media(max-width:640px){.notes-board{top:0;left:0;right:0;bottom:0;width:100%;transform:translateY(100%)}.notes-board-wrap.open .notes-board{transform:translateY(0)}}
-    .nb-header{padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-    .nb-title-block{display:flex;align-items:center;gap:10px}
-    .nb-emoji{font-size:1.6rem;line-height:1}
-    .nb-title{font-size:1.15rem;font-weight:800;letter-spacing:-.03em;color:var(--label)}
-    .nb-sub{font-size:.7rem;color:var(--label3);margin-top:1px}
-    .nb-close-btn{width:32px;height:32px;border-radius:50%;border:none;background:var(--fill);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--label2);transition:all var(--dur-fast);font-size:1.1rem;line-height:1}
-    .nb-close-btn:hover{background:var(--sep)}
-    .nb-add-row{margin:14px 20px 8px;display:flex;gap:8px;align-items:center}
-    .nb-add-input{flex:1;padding:10px 14px;background:var(--fill);border:1.5px solid transparent;border-radius:12px;font-size:1rem;color:var(--label);font-family:inherit;outline:none;transition:all var(--dur-fast);box-sizing:border-box;min-width:0}
-    .nb-add-input:focus{background:var(--card);border-color:rgba(255,45,85,.4);box-shadow:0 0 0 3px rgba(255,45,85,.08)}
-    .nb-add-btn{padding:10px 14px;background:linear-gradient(135deg,#FF2D55,#FF6482);border:none;border-radius:12px;color:#fff;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;font-family:inherit;transition:transform .15s;box-shadow:0 4px 12px rgba(255,45,85,.25);display:flex;align-items:center;gap:5px;flex-shrink:0}
-    .nb-add-btn:active{transform:scale(.95)}
-    .nb-add-btn svg{width:13px;height:13px}
-    .nb-assign-row,.nb-dur-row,.nb-filter-row{display:flex;gap:6px;padding:0 20px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
-    .nb-assign-row::-webkit-scrollbar,.nb-dur-row::-webkit-scrollbar,.nb-filter-row::-webkit-scrollbar{display:none}
-    .nb-av-btn,.nb-dur-chip,.nb-chip{padding:5px 10px;border-radius:20px;border:1.5px solid var(--sep);background:transparent;font-size:.7rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--label2);transition:all var(--dur-fast);white-space:nowrap}
-    .nb-av-btn.active.nb-av-bruno{background:rgba(0,122,255,.1);color:#007AFF;border-color:rgba(0,122,255,.25)}
-    .nb-av-btn.active.nb-av-parceira{background:rgba(255,45,85,.1);color:#FF2D55;border-color:rgba(255,45,85,.25)}
-    .nb-av-btn.active.nb-av-ambos{background:rgba(175,82,222,.1);color:#AF52DE;border-color:rgba(175,82,222,.25)}
-    .nb-dur-chip.active,.nb-chip.active{background:var(--label);color:var(--bg);border-color:var(--label)}
-    .nb-dur-custom{display:none;align-items:center;gap:6px;padding:0 20px 8px;flex-shrink:0}
-    .nb-dur-custom.show{display:flex}
-    .nb-dur-custom input{width:64px;padding:6px 8px;border:1.5px solid var(--sep);border-radius:8px;font-size:1rem;font-family:inherit;background:var(--bg);color:var(--label);outline:none;text-align:center;box-sizing:border-box}
-    .nb-dur-custom input:focus{border-color:var(--blue)}
-    .nb-dur-custom span{font-size:.72rem;color:var(--label3);font-weight:600}
-    .nb-divider{height:1px;background:var(--sep);margin:2px 20px 10px;flex-shrink:0}
-    .nb-cards{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 16px 100px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-    .nb-card{border-radius:16px;padding:16px 16px 12px;position:relative;overflow:hidden;animation:nbIn .3s var(--ease-spring) both;transition:transform .2s,box-shadow .2s}
-    .nb-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
-    @keyframes nbIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-    .nb-card.nb-bruno{background:linear-gradient(135deg,rgba(0,122,255,.07),rgba(90,200,250,.11));border:1px solid rgba(0,122,255,.12)}
-    .nb-card.nb-parceira{background:linear-gradient(135deg,rgba(255,45,85,.07),rgba(255,100,130,.11));border:1px solid rgba(255,45,85,.12)}
-    .nb-card.nb-ambos{background:linear-gradient(135deg,rgba(175,82,222,.07),rgba(88,86,214,.11));border:1px solid rgba(175,82,222,.12)}
-    [data-theme="dark"] .nb-card.nb-bruno{background:linear-gradient(135deg,rgba(0,122,255,.11),rgba(90,200,250,.06));border-color:rgba(0,122,255,.22)}
-    [data-theme="dark"] .nb-card.nb-parceira{background:linear-gradient(135deg,rgba(255,45,85,.11),rgba(255,100,130,.06));border-color:rgba(255,45,85,.22)}
-    [data-theme="dark"] .nb-card.nb-ambos{background:linear-gradient(135deg,rgba(175,82,222,.11),rgba(88,86,214,.06));border-color:rgba(175,82,222,.22)}
-    .nb-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    @media(max-width:640px){
+      .notes-board{top:0;left:0;right:0;bottom:0;width:100%;border-radius:0;transform:translateY(100%)}
+      .notes-board-wrap.open .notes-board{transform:translateY(0)}
+    }
+    /* Header — Apple large title style */
+    .nb-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:.5px solid var(--sep);background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+    @media(max-width:640px){.nb-header{padding:calc(env(safe-area-inset-top,12px) + 8px) 20px 12px}}
+    .nb-title-block{display:flex;flex-direction:column;gap:1px}
+    .nb-title{font-size:1.1rem;font-weight:700;letter-spacing:-.02em;color:var(--label)}
+    .nb-sub{font-size:.68rem;color:var(--label3);font-weight:500;letter-spacing:.01em}
+    .nb-close-btn{width:30px;height:30px;border-radius:50%;border:none;background:var(--fill);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--label3);transition:all var(--dur-fast);flex-shrink:0}
+    .nb-close-btn svg{width:14px;height:14px}
+    .nb-close-btn:hover{background:var(--sep);color:var(--label)}
+    .nb-count-badge{font-size:.58rem;background:rgba(255,45,85,.12);color:#FF2D55;padding:2px 6px;border-radius:8px;font-weight:700;margin-left:6px;vertical-align:middle}
+    /* Filter pills — just below header */
+    .nb-filter-row{display:flex;gap:6px;padding:12px 20px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+    .nb-filter-row::-webkit-scrollbar{display:none}
+    .nb-chip{padding:6px 14px;border-radius:20px;border:none;background:var(--fill);color:var(--label2);font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all var(--dur-fast);white-space:nowrap}
+    .nb-chip.active{background:var(--label);color:var(--bg)}
+    /* Cards area */
+    .nb-cards{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 16px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+    @media(max-width:640px){.nb-cards{padding-bottom:calc(220px + env(safe-area-inset-bottom,20px))}}
+    .nb-card{border-radius:14px;padding:14px 16px 12px;position:relative;overflow:hidden;animation:nbIn .3s var(--ease-spring) both;transition:transform .2s,box-shadow .2s}
+    @keyframes nbIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .nb-card.nb-bruno{background:rgba(0,122,255,.06);border:1px solid rgba(0,122,255,.1)}
+    .nb-card.nb-parceira{background:rgba(255,45,85,.06);border:1px solid rgba(255,45,85,.1)}
+    .nb-card.nb-ambos{background:rgba(175,82,222,.06);border:1px solid rgba(175,82,222,.1)}
+    [data-theme="dark"] .nb-card.nb-bruno{background:rgba(0,122,255,.1);border-color:rgba(0,122,255,.18)}
+    [data-theme="dark"] .nb-card.nb-parceira{background:rgba(255,45,85,.1);border-color:rgba(255,45,85,.18)}
+    [data-theme="dark"] .nb-card.nb-ambos{background:rgba(175,82,222,.1);border-color:rgba(175,82,222,.18)}
+    .nb-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
     .nb-who{display:flex;align-items:center;gap:6px}
-    .nb-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .nb-av svg{width:11px;height:11px;color:#fff}
-    .nb-who-name{font-size:.64rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--label3)}
-    .nb-actions{display:flex;gap:2px;opacity:0;transition:opacity var(--dur-fast)}
-    .nb-card:hover .nb-actions,.nb-card:focus-within .nb-actions{opacity:1}
-    @media(hover:none){.nb-actions{opacity:1}}
-    .nb-del-btn{width:26px;height:26px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--label3);padding:0;transition:all var(--dur-fast)}
-    .nb-del-btn:hover{background:rgba(255,59,48,.12);color:#FF3B30}
-    .nb-del-btn svg{width:13px;height:13px}
-    .nb-text{font-size:.9rem;line-height:1.55;color:var(--label);font-weight:500;word-break:break-word;white-space:pre-wrap}
-    .nb-footer{margin-top:10px;display:flex;align-items:center;justify-content:space-between}
-    .nb-expire{font-size:.64rem;color:var(--label3);font-weight:500}
-    .nb-expire.nb-soon{color:#FF9500;font-weight:700}
-    .nb-expire.nb-today{color:#FF3B30;font-weight:700}
+    .nb-av{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .nb-av svg{width:10px;height:10px;color:#fff}
+    .nb-who-name{font-size:.62rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--label3)}
+    .nb-actions{display:flex;gap:2px}
+    @media(hover:hover){.nb-actions{opacity:0;transition:opacity var(--dur-fast)}.nb-card:hover .nb-actions{opacity:1}}
+    .nb-del-btn{width:24px;height:24px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--label3);padding:0;transition:all var(--dur-fast)}
+    .nb-del-btn:hover{background:rgba(255,59,48,.1);color:#FF3B30}
+    .nb-del-btn svg{width:12px;height:12px}
+    .nb-text{font-size:.88rem;line-height:1.5;color:var(--label);font-weight:500;word-break:break-word;white-space:pre-wrap}
+    .nb-footer{margin-top:8px;display:flex;align-items:center;justify-content:space-between}
+    .nb-expire{font-size:.62rem;color:var(--label3);font-weight:500}
+    .nb-expire.nb-soon{color:#FF9500;font-weight:600}
+    .nb-expire.nb-today{color:#FF3B30;font-weight:600}
     .nb-topbar{position:absolute;top:0;left:0;right:0;height:3px}
-    .nb-empty{display:flex;flex-direction:column;align-items:center;padding:60px 20px;gap:12px;text-align:center}
-    .nb-empty-emoji{font-size:3.5rem}
-    .nb-empty-title{font-size:1rem;font-weight:700;color:var(--label)}
-    .nb-empty-sub{font-size:.8rem;color:var(--label3);line-height:1.5}
-    .nb-count-badge{font-size:.62rem;background:rgba(255,45,85,.12);color:#FF2D55;padding:2px 7px;border-radius:10px;font-weight:700;margin-left:6px;vertical-align:middle}
+    .nb-empty{display:flex;flex-direction:column;align-items:center;padding:80px 20px;gap:12px;text-align:center}
+    .nb-empty-emoji{font-size:3rem}
+    .nb-empty-title{font-size:.95rem;font-weight:700;color:var(--label)}
+    .nb-empty-sub{font-size:.78rem;color:var(--label3);line-height:1.5}
+    /* Bottom composer — iMessage style */
+    .nb-composer{position:absolute;bottom:0;left:0;right:0;background:rgba(245,245,247,.92);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:.5px solid var(--sep);padding:10px 16px calc(env(safe-area-inset-bottom,8px) + 8px);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+    [data-theme="dark"] .nb-composer{background:rgba(28,28,30,.92)}
+    .nb-comp-row{display:flex;gap:8px;align-items:flex-end}
+    .nb-comp-input{flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--sep);border-radius:20px;font-size:.88rem;color:var(--label);font-family:inherit;outline:none;transition:all var(--dur-fast);box-sizing:border-box;min-width:0;resize:none;max-height:80px;line-height:1.4}
+    .nb-comp-input:focus{border-color:rgba(255,45,85,.4);box-shadow:0 0 0 3px rgba(255,45,85,.06)}
+    .nb-comp-send{width:34px;height:34px;border-radius:50%;border:none;background:linear-gradient(135deg,#FF2D55,#FF6482);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .15s,opacity .15s;box-shadow:0 2px 8px rgba(255,45,85,.3)}
+    .nb-comp-send:active{transform:scale(.9)}
+    .nb-comp-send:disabled{opacity:.4;cursor:default}
+    .nb-comp-send svg{width:16px;height:16px;transform:rotate(-45deg) translate(1px,-1px)}
+    .nb-comp-opts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+    .nb-opt-chip{padding:4px 10px;border-radius:14px;border:1px solid var(--sep);background:transparent;color:var(--label2);font-size:.66rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all var(--dur-fast);white-space:nowrap;display:flex;align-items:center;gap:3px}
+    .nb-opt-chip.active{border-color:transparent}
+    .nb-opt-chip.active.nb-av-bruno{background:rgba(0,122,255,.1);color:#007AFF}
+    .nb-opt-chip.active.nb-av-parceira{background:rgba(255,45,85,.1);color:#FF2D55}
+    .nb-opt-chip.active.nb-av-ambos{background:rgba(175,82,222,.1);color:#AF52DE}
+    .nb-opt-chip.nb-dur.active{background:var(--label);color:var(--bg);border-color:var(--label)}
+    .nb-opt-sep{width:1px;height:16px;background:var(--sep);flex-shrink:0;margin:0 2px}
+    .nb-dur-custom{display:none;align-items:center;gap:4px;flex-shrink:0}
+    .nb-dur-custom.show{display:flex}
+    .nb-dur-custom input{width:48px;padding:4px 6px;border:1px solid var(--sep);border-radius:8px;font-size:.78rem;font-family:inherit;background:var(--bg);color:var(--label);outline:none;text-align:center;box-sizing:border-box}
+    .nb-dur-custom input:focus{border-color:var(--blue)}
+    .nb-dur-custom span{font-size:.66rem;color:var(--label3);font-weight:600}
+
     /* Keyword magic effects */
     .nbk-love{color:#FF2D55;font-weight:700;position:relative;display:inline}
     .nbk-heart{font-size:.7rem;color:#FF2D55;animation:nbHeartPop .5s var(--ease-spring) both;display:inline-block;margin-left:1px}
@@ -1186,38 +1200,17 @@
 
 <button class="fab" id="fab" aria-label="Nova tarefa"><svg><use href="#i-plus"/></svg></button>
 
-<!-- Notes Board Panel -->
+<!-- Notes Board Panel — Apple HIG Premium -->
 <div class="notes-board-wrap" id="notesBoardWrap">
   <div class="notes-board-backdrop" id="notesBoardBd"></div>
   <div class="notes-board" id="notesBoard">
     <div class="nb-header">
       <div class="nb-title-block">
-        <span class="nb-emoji">📝</span>
-        <div><div class="nb-title">Nosso Quadro <span class="nb-count-badge" id="nbCount">0</span></div><div class="nb-sub">Lembretes do casal ✨</div></div>
+        <div class="nb-title">Nosso Quadro <span class="nb-count-badge" id="nbCount">0</span></div>
+        <div class="nb-sub">Lembretes do casal</div>
       </div>
-      <button class="nb-close-btn" id="nbClose">✕</button>
+      <button class="nb-close-btn" id="nbClose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="nb-add-row">
-      <input class="nb-add-input" id="nbInput" placeholder="Escreva uma nota rápida..." type="text">
-      <button class="nb-add-btn" id="nbAddBtn"><svg width="13" height="13"><use href="#i-plus"/></svg>Anotar</button>
-    </div>
-    <div class="nb-assign-row" id="nbAssignRow">
-      <button class="nb-av-btn nb-av-bruno active" data-nba="bruno"><span class="nb-av" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="11" height="11"><use href="#i-user"/></svg></span>&nbsp;Bruno</button>
-      <button class="nb-av-btn nb-av-parceira" data-nba="parceira"><span class="nb-av" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="11" height="11"><use href="#i-user"/></svg></span>&nbsp;Clara</button>
-      <button class="nb-av-btn nb-av-ambos" data-nba="ambos"><span class="nb-av" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="11" height="11"><use href="#i-users"/></svg></span>&nbsp;Ambos</button>
-    </div>
-    <div class="nb-dur-row">
-      <button class="nb-dur-chip" data-nbd="1">1 dia</button>
-      <button class="nb-dur-chip active" data-nbd="3">3 dias</button>
-      <button class="nb-dur-chip" data-nbd="7">1 semana</button>
-      <button class="nb-dur-chip" data-nbd="0">Permanente</button>
-      <button class="nb-dur-chip" data-nbd="custom">Outro</button>
-    </div>
-    <div class="nb-dur-custom" id="nbDurCustom">
-      <input type="number" id="nbDurDays" min="1" max="365" placeholder="14">
-      <span>dias</span>
-    </div>
-    <div class="nb-divider"></div>
     <div class="nb-filter-row">
       <button class="nb-chip active" data-nbf="all">Todas</button>
       <button class="nb-chip" data-nbf="bruno">Bruno</button>
@@ -1225,6 +1218,25 @@
       <button class="nb-chip" data-nbf="ambos">Ambos</button>
     </div>
     <div class="nb-cards" id="nbCards"></div>
+    <!-- Bottom composer -->
+    <div class="nb-composer">
+      <div class="nb-comp-opts" id="nbCompOpts">
+        <button class="nb-opt-chip nb-av-bruno active" data-nba="bruno"><span class="nb-av" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="9" height="9"><use href="#i-user"/></svg></span>Bruno</button>
+        <button class="nb-opt-chip nb-av-parceira" data-nba="parceira"><span class="nb-av" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="9" height="9"><use href="#i-user"/></svg></span>Clara</button>
+        <button class="nb-opt-chip nb-av-ambos" data-nba="ambos"><span class="nb-av" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="9" height="9"><use href="#i-users"/></svg></span>Ambos</button>
+        <div class="nb-opt-sep"></div>
+        <button class="nb-opt-chip nb-dur" data-nbd="1">1d</button>
+        <button class="nb-opt-chip nb-dur active" data-nbd="3">3d</button>
+        <button class="nb-opt-chip nb-dur" data-nbd="7">1sem</button>
+        <button class="nb-opt-chip nb-dur" data-nbd="0">∞</button>
+        <button class="nb-opt-chip nb-dur" data-nbd="custom">Outro</button>
+        <div class="nb-dur-custom" id="nbDurCustom"><input type="number" id="nbDurDays" min="1" max="365" placeholder="14"><span>dias</span></div>
+      </div>
+      <div class="nb-comp-row">
+        <input class="nb-comp-input" id="nbInput" placeholder="Escreva uma notinha..." type="text">
+        <button class="nb-comp-send" id="nbAddBtn" title="Enviar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2997,23 +3009,25 @@ function closeNotesBoard(){
 $('#nbClose').addEventListener('click',closeNotesBoard);
 $('#notesBoardBd').addEventListener('click',closeNotesBoard);
 
-// Assign row
-$('#nbAssignRow').addEventListener('click',e=>{
-  const b=e.target.closest('[data-nba]');if(!b)return;
-  $$('#nbAssignRow .nb-av-btn').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  nbAssign=b.dataset.nba;
+// Composer option chips (assign + duration) — delegated
+$('#nbCompOpts').addEventListener('click',e=>{
+  const chip=e.target.closest('.nb-opt-chip');if(!chip)return;
+  if(chip.dataset.nba){
+    // Assign chip
+    $$('#nbCompOpts .nb-opt-chip[data-nba]').forEach(x=>x.classList.remove('active'));
+    chip.classList.add('active');
+    nbAssign=chip.dataset.nba;
+  } else if(chip.dataset.nbd!==undefined){
+    // Duration chip
+    $$('#nbCompOpts .nb-opt-chip.nb-dur').forEach(x=>x.classList.remove('active'));
+    chip.classList.add('active');
+    nbDurDays=chip.dataset.nbd==='custom'?'custom':parseInt(chip.dataset.nbd);
+    $('#nbDurCustom').classList.toggle('show',chip.dataset.nbd==='custom');
+  }
 });
-// Duration chips
-$$('.nb-dur-chip').forEach(c=>c.addEventListener('click',()=>{
-  $$('.nb-dur-chip').forEach(x=>x.classList.remove('active'));
-  c.classList.add('active');
-  nbDurDays=c.dataset.nbd==='custom'?'custom':parseInt(c.dataset.nbd);
-  $('#nbDurCustom').classList.toggle('show',c.dataset.nbd==='custom');
-}));
 // Filter chips
-$$('.nb-chip').forEach(c=>c.addEventListener('click',()=>{
-  $$('.nb-chip').forEach(x=>x.classList.remove('active'));
+$$('.nb-chip[data-nbf]').forEach(c=>c.addEventListener('click',()=>{
+  $$('.nb-chip[data-nbf]').forEach(x=>x.classList.remove('active'));
   c.classList.add('active');
   nbFilter=c.dataset.nbf;
   nbRender();
@@ -3344,7 +3358,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=57',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=58',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
