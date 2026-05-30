@@ -3212,50 +3212,116 @@ function closeNotesBoard(){
 $('#nbClose').addEventListener('click',closeNotesBoard);
 $('#notesBoardBd').addEventListener('click',closeNotesBoard);
 
-// ===== iOS-STYLE SWIPE-BACK GESTURE (edge swipe to dismiss) =====
-(function initSwipeBack(){
-  const wrap=$('#notesBoardWrap'), board=$('#notesBoard');
-  let startX=0, startY=0, dragging=false, moved=false;
-  const EDGE=30, THRESHOLD=80;
+// ===== iOS-STYLE GESTURES: PULL-DOWN + SWIPE-BACK =====
+(function initGestures(){
+  // --- Notes Board: edge-swipe + pull-down ---
+  const board=$('#notesBoard'), wrap=$('#notesBoardWrap');
+  let sX=0, sY=0, drag=false, moved=false, mode=null; // mode: 'edge' | 'pull'
+  const EDGE=30, THRESH=80;
 
   board.addEventListener('touchstart',e=>{
     const t=e.touches[0];
-    if(t.clientX > EDGE) return;
-    startX=t.clientX; startY=t.clientY;
-    dragging=true; moved=false;
-    board.style.transition='none';
+    const cards=$('#nbCards');
+    const atTop=!cards||cards.scrollTop<=0;
+    // Edge swipe (left 30px)
+    if(t.clientX<=EDGE){
+      sX=t.clientX;sY=t.clientY;drag=true;moved=false;mode='edge';
+      board.style.transition='none';
+      return;
+    }
+    // Pull-down (only when scrolled to top and touch is not on input)
+    if(atTop && !e.target.closest('input,textarea,button,.nb-comp-opts')){
+      sX=t.clientX;sY=t.clientY;drag=true;moved=false;mode='pull';
+    }
   },{passive:true});
 
   board.addEventListener('touchmove',e=>{
-    if(!dragging) return;
+    if(!drag) return;
     const t=e.touches[0];
-    const dx=t.clientX - startX;
-    const dy=Math.abs(t.clientY - startY);
-    if(!moved && dy > Math.abs(dx)){dragging=false;board.style.transition='';return;}
-    if(dx<0) return;
-    moved=true;
-    const isMobile=window.innerWidth<=640;
-    if(isMobile){
-      const pct=Math.min(dx/window.innerWidth,1);
-      board.style.transform='translateY('+pct*100+'%)';
-    } else {
-      board.style.transform='translateX('+dx+'px)';
+    const dx=t.clientX-sX, dy=t.clientY-sY;
+
+    if(mode==='edge'){
+      if(!moved&&Math.abs(dy)>Math.abs(dx)){drag=false;board.style.transition='';return;}
+      if(dx<0) return;
+      moved=true;
+      board.style.transition='none';
+      const isMob=window.innerWidth<=640;
+      board.style.transform=isMob?'translateY('+Math.min(dx/window.innerWidth,1)*100+'%)':'translateX('+dx+'px)';
+    } else if(mode==='pull'){
+      if(!moved&&Math.abs(dx)>dy){drag=false;return;}
+      if(dy<0) return;
+      moved=true;
+      board.style.transition='none';
+      board.style.transform='translateY('+dy+'px)';
     }
   },{passive:true});
 
   board.addEventListener('touchend',e=>{
-    if(!dragging||!moved){dragging=false;return;}
-    dragging=false;
-    const endX=e.changedTouches[0].clientX;
-    const dx=endX - startX;
+    if(!drag||!moved){drag=false;mode=null;return;}
+    drag=false;
+    const ex=e.changedTouches[0].clientX, ey=e.changedTouches[0].clientY;
     board.style.transition='transform .35s cubic-bezier(.32,1,.23,1)';
-    if(dx >= THRESHOLD){
-      closeNotesBoard();
-    } else {
-      const isMobile=window.innerWidth<=640;
-      board.style.transform=isMobile?'translateY(0)':'translateX(0)';
+
+    if(mode==='edge'){
+      const dx=ex-sX;
+      if(dx>=THRESH){closeNotesBoard()}
+      else{const isMob=window.innerWidth<=640;board.style.transform=isMob?'translateY(0)':'translateX(0)'}
+    } else if(mode==='pull'){
+      const dy=ey-sY;
+      if(dy>=THRESH){closeNotesBoard()}
+      else{board.style.transform='translateY(0)'}
     }
+    mode=null;
   },{passive:true});
+
+  // --- Universal sheet pull-down-to-dismiss ---
+  function initSheetDrag(sheetEl, ovEl, closeFn){
+    let sy=0, dragging=false, moved=false;
+    sheetEl.addEventListener('touchstart',e=>{
+      const t=e.touches[0];
+      // Only start drag from handle area (top 44px) or when scrolled to top
+      const isHandle=t.clientY <= sheetEl.getBoundingClientRect().top+50;
+      const atTop=sheetEl.scrollTop<=0;
+      if(!isHandle && !atTop) return;
+      if(e.target.closest('input,textarea,select,button')) return;
+      sy=t.clientY;dragging=true;moved=false;
+    },{passive:true});
+
+    sheetEl.addEventListener('touchmove',e=>{
+      if(!dragging) return;
+      const dy=e.touches[0].clientY-sy;
+      if(!moved && dy<0){dragging=false;return;} // Only downward
+      if(dy<0) return;
+      moved=true;
+      sheetEl.style.transition='none';
+      sheetEl.style.transform='translateY('+dy+'px)';
+      if(ovEl)ovEl.style.opacity=Math.max(0,1-dy/300);
+    },{passive:true});
+
+    sheetEl.addEventListener('touchend',e=>{
+      if(!dragging||!moved){dragging=false;return;}
+      dragging=false;
+      const dy=e.changedTouches[0].clientY-sy;
+      sheetEl.style.transition='transform .3s cubic-bezier(.32,1,.23,1)';
+      if(ovEl){ovEl.style.transition='opacity .3s';ovEl.style.opacity=''}
+      if(dy>=100){
+        closeFn();
+        // Reset inline styles after animation
+        setTimeout(()=>{sheetEl.style.transform='';sheetEl.style.transition=''},350);
+      } else {
+        sheetEl.style.transform='translateY(0)';
+        setTimeout(()=>{sheetEl.style.transform='';sheetEl.style.transition=''},350);
+      }
+    },{passive:true});
+  }
+
+  // Attach to Settings/Sort/Group sheet
+  const mobSheet=$('#mobSheet'), mobOv=$('#mobSheetOv');
+  if(mobSheet) initSheetDrag(mobSheet, mobOv, closeMobSheet);
+
+  // Attach to Alert sheet
+  const alertSheet=$('#alertSheet'), alertOv=$('#alertOv');
+  if(alertSheet) initSheetDrag(alertSheet, alertOv, closeAlertForm);
 })();
 
 // Composer chips (duration only)
@@ -3610,7 +3676,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=70',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=71',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
