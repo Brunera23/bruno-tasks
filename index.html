@@ -107,7 +107,7 @@
     .assign-avatar{width:26px;height:26px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 5px rgba(0,0,0,.15)}
     .assign-mini{width:16px;height:16px;border-radius:50%;color:#fff;font-size:.5rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:3px}
     .assign-tag{display:flex;align-items:center;gap:0}
-    .proj-dot-nos{width:6px;height:6px;border-radius:50%;background:#FF2D55;display:inline-block;margin-right:5px;flex-shrink:0;vertical-align:middle}
+    .proj-dot-nos{display:none}
 
     /* ===== LAYOUT ===== */
     .shell{display:flex;min-height:100dvh}
@@ -446,8 +446,8 @@
     .ck{flex-shrink:0;width:22px;height:22px;margin-top:1px;border-radius:50%;border:1.8px solid var(--label3);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:border-color var(--dur-norm) var(--ease-spring),background var(--dur-norm) var(--ease-spring),color var(--dur-fast),transform var(--dur-spring) var(--ease-spring),box-shadow var(--dur-norm)}
     .ck:hover{border-color:var(--label2);transform:scale(1.08);box-shadow:0 0 0 4px rgba(52,199,89,.06)}
     .ck.on{border-color:#34C759;background:#34C759;color:#fff;animation:ckBounce var(--dur-spring) var(--ease-spring),ckGlow .8s var(--ease-std)}
-    .ck.doing-st{border-color:#FF9500;border-width:2px;background:transparent;color:transparent}
-    .ck.doing-st::after{content:'';width:8px;height:8px;border-radius:50%;background:#FF9500}
+    .ck.doing-st{border-color:#FF9500;border-width:2px;background:transparent;color:transparent;position:relative}
+    .ck.doing-st::after{content:'';width:8px;height:8px;border-radius:50%;background:#FF9500;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
     @keyframes ckBounce{0%{transform:scale(1)}25%{transform:scale(1.25)}50%{transform:scale(.95)}75%{transform:scale(1.05)}100%{transform:scale(1)}}
     @keyframes ckGlow{0%{box-shadow:0 0 0 0 rgba(52,199,89,.4)}70%{box-shadow:0 0 0 8px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}
     .ck svg{width:11px;height:11px;stroke-width:3}
@@ -3786,7 +3786,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=86',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=87',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
