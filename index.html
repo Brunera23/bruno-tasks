@@ -446,10 +446,8 @@
     .ck{flex-shrink:0;width:22px;height:22px;margin-top:1px;border-radius:50%;border:1.8px solid var(--label3);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:border-color var(--dur-norm) var(--ease-spring),background var(--dur-norm) var(--ease-spring),color var(--dur-fast),transform var(--dur-spring) var(--ease-spring),box-shadow var(--dur-norm)}
     .ck:hover{border-color:var(--label2);transform:scale(1.08);box-shadow:0 0 0 4px rgba(52,199,89,.06)}
     .ck.on{border-color:#34C759;background:#34C759;color:#fff;animation:ckBounce var(--dur-spring) var(--ease-spring),ckGlow .8s var(--ease-std)}
-    .ck.doing-st{border-color:transparent;border-width:2.5px;background:transparent;color:transparent;position:relative}
-    .ck.doing-st::before{content:'';position:absolute;inset:0;border-radius:50%;border:2.5px solid rgba(255,149,0,.2)}
-    .ck.doing-st::after{content:'';position:absolute;inset:0;border-radius:50%;border:2.5px solid transparent;border-top-color:#FF9500;animation:ckSpin 1s linear infinite}
-    @keyframes ckSpin{to{transform:rotate(360deg)}}
+    .ck.doing-st{border-color:#FF9500;border-width:2px;background:transparent;color:transparent}
+    .ck.doing-st::after{content:'';width:10px;height:10px;border-radius:50%;background:#FF9500}
     @keyframes ckBounce{0%{transform:scale(1)}25%{transform:scale(1.25)}50%{transform:scale(.95)}75%{transform:scale(1.05)}100%{transform:scale(1)}}
     @keyframes ckGlow{0%{box-shadow:0 0 0 0 rgba(52,199,89,.4)}70%{box-shadow:0 0 0 8px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}
     .ck svg{width:11px;height:11px;stroke-width:3}
@@ -3788,7 +3786,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=84',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=85',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
