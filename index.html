@@ -3285,12 +3285,17 @@ function nbAddNote(){
   tasks.unshift(note);addLog('create',note);sT();render();
   $('#nbInput').value='';
   nbRender();
+  // Scroll cards to top so the new note is visible
+  const cards=$('#nbCards');
+  if(cards) requestAnimationFrame(()=>cards.scrollTop=0);
   toast('📝 Nota adicionada!');
 }
-// Safari iOS gold standard: use touchend + preventDefault so blur doesn't cancel the tap
+// Safari iOS: touchend fires before blur so the button works with keyboard open.
+// Guard against double-fire (touchend + mousedown both fire on mobile).
 const _nbSend=$('#nbAddBtn');
-_nbSend.addEventListener('touchend',e=>{e.preventDefault();nbAddNote()},{passive:false});
-_nbSend.addEventListener('mousedown',e=>{e.preventDefault();nbAddNote()});
+let _nbTouchFired=false;
+_nbSend.addEventListener('touchend',e=>{e.preventDefault();_nbTouchFired=true;nbAddNote();setTimeout(()=>_nbTouchFired=false,400)},{passive:false});
+_nbSend.addEventListener('click',e=>{if(_nbTouchFired)return;nbAddNote()});
 $('#nbInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();nbAddNote()}});
 // Delete note from board
 function nbDeleteNote(id){
@@ -3605,7 +3610,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=69',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=70',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
