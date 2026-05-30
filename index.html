@@ -764,14 +764,16 @@
     .push-banner-btn{padding:7px 14px;background:linear-gradient(135deg,#FF9500,#FFD60A);border:none;border-radius:20px;color:#fff;font-weight:700;font-size:.72rem;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 2px 8px rgba(255,149,0,.3);flex-shrink:0}
     .push-banner-close{width:24px;height:24px;border-radius:50%;border:none;background:var(--fill);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--label3);font-size:.8rem;flex-shrink:0;line-height:1}
 
-    /* ===== MOBILE NAV — frosted vibrancy ===== */
-    .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(245,245,247,.72);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);padding:6px 0 max(env(safe-area-inset-bottom,6px),6px);z-index:80;transition:background var(--dur-smooth)}
-    [data-theme="dark"] .mob-nav{background:rgba(10,10,10,.72);border-top-color:rgba(255,255,255,.06)}
-    .mob-nav-inner{display:flex;justify-content:space-around}
-    .mob-tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px;border:none;background:transparent;color:var(--label3);font-size:.6rem;font-weight:500;cursor:pointer;font-family:inherit;transition:all var(--dur-fast)}
-    .mob-tab:active{transform:scale(.92);transition-duration:80ms}
-    .mob-tab.active{color:var(--label)}
-    .mob-tab svg{width:20px;height:20px}
+    /* ===== MOBILE TAB BAR — Apple HIG Tab Bar ===== */
+    .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(245,245,247,.8);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid rgba(60,60,67,.16);padding:4px 0 max(env(safe-area-inset-bottom,4px),4px);z-index:80}
+    [data-theme="dark"] .mob-nav{background:rgba(22,22,24,.82);border-top-color:rgba(255,255,255,.08)}
+    .mob-nav-inner{display:flex;justify-content:space-around;align-items:stretch}
+    .mob-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:44px;min-width:56px;padding:4px 12px 2px;border:none;background:transparent;color:rgba(60,60,67,.6);font-size:.62rem;font-weight:500;letter-spacing:.01em;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:color .15s}
+    .mob-tab:active{opacity:.5}
+    .mob-tab.active{color:#007AFF}
+    [data-theme="dark"] .mob-tab{color:rgba(235,235,245,.5)}
+    [data-theme="dark"] .mob-tab.active{color:#0A84FF}
+    .mob-tab svg{width:24px;height:24px}
 
     @media(max-width:768px){
       .sidebar{display:none}.main{padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 110px)}.fab{display:flex}.wk-toggle,.wdg-panel{display:none!important}
@@ -3194,17 +3196,67 @@ $('#aFreq').addEventListener('click',e=>{
 let nbFilter='all',nbDurDays=3;
 
 function openNotesBoard(){
+  const board=$('#notesBoard');
+  board.style.transition='';
+  board.style.transform='';
   $('#notesBoardWrap').classList.add('open');
-  // Do NOT lock body scroll — Safari keyboard breaks when body is locked
-  // The board is its own scroll container
   nbRender();
   setTimeout(()=>$('#nbInput').focus(),400);
 }
 function closeNotesBoard(){
+  const board=$('#notesBoard');
+  board.style.transition='transform .35s cubic-bezier(.32,1,.23,1)';
+  board.style.transform='';
   $('#notesBoardWrap').classList.remove('open');
 }
 $('#nbClose').addEventListener('click',closeNotesBoard);
 $('#notesBoardBd').addEventListener('click',closeNotesBoard);
+
+// ===== iOS-STYLE SWIPE-BACK GESTURE (edge swipe to dismiss) =====
+(function initSwipeBack(){
+  const wrap=$('#notesBoardWrap'), board=$('#notesBoard');
+  let startX=0, startY=0, dragging=false, moved=false;
+  const EDGE=30, THRESHOLD=80;
+
+  board.addEventListener('touchstart',e=>{
+    const t=e.touches[0];
+    if(t.clientX > EDGE) return;
+    startX=t.clientX; startY=t.clientY;
+    dragging=true; moved=false;
+    board.style.transition='none';
+  },{passive:true});
+
+  board.addEventListener('touchmove',e=>{
+    if(!dragging) return;
+    const t=e.touches[0];
+    const dx=t.clientX - startX;
+    const dy=Math.abs(t.clientY - startY);
+    if(!moved && dy > Math.abs(dx)){dragging=false;board.style.transition='';return;}
+    if(dx<0) return;
+    moved=true;
+    const isMobile=window.innerWidth<=640;
+    if(isMobile){
+      const pct=Math.min(dx/window.innerWidth,1);
+      board.style.transform='translateY('+pct*100+'%)';
+    } else {
+      board.style.transform='translateX('+dx+'px)';
+    }
+  },{passive:true});
+
+  board.addEventListener('touchend',e=>{
+    if(!dragging||!moved){dragging=false;return;}
+    dragging=false;
+    const endX=e.changedTouches[0].clientX;
+    const dx=endX - startX;
+    board.style.transition='transform .35s cubic-bezier(.32,1,.23,1)';
+    if(dx >= THRESHOLD){
+      closeNotesBoard();
+    } else {
+      const isMobile=window.innerWidth<=640;
+      board.style.transform=isMobile?'translateY(0)':'translateX(0)';
+    }
+  },{passive:true});
+})();
 
 // Composer chips (duration only)
 $('#nbCompOpts').addEventListener('click',e=>{
@@ -3553,7 +3605,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=68',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=69',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
