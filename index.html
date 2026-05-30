@@ -2,11 +2,11 @@
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="Bruno Tasks — Gerenciador de tarefas pessoal">
   <meta name="theme-color" content="#f2f2f7" id="metaTheme">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <title>Bruno Tasks</title>
@@ -765,7 +765,7 @@
     .push-banner-close{width:24px;height:24px;border-radius:50%;border:none;background:var(--fill);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--label3);font-size:.8rem;flex-shrink:0;line-height:1}
 
     /* ===== MOBILE NAV — frosted vibrancy ===== */
-    .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(245,245,247,.72);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);padding:6px 0 env(safe-area-inset-bottom,6px);z-index:80;transition:background var(--dur-smooth)}
+    .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(245,245,247,.72);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid rgba(0,0,0,.06);padding:6px 0 max(env(safe-area-inset-bottom,6px),6px);z-index:80;transition:background var(--dur-smooth)}
     [data-theme="dark"] .mob-nav{background:rgba(10,10,10,.72);border-top-color:rgba(255,255,255,.06)}
     .mob-nav-inner{display:flex;justify-content:space-around}
     .mob-tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px;border:none;background:transparent;color:var(--label3);font-size:.6rem;font-weight:500;cursor:pointer;font-family:inherit;transition:all var(--dur-fast)}
@@ -774,7 +774,7 @@
     .mob-tab svg{width:20px;height:20px}
 
     @media(max-width:768px){
-      .sidebar{display:none}.main{padding:16px 16px 110px}.fab{display:flex}.wk-toggle,.wdg-panel{display:none!important}
+      .sidebar{display:none}.main{padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 110px)}.fab{display:flex}.wk-toggle,.wdg-panel{display:none!important}
       .mob-nav{display:block}.btn-add{display:none}
       .page-head h1{font-size:1.25rem}.mob-cats{display:flex}
       .dash-grid{grid-template-columns:repeat(2,1fr)}
@@ -943,11 +943,11 @@
     .notes-board-wrap.open{pointer-events:all}
     .notes-board-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);opacity:0;transition:opacity .35s ease}
     .notes-board-wrap.open .notes-board-backdrop{opacity:1}
-    /* Board: overflow-y:auto is required for position:sticky on composer to work */
-    .notes-board{position:absolute;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--bg);display:flex;flex-direction:column;overflow-y:auto;transform:translateX(100%);transition:transform .5s cubic-bezier(.32,1,.23,1);box-shadow:-4px 0 24px rgba(0,0,0,.08)}
+    /* Board: flex column — header + cards(scroll) + composer(fixed bottom). NO overflow on board itself */
+    .notes-board{position:absolute;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--bg);display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);transition:transform .5s cubic-bezier(.32,1,.23,1);box-shadow:-4px 0 24px rgba(0,0,0,.08)}
     .notes-board-wrap.open .notes-board{transform:translateX(0)}
     @media(max-width:640px){
-      .notes-board{top:0;left:0;right:0;bottom:0;width:100%;border-radius:0;transform:translateY(100%)}
+      .notes-board{top:0;left:0;right:0;bottom:0;width:100%;height:100dvh;border-radius:0;transform:translateY(100%)}
       .notes-board-wrap.open .notes-board{transform:translateY(0)}
     }
     /* Header — Apple style clean */
@@ -967,9 +967,8 @@
     .nb-chip.active{background:var(--label);color:var(--bg)}
     .nb-chip:active{transform:scale(.95)}
     /* Cards area */
-    .nb-cards{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 16px 8px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-    /* On mobile: no fixed padding-bottom — composer is sticky so it never overlaps */
-    @media(max-width:640px){.nb-cards{padding-bottom:8px}}
+    /* Cards: the ONLY scrollable region — flex:1 fills remaining space between header & composer */
+    .nb-cards{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 16px 10px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
     /* Cards — clean, minimal, Apple-style */
     .nb-card{border-radius:12px;padding:12px 14px 10px;position:relative;background:var(--card);border:1px solid var(--sep);animation:nbIn .3s ease both;transition:transform .15s,box-shadow .15s}
     .nb-card:active{transform:scale(.985)}
@@ -996,8 +995,8 @@
     .nb-empty-emoji{font-size:2.4rem}
     .nb-empty-title{font-size:.88rem;font-weight:700;color:var(--label)}
     .nb-empty-sub{font-size:.75rem;color:var(--label3);line-height:1.5}
-    /* Bottom composer — sticky so Safari keyboard never covers it */
-    .nb-composer{position:sticky;bottom:0;left:0;right:0;background:rgba(245,245,247,.98);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid var(--sep);padding:8px 16px calc(env(safe-area-inset-bottom,6px) + 6px);flex-shrink:0;display:flex;flex-direction:column;gap:8px;z-index:10}
+    /* Bottom composer — flex-shrink:0 keeps it pinned at the bottom of the flex column */
+    .nb-composer{flex-shrink:0;background:rgba(245,245,247,.98);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:.5px solid var(--sep);padding:8px 16px max(env(safe-area-inset-bottom,8px),20px);display:flex;flex-direction:column;gap:8px;z-index:10}
     [data-theme="dark"] .nb-composer{background:rgba(28,28,30,.98)}
     .nb-comp-row{display:flex;gap:8px;align-items:center}
     .nb-comp-input{flex:1;padding:9px 14px;background:var(--bg);border:1px solid var(--sep);border-radius:18px;font-size:16px;color:var(--label);font-family:inherit;outline:none;transition:border-color .2s;box-sizing:border-box;min-width:0;line-height:1.35;-webkit-appearance:none;appearance:none}
@@ -3554,7 +3553,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=67',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=68',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
