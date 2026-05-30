@@ -898,22 +898,15 @@
     .ms-section-label{font-size:.72rem;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.05em;padding:0 4px 6px;margin-top:4px}
     [data-theme="dark"] .mob-sheet{background:rgba(28,28,30,.98);border-top:.5px solid rgba(255,255,255,.06)}
 
-    /* ===== FAB ACTION MENU ===== */
-    .fab-menu{position:fixed;bottom:90px;right:20px;z-index:100;display:flex;flex-direction:column-reverse;gap:10px;opacity:0;pointer-events:none;transform:translateY(20px);transition:all .3s var(--ease-spring)}
-    .fab-menu.open{opacity:1;pointer-events:all;transform:translateY(0)}
-    .fab-menu-item{display:flex;align-items:center;gap:10px;flex-direction:row-reverse;animation:fabItemIn .3s var(--ease-spring) both}
-    .fab-menu-item:nth-child(1){animation-delay:0ms}
-    .fab-menu-item:nth-child(2){animation-delay:60ms}
-    .fab-menu-item:nth-child(3){animation-delay:120ms}
-    @keyframes fabItemIn{from{opacity:0;transform:translateY(10px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
-    .fab-menu-btn{width:48px;height:48px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.12);transition:transform var(--dur-fast)}
-    .fab-menu-btn:active{transform:scale(.9)}
-    .fab-menu-btn svg{width:20px;height:20px;color:#fff}
-    .fab-menu-btn.fm-task{background:linear-gradient(135deg,#007AFF,#5AC8FA)}
-    .fab-menu-btn.fm-alert{background:linear-gradient(135deg,#FF9500,#FFCC00)}
-    .fab-menu-btn.fm-note{background:linear-gradient(135deg,#34C759,#30D158)}
-    .fab-menu-label{background:var(--card);padding:6px 12px;border-radius:8px;font-size:.76rem;font-weight:600;color:var(--label);box-shadow:0 2px 10px rgba(0,0,0,.08);white-space:nowrap}
-    .fab-menu-ov{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.15);backdrop-filter:blur(4px);display:none}
+    /* ===== FAB ACTION MENU (Apple Context Menu Style) ===== */
+    .fab-menu{position:fixed;bottom:90px;right:20px;z-index:100;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:scale(0.8);transform-origin:bottom right;transition:all .2s cubic-bezier(.16,1,.3,1);background:rgba(250,250,252,.85);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.15);min-width:180px;overflow:hidden;border:.5px solid rgba(0,0,0,.08)}
+    [data-theme="dark"] .fab-menu{background:rgba(30,30,32,.85);border-color:rgba(255,255,255,.1);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+    .fab-menu.open{opacity:1;pointer-events:all;transform:scale(1)}
+    .fab-menu-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;width:100%;border:none;background:transparent;color:var(--label);font-size:.95rem;font-weight:400;cursor:pointer;font-family:inherit;transition:background .1s;-webkit-tap-highlight-color:transparent}
+    .fab-menu-row:active{background:var(--fill)}
+    .fab-menu-row + .fab-menu-row{border-top:.5px solid var(--sep)}
+    .fab-menu-row svg{width:18px;height:18px;color:var(--label);opacity:0.8}
+    .fab-menu-ov{position:fixed;inset:0;z-index:99;display:none}
     .fab-menu-ov.open{display:block}
 
     /* Desktop: alert/note sheets as centered modals */
@@ -923,9 +916,8 @@
       .mob-sheet-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
       .mob-sheet-ov.open{display:block}
       .mob-sheet-handle{display:none}
-      .fab-menu{bottom:auto;right:auto;top:50%;left:50%;transform:translate(-50%,-50%) translateY(20px);flex-direction:column;gap:12px}
-      .fab-menu.open{transform:translate(-50%,-50%) translateY(0)}
-      .fab-menu-item{flex-direction:row;gap:12px}
+      .fab-menu{bottom:auto;right:auto;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);transform-origin:center;flex-direction:column}
+      .fab-menu.open{transform:translate(-50%,-50%) scale(1)}
     }
 
     /* ===== ALERT ITEMS ===== */
@@ -1267,8 +1259,14 @@
 <!-- FAB Action Menu (for Nos project) -->
 <div class="fab-menu-ov" id="fabMenuOv"></div>
 <div class="fab-menu" id="fabMenu">
-  <div class="fab-menu-item"><button class="fab-menu-btn fm-task" id="fmTask"><svg><use href="#i-check"/></svg></button><span class="fab-menu-label">Nova Tarefa</span></div>
-  <div class="fab-menu-item"><button class="fab-menu-btn fm-alert" id="fmAlert"><svg><use href="#i-bell"/></svg></button><span class="fab-menu-label">Novo Alerta</span></div>
+  <button class="fab-menu-row" id="fmTask">
+    <span>Nova Tarefa</span>
+    <svg><use href="#i-check"/></svg>
+  </button>
+  <button class="fab-menu-row" id="fmAlert">
+    <span>Novo Alerta</span>
+    <svg><use href="#i-bell"/></svg>
+  </button>
 </div>
 
 <!-- Quick Alert Form -->
@@ -3556,7 +3554,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=66',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=67',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
