@@ -1949,20 +1949,11 @@ function combineData(){
     const newItems=newTasks.filter(t=>!oldIds.has(t.id));
     const recentCutoff=Date.now()-60000;
     newItems.forEach(t=>{
-      if((t.type==='alert'||t.type==='note')&&t.createdAt>recentCutoff){
-        // For NOTES: assignedTo = who WROTE it (creator)
-        // For ALERTS: assignedTo = who should RECEIVE it (recipient)
-        let iCreatedIt;
-        if(t.type==='note'){
-          iCreatedIt=t.assignedTo===myRole; // I wrote this note
-        }else{
-          iCreatedIt=t.assignedTo!==myRole&&t.assignedTo!=='ambos'; // I set this alert for someone else
-        }
-        if(iCreatedIt) return; // Don't notify yourself
-        // Determine who created it
-        const creatorName=t.type==='note'
-          ?(t.assignedTo==='bruno'?'Bruno':'Clara')
-          :(t.assignedTo==='bruno'?'Clara':'Bruno'); // alert: creator is the OTHER person
+      // Only notify for NOTES here — alerts are handled exclusively by processAlerts()
+      if(t.type==='note'&&t.createdAt>recentCutoff){
+        const iCreatedIt=t.assignedTo===myRole;
+        if(iCreatedIt) return;
+        const creatorName=t.assignedTo==='bruno'?'Bruno':'Clara';
         const ntitle=creatorName+': '+t.title;
         toast(ntitle);
         if(Notification.permission==='granted'){
@@ -3795,7 +3786,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=92',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=93',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -3837,7 +3828,7 @@ function processAlerts(){
         try{
           const n=new Notification(targetName,{
             body:t.title,
-            tag:'alert-'+t.id,
+            tag:t.id,
             renotify:true,
             vibrate:[200,100,200,100,200]
           });
