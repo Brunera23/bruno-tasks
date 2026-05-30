@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bruno-tasks-v79';
+const CACHE_NAME = 'bruno-tasks-v80';
 const ASSETS = ['./index.html'];
 
 self.addEventListener('install', e => {
@@ -26,7 +26,7 @@ self.addEventListener('message', e => {
 
 // ===== PUSH NOTIFICATIONS =====
 self.addEventListener('push', e => {
-  let data = {title: 'Bruno Tasks', body: 'Nova notificação'};
+  let data = {title: 'Bruno Tasks', body: 'Nova atualização'};
   if(e.data) {
     try {
       const payload = e.data.json();

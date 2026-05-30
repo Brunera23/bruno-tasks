@@ -1520,7 +1520,7 @@ async function requestNotifPermission(){
     if(token){
       pushToken=token;
       await savePushToken(token);
-      toast('🔔 Notificações ativadas!');
+      toast('Notificações ativadas');
       return true;
     }
   }catch(err){
@@ -1568,7 +1568,7 @@ if(messaging){
     const {title,body}=payload.notification||{};
     if(title){
       // Show in-app toast
-      toast('🔔 '+title+(body?': '+body:''));
+      toast(title+(body?': '+body:''));
       // Also show native notification if page is visible
       if(Notification.permission==='granted'){
         new Notification(title,{body:body||'',icon:'./manifest-icon.png',badge:'./manifest-icon.png'});
@@ -1928,14 +1928,12 @@ function combineData(){
     const recentCutoff=Date.now()-60000;
     newItems.forEach(t=>{
       if((t.type==='alert'||t.type==='note')&&t.createdAt>recentCutoff){
-        // Only notify if the OTHER person wrote it (not yourself)
-        // assignedTo = who wrote it. So notify when assignedTo !== myRole
         const wroteIt=t.assignedTo===myRole;
-        if(wroteIt) return; // Don't notify yourself
-        // Also notify for "ambos" items only if someone else created them
-        const icon=t.type==='alert'?'🔔':'📝';
-        const ntitle=icon+' Nova '+(t.type==='alert'?'alerta':'nota');
-        toast(ntitle+': '+t.title);
+        if(wroteIt) return;
+        const who=t.assignedTo==='bruno'?'Bruno':'Clara';
+        const label=t.type==='alert'?'Alerta':'Nota';
+        const ntitle=label+' de '+who;
+        toast(ntitle+' — '+t.title);
         if(Notification.permission==='granted'){
           try{
             const n=new Notification(ntitle,{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});
@@ -3187,7 +3185,7 @@ $('#alertForm').addEventListener('submit',e=>{
     createdAt:Date.now(),updatedAt:Date.now()
   };
   tasks.unshift(data);addLog('create',data);sT();closeAlertForm();render();
-  toast('🔔 Alerta agendado para '+time+'!');
+  toast('Alerta agendado para '+time);
 });
 
 // Reminder/Note Form
@@ -3209,7 +3207,7 @@ $('#noteForm').addEventListener('submit',e=>{
   let dur=0;
   if(durChip){const dv=durChip.dataset.days;dur=dv==='custom'?(parseInt($('#nDurDays').value)||0):parseInt(dv)||0}
   const data={id:uid(),type:'note',title:msg,project:getActiveContextProject()||'nos',assignedTo:getPickVal($('#nAssign')),expiresAt:dur>0?Date.now()+dur*86400000:null,status:'todo',category:'social',createdAt:Date.now(),updatedAt:Date.now()};
-  tasks.unshift(data);addLog('create',data);sT();closeNoteForm();render();toast('📝 Lembrete criado!');
+  tasks.unshift(data);addLog('create',data);sT();closeNoteForm();render();toast('Lembrete criado');
 });
 // nDurChips click handler (Outro reveals custom input)
 $('#nDurChips').addEventListener('click',e=>{const c=e.target.closest('.time-chip');if(!c)return;$$('#nDurChips .time-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');$('#nDurCustom').style.display=c.dataset.days==='custom'?'flex':'none'});
@@ -3399,7 +3397,7 @@ function nbAddNote(){
   // Scroll cards to top so the new note is visible
   const cards=$('#nbCards');
   if(cards) requestAnimationFrame(()=>cards.scrollTop=0);
-  toast('📝 Nota adicionada!');
+  toast('Nota adicionada');
 }
 // Safari iOS: touchend fires before blur so the button works with keyboard open.
 // Guard against double-fire (touchend + mousedown both fire on mobile).
@@ -3717,7 +3715,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=79',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=80',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -3754,8 +3752,8 @@ function processAlerts(){
     if(now>=t.nextFireAt){
       // Fire notification!
       const senderName=myRole==='parceira'?'Bruno':'Clara';
-      const title='🔔 Alerta de '+senderName;
-      toast(title+': '+t.title);
+      const title='Alerta de '+senderName;
+      toast(title+' — '+t.title);
       if(Notification.permission==='granted'){
         try{
           const n=new Notification(title,{
