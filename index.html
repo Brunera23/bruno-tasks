@@ -447,7 +447,7 @@
     .ck:hover{border-color:var(--label2);transform:scale(1.08);box-shadow:0 0 0 4px rgba(52,199,89,.06)}
     .ck.on{border-color:#34C759;background:#34C759;color:#fff;animation:ckBounce var(--dur-spring) var(--ease-spring),ckGlow .8s var(--ease-std)}
     .ck.doing-st{border-color:#FF9500;border-width:2px;background:transparent;color:transparent;position:relative}
-    .ck.doing-st::after{content:'';width:9px;height:9px;border-radius:50%;background:#FF9500;position:absolute;top:50%;right:2px;transform:translateY(-50%)}
+    .ck.doing-st::after{content:'';width:9px;height:9px;border-radius:50%;background:#FF9500;position:absolute;top:50%;right:0;transform:translateY(-50%)}
     @keyframes ckBounce{0%{transform:scale(1)}25%{transform:scale(1.25)}50%{transform:scale(.95)}75%{transform:scale(1.05)}100%{transform:scale(1)}}
     @keyframes ckGlow{0%{box-shadow:0 0 0 0 rgba(52,199,89,.4)}70%{box-shadow:0 0 0 8px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}
     .ck svg{width:11px;height:11px;stroke-width:3}
@@ -3795,7 +3795,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=89',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=90',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
