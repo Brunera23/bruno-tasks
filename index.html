@@ -679,7 +679,8 @@
     .dep-chip .dc-rm svg{width:11px;height:11px}
     .fld-row{display:flex;gap:10px}.fld-row .fld{flex:1;min-width:0}
     @media(max-width:480px){.fld-row{flex-direction:column;gap:0}.fld-row .fld{flex:none}}
-    .fld input[type="date"],.fld input[type="time"]{max-width:100%;box-sizing:border-box}
+    .fld input[type="date"],.fld input[type="time"]{max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none;display:block;min-height:44px;color:var(--label)}
+    .fld input[type="date"]::-webkit-date-and-time-value{text-align:left}
     .sub-edit-section{margin-bottom:12px}
     .sub-edit-section>label{display:block;font-size:.7rem;font-weight:600;color:var(--label3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
     .sub-edit-list{display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
@@ -860,7 +861,7 @@
     /* ===== MOBILE BOTTOM SHEET ===== */
     .mob-sheet-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
     .mob-sheet-ov.open{display:block}
-    .mob-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;z-index:201;padding:8px 20px 40px;transform:translateY(100%);transition:transform .35s cubic-bezier(.16,1,.3,1);max-height:70dvh;overflow-y:auto;overflow-x:clip;overscroll-behavior:contain}
+    .mob-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;z-index:201;padding:8px 20px 40px;transform:translateY(100%);transition:transform .35s cubic-bezier(.16,1,.3,1);max-height:88dvh;overflow-y:auto;overflow-x:clip;overscroll-behavior:contain}
     .mob-sheet.open{transform:translateY(0)}
     .mob-sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--sep);margin:0 auto 16px}
     .mob-sheet-title{font-size:1rem;font-weight:700;color:var(--label);margin-bottom:20px;text-align:center}
@@ -987,6 +988,14 @@
     .nb-empty-title{font-size:1rem;font-weight:700;color:var(--label)}
     .nb-empty-sub{font-size:.8rem;color:var(--label3);line-height:1.5}
     .nb-count-badge{font-size:.62rem;background:rgba(255,45,85,.12);color:#FF2D55;padding:2px 7px;border-radius:10px;font-weight:700;margin-left:6px;vertical-align:middle}
+    /* Keyword magic effects */
+    .nbk-love{color:#FF2D55;font-weight:700;position:relative;display:inline}
+    .nbk-heart{font-size:.7rem;color:#FF2D55;animation:nbHeartPop .5s var(--ease-spring) both;display:inline-block;margin-left:1px}
+    @keyframes nbHeartPop{0%{opacity:0;transform:scale(0)}70%{transform:scale(1.4)}100%{opacity:1;transform:scale(1)}}
+    .nbk-saudade{color:#AF52DE;font-weight:600;font-style:italic}
+    .nbk-thanks{color:#FF9500;font-weight:600}
+    .nbk-celebrate{color:#FF9F0A;font-weight:700}
+    .nbk-kiss{color:#FF6482;font-weight:600}
     /* ===== SMART SUGGEST AUTOCOMPLETE ===== */
     .smart-suggest{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow2);z-index:50;padding:4px;margin-top:4px;display:none}
     .smart-suggest.show{display:block}
@@ -1075,6 +1084,7 @@
       <div class="nav-label">Menu</div>
       <button class="nav-item active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas<span class="nav-badge" id="navBadge">0</span></button>
       <button class="nav-item" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
+      <button class="nav-item" id="sideNotes" style="color:#FF2D55"><svg style="color:#FF2D55"><use href="#i-edit"/></svg>Quadro de Notas <span style="font-size:.6rem;background:rgba(255,45,85,.1);color:#FF2D55;padding:1px 5px;border-radius:6px;font-weight:700;vertical-align:middle">Nós</span></button>
     </div>
     <div class="sidebar-projects">
       <div class="nav-label">Projetos<button class="nav-label-btn" id="addProjBtn" title="Novo Projeto"><svg><use href="#i-plus"/></svg></button></div>
@@ -1160,6 +1170,7 @@
 <nav class="mob-nav"><div class="mob-nav-inner">
   <button class="mob-tab active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas</button>
   <button class="mob-tab" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
+  <button class="mob-tab" id="mobNotes"><svg><use href="#i-edit"/></svg>Quadro</button>
   <button class="mob-tab" id="mobCatMgr"><svg><use href="#i-settings"/></svg>Mais</button>
 </div></nav>
 
@@ -1212,7 +1223,6 @@
 <div class="fab-menu" id="fabMenu">
   <div class="fab-menu-item"><button class="fab-menu-btn fm-task" id="fmTask"><svg><use href="#i-check"/></svg></button><span class="fab-menu-label">Nova Tarefa</span></div>
   <div class="fab-menu-item"><button class="fab-menu-btn fm-alert" id="fmAlert"><svg><use href="#i-bell"/></svg></button><span class="fab-menu-label">Novo Alerta</span></div>
-  <div class="fab-menu-item"><button class="fab-menu-btn fm-note" id="fmNote" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg><use href="#i-edit"/></svg></button><span class="fab-menu-label">Quadro de Notas</span></div>
 </div>
 
 <!-- Quick Alert Form -->
@@ -1293,7 +1303,7 @@
     </div>
     <div class="fld-row"><div class="fld"><label>Qual a urgência?</label><div class="pick-seg" id="fP"><button type="button" data-v="alta"><span class="pick-dot" style="background:#FF3B30"></span>Alta</button><button type="button" data-v="media" class="active"><span class="pick-dot" style="background:#FF9500"></span>Média</button><button type="button" data-v="baixa"><span class="pick-dot" style="background:#34C759"></span>Baixa</button></div></div><div class="fld"><label>Em que pé está?</label><div class="pick-seg" id="fS"><button type="button" data-v="todo" class="active">A Fazer</button><button type="button" data-v="doing">Fazendo</button><button type="button" data-v="done">Feita</button></div></div></div>
     <div class="fld"><label>Até quando?</label><input type="date" id="fD"><div class="adv-field" style="position:relative"><button type="button" class="recur-btn" id="recurBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg><span id="recurLabel">Repetir</span></button><div class="recur-pop" id="recurPop"><div class="recur-freq" id="recurFreq"><button type="button" data-rf="daily">Diário</button><button type="button" data-rf="weekdays">Dias úteis</button><button type="button" data-rf="weekly">Semanal</button><button type="button" data-rf="monthly">Mensal</button><button type="button" data-rf="">Nenhum</button></div><div class="recur-until"><span>Até:</span><input type="date" id="recurUntil"></div></div></div></div>
-    <div class="fld"><label>Tempo estimado</label><div class="time-chips" id="timeChips"><button type="button" class="time-chip" data-min="15">15min</button><button type="button" class="time-chip" data-min="30">30min</button><button type="button" class="time-chip" data-min="60">1h</button><button type="button" class="time-chip" data-min="120">2h</button><button type="button" class="time-chip" data-min="240">4h</button><button type="button" class="time-chip" data-min="custom">Outro</button></div><div class="time-custom-wrap" id="timeCustom"><input type="number" id="fET" min="1" max="960" placeholder="90"><span>minutos</span></div></div>
+    <div class="fld"><label>Tempo estimado</label><div class="time-chips" id="timeChips"><button type="button" class="time-chip" data-min="5">5min</button><button type="button" class="time-chip" data-min="15">15min</button><button type="button" class="time-chip" data-min="30">30min</button><button type="button" class="time-chip" data-min="60">1h</button><button type="button" class="time-chip" data-min="120">2h</button><button type="button" class="time-chip" data-min="240">4h</button><button type="button" class="time-chip" data-min="custom">Outro</button></div><div class="time-custom-wrap" id="timeCustom"><input type="number" id="fET" min="1" max="960" placeholder="90"><span>minutos</span></div></div>
     <div class="sub-edit-section adv-field"><label>Subtarefas</label><div class="sub-edit-list" id="subList"></div><button type="button" class="add-sub-btn" id="addSub"><svg width="13" height="13"><use href="#i-plus"/></svg>Adicionar subtarefa</button></div>
     <div class="fld adv-field"><label>Depende de</label><div class="dep-picker" id="depPicker"><input type="text" class="dep-search" id="depSearch" placeholder="Buscar tarefa..." autocomplete="off"><div class="dep-results" id="depResults"></div></div><div class="dep-chips" id="depChips"></div></div>
     <div class="fld adv-field"><label>Notas</label><textarea id="fN" placeholder="Detalhes, links, anotações..."></textarea></div>
@@ -2682,8 +2692,8 @@ function openM(task){
   $('#fN').value=e?(task.notes||''):'';
   mSubs=e?(task.subtasks||[]).map(s=>({...s})):[];
   mDeps=e?(task.blockedBy||[]).filter(id=>tasks.some(x=>x.id===id)):[];
-  const et=e?(task.estimatedTime||0):0;
-  if(et&&[15,30,60,120,240].includes(et)){setTimeChip(et)}
+  const et=e?(task.estimatedTime||0):(fFormProj==='nos'?5:0);
+  if(et&&[5,15,30,60,120,240].includes(et)){setTimeChip(et)}
   else if(et){$('#fET').value=et;setTimeChip('custom')}
   else{setTimeChip(null);$('#fET').value=''}
   // Recurrence state
@@ -3014,6 +3024,34 @@ function nbDeleteNote(id){
   tasks=tasks.filter(t=>t.id!==id);addLog('delete',{id});sT();render();nbRender();
 }
 // Render board
+// Keyword magic for Notes Board
+function nbMagicText(raw){
+  // Escape first so we don't inject HTML from the raw text
+  let t=escapeHtml(raw);
+  // Define keyword rules (case-insensitive), most specific first
+  const rules=[
+    // "te amo" / "te amo muito" / "amo você" — rose + floating hearts
+    {re:/\b(te\s+amo(?:\s+muito)?|amo\s+voc[eê]|amor(?:\s+da\s+minha\s+vida)?)\b/gi,
+     fn:m=>`<span class="nbk-love">${m}<span class="nbk-heart" aria-hidden="true">♥</span></span>`},
+    // "saudade" — soft purple/lilac
+    {re:/\b(saudade(?:s)?)\b/gi,
+     fn:m=>`<span class="nbk-saudade">${m}</span>`},
+    // "obrigad" — warm amber
+    {re:/\b(obrigad[ao]s?)\b/gi,
+     fn:m=>`<span class="nbk-thanks">${m}</span>`},
+    // "parabéns" / "feliz aniversário" — golden confetti feel
+    {re:/\b(parab[ée]ns|feliz\s+anivers[áa]rio)\b/gi,
+     fn:m=>`<span class="nbk-celebrate">${m} 🎉</span>`},
+    // "beijo" / "beijos" — light pink
+    {re:/\b(beijos?)\b/gi,
+     fn:m=>`<span class="nbk-kiss">${m}</span>`},
+    // "sinto falta" — gentle blue
+    {re:/\b(sinto\s+falta)\b/gi,
+     fn:m=>`<span class="nbk-saudade">${m}</span>`},
+  ];
+  rules.forEach(r=>{t=t.replace(r.re,r.fn)});
+  return t;
+}
 function nbRender(){
   const notes=tasks.filter(t=>t.type==='note'&&t.project==='nos'&&(t.expiresAt===null||t.expiresAt>Date.now()));
   const filtered=nbFilter==='all'?notes:notes.filter(n=>n.assignedTo===nbFilter);
@@ -3045,12 +3083,18 @@ function nbRender(){
           <button class="nb-del-btn" onclick="nbDeleteNote('${n.id}')" title="Apagar"><svg><use href="#i-trash"/></svg></button>
         </div>
       </div>
-      <div class="nb-text">${escapeHtml(n.title)}</div>
+      <div class="nb-text">${nbMagicText(n.title)}</div>
       <div class="nb-footer">${expHtml}<span class="nb-expire">${relTime(n.createdAt)}</span></div>
     </div>`;
   }).join('');
 }
+// Nav handlers for Notes Board
+const _mobNotes=$('#mobNotes');if(_mobNotes)_mobNotes.addEventListener('click',openNotesBoard);
+const _sideNotes=$('#sideNotes');if(_sideNotes)_sideNotes.addEventListener('click',openNotesBoard);
+// Guard removed fmNote reference
+const _fmNote=$('#fmNote');if(_fmNote)_fmNote.addEventListener('click',()=>{closeFabMenu();openNotesBoard()});
 // Also open board from settings sheet
+
 $('#addSub').addEventListener('click',()=>{mSubs.push({text:'',done:false});renderMSubs();const ins=$$('#subList input');if(ins.length)ins[ins.length-1].focus()});
 $('#recurBtn').addEventListener('click',()=>{$('#recurPop').classList.toggle('show')});
 $('#recurFreq').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#recurFreq button').forEach(x=>x.classList.remove('active'));if(b.dataset.rf){b.classList.add('active');$('#recurBtn').classList.add('active');$('#recurLabel').textContent=b.textContent}else{$('#recurBtn').classList.remove('active');$('#recurLabel').textContent='Repetir'}$('#recurPop').classList.remove('show')});
@@ -3270,7 +3314,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=55',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=56',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
