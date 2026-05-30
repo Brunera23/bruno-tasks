@@ -1041,6 +1041,16 @@
     @keyframes nbPulse{0%,100%{opacity:1}50%{opacity:.6}}
     .nbk-travel{color:#007AFF;font-weight:600}
     .nbk-sorry{color:#AF52DE;font-weight:500}
+    /* Family keyword effects */
+    .nbk-family{color:#34C759;font-weight:600}
+    .nbk-mama{color:#FF6482;font-weight:700}
+    .nbk-papa{color:#007AFF;font-weight:700}
+    .nbk-vovo{color:#AF52DE;font-weight:600;font-style:italic}
+    /* Bernardo / Ber — SPECIAL rainbow animated */
+    .nbk-ber{font-weight:800;background:linear-gradient(90deg,#FF2D55,#FF9500,#FFD60A,#34C759,#007AFF,#AF52DE,#FF2D55);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:nbRainbow 3s linear infinite;display:inline;position:relative}
+    @keyframes nbRainbow{to{background-position:200% center}}
+    .nbk-ber-emoji{display:inline-block;animation:nbBounce 1s ease-in-out infinite;font-style:normal;margin-left:2px}
+    @keyframes nbBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
     /* ===== SMART SUGGEST AUTOCOMPLETE ===== */
     .smart-suggest{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow2);z-index:50;padding:4px;margin-top:4px;display:none}
     .smart-suggest.show{display:block}
@@ -1236,7 +1246,6 @@
       <button class="nb-chip active" data-nbf="all">Todas</button>
       <button class="nb-chip" data-nbf="bruno">Bruno</button>
       <button class="nb-chip" data-nbf="parceira">Clara</button>
-      <button class="nb-chip" data-nbf="ambos">Ambos</button>
     </div>
     <div class="nb-cards" id="nbCards"></div>
     <!-- Bottom composer -->
@@ -3405,6 +3414,27 @@ function nbMagicText(raw){
     // Raiva — humor\u00edstico: texto riscado + vermelho
     {re:/\b((?:que\s+)?raiva|odeio|estress(?:e|ada|ado)|irrita(?:da|do)?)\b/gi,
      fn:m=>`<span class="nbk-rage">${m}</span>`},
+    // ===== FAMILY EFFECTS =====
+    // Bernardo / Ber — RAINBOW SPECIAL (must be before generic family)
+    {re:/\b(Bernardo|Bernardinho)\b/gi,
+     fn:m=>`<span class="nbk-ber">${m}</span><span class="nbk-ber-emoji">👶✨</span>`},
+    {re:/\b(Ber(?:zinho)?)\b/gi,
+     fn:m=>`<span class="nbk-ber">${m}</span><span class="nbk-ber-emoji">👶💫</span>`},
+    // Mãe / Mamãe
+    {re:/\b(m[aã]e|mam[aã]e|mainha)\b/gi,
+     fn:m=>`<span class="nbk-mama">${m} 👩‍👦</span>`},
+    // Pai / Papai
+    {re:/\b(pai|papai|painho)\b/gi,
+     fn:m=>`<span class="nbk-papa">${m} 👨‍👦</span>`},
+    // Filho / Filha / Bebê
+    {re:/\b(filh[oa]|filhinho|filhinha|beb[eê]|nen[eê]|neném)\b/gi,
+     fn:m=>`<span class="nbk-family">${m} 🍼</span>`},
+    // Avó / Vó / Avô / Vô
+    {re:/\b(av[oó]|v[oó]|vovó|vovô|av[oô])\b/gi,
+     fn:m=>`<span class="nbk-vovo">${m} 👴👵</span>`},
+    // Família
+    {re:/\b(fam[ií]lia)\b/gi,
+     fn:m=>`<span class="nbk-family">${m} 👨‍👩‍👦</span>`},
     // Alegria — dourado brilhante
     {re:/\b((?:que\s+)?alegria|feliz(?:idade)?|happy|animad[ao])\b/gi,
      fn:m=>`<span class="nbk-joy">${m} \ud83c\udf1f</span>`},
@@ -3694,7 +3724,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=75',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=76',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
