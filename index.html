@@ -351,10 +351,18 @@
     /* ===== TOOLBAR ===== */
     .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
     .search-box{flex:1;min-width:180px;position:relative}
-    .search-box input{width:100%;padding:10px 14px 10px 36px;background:var(--card);border:1px solid var(--sep);border-radius:10px;color:var(--label);font-family:inherit;font-size:.86rem;outline:none;transition:all var(--dur-fast) var(--ease-std);box-shadow:var(--shadow)}
+    .search-box input{width:100%;padding:10px 38px 10px 36px;background:var(--card);border:1px solid var(--sep);border-radius:10px;color:var(--label);font-family:inherit;font-size:.86rem;outline:none;transition:all var(--dur-fast) var(--ease-std);box-shadow:var(--shadow)}
     .search-box input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.1)}
     .search-box input::placeholder{color:var(--label3)}
     .search-box .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--label3)}
+    .search-filter-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:6px;background:transparent;border:none;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur-fast)}
+    .search-filter-btn:hover{background:var(--fill);color:var(--label)}
+    .search-filter-btn svg{width:16px;height:16px}
+    .qf-pop{position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;z-index:100;opacity:0;pointer-events:none;transform:translateY(-4px);transition:all var(--dur-fast) var(--ease-std);min-width:160px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+    .qf-pop.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+    .qf-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:0.8rem;font-weight:500;color:var(--label);border-radius:8px;cursor:pointer;transition:background var(--dur-fast)}
+    .qf-opt:hover{background:var(--fill)}
+    .qf-opt svg{width:14px;height:14px;color:var(--label3)}
     .seg{display:flex;background:var(--fill);border-radius:10px;padding:3px}
     .seg button{padding:7px 13px;font-size:.76rem;font-weight:500;color:var(--label2);background:transparent;border:none;border-radius:8px;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;white-space:nowrap}
     .seg button.active{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -1204,7 +1212,20 @@
       <div class="mob-proj-bar" id="mobProjs" style="display:none"></div>
       <div class="mob-cats" id="mobCats"></div>
       <div class="toolbar">
-        <div class="search-box"><svg class="si"><use href="#i-search"/></svg><input type="text" id="q" placeholder="Buscar ou filtrar (hoje, alta, atrasada...)" autocomplete="off"><div class="smart-suggest" id="smartSuggest"></div></div>
+        <div class="search-box">
+          <svg class="si"><use href="#i-search"/></svg>
+          <input type="text" id="q" placeholder="Buscar ou filtrar (hoje, alta, atrasada...)" autocomplete="off">
+          <button class="search-filter-btn" onclick="toggleQF(event)" title="Filtros rápidos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+          </button>
+          <div class="qf-pop" id="qfPop">
+            <div class="qf-opt" onclick="setQF('hoje')"><svg><use href="#i-cal"/></svg>Hoje</div>
+            <div class="qf-opt" onclick="setQF('amanhã')"><svg><use href="#i-cal"/></svg>Amanhã</div>
+            <div class="qf-opt" onclick="setQF('atrasada')"><svg><use href="#i-clock"/></svg>Atrasadas</div>
+            <div class="qf-opt" onclick="setQF('alta')"><svg><use href="#i-flag"/></svg>Alta Prioridade</div>
+          </div>
+          <div class="smart-suggest" id="smartSuggest"></div>
+        </div>
         <div class="seg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="done">Feitas</button></div>
         <button class="btn-add" id="btnAdd"><svg><use href="#i-plus"/></svg>Nova tarefa</button>
       </div>
@@ -2299,6 +2320,9 @@ function showSmartSuggest(q){
   box.classList.add('show');
 }
 function hideSmartSuggest(){setTimeout(()=>{$('#smartSuggest').classList.remove('show');$('#smartSuggest').innerHTML=''},150)}
+function toggleQF(e){e.stopPropagation();$('#qfPop').classList.toggle('show')}
+function setQF(v){$('#q').value=v;$('#q').dispatchEvent(new Event('input',{bubbles:true}));$('#qfPop').classList.remove('show');window.scrollTo({top:0,behavior:'smooth'})}
+document.addEventListener('click', e => { if(!e.target.closest('#qfPop') && !e.target.closest('.search-filter-btn')) $('#qfPop')?.classList.remove('show'); });
 function renderTasks(){
   let list=getVisibleTasks().filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'&&t.status!==aSt)return false;if(qry){if(!smartFilter(t,qry))return false}return true});
   // Widget filter
@@ -3816,7 +3840,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=98',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=99',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
