@@ -1715,7 +1715,7 @@ auth.onAuthStateChanged(user=>{
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
 let _fbSynced=false; // true after first successful Firestore sync
 const _ui=ld('bt-ui',{});
-let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null;
+let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',dashProj='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null;
 
 // ===== PROJECT SYSTEM =====
 const DEF_PROJECTS=[
@@ -2903,34 +2903,36 @@ function renderDashFilter(){
   // Project pills (same as task list)
   let ph='';
   if(projects.length>1){
-    const allVis=projects.every(p=>p.visible);
-    ph+=`<button class="df-chip ${allVis?'active':''}" data-dp="all">Todos</button>`;
+    ph+=`<button class="df-chip ${dashProj==='all'?'active':''}" data-dp="all">Todos</button>`;
     projects.forEach(p=>{
-      const isActive=p.visible&&!allVis;
-      ph+=`<button class="df-chip ${isActive?'active':''}" data-dp="${p.id}"><svg style="width:12px;height:12px"><use href="#${p.icon||'i-layers'}"/></svg>${escapeHtml(p.name)}</button>`;
+      ph+=`<button class="df-chip ${dashProj===p.id?'active':''}" data-dp="${p.id}"><svg style="width:12px;height:12px"><use href="#${p.icon||'i-layers'}"/></svg>${escapeHtml(p.name)}</button>`;
     });
     ph+='<span style="width:1px;height:20px;background:var(--sep);flex-shrink:0;margin:0 4px"></span>';
   }
   // Category pills
   let h=`<button class="df-chip ${dashCat==='all'?'active':''}" data-dc="all">Todas</button>`;
-  const activeCats=getCatsForVisibleProjects();
+  const activeCats=getCatsForDash();
   activeCats.forEach(c=>{h+=`<button class="df-chip ${dashCat===c.id?'active':''}" data-dc="${c.id}"><span class="df-dot" style="background:${c.color}"></span>${c.name}</button>`});
   $('#dashFilter').innerHTML=ph+h;
 }
-function getCatsForVisibleProjects(){
-  const visProjs=projects.filter(p=>p.visible).map(p=>p.id);
-  const hasBruno=visProjs.some(id=>id==='bruno'||projects.find(p=>p.id===id&&p.type!=='shared'));
-  const hasShared=visProjs.some(id=>id==='nos'||projects.find(p=>p.id===id&&p.type==='shared'));
+function getCatsForDash(){
+  if(dashProj!=='all') return getCatsForProject(dashProj);
   let result=[];
-  if(hasBruno)result=result.concat(cats);
-  if(hasShared)result=result.concat(NOS_CATS.filter(c=>!result.some(r=>r.id===c.id)));
+  projects.forEach(p=>{
+    getCatsForProject(p.id).forEach(c=>{if(!result.some(r=>r.id===c.id))result.push(c)});
+  });
   return result.length?result:cats;
+}
+function getDashTasks(){
+  let list=tasks.filter(t=>t.type!=='note');
+  if(dashProj!=='all') list=list.filter(t=>(t.project||'bruno')===dashProj);
+  return list;
 }
 
 function renderDash(){
   renderDashFilter();
-  const visTasks=getVisibleTasks();
-  const ft=dashCat==='all'?visTasks:visTasks.filter(t=>t.category===dashCat);
+  const dTasks=getDashTasks();
+  const ft=dashCat==='all'?dTasks:dTasks.filter(t=>t.category===dashCat);
   const fl=dashCat==='all'?log:log.filter(l=>l.category===dashCat);
   const total=ft.length;const done=ft.filter(t=>t.status==='done').length;
   const overdue=ft.filter(t=>isOD(t.date)&&t.status!=='done').length;const pct=total?Math.round(done/total*100):0;
@@ -3733,7 +3735,7 @@ $('#mobCatMgr').addEventListener('click',()=>{
   openMobSettings();
 });
 $('#dashFilter').addEventListener('click',e=>{const c=e.target.closest('.df-chip');if(!c)return;
-  if(c.dataset.dp){const dp=c.dataset.dp;if(dp==='all'){projects.forEach(p=>p.visible=true)}else{projects.forEach(p=>p.visible=(p.id===dp))}saveUI();dashCat='all';renderDash();renderProjNav();return}
+  if(c.dataset.dp){dashProj=c.dataset.dp;dashCat='all';renderDash();return}
   if(c.dataset.dc){dashCat=c.dataset.dc;renderDash()}
 });
 $('#wkToggle').addEventListener('click',()=>{const p=$('#wdgPanel'),t=$('#wkToggle'),m=$('.main');p.classList.toggle('open');t.classList.toggle('open');m.classList.toggle('wdg-open',p.classList.contains('open'))});
@@ -3882,7 +3884,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=102',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=103',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
