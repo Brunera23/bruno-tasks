@@ -2329,7 +2329,14 @@ function hideSmartSuggest(){setTimeout(()=>{$('#smartSuggest').classList.remove(
 function toggleQF(e){e.stopPropagation();$('#qfPop').classList.toggle('show')}
 function setQF(v){$('#q').value=v;$('#q').dispatchEvent(new Event('input',{bubbles:true}));$('#qfPop').classList.remove('show');window.scrollTo({top:0,behavior:'smooth'})}
 document.addEventListener('click', e => { if(!e.target.closest('#qfPop') && !e.target.closest('.search-filter-btn')) $('#qfPop')?.classList.remove('show'); });
-function clearAllFilters(){$('#q').value='';qry='';aSt='all';aCat='all';widgetFilter='';saveUI();render()}
+function clearAllFilters(){
+  $('#q').value='';qry='';aSt='all';aCat='all';widgetFilter=null;
+  saveUI();
+  $$('.seg button').forEach(x=>x.classList.toggle('active',x.dataset.s==='all'));
+  $$('#mobCats .m-chip').forEach(x=>x.classList.toggle('active',x.dataset.c==='all'));
+  $$('.cat-nav-item').forEach(x=>x.classList.toggle('active',x.dataset.c==='all'));
+  render();
+}
 function renderTasks(){
   const filterActive=!!qry||aSt!=='all'||aCat!=='all'||!!widgetFilter;
   const scBtn=$('#searchClearBtn');if(scBtn)scBtn.style.display=filterActive?'flex':'none';
@@ -3849,7 +3856,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=99',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=100',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
