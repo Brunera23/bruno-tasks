@@ -2780,13 +2780,34 @@ function renderHabitsWidget(){
     });
     const freq=instances[0]?.recurrence?.freq;
     const freqLabel={daily:'Diário',weekdays:'Dias úteis',weekly:'Semanal',monthly:'Mensal'}[freq]||'';
-    full+=`<div class="habit-row">
-      <div class="habit-head">
-        <span class="habit-name">${name}</span>
-        <span class="recur-tag">${freqLabel}</span>
-      </div>
-      <div class="habit-dots">${dots}</div>
-    </div>`;
+    
+    if (freq === 'monthly' || freq === 'weekly') {
+      const pendingInst = instances.filter(t => t.status !== 'done').sort((a,b) => (a.date||'') > (b.date||'') ? 1 : -1)[0];
+      const doneInst = instances.filter(t => t.status === 'done' && t.completedAt).sort((a,b) => b.completedAt - a.completedAt)[0];
+      
+      let infoHtml = '';
+      if (pendingInst) {
+        infoHtml = `<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--label3);font-weight:600;padding:4px 0;"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> A fazer (até ${fDate(pendingInst.date)})</div>`;
+      } else if (doneInst) {
+        infoHtml = `<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#34C759;font-weight:600;padding:4px 0;"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Concluído: ${fDate(dateStr(new Date(doneInst.completedAt)))}</div>`;
+      }
+
+      full+=`<div class="habit-row">
+        <div class="habit-head">
+          <span class="habit-name">${name}</span>
+          <span class="recur-tag" style="background:var(--fill);color:var(--label2)">${freqLabel}</span>
+        </div>
+        <div class="habit-dots" style="justify-content:flex-start">${infoHtml}</div>
+      </div>`;
+    } else {
+      full+=`<div class="habit-row">
+        <div class="habit-head">
+          <span class="habit-name">${name}</span>
+          <span class="recur-tag">${freqLabel}</span>
+        </div>
+        <div class="habit-dots">${dots}</div>
+      </div>`;
+    }
   });
   full+='</div>';
   const pct=totalPossible?Math.round(totalDone/totalPossible*100):0;
@@ -3793,7 +3814,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=96',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=97',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
