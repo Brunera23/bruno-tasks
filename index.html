@@ -1154,6 +1154,7 @@
   <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></symbol>
   <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
   <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-6H7L5 12z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M3 17h2M19 17h2"/></symbol>
+  <symbol id="i-pill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5l-6-6a4.95 4.95 0 117-7l6 6a4.95 4.95 0 11-7 7z"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></symbol>
 </svg>
 
 <!-- LOGIN SCREEN -->
@@ -1181,6 +1182,7 @@
       <div class="nav-label">Menu</div>
       <button class="nav-item active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas<span class="nav-badge" id="navBadge">0</span></button>
       <button class="nav-item" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
+      <button class="nav-item" data-view="med"><svg><use href="#i-pill"/></svg>Saúde</button>
       <button class="nav-item" id="sideNotes"><svg><use href="#i-edit"/></svg>Quadro de Notas</button>
     </div>
     <div class="sidebar-projects">
@@ -1274,6 +1276,18 @@
       </div>
       <div class="dash-section"><h2>Atividade recente</h2><div class="feed" id="feedList"></div></div>
     </div>
+    <div class="med" id="medView">
+      <div class="page-head"><div class="page-head-left"><div class="greeting">Saúde & Bem-Estar</div><h1>Med View</h1></div></div>
+      <div class="med-grid">
+        <div class="med-col">
+          <div class="dash-section" style="margin-bottom:0"><h2>Cronograma de Remédios</h2><div class="med-timeline" id="medSchedule"></div></div>
+        </div>
+        <div class="med-col">
+          <div class="dash-section"><h2>Próximas Consultas</h2><div id="medAppointments"></div></div>
+          <div class="dash-section"><h2>Exames Pendentes</h2><div id="medExams"></div></div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <button class="wk-toggle" id="wkToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Widgets</button>
@@ -1283,6 +1297,7 @@
 <nav class="mob-nav"><div class="mob-nav-inner">
   <button class="mob-tab active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas</button>
   <button class="mob-tab" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
+  <button class="mob-tab" data-view="med"><svg><use href="#i-pill"/></svg>Saúde</button>
   <button class="mob-tab" id="mobNotes"><svg><use href="#i-edit"/></svg>Quadro</button>
   <button class="mob-tab" id="mobCatMgr"><svg><use href="#i-settings"/></svg>Mais</button>
 </div></nav>
@@ -2129,8 +2144,8 @@ function setGreeting(){
 }
 
 function switchView(v){
-  const apply=()=>{curView=v;saveUI();$('#tasksView').classList.toggle('active',v==='tasks');$('#dashView').classList.toggle('active',v==='dash');$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));$$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));if(v==='dash')renderDash()};
-  if(document.startViewTransition){document.startViewTransition(apply)}else{apply()}
+  const apply=()=>{curView=v;saveUI();$('#tasksView').classList.toggle('active',v==='tasks');$('#dashView').classList.toggle('active',v==='dash');$('#medView').classList.toggle('active',v==='med');$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));$$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));if(v==='dash')renderDash();if(v==='med')renderMedView()};
+  if(v==='tasks'&&$('#fmWrap').classList.contains('open')){$('#fmWrap').classList.remove('open');setTimeout(apply,300)}else if(document.startViewTransition){document.startViewTransition(apply)}else{apply()}
 }
 
 function getActiveContextProject() {
@@ -2897,7 +2912,7 @@ function toggleAlertBar(){
   if(bar) bar.classList.toggle('open',_alertBarOpen);
 }
 
-function render(){renderProjNav();renderCatNav();renderTasks();renderWidgets();if(curView==='dash')renderDash()}
+function render(){renderProjNav();renderCatNav();renderTasks();renderWidgets();if(curView==='dash')renderDash();if(curView==='med')renderMedView()}
 
 function renderDashFilter(){
   // Project pills (same as task list)
@@ -3006,6 +3021,86 @@ function renderDash(){
   const feed=fl.slice(0,25);const tc={create:'#007AFF',complete:'#34C759',reopen:'#FF9500',edit:'#AF52DE',delete:'#FF3B30'};const tl={create:'criou',complete:'concluiu',reopen:'reabriu',edit:'editou',delete:'excluiu'};
   $('#feedList').innerHTML=feed.length?feed.map(f=>`<div class="feed-item"><div class="feed-dot" style="background:${tc[f.type]||'#8E8E93'}"></div><div class="feed-text">Você ${tl[f.type]||f.type} <strong>${f.title}</strong></div><div class="feed-time">${relTime(f.ts)}</div></div>`).join(''):'<div class="task-empty" style="padding:28px"><p>Nenhuma atividade</p></div>';
 }
+
+function renderMedView(){
+  const medProj = projects.find(p => p.name.trim().toLowerCase() === 'med' || p.id === 'med');
+  const medProjId = medProj ? medProj.id : 'med';
+  let mTasks = tasks.filter(t => t.type !== 'note' && (t.project || 'bruno') === medProjId);
+  mTasks.sort((a,b) => {
+    if(a.status==='done' && b.status!=='done') return 1;
+    if(a.status!=='done' && b.status==='done') return -1;
+    return new Date(a.date||0) - new Date(b.date||0);
+  });
+  
+  const isMed = t => t.category.match(/rem|medica/i) || t.title.match(/tomar|gotas|comprim|mg|ml/i);
+  const isCon = t => t.category.match(/consult|medic/i) || t.title.match(/consulta|dr\.|dra\./i);
+  const isExm = t => t.category.match(/exam/i) || t.title.match(/exame|sangue|ultrassom|raio/i);
+
+  const meds = mTasks.filter(t => isMed(t));
+  const cons = mTasks.filter(t => isCon(t) && !isMed(t));
+  const exms = mTasks.filter(t => isExm(t) && !isMed(t) && !isCon(t));
+  
+  const todayStr = dateStr(new Date());
+  const todayMeds = meds.filter(t => t.date === todayStr || (t.recurrence && t.recurrence.freq) || (!t.date && t.status!=='done') || (isOD(t.date)&&t.status!=='done') || t.status==='done');
+  
+  let medsHtml = '';
+  if(todayMeds.length === 0){
+    medsHtml = '<div class="med-empty">Nenhum remédio para hoje.</div>';
+  } else {
+    const m={man:[], tar:[], noi:[], out:[]};
+    todayMeds.forEach(t=>{
+      const str = (t.title+' '+(t.notes||'')).toLowerCase();
+      if(str.match(/manhã|cedo|jejum|ao acordar/)) m.man.push(t);
+      else if(str.match(/tarde|almoço|12h|13h|14h|15h|16h|17h/)) m.tar.push(t);
+      else if(str.match(/noite|dormir|jantar|18h|19h|20h|21h|22h|23h/)) m.noi.push(t);
+      else m.out.push(t);
+    });
+    const renderPill = t => `<div class="med-pill ${t.status==='done'?'done':''}" onclick="toggleM('${t.id}')">
+      <div class="ck"><svg width="12" height="12"><use href="#i-check"/></svg></div>
+      <div class="med-pill-info"><div class="med-pill-title">${escapeHtml(t.title)}</div><div class="med-pill-sub">${escapeHtml(t.notes||(t.recurrence?.freq?recurText(t.recurrence.freq):''))}</div></div>
+    </div>`;
+    
+    if(m.man.length) medsHtml += `<div class="med-time-group"><div class="med-time-dot"></div><div class="med-time-label">Manhã</div>${m.man.map(renderPill).join('')}</div>`;
+    if(m.tar.length) medsHtml += `<div class="med-time-group"><div class="med-time-dot"></div><div class="med-time-label">Tarde</div>${m.tar.map(renderPill).join('')}</div>`;
+    if(m.noi.length) medsHtml += `<div class="med-time-group"><div class="med-time-dot"></div><div class="med-time-label">Noite</div>${m.noi.map(renderPill).join('')}</div>`;
+    if(m.out.length) medsHtml += `<div class="med-time-group"><div class="med-time-dot" style="background:var(--label3)"></div><div class="med-time-label">Outros horários</div>${m.out.map(renderPill).join('')}</div>`;
+  }
+  $('#medSchedule').innerHTML = medsHtml;
+  
+  const renderTicket = t => {
+    let day = '--', mo = '---';
+    if(t.date){
+      const d = new Date(t.date+'T12:00:00');
+      day = String(d.getDate()).padStart(2,'0');
+      mo = d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
+    }
+    return `<div class="med-ticket ${t.status==='done'?'done':''}" onclick="editTask('${t.id}')">
+      <div class="med-ticket-date"><div class="med-ticket-day">${day}</div><div class="med-ticket-month">${mo}</div></div>
+      <div class="med-ticket-info">
+        <div class="med-ticket-title">${escapeHtml(t.title)}</div>
+        <div class="med-ticket-sub"><svg width="12" height="12"><use href="#i-cal"/></svg> ${t.date?fmtD(t.date):'Sem data'}</div>
+      </div>
+    </div>`;
+  };
+  
+  $('#medAppointments').innerHTML = cons.length ? cons.map(renderTicket).join('') : '<div class="med-empty">Nenhuma consulta agendada.</div>';
+  $('#medExams').innerHTML = exms.length ? exms.map(renderTicket).join('') : '<div class="med-empty">Nenhum exame pendente.</div>';
+}
+
+window.toggleM = function(id){
+  const t = tasks.find(x=>x.id===id);
+  if(!t)return;
+  if(t.status==='done'){
+    t.status='todo';t.completedAt=null;addLog('reopen',t.title,t.category);
+  } else {
+    t.status='done';t.completedAt=Date.now();addLog('complete',t.title,t.category);
+    if(t.recurrence&&t.recurrence.freq){
+      const nextD=getNextRecurDate(t.date,t.recurrence.freq);
+      if(nextD)tasks.push({...t,id:genId(),date:nextD,status:'todo',completedAt:null,subtasks:(t.subtasks||[]).map(s=>({...s,done:false}))});
+    }
+  }
+  sT(); render();
+};
 
 // Modal
 function setTimeChip(val){
@@ -3884,7 +3979,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=103',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=104',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
