@@ -855,7 +855,9 @@
 
     /* ===== HABITS WIDGET CLASSES ===== */
     .habit-list{display:flex;flex-direction:column;gap:0}
-    .habit-row{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-bottom:.5px solid var(--sep)}
+    .habit-row{display:flex;flex-direction:column;gap:4px;padding:8px 6px;margin:0 -6px;border-bottom:.5px solid var(--sep);border-radius:8px;cursor:pointer;transition:background .15s ease}
+    .habit-row:hover{background:var(--fill)}
+    .habit-row:active{transform:scale(0.98)}
     .habit-row:last-child{border-bottom:none}
     .habit-head{display:flex;align-items:center;justify-content:space-between}
     .habit-name{font-size:.74rem;font-weight:600;color:var(--label)}
@@ -2792,7 +2794,7 @@ function renderHabitsWidget(){
         infoHtml = `<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#34C759;font-weight:600;padding:4px 0;"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Concluído: ${fDate(dateStr(new Date(doneInst.completedAt)))}</div>`;
       }
 
-      full+=`<div class="habit-row">
+      full+=`<div class="habit-row" onclick="$('#q').value='${name}';$('#q').dispatchEvent(new Event('input',{bubbles:true}));window.scrollTo({top:0,behavior:'smooth'})">
         <div class="habit-head">
           <span class="habit-name">${name}</span>
           <span class="recur-tag" style="background:var(--fill);color:var(--label2)">${freqLabel}</span>
@@ -2800,7 +2802,7 @@ function renderHabitsWidget(){
         <div class="habit-dots" style="justify-content:flex-start">${infoHtml}</div>
       </div>`;
     } else {
-      full+=`<div class="habit-row">
+      full+=`<div class="habit-row" onclick="$('#q').value='${name}';$('#q').dispatchEvent(new Event('input',{bubbles:true}));window.scrollTo({top:0,behavior:'smooth'})">
         <div class="habit-head">
           <span class="habit-name">${name}</span>
           <span class="recur-tag">${freqLabel}</span>
@@ -3814,7 +3816,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=97',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=98',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
