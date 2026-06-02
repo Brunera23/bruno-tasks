@@ -2802,7 +2802,7 @@ function renderBlockedWidget(){
 
 function renderOverdueWidget(){
   const todayDs=dateStr(new Date());
-  const list=tasks.filter(t=>t.status!=='done'&&t.date&&t.date<todayDs);
+  const list=getVisibleTasks().filter(t=>t.status!=='done'&&t.date&&t.date<todayDs);
   if(!list.length)return{badge:'',summary:'<div style="font-size:0.75rem;color:var(--label3)">Nenhuma tarefa atrasada. Tudo em dia! 🎉</div>',full:'<div style="padding:10px;text-align:center;color:var(--label3)">Você não possui pendências atrasadas.</div>'};
   
   list.sort((a,b)=>a.date.localeCompare(b.date));
@@ -3882,7 +3882,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=101',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=102',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
