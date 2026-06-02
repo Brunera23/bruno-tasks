@@ -351,7 +351,7 @@
     /* ===== TOOLBAR ===== */
     .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
     .search-box{flex:1;min-width:180px;position:relative}
-    .search-box input{width:100%;padding:10px 38px 10px 36px;background:var(--card);border:1px solid var(--sep);border-radius:10px;color:var(--label);font-family:inherit;font-size:.86rem;outline:none;transition:all var(--dur-fast) var(--ease-std);box-shadow:var(--shadow)}
+    .search-box input{width:100%;padding:10px 68px 10px 36px;background:var(--card);border:1px solid var(--sep);border-radius:10px;color:var(--label);font-family:inherit;font-size:.86rem;outline:none;transition:all var(--dur-fast) var(--ease-std);box-shadow:var(--shadow)}
     .search-box input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.1)}
     .search-box input::placeholder{color:var(--label3)}
     .search-box .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--label3)}
@@ -363,6 +363,9 @@
     .qf-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:0.8rem;font-weight:500;color:var(--label);border-radius:8px;cursor:pointer;transition:background var(--dur-fast)}
     .qf-opt:hover{background:var(--fill)}
     .qf-opt svg{width:14px;height:14px;color:var(--label3)}
+    .search-clear-btn{position:absolute;right:40px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--fill);border:none;color:var(--label3);cursor:pointer;display:none;align-items:center;justify-content:center;transition:all var(--dur-fast)}
+    .search-clear-btn:hover{background:var(--label3);color:var(--bg)}
+    .search-clear-btn svg{width:12px;height:12px;stroke-width:2.5}
     .seg{display:flex;background:var(--fill);border-radius:10px;padding:3px}
     .seg button{padding:7px 13px;font-size:.76rem;font-weight:500;color:var(--label2);background:transparent;border:none;border-radius:8px;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-family:inherit;white-space:nowrap}
     .seg button.active{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -1215,6 +1218,9 @@
         <div class="search-box">
           <svg class="si"><use href="#i-search"/></svg>
           <input type="text" id="q" placeholder="Buscar ou filtrar (hoje, alta, atrasada...)" autocomplete="off">
+          <button class="search-clear-btn" id="searchClearBtn" onclick="clearAllFilters()" title="Remover todos os filtros">
+            <svg><use href="#i-x"/></svg>
+          </button>
           <button class="search-filter-btn" onclick="toggleQF(event)" title="Filtros rápidos">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
           </button>
@@ -2323,7 +2329,10 @@ function hideSmartSuggest(){setTimeout(()=>{$('#smartSuggest').classList.remove(
 function toggleQF(e){e.stopPropagation();$('#qfPop').classList.toggle('show')}
 function setQF(v){$('#q').value=v;$('#q').dispatchEvent(new Event('input',{bubbles:true}));$('#qfPop').classList.remove('show');window.scrollTo({top:0,behavior:'smooth'})}
 document.addEventListener('click', e => { if(!e.target.closest('#qfPop') && !e.target.closest('.search-filter-btn')) $('#qfPop')?.classList.remove('show'); });
+function clearAllFilters(){$('#q').value='';qry='';aSt='all';aCat='all';widgetFilter='';saveUI();render()}
 function renderTasks(){
+  const filterActive=!!qry||aSt!=='all'||aCat!=='all'||!!widgetFilter;
+  const scBtn=$('#searchClearBtn');if(scBtn)scBtn.style.display=filterActive?'flex':'none';
   let list=getVisibleTasks().filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'&&t.status!==aSt)return false;if(qry){if(!smartFilter(t,qry))return false}return true});
   // Widget filter
   if(widgetFilter){
