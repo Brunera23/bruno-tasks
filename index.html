@@ -2351,12 +2351,13 @@ function renderTasks(){
       case 'blocked':list=list.filter(t=>t.status!=='done'&&isBlocked(t));break;
       case 'progress':list=list.filter(t=>t.completedAt&&t.completedAt>=Date.now()-7*864e5);break;
       case 'habits':list=list.filter(t=>t.recurrence&&t.recurrence.freq);break;
+      case 'overdue':list=list.filter(t=>t.status!=='done'&&t.date&&t.date<todayDs);break;
       case 'week':break;
       default:if(widgetFilter.startsWith('day:')){const ds=widgetFilter.slice(4);list=list.filter(t=>t.date===ds)}
     }
   }
   // Update page title to reflect active filter
-  const wLabels={foco:'Foco do Dia',next:'Próximas Prioridades',blocked:'Bloqueadas',progress:'Progresso Semanal',habits:'Hábitos & Rotinas'};
+  const wLabels={foco:'Foco do Dia',next:'Próximas Prioridades',blocked:'Bloqueadas',progress:'Progresso Semanal',habits:'Hábitos & Rotinas',overdue:'Tarefas Atrasadas'};
   if(widgetFilter&&(wLabels[widgetFilter]||widgetFilter.startsWith('day:'))){
     let fName=wLabels[widgetFilter];
     if(widgetFilter.startsWith('day:')){const dd=new Date(widgetFilter.slice(4)+'T00:00:00');const dayN=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];fName=dd.toLocaleDateString('pt-BR')==new Date().toLocaleDateString('pt-BR')?'Hoje':dayN[dd.getDay()]+' '+dd.getDate()}
@@ -2452,11 +2453,12 @@ function renderTasks(){
 }
 
 // ===== WIDGET PANEL SYSTEM =====
-let wdgState=ld('bt-wdg-state',{week:{compact:false},foco:{compact:false},next:{compact:false},progress:{compact:false},blocked:{compact:true},habits:{compact:false}});
-let wdgOrder=ld('bt-wdg-order',['week','foco','next','progress','blocked','habits']);
+let wdgState=ld('bt-wdg-state',{week:{compact:false},foco:{compact:false},next:{compact:false},progress:{compact:false},blocked:{compact:true},habits:{compact:false},overdue:{compact:false}});
+let wdgOrder=ld('bt-wdg-order',['overdue','week','foco','next','progress','blocked','habits']);
 function saveWdgState(){sv('bt-wdg-state',wdgState);sv('bt-wdg-order',wdgOrder)}
 
 const wdgDefs={
+  overdue:{icon:'⚠️',name:'Tarefas Atrasadas',grad:'linear-gradient(135deg,#FF3B30,#FF453A)',render:renderOverdueWidget},
   week:{icon:'📅',name:'Carga da Semana',grad:'linear-gradient(135deg,#007AFF,#5AC8FA)',render:renderWeekWidget},
   foco:{icon:'📋',name:'Foco do Dia',grad:'linear-gradient(135deg,#34C759,#30D158)',render:renderFocoWidget},
   next:{icon:'⚡',name:'Próximas Prioridades',grad:'linear-gradient(135deg,#007AFF,#5856D6)',render:renderNextWidget},
@@ -2796,6 +2798,30 @@ function renderBlockedWidget(){
     </div>
   </div>`;
   return{badge:blocked.length?blocked.length.toString():'',summary:summaryHtml,full};
+}
+
+function renderOverdueWidget(){
+  const todayDs=dateStr(new Date());
+  const list=tasks.filter(t=>t.status!=='done'&&t.date&&t.date<todayDs);
+  if(!list.length)return{badge:'',summary:'<div style="font-size:0.75rem;color:var(--label3)">Nenhuma tarefa atrasada. Tudo em dia! 🎉</div>',full:'<div style="padding:10px;text-align:center;color:var(--label3)">Você não possui pendências atrasadas.</div>'};
+  
+  list.sort((a,b)=>a.date.localeCompare(b.date));
+  let summary=`<div style="font-size:0.75rem;color:#FF3B30;font-weight:600">${list.length} tarefa${list.length>1?'s':''} atrasada${list.length>1?'s':''}</div>`;
+  let full='';
+  list.forEach(t=>{
+    const overdueDays = Math.floor((new Date(todayDs+'T00:00:00') - new Date(t.date+'T00:00:00'))/864e5);
+    const dayStr = overdueDays === 1 ? '1 dia' : overdueDays + ' dias';
+    full+=`<div class="habit-row" onclick="setQF('${escapeHtml(t.title).replace(/'/g,"\\'")}')">
+      <div class="habit-head">
+        <span class="habit-name" style="color:var(--label)">${escapeHtml(t.title)}</span>
+        <span class="recur-tag" style="background:rgba(255,59,48,0.1);color:#FF3B30;border:1px solid rgba(255,59,48,0.2)">Atrasada: ${dayStr}</span>
+      </div>
+      <div class="habit-dots" style="justify-content:flex-start">
+        <span style="font-size:0.7rem;color:var(--label3)">Prazo original: ${fDate(t.date)}</span>
+      </div>
+    </div>`;
+  });
+  return {badge:`<span style="background:#FF3B30;color:#FFF;padding:2px 6px;border-radius:10px;font-size:0.7rem;font-weight:600">${list.length}</span>`,summary,full};
 }
 
 function renderHabitsWidget(){
@@ -3856,7 +3882,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=100',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=101',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
