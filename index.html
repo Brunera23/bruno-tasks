@@ -2179,7 +2179,7 @@ function setGreeting(){
 
 function switchView(v){
   const apply=()=>{curView=v;saveUI();$('#tasksView').classList.toggle('active',v==='tasks');$('#dashView').classList.toggle('active',v==='dash');$('#medView').classList.toggle('active',v==='med');$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));$$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));if(v==='tasks')renderTasks();if(v==='dash')renderDash();if(v==='med')renderMedView()};
-  if(v==='tasks'&&$('#modal')&&$('#modal').classList.contains('open')){closeM();setTimeout(apply,300)}else if(document.startViewTransition){document.startViewTransition(apply)}else{apply()}
+  if(v==='tasks'&&$('#modal')&&$('#modal').classList.contains('open')){closeM();setTimeout(apply,300)}else{apply()}
 }
 
 function getActiveContextProject() {
@@ -4023,7 +4023,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=106',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=107',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
