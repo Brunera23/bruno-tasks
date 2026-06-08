@@ -2178,7 +2178,7 @@ function setGreeting(){
 }
 
 function switchView(v){
-  const apply=()=>{curView=v;saveUI();$('#tasksView').classList.toggle('active',v==='tasks');$('#dashView').classList.toggle('active',v==='dash');$('#medView').classList.toggle('active',v==='med');$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));$$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));if(v==='dash')renderDash();if(v==='med')renderMedView()};
+  const apply=()=>{curView=v;saveUI();$('#tasksView').classList.toggle('active',v==='tasks');$('#dashView').classList.toggle('active',v==='dash');$('#medView').classList.toggle('active',v==='med');$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));$$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));if(v==='tasks')renderTasks();if(v==='dash')renderDash();if(v==='med')renderMedView()};
   if(v==='tasks'&&$('#modal')&&$('#modal').classList.contains('open')){closeM();setTimeout(apply,300)}else if(document.startViewTransition){document.startViewTransition(apply)}else{apply()}
 }
 
