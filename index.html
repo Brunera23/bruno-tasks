@@ -139,6 +139,11 @@
     .nav-item svg{width:18px;height:18px;flex-shrink:0;transition:color var(--dur-fast)}
     .nav-item .nav-badge{margin-left:auto;font-size:.72rem;font-weight:600;background:var(--fill);border-radius:6px;padding:1px 7px;min-width:22px;text-align:center}
     .nav-item.active .nav-badge{background:rgba(128,128,128,.25)}
+    /* nav-action: abre um painel lateral, não troca de view — sem estado .active */
+    .nav-action{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;font-size:.86rem;font-weight:500;color:var(--label2);cursor:pointer;transition:all var(--dur-fast) var(--ease-std);border:none;background:transparent;width:100%;text-align:left;font-family:inherit}
+    .nav-action:hover{background:var(--fill);color:var(--label)}
+    .nav-action:active{transform:scale(.98);transition-duration:80ms}
+    .nav-action svg{width:18px;height:18px;flex-shrink:0;transition:color var(--dur-fast)}
     .sidebar-cats{flex:1}
     .cat-nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;font-size:.82rem;font-weight:500;color:var(--label2);cursor:pointer;transition:all var(--dur-fast) var(--ease-std);border:none;background:transparent;width:100%;text-align:left;font-family:inherit}
     .cat-nav-item:hover{background:var(--fill)}
@@ -883,10 +888,10 @@
     .mob-more-btn{display:none}
 
     /* ===== MOBILE BOTTOM SHEET ===== */
-    .mob-sheet-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s ease}
-    .mob-sheet-ov.open{opacity:1;pointer-events:all}
-    .mob-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:14px 14px 0 0;z-index:201;padding:8px 20px 40px;transform:translateY(100%);transition:transform .4s cubic-bezier(.32,1,.23,1);max-height:88dvh;overflow-y:auto;overflow-x:clip;overscroll-behavior:contain;will-change:transform;-webkit-overflow-scrolling:touch}
-    .mob-sheet.open{transform:translateY(0)}
+    .mob-sheet-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s ease, visibility 0s linear .3s; visibility: hidden;}
+    .mob-sheet-ov.open{opacity:1;pointer-events:all; visibility: visible; transition: opacity .3s ease, visibility 0s;}
+    .mob-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:14px 14px 0 0;z-index:201;padding:8px 20px 40px;transform:translateY(100%);transition:transform .4s cubic-bezier(.32,1,.23,1), visibility 0s linear .4s;max-height:88dvh;overflow-y:auto;overflow-x:clip;overscroll-behavior:contain;will-change:transform;-webkit-overflow-scrolling:touch; visibility: hidden;}
+    .mob-sheet.open{transform:translateY(0); visibility: visible; transition: transform .4s cubic-bezier(.32,1,.23,1), visibility 0s;}
     .mob-sheet-handle{width:36px;height:5px;border-radius:2.5px;background:rgba(60,60,67,.3);margin:6px auto 16px;flex-shrink:0}
     .mob-sheet-title{font-size:1rem;font-weight:700;color:var(--label);margin-bottom:20px;text-align:center}
     .mob-sheet-section{margin-bottom:20px}
@@ -927,10 +932,10 @@
 
     /* Desktop: alert/note sheets as centered modals */
     @media(min-width:641px){
-      .mob-sheet{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.95);bottom:auto;right:auto;border-radius:16px;max-width:480px;width:92%;max-height:80dvh;padding:24px;z-index:201;opacity:0;pointer-events:none;transition:transform .3s var(--ease-spring),opacity .2s}
-      .mob-sheet.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all}
-      .mob-sheet-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;opacity:0;pointer-events:none;transition:opacity .25s ease}
-      .mob-sheet-ov.open{opacity:1;pointer-events:all}
+      .mob-sheet{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.95);bottom:auto;right:auto;border-radius:16px;max-width:480px;width:92%;max-height:80dvh;padding:24px;z-index:201;opacity:0;pointer-events:none;transition:transform .3s var(--ease-spring),opacity .2s, visibility 0s linear .3s; visibility: hidden;}
+      .mob-sheet.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all; visibility: visible; transition: transform .3s var(--ease-spring), opacity .2s, visibility 0s;}
+      .mob-sheet-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;opacity:0;pointer-events:none;transition:opacity .25s ease, visibility 0s linear .25s; visibility: hidden;}
+      .mob-sheet-ov.open{opacity:1;pointer-events:all; visibility: visible; transition: opacity .25s ease, visibility 0s;}
       .mob-sheet-handle{display:none}
       .fab-menu{bottom:auto;right:auto;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);transform-origin:center;flex-direction:column}
       .fab-menu.open{transform:translate(-50%,-50%) scale(1)}
@@ -1212,7 +1217,7 @@
       <button class="nav-item active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas<span class="nav-badge" id="navBadge">0</span></button>
       <button class="nav-item" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
       <button class="nav-item" data-view="med"><svg><use href="#i-pill"/></svg>Saúde</button>
-      <button class="nav-item" id="sideNotes"><svg><use href="#i-edit"/></svg>Quadro de Notas</button>
+      <button class="nav-action" id="sideNotes"><svg><use href="#i-edit"/></svg>Quadro de Notas</button>
     </div>
     <div class="sidebar-projects">
       <div class="nav-label">Projetos<button class="nav-label-btn" id="addProjBtn" title="Novo Projeto"><svg><use href="#i-plus"/></svg></button></div>
@@ -2174,7 +2179,7 @@ function setGreeting(){
 
 function switchView(v){
   const apply=()=>{curView=v;saveUI();$('#tasksView').classList.toggle('active',v==='tasks');$('#dashView').classList.toggle('active',v==='dash');$('#medView').classList.toggle('active',v==='med');$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));$$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));if(v==='dash')renderDash();if(v==='med')renderMedView()};
-  if(v==='tasks'&&$('#fmWrap').classList.contains('open')){$('#fmWrap').classList.remove('open');setTimeout(apply,300)}else if(document.startViewTransition){document.startViewTransition(apply)}else{apply()}
+  if(v==='tasks'&&$('#modal')&&$('#modal').classList.contains('open')){closeM();setTimeout(apply,300)}else if(document.startViewTransition){document.startViewTransition(apply)}else{apply()}
 }
 
 function getActiveContextProject() {
@@ -3138,10 +3143,11 @@ function setTimeChip(val){
   else{$('#timeCustom').classList.remove('show');if(val){const chip=$('#timeChips .time-chip[data-min="'+val+'"]');if(chip)chip.classList.add('active');$('#fET').value=val}else{$('#fET').value=''}}
 }
 function pickVal(container,val){
+  if(!container)return;
   container.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('active',b.dataset.v===val));
 }
 function getPickVal(container){
-  return container.querySelector('[data-v].active')?.dataset.v||'';
+  return container?.querySelector('[data-v].active')?.dataset.v||'';
 }
 function updateFormProject(){
   const isShared=projects.find(p=>p.id===fFormProj)?.type==='shared';
@@ -3220,10 +3226,18 @@ function openM(task){
   // Lock body scroll on mobile to prevent horizontal swipe
   const scrollY=window.scrollY;document.body.style.top='-'+scrollY+'px';document.body.classList.add('modal-open');document.body.dataset.scrollY=scrollY;
   setTimeout(()=>$('#fT').focus(),300)}
+function checkRestoreScroll(){
+  if(!document.querySelector('.modal.open, .mob-sheet.open, .overlay.open')){
+    document.body.classList.remove('modal-open');document.body.style.top='';
+    document.documentElement.style.scrollBehavior='auto';
+    void document.body.offsetHeight;
+    window.scrollTo(0,parseInt(document.body.dataset.scrollY||'0'));
+    setTimeout(()=>document.documentElement.style.scrollBehavior='',10);
+  }
+}
 function closeM(){
   $('#ov').classList.remove('open');$('#modal').classList.remove('open');
-  // Restore body scroll
-  document.body.classList.remove('modal-open');document.body.style.top='';window.scrollTo(0,parseInt(document.body.dataset.scrollY||'0'));
+  checkRestoreScroll();
 }
 function renderMSubs(){
   const gripSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg>';
@@ -3437,7 +3451,7 @@ function openAlertForm(){
 }
 function closeAlertForm(){
   $('#alertSheet').classList.remove('open');$('#alertOv').classList.remove('open');
-  document.body.classList.remove('modal-open');document.body.style.top='';window.scrollTo(0,parseInt(document.body.dataset.scrollY||'0'));
+  checkRestoreScroll();
 }
 $('#alertOv').addEventListener('click',closeAlertForm);
 $('#aCan').addEventListener('click',closeAlertForm);
@@ -3479,7 +3493,7 @@ function openNoteForm(){
 }
 function closeNoteForm(){
   $('#noteSheet').classList.remove('open');$('#noteOv').classList.remove('open');
-  document.body.classList.remove('modal-open');document.body.style.top='';window.scrollTo(0,parseInt(document.body.dataset.scrollY||'0'));
+  checkRestoreScroll();
 }
 $('#noteOv').addEventListener('click',closeNoteForm);
 $('#nCan').addEventListener('click',closeNoteForm);
@@ -3830,7 +3844,8 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
 $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'));
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
-$('#list').addEventListener('click',e=>{if(e.target.closest('.iq-pop'))return;const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);dpt.classList.toggle('open');const sec=dpt.nextElementSibling;if(sec&&sec.classList.contains('dep-children'))sec.classList.toggle('open');return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;saveUI();dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const tt=e.target.closest('.tag-time[data-id]');if(tt){e.stopPropagation();showTimePop(tt,tt.dataset.id);return}const id_el=e.target.closest('.item-date[data-id]');if(id_el){e.stopPropagation();showDatePop(id_el,id_el.dataset.id);return}const ct=e.target.closest('.tag-cat[data-id]');if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s)}});
+let _itemClickTimeout=null;
+$('#list').addEventListener('click',e=>{if(e.target.closest('.iq-pop'))return;const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);dpt.classList.toggle('open');const sec=dpt.nextElementSibling;if(sec&&sec.classList.contains('dep-children'))sec.classList.toggle('open');return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;saveUI();dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const tt=e.target.closest('.tag-time[data-id]');if(tt){e.stopPropagation();showTimePop(tt,tt.dataset.id);return}const id_el=e.target.closest('.item-date[data-id]');if(id_el){e.stopPropagation();showDatePop(id_el,id_el.dataset.id);return}const ct=e.target.closest('.tag-cat[data-id]');if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s);return}const acts=e.target.closest('.item-acts');if(acts)return;const b=e.target.closest('.item-body');if(b){if(_itemClickTimeout){clearTimeout(_itemClickTimeout);_itemClickTimeout=null;}if(window.getSelection().toString().length>0)return;const item=b.closest('.item');if(item){const id=item.querySelector('.ck')?.dataset.id;if(id){e.stopPropagation();if(e.detail===1){_itemClickTimeout=setTimeout(()=>{if(window.getSelection().toString().trim().length===0)edit(id)},250)}else if(e.detail>=2){edit(id)}return}}}});
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;saveUI();render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;saveUI();render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;saveUI();renderTasks()})});
@@ -4121,6 +4136,7 @@ function processRecurring(){
 (function restoreUI(){
   // Restore view
   if(curView==='dash')switchView('dash');
+  if(curView==='med')switchView('med');
   // Restore status segment
   if(aSt!=='all'){$$('.seg button').forEach(s=>{s.classList.toggle('active',s.dataset.s===aSt)})}
   // Restore sort label
@@ -4261,7 +4277,7 @@ function openMobSheet(){
   $('#mobSheetSort').innerHTML=sorts.map(s=>`<button class="${sortBy===s.so?'active':''}" data-mso="${s.so}">${s.n}</button>`).join('');
   sheet.classList.add('open');ov.classList.add('open');
 }
-function closeMobSheet(){$('#mobSheet').classList.remove('open');$('#mobSheetOv').classList.remove('open')}
+function closeMobSheet(){$('#mobSheet').classList.remove('open');$('#mobSheetOv').classList.remove('open');checkRestoreScroll();}
 
 function openMobSettings(){
   const sheet=$('#mobSheet'), ov=$('#mobSheetOv');
