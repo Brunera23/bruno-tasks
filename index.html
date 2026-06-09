@@ -137,6 +137,7 @@
     .nav-item.active{background:var(--label);color:var(--bg)}
     .nav-item.active svg{color:var(--bg)}
     .nav-item svg{width:18px;height:18px;flex-shrink:0;transition:color var(--dur-fast)}
+    .nav-item svg,.nav-item svg *,.mob-tab svg,.mob-tab svg *{pointer-events:none}
     .nav-item .nav-badge{margin-left:auto;font-size:.72rem;font-weight:600;background:var(--fill);border-radius:6px;padding:1px 7px;min-width:22px;text-align:center}
     .nav-item.active .nav-badge{background:rgba(128,128,128,.25)}
     /* nav-action: abre um painel lateral, não troca de view — sem estado .active */
@@ -2178,8 +2179,27 @@ function setGreeting(){
 }
 
 function switchView(v){
-  const apply=()=>{curView=v;saveUI();$('#tasksView').classList.toggle('active',v==='tasks');$('#dashView').classList.toggle('active',v==='dash');$('#medView').classList.toggle('active',v==='med');$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));$$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));if(v==='tasks')renderTasks();if(v==='dash')renderDash();if(v==='med')renderMedView()};
-  if(v==='tasks'&&$('#modal')&&$('#modal').classList.contains('open')){closeM();setTimeout(apply,300)}else{apply()}
+  const apply=()=>{
+    curView=v;
+    try{saveUI()}catch(e){console.error('[switchView] saveUI falhou',e)}
+    // Troca de view PRIMEIRO (sincrono) — nunca pode depender do render abaixo
+    $('#tasksView').classList.toggle('active',v==='tasks');
+    $('#dashView').classList.toggle('active',v==='dash');
+    $('#medView').classList.toggle('active',v==='med');
+    $$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
+    $$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
+    // Render isolado: se quebrar, a view ja trocou e o erro fica visivel no console
+    try{
+      if(v==='tasks')renderTasks();
+      else if(v==='dash')renderDash();
+      else if(v==='med')renderMedView();
+    }catch(err){console.error('[switchView] render("'+v+'") quebrou — view trocada mesmo assim:',err)}
+  };
+  // Guarda do modal isolada: se closeM falhar, aplica direto em vez de travar a navegacao
+  try{
+    if(v==='tasks'&&$('#modal')&&$('#modal').classList.contains('open')){closeM();setTimeout(apply,300)}
+    else{apply()}
+  }catch(err){console.error('[switchView] guarda do modal falhou — aplicando fallback:',err);apply()}
 }
 
 function getActiveContextProject() {
@@ -4023,7 +4043,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=107',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=108',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
