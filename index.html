@@ -112,8 +112,22 @@
 
     /* ===== LAYOUT ===== */
     .shell{display:flex;min-height:100dvh}
-    .sidebar{width:260px;flex-shrink:0;background:rgba(255,255,255,.88);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-right:1px solid var(--sep);padding:24px 16px 20px;display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;transition:background var(--dur-smooth),border-color var(--dur-smooth),margin-left var(--dur-smooth),opacity var(--dur-smooth)}
-    .shell.sidebar-closed .sidebar{margin-left:-260px;opacity:0;pointer-events:none}
+    .sidebar{width:260px;flex-shrink:0;background:rgba(255,255,255,.88);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-right:1px solid var(--sep);padding:24px 16px 20px;display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;transition:background var(--dur-smooth),border-color var(--dur-smooth),width var(--dur-smooth),padding var(--dur-smooth)}
+    .shell.sidebar-closed .sidebar{width:72px;padding:24px 10px 20px;}
+    .shell.sidebar-closed .sidebar-top{flex-direction:column;gap:16px;}
+    .shell.sidebar-closed .sidebar-logo{font-size:0;color:transparent;gap:0;}
+    .shell.sidebar-closed .sidebar-logo .logo-icon{margin:0 auto;}
+    .shell.sidebar-closed .sidebar-top > div {flex-direction:column;gap:10px;}
+    .shell.sidebar-closed .nav-label,
+    .shell.sidebar-closed .sidebar-projects,
+    .shell.sidebar-closed .sidebar-cats,
+    .shell.sidebar-closed .su-info,
+    .shell.sidebar-closed .su-logout,
+    .shell.sidebar-closed .nav-badge {display:none}
+    .shell.sidebar-closed .nav-item,
+    .shell.sidebar-closed .nav-action {font-size:0;color:transparent;justify-content:center;padding:12px 0;gap:0}
+    .shell.sidebar-closed .sidebar-user {justify-content:center;padding:12px 0}
+    .shell.sidebar-closed #closeSidebarBtn svg {transform:rotate(180deg)}
     [data-theme="dark"] .sidebar{background:rgba(22,22,24,.88)}
     .sidebar::-webkit-scrollbar{display:none}
     .sidebar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding:0 8px}
@@ -1303,12 +1317,9 @@
   <main class="main">
     <div class="tasks-view active" id="tasksView">
       <div class="page-head">
-        <div class="page-head-left" style="display:flex;align-items:center">
-          <button id="openSidebarBtn" title="Abrir menu" style="display:none;background:transparent;border:none;color:var(--label);cursor:pointer;padding:4px;border-radius:8px;margin-right:12px;transition:background var(--dur-fast)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
-          <div style="display:flex;flex-direction:column">
-            <div class="greeting" id="greeting"></div>
-            <h1 id="pageTitle">Tarefas</h1>
-          </div>
+        <div class="page-head-left">
+          <div class="greeting" id="greeting"></div>
+          <h1 id="pageTitle">Tarefas</h1>
         </div>
         <button class="theme-btn mob-theme-btn" id="mobThemeBtn" title="Alternar tema"><svg id="mobThemeIcon"><use href="#i-moon"/></svg></button>
         <button class="mob-more-btn" id="mobMore" title="Opções">
@@ -4913,18 +4924,17 @@ $('#mobSheet').addEventListener('click',e=>{
 
 // Sidebar Toggle Logic
 $('#closeSidebarBtn')?.addEventListener('click', () => {
-  $('.shell').classList.add('sidebar-closed');
-  $('#openSidebarBtn').style.display = 'block';
-  localStorage.setItem('btSidebarClosed', '1');
-});
-$('#openSidebarBtn')?.addEventListener('click', () => {
-  $('.shell').classList.remove('sidebar-closed');
-  $('#openSidebarBtn').style.display = 'none';
-  localStorage.setItem('btSidebarClosed', '0');
+  const shell = $('.shell');
+  if(shell.classList.contains('sidebar-closed')){
+    shell.classList.remove('sidebar-closed');
+    localStorage.setItem('btSidebarClosed', '0');
+  }else{
+    shell.classList.add('sidebar-closed');
+    localStorage.setItem('btSidebarClosed', '1');
+  }
 });
 if(localStorage.getItem('btSidebarClosed') === '1') {
   $('.shell').classList.add('sidebar-closed');
-  if($('#openSidebarBtn')) $('#openSidebarBtn').style.display = 'block';
 }
 
 </script>
