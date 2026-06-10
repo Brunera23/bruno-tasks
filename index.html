@@ -1791,14 +1791,20 @@ try{
 
 // Request permission and get token
 async function requestNotifPermission(){
-  if(!messaging){
+  if(!('Notification' in window)){
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-    if (isIOS && !isStandalone) {
-      toast('Adicione à Tela Inicial (Compartilhar > Adicionar à Tela Inicial) para ativar notificações.');
-    } else {
-      toast('Notificações não suportadas neste navegador.');
-    }
+    if(isIOS) toast('Adicione à Tela Inicial (Compartilhar > Adicionar) para ativar notificações.');
+    else toast('Notificações não suportadas neste navegador.');
+    return false;
+  }
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  if(isIOS && !isStandalone){
+    toast('Adicione à Tela Inicial (Compartilhar > Adicionar à Tela Inicial) para ativar notificações.');
+    return false;
+  }
+  if(!messaging){
+    toast('Notificações não suportadas (FCM off).');
     return false;
   }
   if(!VAPID_KEY){
