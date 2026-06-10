@@ -4310,11 +4310,13 @@ $('#kanban').addEventListener('click',e=>{
     const [id,col]=dot.dataset.move.split('|');
     const t=tasks.find(x=>x.id===id);
     if(t&&agentStatusOf(t)!==col){
-      setAgentStatus(t,col);sT();renderAgentsView();
-      toast('Movido para '+KCOL_NAME[col]);
       const rect=dot.getBoundingClientRect();
       const cx = rect.left + rect.width/2;
       const cy = rect.top + rect.height/2;
+
+      setAgentStatus(t,col);sT();renderAgentsView();
+      toast('Movido para '+KCOL_NAME[col]);
+      
       if(col==='validation') spawnBurst(cx, cy, ['#AF52DE', '#E5CEFF', '#5856D6', '#D6A8FF'], 12, 60);
       else if (col==='bug') spawnBurst(cx, cy, ['#FF3B30', '#FFD1D1', '#FF9500', '#FF6B6B'], 12, 60);
       else if (col==='done') celebrateDone(cx, cy);
