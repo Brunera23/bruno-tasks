@@ -2548,7 +2548,7 @@ function renderItem(t,i,isChild=false,depsOpen=false,isLast=false){
   const recurTag=t.recurrence&&t.recurrence.freq?`<span class="recur-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>${recurText(t.recurrence.freq,t.recurrence.every)}</span>`:'';
   const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');if(depsOpen)cls.push('deps-open');if(isLast)cls.push('is-last');
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
-  const agentTag=t.agent?`<span class="tag-agent" data-id="${t.id}"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span>`:'';
+  const agentTag=`<span class="tag-agent" data-id="${t.id}"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent || 'Sem agente')}</span>`;
   const dateTag=t.date?`<span class="item-date ${od?'overdue':''}" data-id="${t.id}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:`<span class="item-date" data-id="${t.id}" style="opacity:.4"><svg><use href="#i-cal"/></svg>Prazo</span>`;
   const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
   const assignTag=t.project==='nos'&&t.assignedTo?`<span class="tag-meta assign-tag"><span class="assign-mini" style="background:${t.assignedTo==='bruno'?'linear-gradient(135deg,#007AFF,#5AC8FA)':t.assignedTo==='parceira'?'linear-gradient(135deg,#FF2D55,#FF6482)':'linear-gradient(135deg,#AF52DE,#5856D6)'}"><svg width="10" height="10"><use href="${t.assignedTo==='ambos'?'#i-users':'#i-user'}"/></svg></span>${t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'Ambos'}</span>`:'';
@@ -3373,7 +3373,7 @@ function renderAgentsView(){
     return`<div class="kanban-card ${t.status==='done'?'kc-done':''}" draggable="true" data-id="${t.id}">
       <div class="kc-title">${escapeHtml(t.title)}</div>
       <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}</div>
-      <div class="kc-foot"><span class="kc-agent tag-agent" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span></div>
+      <div class="kc-foot"><span class="kc-agent tag-agent" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent || 'Sem agente')}</span></div>
       <div class="kc-cols">${dots}</div>
     </div>`;
   };
