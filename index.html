@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="description" content="Bruno Tasks — Gerenciador de tarefas pessoal">
+  <meta name="description" content="Berserk — Gerenciador de tarefas pessoal">
   <meta name="theme-color" content="#f2f2f7" id="metaTheme">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Tasks">
+  <meta name="apple-mobile-web-app-title" content="Berserk">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="manifest-icon.png">
   <link rel="manifest" href="manifest.json">
-  <title>Bruno Tasks</title>
+  <title>Berserk</title>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
@@ -1167,9 +1168,22 @@
     .med-ticket-sub{font-size:0.8rem;color:var(--label3);display:flex;align-items:center;gap:4px}
     .med-empty{padding:24px;text-align:center;color:var(--label3);font-size:0.9rem;background:var(--bg);border-radius:14px;border:1px dashed var(--sep)}
 
+    /* ===== TASK LAYOUT TOGGLE ===== */
+    .layout-toggle{display:flex;align-items:center;background:var(--fill);border-radius:10px;padding:2px;gap:2px;border:1px solid var(--sep)}
+    .layout-toggle button{display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:8px;background:transparent;color:var(--label3);font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;transition:all var(--dur-fast) var(--ease-std)}
+    .layout-toggle button:hover{color:var(--label)}
+    .layout-toggle button.active{background:var(--card);color:var(--label);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+    .layout-toggle button svg{width:14px;height:14px}
+    .task-kanban-wrap{display:none}
+    .task-kanban-wrap.active{display:block}
+    .tasks-view .tl.hidden-by-layout{display:none}
+    .tasks-view .grp-bar.hidden-by-layout{display:none}
+    .tasks-view .seg.hidden-by-layout{display:none}
+
     /* ===== AGENTS / KANBAN VIEW ===== */
     .agents-view{display:none}.agents-view.active{display:block}
     @media(min-width:1024px){.main:has(#agentsView.active){max-width:1500px}}
+    @media(min-width:1024px){.main:has(.task-kanban-wrap.active){max-width:1500px}}
     .kanban{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;overflow-y:visible;padding:4px 2px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;cursor:grab;user-select:none}
     .kanban.active{cursor:grabbing}
     .kanban::-webkit-scrollbar{display:none}
@@ -1290,8 +1304,8 @@
 <!-- LOGIN SCREEN -->
 <div class="login-screen" id="loginScreen" style="display:none">
   <div class="login-card">
-    <div class="login-logo"><div class="login-logo-icon"><svg width="32" height="32" style="color:#fff"><use href="#i-check"/></svg></div></div>
-    <h1 class="login-title">Bruno Tasks</h1>
+    <div class="login-logo"><div class="login-logo-icon" style="background: transparent; box-shadow: none;"><img src="./manifest-icon.png" width="72" height="72" style="border-radius: 18px; object-fit: cover;" /></div></div>
+    <h1 class="login-title">Berserk</h1>
     <p class="login-sub">Faça login para continuar</p>
     <button class="login-google-btn" id="loginBtn">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
@@ -1305,7 +1319,7 @@
 <div class="shell" style="display:none">
   <aside class="sidebar">
     <div class="sidebar-top">
-      <div class="sidebar-logo"><div class="logo-icon"><svg><use href="#i-check"/></svg></div>Bruno Tasks</div>
+      <div class="sidebar-logo"><div class="logo-icon" style="background: transparent;"><img src="./manifest-icon.png" width="30" height="30" style="border-radius: 8px; object-fit: cover;" /></div>Berserk</div>
       <div style="display:flex;align-items:center;gap:6px">
         <button class="theme-btn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema claro/escuro"><svg id="themeIcon"><use href="#i-moon"/></svg></button>
         <button class="theme-btn" id="closeSidebarBtn" title="Recolher menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -1368,7 +1382,11 @@
           </div>
           <div class="smart-suggest" id="smartSuggest"></div>
         </div>
-        <div class="seg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="done">Feitas</button></div>
+        <div class="seg" id="taskSeg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="done">Feitas</button></div>
+        <div class="layout-toggle" id="layoutToggle">
+          <button class="active" data-layout="list" title="Visualização em lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Lista</button>
+          <button data-layout="board" title="Visualização em quadro Kanban"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="9" rx="1"/></svg>Quadro</button>
+        </div>
         <button class="btn-focus" id="btnFocus" style="display:none" title="Modo Foco — janela flutuante com o que você está fazendo agora"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>Foco<span class="bf-count" id="bfCount">0</span></button>
         <button class="btn-add" id="btnAdd"><svg><use href="#i-plus"/></svg>Nova tarefa</button>
       </div>
@@ -1396,6 +1414,9 @@
         </div>
       </div>
       <div class="tl" id="list"></div>
+      <div class="task-kanban-wrap" id="taskKanbanWrap">
+        <div class="kanban" id="taskKanban"></div>
+      </div>
     </div>
 
     <div class="dash" id="dashView">
@@ -2048,7 +2069,7 @@ let agents=ld('bt-agents',DEF_AGENTS),mAgent='';
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
 let _fbSynced=false; // true after first successful Firestore sync
 const _ui=ld('bt-ui',{});
-let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',dashProj='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null;
+let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',dashProj='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null,taskLayout=_ui.taskLayout||'list';
 
 // ===== PROJECT SYSTEM =====
 const DEF_PROJECTS=[
@@ -2072,7 +2093,7 @@ const NOS_CATS=[
   {id:'financas-casal',name:'Finanças',icon:'i-wallet',color:'#FF3B30'}
 ];
 
-function saveUI(){sv('bt-ui',{aCat,aSt,curView,groupBy,sortBy,showDone});sv('bt-projects',projects)}
+function saveUI(){sv('bt-ui',{aCat,aSt,curView,groupBy,sortBy,showDone,taskLayout});sv('bt-projects',projects)}
 
 function getCatsForProject(projId){
   return projId==='nos'?NOS_CATS:cats;

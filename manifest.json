@@ -1,6 +1,6 @@
 {
-  "name": "Bruno Tasks",
-  "short_name": "Tasks",
+  "name": "Berserk",
+  "short_name": "Berserk",
   "description": "Gerenciador de tarefas pessoal",
   "start_url": "./index.html",
   "display": "standalone",

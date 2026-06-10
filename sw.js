@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bruno-tasks-v115';
+const CACHE_NAME = 'bruno-tasks-v117';
 const ASSETS = ['./index.html', './manifest.json', './apple-touch-icon.png', './manifest-icon.png'];
 
 self.addEventListener('install', e => {
@@ -26,7 +26,7 @@ self.addEventListener('message', e => {
 
 // ===== PUSH NOTIFICATIONS =====
 self.addEventListener('push', e => {
-  let data = {title: 'Bruno Tasks', body: 'Nova atualização'};
+  let data = {title: 'Berserk', body: 'Nova atualização'};
   if(e.data) {
     try {
       const payload = e.data.json();
@@ -46,7 +46,7 @@ self.addEventListener('push', e => {
     tag: data.tag || 'default',
     renotify: true
   };
-  e.waitUntil(self.registration.showNotification(data.title || 'Bruno Tasks', options));
+  e.waitUntil(self.registration.showNotification(data.title || 'Berserk', options));
 });
 
 // Open app when notification is clicked
