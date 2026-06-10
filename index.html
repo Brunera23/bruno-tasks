@@ -112,7 +112,8 @@
 
     /* ===== LAYOUT ===== */
     .shell{display:flex;min-height:100dvh}
-    .sidebar{width:260px;flex-shrink:0;background:rgba(255,255,255,.88);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-right:1px solid var(--sep);padding:24px 16px 20px;display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;transition:background var(--dur-smooth),border-color var(--dur-smooth)}
+    .sidebar{width:260px;flex-shrink:0;background:rgba(255,255,255,.88);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-right:1px solid var(--sep);padding:24px 16px 20px;display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;transition:background var(--dur-smooth),border-color var(--dur-smooth),margin-left var(--dur-smooth),opacity var(--dur-smooth)}
+    .shell.sidebar-closed .sidebar{margin-left:-260px;opacity:0;pointer-events:none}
     [data-theme="dark"] .sidebar{background:rgba(22,22,24,.88)}
     .sidebar::-webkit-scrollbar{display:none}
     .sidebar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding:0 8px}
@@ -1186,8 +1187,9 @@
     .kc-date{font-size:.62rem;color:var(--label3);font-weight:500}
     .kc-date.overdue{color:#FF3B30;font-weight:600}
     /* agent tag in the tasks list */
-    .tag-agent{display:inline-flex;align-items:center;gap:3px;font-size:.66rem;font-weight:600;color:var(--blue);background:rgba(0,122,255,.08);border-radius:6px;padding:1px 7px}
-    .tag-agent svg{width:10px;height:10px}
+    .tag-agent{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;font-weight:600;color:var(--label);background:linear-gradient(135deg, rgba(120,120,128,0.08), rgba(120,120,128,0.03));border:0.5px solid var(--sep);border-radius:6px;padding:2px 8px;cursor:pointer;transition:all var(--dur-fast);box-shadow:0 1px 2px rgba(0,0,0,.03)}
+    .tag-agent:hover{background:var(--fill);border-color:var(--label3);transform:translateY(-0.5px);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+    .tag-agent svg{width:11px;height:11px;opacity:0.8}
     /* agent picker in the form */
     .ag-opt{display:flex;align-items:center;gap:8px}
     .ag-opt .ag-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1270,7 +1272,10 @@
   <aside class="sidebar">
     <div class="sidebar-top">
       <div class="sidebar-logo"><div class="logo-icon"><svg><use href="#i-check"/></svg></div>Bruno Tasks</div>
-      <button class="theme-btn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema claro/escuro"><svg id="themeIcon"><use href="#i-moon"/></svg></button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="theme-btn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema claro/escuro"><svg id="themeIcon"><use href="#i-moon"/></svg></button>
+        <button class="theme-btn" id="closeSidebarBtn" title="Recolher menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      </div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Menu</div>
@@ -1298,9 +1303,12 @@
   <main class="main">
     <div class="tasks-view active" id="tasksView">
       <div class="page-head">
-        <div class="page-head-left">
-          <div class="greeting" id="greeting"></div>
-          <h1 id="pageTitle">Tarefas</h1>
+        <div class="page-head-left" style="display:flex;align-items:center">
+          <button id="openSidebarBtn" title="Abrir menu" style="display:none;background:transparent;border:none;color:var(--label);cursor:pointer;padding:4px;border-radius:8px;margin-right:12px;transition:background var(--dur-fast)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+          <div style="display:flex;flex-direction:column">
+            <div class="greeting" id="greeting"></div>
+            <h1 id="pageTitle">Tarefas</h1>
+          </div>
         </div>
         <button class="theme-btn mob-theme-btn" id="mobThemeBtn" title="Alternar tema"><svg id="mobThemeIcon"><use href="#i-moon"/></svg></button>
         <button class="mob-more-btn" id="mobMore" title="Opções">
@@ -2525,7 +2533,7 @@ function renderItem(t,i,isChild=false,depsOpen=false,isLast=false){
   const recurTag=t.recurrence&&t.recurrence.freq?`<span class="recur-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>${recurText(t.recurrence.freq,t.recurrence.every)}</span>`:'';
   const cls=['item'];if(isChild)cls.push('child');if(t.status==='done')cls.push('completed');if(blocked)cls.push('blocked');if(depsOpen)cls.push('deps-open');if(isLast)cls.push('is-last');
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
-  const agentTag=t.agent?`<span class="tag-agent"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span>`:'';
+  const agentTag=t.agent?`<span class="tag-agent" data-id="${t.id}"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span>`:'';
   const dateTag=t.date?`<span class="item-date ${od?'overdue':''}" data-id="${t.id}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:`<span class="item-date" data-id="${t.id}" style="opacity:.4"><svg><use href="#i-cal"/></svg>Prazo</span>`;
   const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
   const assignTag=t.project==='nos'&&t.assignedTo?`<span class="tag-meta assign-tag"><span class="assign-mini" style="background:${t.assignedTo==='bruno'?'linear-gradient(135deg,#007AFF,#5AC8FA)':t.assignedTo==='parceira'?'linear-gradient(135deg,#FF2D55,#FF6482)':'linear-gradient(135deg,#AF52DE,#5856D6)'}"><svg width="10" height="10"><use href="${t.assignedTo==='ambos'?'#i-users':'#i-user'}"/></svg></span>${t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'Ambos'}</span>`:'';
@@ -3655,6 +3663,35 @@ function celebrateDone(x,y){
   spawnBurst(x,y,c1,12,180);
   setTimeout(()=>spawnBurst(x,y-20,['#FFCC00','#34C759','#007AFF'],8,200),200);
 }
+function showAgentPop(el, id){
+  if(agents.length===0){toast('Nenhum agente cadastrado');return}
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  closeInlinePop();
+  const pop=document.createElement('div');pop.className='iq-pop';pop.id='iqPop';
+  let html='';
+  agents.forEach(a=>{
+    const sel=a===t.agent?' current':'';
+    html+=`<div class="iq-opt${sel}" data-v="${escapeHtml(a)}"><svg><use href="#i-zap"/></svg>${escapeHtml(a)}</div>`;
+  });
+  html+=`<div class="iq-sep"></div><div class="iq-opt" style="color:#FF3B30" data-v="__remove__"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Remover agente</div>`;
+  pop.innerHTML=html;
+  const r=el.getBoundingClientRect();
+  pop.style.left=Math.min(r.left, window.innerWidth-180)+'px';
+  pop.style.top=(r.bottom+4)+'px';
+  document.body.appendChild(pop);
+  requestAnimationFrame(()=>pop.classList.add('show'));
+  pop.addEventListener('click',e=>{
+    const opt=e.target.closest('.iq-opt');
+    if(opt){
+      e.stopPropagation();
+      const v=opt.dataset.v;
+      if(v==='__remove__'){t.agent=null;t.agentStatus=null}else{t.agent=v;if(!t.agentStatus)t.agentStatus=(t.status==='done'?'done':(t.status==='doing'?'progress':'todo'))}
+      t.updatedAt=Date.now();addLog('edit',t);sT();renderTasks();
+      closeInlinePop();
+    }
+  });
+}
+
 function showStatusPop(ckEl,id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
   if(isBlocked(t)&&t.status!=='done'){toast('Complete a tarefa anterior primeiro');return}
@@ -3671,7 +3708,7 @@ function showStatusPop(ckEl,id){
 function closeStatusPop(){const p=$('#stPop');if(p)p.remove()}
 function closeInlinePop(){const p=document.getElementById('iqPop');if(p)p.remove()}
 function closeAllPops(){closeStatusPop();closeInlinePop()}
-document.addEventListener('mousedown',e=>{const sp=document.getElementById('stPop');if(sp&&!sp.contains(e.target)&&!e.target.closest('.ck'))closeStatusPop();const ip=document.getElementById('iqPop');if(ip&&!ip.contains(e.target)&&!e.target.closest('.tag-cat[data-id]')&&!e.target.closest('.item-date[data-id]')&&!e.target.closest('.tag-time[data-id]'))closeInlinePop()});
+document.addEventListener('mousedown',e=>{const sp=document.getElementById('stPop');if(sp&&!sp.contains(e.target)&&!e.target.closest('.ck'))closeStatusPop();const ip=document.getElementById('iqPop');if(ip&&!ip.contains(e.target)&&!e.target.closest('.tag-cat[data-id]')&&!e.target.closest('.item-date[data-id]')&&!e.target.closest('.tag-time[data-id]')&&!e.target.closest('.tag-agent[data-id]'))closeInlinePop()});
 function showDatePop(el,id){
   closeInlinePop();closeStatusPop();
   const t=tasks.find(x=>x.id===id);if(!t)return;
@@ -4304,7 +4341,7 @@ $('#fCWrap').addEventListener('click',()=>$('#fCWrap').classList.toggle('open'))
 $('#fCWrap').addEventListener('blur',()=>setTimeout(()=>$('#fCWrap').classList.remove('open'),150));
 $('#fCMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.cs-opt');if(!o)return;e.preventDefault();fCCat=o.dataset.v;renderCatPicker();$('#fCWrap').classList.remove('open')});
 let _itemClickTimeout=null;
-$('#list').addEventListener('click',e=>{if(e.target.closest('.iq-pop'))return;const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);dpt.classList.toggle('open');const sec=dpt.nextElementSibling;if(sec&&sec.classList.contains('dep-children'))sec.classList.toggle('open');return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;saveUI();dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const tt=e.target.closest('.tag-time[data-id]');if(tt){e.stopPropagation();showTimePop(tt,tt.dataset.id);return}const id_el=e.target.closest('.item-date[data-id]');if(id_el){e.stopPropagation();showDatePop(id_el,id_el.dataset.id);return}const ct=e.target.closest('.tag-cat[data-id]');if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s);return}const acts=e.target.closest('.item-acts');if(acts)return;const b=e.target.closest('.item-body');if(b){if(_itemClickTimeout){clearTimeout(_itemClickTimeout);_itemClickTimeout=null;}if(window.getSelection().toString().length>0)return;const item=b.closest('.item');if(item){const id=item.querySelector('.ck')?.dataset.id;if(id){e.stopPropagation();if(e.detail===1){_itemClickTimeout=setTimeout(()=>{if(window.getSelection().toString().trim().length===0)edit(id)},250)}else if(e.detail>=2){edit(id)}return}}}});
+$('#list').addEventListener('click',e=>{if(e.target.closest('.iq-pop'))return;const gh=e.target.closest('.grp-header');if(gh&&gh.dataset.grp){const gk=gh.dataset.grp;if(collapsedGroups.has(gk))collapsedGroups.delete(gk);else collapsedGroups.add(gk);gh.classList.toggle('collapsed');const sec=gh.nextElementSibling;if(sec&&sec.classList.contains('grp-section')){sec.classList.toggle('collapsed');sec.style.maxHeight=sec.classList.contains('collapsed')?'0px':sec.scrollHeight+'px'}return}const dpt=e.target.closest('.dep-toggle');if(dpt){const pid=dpt.dataset.depToggle;if(expandedDeps.has(pid))expandedDeps.delete(pid);else expandedDeps.add(pid);dpt.classList.toggle('open');const sec=dpt.nextElementSibling;if(sec&&sec.classList.contains('dep-children'))sec.classList.toggle('open');return}const dt=e.target.closest('.done-toggle');if(dt){showDone=!showDone;saveUI();dt.classList.toggle('open',showDone);const sec=dt.nextElementSibling;if(sec)sec.classList.toggle('open',showDone);return}if(e.target.closest('.st-pop'))return;const at=e.target.closest('.tag-agent[data-id]');if(at){e.stopPropagation();showAgentPop(at,at.dataset.id);return}const tt=e.target.closest('.tag-time[data-id]');if(tt){e.stopPropagation();showTimePop(tt,tt.dataset.id);return}const id_el=e.target.closest('.item-date[data-id]');if(id_el){e.stopPropagation();showDatePop(id_el,id_el.dataset.id);return}const ct=e.target.closest('.tag-cat[data-id]');if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return}const ck=e.target.closest('.ck');if(ck){e.stopPropagation();showStatusPop(ck,ck.dataset.id);return}const sk=e.target.closest('.sub-ck');if(sk){e.stopPropagation();toggleSub(sk.dataset.t,+sk.dataset.s);return}const acts=e.target.closest('.item-acts');if(acts)return;const b=e.target.closest('.item-body');if(b){if(_itemClickTimeout){clearTimeout(_itemClickTimeout);_itemClickTimeout=null;}if(window.getSelection().toString().length>0)return;const item=b.closest('.item');if(item){const id=item.querySelector('.ck')?.dataset.id;if(id){e.stopPropagation();if(e.detail===1){_itemClickTimeout=setTimeout(()=>{if(window.getSelection().toString().trim().length===0)edit(id)},250)}else if(e.detail>=2){edit(id)}return}}}});
 $('#catNav').addEventListener('click',e=>{const c=e.target.closest('.cat-nav-item');if(!c)return;aCat=c.dataset.c;saveUI();render()});
 $('#mobCats').addEventListener('click',e=>{const c=e.target.closest('.m-chip[data-c]');if(c){aCat=c.dataset.c;saveUI();render();return}if(e.target.closest('#mobAddCat'))openCatMgr()});
 $$('.seg button').forEach(s=>{s.addEventListener('click',()=>{$$('.seg button').forEach(x=>x.classList.remove('active'));s.classList.add('active');aSt=s.dataset.s;saveUI();renderTasks()})});
@@ -4873,6 +4910,23 @@ $('#mobSheet').addEventListener('click',e=>{
   const mso=e.target.closest('[data-mso]');
   if(mso){sortBy=mso.dataset.mso;saveUI();closeMobSheet();renderTasks();return}
 });
+
+// Sidebar Toggle Logic
+$('#closeSidebarBtn')?.addEventListener('click', () => {
+  $('.shell').classList.add('sidebar-closed');
+  $('#openSidebarBtn').style.display = 'block';
+  localStorage.setItem('btSidebarClosed', '1');
+});
+$('#openSidebarBtn')?.addEventListener('click', () => {
+  $('.shell').classList.remove('sidebar-closed');
+  $('#openSidebarBtn').style.display = 'none';
+  localStorage.setItem('btSidebarClosed', '0');
+});
+if(localStorage.getItem('btSidebarClosed') === '1') {
+  $('.shell').classList.add('sidebar-closed');
+  if($('#openSidebarBtn')) $('#openSidebarBtn').style.display = 'block';
+}
+
 </script>
 </body>
 </html>
