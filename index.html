@@ -1220,6 +1220,36 @@
     .ag-new-input:focus{border-color:var(--blue)}
     .ag-new-save{padding:0 12px;border:none;border-radius:8px;background:var(--label);color:var(--bg);font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;flex-shrink:0}
     @media(max-width:640px){.kanban{gap:10px}.kanban-col{flex-basis:80vw;max-width:80vw}}
+
+    /* ===== MODO FOCO ===== */
+    .btn-focus{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;background:var(--card);color:var(--label);border:1px solid var(--sep);font-family:inherit;font-size:.84rem;font-weight:600;cursor:pointer;transition:transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast);box-shadow:var(--shadow)}
+    .btn-focus:hover{transform:translateY(-1px);box-shadow:var(--shadow2)}
+    .btn-focus:active{transform:scale(.97)}
+    .btn-focus svg{width:15px;height:15px;color:#FF9500}
+    .bf-count{font-size:.68rem;font-weight:700;background:#FF9500;color:#fff;border-radius:6px;padding:0 6px;min-width:16px;text-align:center}
+    .focus-overlay{position:fixed;inset:0;z-index:400;background:rgba(10,10,12,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px;animation:focFade .25s ease both}
+    .focus-overlay.open{display:flex}
+    @keyframes focFade{from{opacity:0}to{opacity:1}}
+    .focus-panel{width:100%;max-width:440px;max-height:88dvh;overflow-y:auto;background:#161618;border-radius:20px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08)}
+    .focus-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .focus-head-title{font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:-.02em}
+    .focus-close{width:30px;height:30px;border-radius:9px;border:none;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .focus-close:hover{background:rgba(255,255,255,.16)}
+    .focus-list{display:flex;flex-direction:column;gap:12px}
+    /* cards de foco — mesmas classes na janela flutuante (PIP_CSS) */
+    .foc-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px}
+    .foc-item.over{border-color:rgba(255,59,48,.5);background:rgba(255,59,48,.1)}
+    .foc-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .foc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .foc-title{font-size:.92rem;font-weight:600;color:#fff;line-height:1.3}
+    .foc-time{font-size:2.1rem;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1}
+    .foc-item.over .foc-time{color:#FF453A}
+    .foc-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin:10px 0 6px}
+    .foc-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#FF9500,#FFCC00);transition:width 1s linear}
+    .foc-item.over .foc-bar-fill{background:#FF453A}
+    .foc-sub{font-size:.74rem;color:rgba(235,235,245,.6);font-weight:500}
+    .foc-item.over .foc-sub{color:#FF8A80}
+    .focus-empty{text-align:center;color:rgba(235,235,245,.5);font-size:.86rem;padding:24px 8px}
   </style>
 </head>
 <body>
@@ -1353,6 +1383,7 @@
           <div class="smart-suggest" id="smartSuggest"></div>
         </div>
         <div class="seg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="done">Feitas</button></div>
+        <button class="btn-focus" id="btnFocus" style="display:none" title="Modo Foco — janela flutuante com o que você está fazendo agora"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>Foco<span class="bf-count" id="bfCount">0</span></button>
         <button class="btn-add" id="btnAdd"><svg><use href="#i-plus"/></svg>Nova tarefa</button>
       </div>
       <div class="grp-bar"><span>Agrupar por:</span>
@@ -1426,6 +1457,14 @@
 </div></nav>
 
 <button class="fab" id="fab" aria-label="Nova tarefa"><svg><use href="#i-plus"/></svg></button>
+
+<!-- Modo Foco — overlay in-app (fallback quando o navegador não suporta janela flutuante) -->
+<div class="focus-overlay" id="focusOverlay">
+  <div class="focus-panel">
+    <div class="focus-head"><div class="focus-head-title">🎯 Em foco agora</div><button class="focus-close" id="focusClose" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="focus-list" id="focusList"></div>
+  </div>
+</div>
 
 <!-- Notes Board Panel — Apple HIG Premium -->
 <div class="notes-board-wrap" id="notesBoardWrap">
@@ -1756,7 +1795,7 @@ let _fbReady=false,_fbSaving=false,_fbListening=false;
 // ===== PUSH NOTIFICATIONS (FCM) =====
 let messaging=null;
 let pushToken=null;
-const VAPID_KEY=''; // >>> COLE AQUI a chave publica VAPID: Firebase Console > Project Settings > Cloud Messaging > Web Push certificates > "Key pair". Ex: 'BPxAbc123...'. Sem ela, push com app fechado nao funciona.
+const VAPID_KEY='BBWa_x7BFyHOJWEWYq_4-imPkpOHpJ_OhMiOGHrqJ4JAKu96VVJWMoaDg57Yoe1o4LhC_Y778OzLPAfHTgvK5Rk';
 
 try{
   if(firebase.messaging.isSupported()){
@@ -1776,6 +1815,11 @@ async function requestNotifPermission(){
     }
     return false;
   }
+  if(!VAPID_KEY){
+    console.error('[push] VAPID_KEY vazio em index.html. Cole a "Key pair" de: Firebase Console > Project Settings > Cloud Messaging > Web Push certificates.');
+    toast('Push ainda não configurado (falta a chave VAPID).');
+    return false;
+  }
   try{
     const permission=await Notification.requestPermission();
     if(permission!=='granted'){toast('Permissão de notificação negada');return false}
@@ -1783,7 +1827,7 @@ async function requestNotifPermission(){
     const swReg=await navigator.serviceWorker.getRegistration();
     if(!swReg){toast('Service Worker não encontrado');return false}
     const token=await messaging.getToken({
-      vapidKey:VAPID_KEY||undefined,
+      vapidKey:VAPID_KEY,
       serviceWorkerRegistration:swReg
     });
     if(token){
@@ -1813,6 +1857,19 @@ async function savePushToken(token){
     },{merge:true});
     localStorage.setItem('btPushEnabled','1');
   }catch(e){console.error('Token save failed:',e)}
+}
+
+// Renova o token FCM no login (tokens expiram/rotacionam). Silencioso, sem pedir permissão.
+async function refreshPushToken(){
+  try{
+    if(!messaging||!VAPID_KEY)return;
+    if(!('Notification' in window)||Notification.permission!=='granted')return;
+    if(!isPushEnabled())return;
+    const swReg=await navigator.serviceWorker.getRegistration();
+    if(!swReg)return;
+    const token=await messaging.getToken({vapidKey:VAPID_KEY,serviceWorkerRegistration:swReg});
+    if(token)await savePushToken(token);
+  }catch(e){console.warn('[push] refresh do token falhou',e)}
 }
 
 // Send push notification to a user role (bruno/parceira/ambos)
@@ -1984,6 +2041,7 @@ auth.onAuthStateChanged(user=>{
     if(!_authBooted){
       _authBooted=true;
       processRecurring();setGreeting();render();fbInit();
+      setTimeout(refreshPushToken,4000);
     }
   } else {
     showLoginScreen();
@@ -3220,7 +3278,7 @@ function toggleAlertBar(){
   if(bar) bar.classList.toggle('open',_alertBarOpen);
 }
 
-function render(){renderProjNav();renderCatNav();renderTasks();renderWidgets();if(curView==='dash')renderDash();if(curView==='med')renderMedView();if(curView==='agents')renderAgentsView();else{const b=$('#navBadgeAg');if(b)b.textContent=agentTasks().filter(t=>t.status!=='done').length}}
+function render(){renderProjNav();renderCatNav();renderTasks();renderWidgets();updateFocusBtn();if(curView==='dash')renderDash();if(curView==='med')renderMedView();if(curView==='agents')renderAgentsView();else{const b=$('#navBadgeAg');if(b)b.textContent=agentTasks().filter(t=>t.status!=='done').length}}
 
 function renderDashFilter(){
   // Project pills (same as task list)
@@ -3371,6 +3429,8 @@ function setAgentStatus(t,col){
     if(t.status==='done'){t.completedAt=null}
     t.status=(col==='todo')?'todo':'doing';
   }
+  // Cronômetro do Modo Foco: carimba/limpa conforme entra ou sai de 'fazendo'
+  if(t.status==='doing'){if(!t.doingStartedAt)t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
   t.updatedAt=Date.now();
 }
 let _agInlineNew=false;
@@ -3804,13 +3864,82 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   const ckEl=document.querySelector(`.ck[data-id="${id}"]`);
   const ckRect=ckEl?ckEl.getBoundingClientRect():null;
   t.status=newSt;t.completedAt=newSt==='done'?Date.now():null;t.updatedAt=Date.now();
+  // Cronômetro do Modo Foco: carimba quando entra em 'fazendo', limpa quando sai
+  if(newSt==='doing'){if(!t.doingStartedAt)t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
   addLog(wasDone&&newSt!=='done'?'reopen':newSt==='done'?'complete':'edit',t);sT();
   if(newSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),800)}if(t.recurrence)setTimeout(processRecurring,100)}
   render();const msgs={todo:'A Fazer',doing:'Fazendo',done:'Conclu\u00edda'};
-  if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('\u26a1 '+msgs[newSt])}
+  if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('\u26a1 '+msgs[newSt]);openFocus(true)}
   else if(newSt==='done'){if(ckRect)celebrateDone(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);toast('\u2728 '+msgs[newSt]+'!')}
   else{toast(msgs[newSt]||'')}}
 function spawnBurst(x,y,colors,count,spread,scale=1){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=((spread*.3)+Math.random()*spread)*scale;const w=(4+Math.random()*10)*scale;const h=w*(Math.random()>.5?1:.4);p.style.width=w+'px';p.style.height=h+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-(spread*.5)*scale)+'px');p.style.setProperty('--cr',(Math.random()*1080-540)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.3?'50%':'2px';p.style.animationDuration=(.8+Math.random()*1)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
+// ===== MODO FOCO — janela flutuante (Document Picture-in-Picture) + fallback overlay =====
+let _pipWin=null,_focusTimer=null;
+const PIP_CSS=`*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:#0d0d0f;color:#fff;padding:14px}
+.focus-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.focus-head-title{font-size:1rem;font-weight:800;letter-spacing:-.02em}
+.focus-list{display:flex;flex-direction:column;gap:10px}
+.foc-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:13px 15px}
+.foc-item.over{border-color:rgba(255,59,48,.5);background:rgba(255,59,48,.1)}
+.foc-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.foc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.foc-title{font-size:.9rem;font-weight:600;line-height:1.3}
+.foc-time{font-size:2rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1}
+.foc-item.over .foc-time{color:#FF453A}
+.foc-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin:9px 0 6px}
+.foc-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#FF9500,#FFCC00);transition:width 1s linear}
+.foc-item.over .foc-bar-fill{background:#FF453A}
+.foc-sub{font-size:.72rem;color:rgba(235,235,245,.6);font-weight:500}
+.foc-item.over .foc-sub{color:#FF8A80}
+.focus-empty{text-align:center;color:rgba(235,235,245,.5);font-size:.84rem;padding:22px 8px;line-height:1.5}`;
+function fmtClock(ms){const s=Math.max(0,Math.round(ms/1000));const m=Math.floor(s/60);return m+':'+String(s%60).padStart(2,'0')}
+function focusItemsHTML(){
+  const doing=getVisibleTasks().filter(t=>t.status==='doing');
+  if(!doing.length)return '<div class="focus-empty">Nada em progresso.<br>Marque uma tarefa como “Fazendo”.</div>';
+  const now=Date.now();
+  return doing.map(t=>{
+    const c=ci(t.category);
+    const since=t.doingStartedAt||t.updatedAt||now;
+    const elapsed=now-since;
+    if(t.estimatedTime){
+      const total=t.estimatedTime*60000,remain=total-elapsed,over=remain<0;
+      const pct=Math.min(100,Math.max(0,elapsed/total*100));
+      const clock=over?('+'+fmtClock(-remain)):fmtClock(remain);
+      const sub=over?('Passou '+fmtClock(-remain)+' do estimado ('+fmtTime(t.estimatedTime)+')'):('Faltam de '+fmtTime(t.estimatedTime)+' estimado');
+      return `<div class="foc-item ${over?'over':''}"><div class="foc-top"><span class="foc-dot" style="background:${c.color}"></span><span class="foc-title">${escapeHtml(t.title)}</span></div><div class="foc-time">${clock}</div><div class="foc-bar"><div class="foc-bar-fill" style="width:${pct}%"></div></div><div class="foc-sub">${sub}</div></div>`;
+    }
+    return `<div class="foc-item"><div class="foc-top"><span class="foc-dot" style="background:${c.color}"></span><span class="foc-title">${escapeHtml(t.title)}</span></div><div class="foc-time">${fmtClock(elapsed)}</div><div class="foc-sub">Em andamento • sem tempo estimado</div></div>`;
+  }).join('');
+}
+function renderFocus(){
+  const html=focusItemsHTML();
+  if(_pipWin&&!_pipWin.closed){const r=_pipWin.document.getElementById('focusList');if(r)r.innerHTML=html}
+  const ov=$('#focusOverlay');
+  if(ov&&ov.classList.contains('open'))$('#focusList').innerHTML=html;
+}
+function startFocusTimer(){if(!_focusTimer)_focusTimer=setInterval(renderFocus,1000)}
+function stopFocusTimer(){if(_pipWin||$('#focusOverlay').classList.contains('open'))return;clearInterval(_focusTimer);_focusTimer=null}
+async function openFocus(auto){
+  if('documentPictureInPicture' in window){
+    try{
+      if(_pipWin&&!_pipWin.closed){_pipWin.focus();return}
+      _pipWin=await documentPictureInPicture.requestWindow({width:360,height:460});
+      const st=_pipWin.document.createElement('style');st.textContent=PIP_CSS;_pipWin.document.head.appendChild(st);
+      _pipWin.document.body.innerHTML='<div class="focus-head"><div class="focus-head-title">🎯 Em foco</div></div><div class="focus-list" id="focusList"></div>';
+      _pipWin.document.title='Em foco';
+      _pipWin.addEventListener('pagehide',()=>{_pipWin=null;stopFocusTimer()});
+      renderFocus();startFocusTimer();
+      return;
+    }catch(e){if(auto)return;console.warn('PiP indisponível, usando overlay',e)}
+  }
+  if(auto)return; // auto: não força overlay (evita pop intrusivo no iPhone)
+  $('#focusOverlay').classList.add('open');renderFocus();startFocusTimer();
+}
+function closeFocus(){$('#focusOverlay').classList.remove('open');if(_pipWin&&!_pipWin.closed){try{_pipWin.close()}catch(e){}}_pipWin=null;stopFocusTimer()}
+function updateFocusBtn(){const n=getVisibleTasks().filter(t=>t.status==='doing').length;const b=$('#btnFocus');if(b){b.style.display=n>0?'flex':'none';const c=$('#bfCount');if(c)c.textContent=n}}
+const _btnFocus=$('#btnFocus');if(_btnFocus)_btnFocus.addEventListener('click',()=>openFocus(false));
+const _focusClose=$('#focusClose');if(_focusClose)_focusClose.addEventListener('click',closeFocus);
+const _focusOv=$('#focusOverlay');if(_focusOv)_focusOv.addEventListener('click',e=>{if(e.target.id==='focusOverlay')closeFocus()});
 function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(52,199,89,.25),rgba(0,122,255,.08) 50%,transparent 70%);z-index:9998;pointer-events:none;animation:flashFade 1s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
 function celebrateDone(x,y,scale=1){
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
@@ -4554,7 +4683,10 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
     if(status==='done')agentStatusVal='done';
     else if(agentStatusVal==='done'||!agentStatusVal)agentStatusVal=(status==='doing'?'progress':'todo');
   }else{agentStatusVal=null}
-  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,agent:agentVal,agentStatus:agentStatusVal,medType:existing?.medType,examTime:existing?.examTime,examLocal:existing?.examLocal,examDoctor:existing?.examDoctor,remindDayBefore:existing?.remindDayBefore,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');notifyNewTask(data);
+  // Cronômetro do Modo Foco: preserva o início se já estava 'fazendo', carimba ao entrar, limpa ao sair
+  let doingStartedAtVal=null;
+  if(status==='doing')doingStartedAtVal=(existing?.status==='doing'&&existing?.doingStartedAt)?existing.doingStartedAt:Date.now();
+  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,agent:agentVal,agentStatus:agentStatusVal,doingStartedAt:doingStartedAtVal,medType:existing?.medType,examTime:existing?.examTime,examLocal:existing?.examLocal,examDoctor:existing?.examDoctor,remindDayBefore:existing?.remindDayBefore,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');notifyNewTask(data);
     // Auto-expand parent deps so the new child is visible immediately
     if(mDeps.length) mDeps.forEach(pid=>expandedDeps.add(pid));
   }sT();closeM();render()});
@@ -4748,7 +4880,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=112',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=113',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately

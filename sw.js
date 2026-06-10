@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bruno-tasks-v112';
+const CACHE_NAME = 'bruno-tasks-v113';
 const ASSETS = ['./index.html', './manifest.json', './apple-touch-icon.png', './manifest-icon.png'];
 
 self.addEventListener('install', e => {
@@ -30,11 +30,8 @@ self.addEventListener('push', e => {
   if(e.data) {
     try {
       const payload = e.data.json();
-      if(payload.notification) {
-        data = payload.notification;
-      } else {
-        data = payload;
-      }
+      // FCM data-only chega como {data:{...}}; notification message como {notification:{...}}
+      data = payload.notification || payload.data || payload;
     } catch(err) {
       data.body = e.data.text();
     }
