@@ -1,5 +1,5 @@
-const CACHE_NAME = 'bruno-tasks-v108';
-const ASSETS = ['./index.html'];
+const CACHE_NAME = 'bruno-tasks-v110';
+const ASSETS = ['./index.html', './manifest.json', './apple-touch-icon.png', './manifest-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
@@ -69,30 +69,30 @@ self.addEventListener('notificationclick', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // POST/streaming (Firestore, auth) vao direto para a rede
+  if(e.request.method !== 'GET') return;
+
   const url = new URL(e.request.url);
-  
+
   // Never cache the SW itself
   if(url.pathname.includes('sw.js')) {
     e.respondWith(fetch(e.request));
     return;
   }
-  
-  // Network-first for HTML, update cache on success
-  if(e.request.mode === 'navigate' || url.pathname.endsWith('.html')) {
-    e.respondWith(
-      fetch(e.request).then(response => {
-        if(response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-        }
-        return response;
-      }).catch(() => caches.match(e.request))
-    );
-    return;
-  }
-  
-  // Everything else: network-first too
+
+  // So intercepta o proprio site e os SDKs do Firebase na CDN;
+  // APIs (firestore/auth/fcm) falam direto com a rede, sem cache
+  const cacheable = url.origin === self.location.origin || url.hostname === 'www.gstatic.com';
+  if(!cacheable) return;
+
+  // Network-first, atualiza cache no sucesso (opaque = scripts no-cors da CDN)
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+    fetch(e.request).then(response => {
+      if(response.ok || response.type === 'opaque') {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+      }
+      return response;
+    }).catch(() => caches.match(e.request))
   );
 });

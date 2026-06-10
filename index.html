@@ -7,8 +7,9 @@
   <meta name="theme-color" content="#f2f2f7" id="metaTheme">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Tasks">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <title>Bruno Tasks</title>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -45,7 +46,7 @@
     }
 
     html{height:100%;scroll-behavior:smooth}
-    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--label);min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;line-height:1.47;transition:background var(--dur-smooth) var(--ease-std),color var(--dur-smooth) var(--ease-std)}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--label);min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;line-height:1.47;transition:background var(--dur-smooth) var(--ease-std),color var(--dur-smooth) var(--ease-std)}
     .svg-defs{display:none}
 
     /* ===== LOGIN SCREEN ===== */
@@ -615,7 +616,7 @@
     .feed-time{font-size:.68rem;color:var(--label3);white-space:nowrap}
 
     /* ===== FAB ===== */
-    .fab{display:none;position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--label);border:none;color:var(--bg);cursor:pointer;align-items:center;justify-content:center;z-index:90;transition:transform var(--dur-norm) var(--ease-spring),box-shadow var(--dur-norm);box-shadow:0 4px 16px rgba(0,0,0,.12)}
+    .fab{display:none;position:fixed;bottom:calc(max(env(safe-area-inset-bottom,4px),4px) + 70px);right:20px;width:52px;height:52px;border-radius:50%;background:var(--label);border:none;color:var(--bg);cursor:pointer;align-items:center;justify-content:center;z-index:90;transition:transform var(--dur-norm) var(--ease-spring),box-shadow var(--dur-norm);box-shadow:0 4px 16px rgba(0,0,0,.12)}
     .fab svg{width:22px;height:22px;transition:transform var(--dur-norm) var(--ease-spring)}
     .fab:hover{transform:scale(1.08);box-shadow:0 8px 28px rgba(0,0,0,.18)}
     .fab:hover svg{transform:rotate(90deg)}
@@ -658,6 +659,8 @@
     .pick-seg button.active{background:var(--card);color:var(--label);box-shadow:0 1px 4px rgba(0,0,0,.06)}
     .pick-seg button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
     .pick-seg .pick-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .md-check{display:flex;align-items:center;gap:10px;margin-top:6px;padding:10px 12px;background:var(--fill);border-radius:12px;font-size:.85rem;color:var(--label);cursor:pointer;user-select:none}
+    .md-check input{width:18px;height:18px;accent-color:var(--blue);flex-shrink:0;cursor:pointer}
 
     /* Dependency picker */
     .dep-picker{position:relative}
@@ -1312,7 +1315,7 @@
       <div class="dash-section"><h2>Atividade recente</h2><div class="feed" id="feedList"></div></div>
     </div>
     <div class="med" id="medView">
-      <div class="page-head"><div class="page-head-left"><div class="greeting">Saúde & Bem-Estar</div><h1>Med View</h1></div></div>
+      <div class="page-head"><div class="page-head-left"><div class="greeting">Saúde & Bem-Estar</div><h1>Med View</h1></div><button class="btn-add" id="medAddBtn"><svg><use href="#i-plus"/></svg>Adicionar</button></div>
       <div class="med-grid">
         <div class="med-col">
           <div class="dash-section" style="margin-bottom:0"><h2>Cronograma de Remédios</h2><div class="med-timeline" id="medSchedule"></div></div>
@@ -1412,6 +1415,47 @@
       <div class="fld" id="aUntilWrap" style="display:none"><label>Até quando</label><input type="date" id="aUntil"></div>
     </div>
     <div class="m-btns"><button type="button" class="btn btn-sec" id="aCan">Cancelar</button><button type="submit" class="btn btn-primary">Criar Alerta</button></div>
+  </form>
+</div>
+
+<!-- Saúde: Remédio / Consulta / Exame -->
+<div class="mob-sheet-ov" id="medOv"></div>
+<div class="mob-sheet" id="medSheet">
+  <div class="mob-sheet-handle"></div>
+  <div class="mob-sheet-title">🩺 Adicionar à Saúde</div>
+  <form id="medForm">
+    <div class="fld"><label>Tipo</label><div class="pick-seg" id="mdType">
+      <button type="button" data-v="med" class="active">💊 Remédio</button>
+      <button type="button" data-v="consulta">🩺 Consulta</button>
+      <button type="button" data-v="exam">🧪 Exame</button>
+    </div></div>
+    <div class="fld"><label id="mdNameLabel">Nome do remédio</label><input type="text" id="mdName" placeholder="Ex: Losartana" required></div>
+    <!-- Campos de Remédio -->
+    <div id="mdMedFields">
+      <div class="fld-row">
+        <div class="fld"><label>Dose</label><input type="text" id="mdDose" placeholder="Ex: 50mg, 10 gotas"></div>
+        <div class="fld"><label>Horário</label><input type="time" id="mdTime" value="08:00"></div>
+      </div>
+      <div class="fld"><label>Para quem?</label><div class="pick-seg" id="mdAssign">
+        <button type="button" data-v="bruno" class="active"><span class="assign-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Bruno</button>
+        <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Clara</button>
+        <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-users"/></svg></span>Ambos</button>
+      </div></div>
+      <label class="md-check"><input type="checkbox" id="mdDaily" checked><span>Lembrar todo dia nesse horário</span></label>
+    </div>
+    <!-- Campos de Consulta / Exame -->
+    <div id="mdExamFields" style="display:none">
+      <div class="fld-row">
+        <div class="fld"><label>Data</label><input type="date" id="mdDate"></div>
+        <div class="fld"><label>Hora</label><input type="time" id="mdExamTime"></div>
+      </div>
+      <div class="fld-row">
+        <div class="fld"><label>Local</label><input type="text" id="mdLocal" placeholder="Ex: Lab. Sabin"></div>
+        <div class="fld"><label>Médico <span style="color:var(--label3)">(opcional)</span></label><input type="text" id="mdDoctor" placeholder="Ex: Dra. Ana"></div>
+      </div>
+      <label class="md-check"><input type="checkbox" id="mdRemind" checked><span>Lembrar no dia e na véspera</span></label>
+    </div>
+    <div class="m-btns"><button type="button" class="btn btn-sec" id="mdCan">Cancelar</button><button type="submit" class="btn btn-primary">Salvar</button></div>
   </form>
 </div>
 
@@ -1583,7 +1627,7 @@ let _fbReady=false,_fbSaving=false,_fbListening=false;
 // ===== PUSH NOTIFICATIONS (FCM) =====
 let messaging=null;
 let pushToken=null;
-const VAPID_KEY=''; // Will be set after Firebase Console setup
+const VAPID_KEY=''; // >>> COLE AQUI a chave publica VAPID: Firebase Console > Project Settings > Cloud Messaging > Web Push certificates > "Key pair". Ex: 'BPxAbc123...'. Sem ela, push com app fechado nao funciona.
 
 try{
   if(firebase.messaging.isSupported()){
@@ -1658,10 +1702,68 @@ async function sendPushToRole(targetRole,title,body){
   }catch(e){console.error('Push send failed:',e)}
 }
 
+// ===== NOTIFICAÇÕES DE TAREFA (nova tarefa + vencimento) =====
+function _roleName(r){return r==='bruno'?'Bruno':r==='parceira'?'Clara':'Ambos'}
+function _otherRole(r){return r==='bruno'?'parceira':r==='parceira'?'bruno':'ambos'}
+// Push habilitado neste aparelho? (se sim, a Cloud Function cobre tudo; senão usamos fallback local)
+function _pushOn(){return localStorage.getItem('btPushEnabled')==='1'}
+
+// Chamado quando EU crio uma tarefa nova → enfileira push p/ o destinatário (funciona com app fechado via Cloud Function)
+function notifyNewTask(t){
+  try{
+    if(!t||t.type==='note'||t.type==='alert')return;
+    const myRole=getMyRole();if(!myRole)return;
+    let target;
+    if(t.project==='nos'&&t.assignedTo){
+      target=t.assignedTo==='ambos'?_otherRole(myRole):t.assignedTo;
+    }else{
+      target=_otherRole(myRole); // tarefa pessoal/projeto → avisa o parceiro
+    }
+    if(!target||target===myRole)return;
+    sendPushToRole(target,'Nova tarefa de '+_roleName(myRole),t.title);
+  }catch(e){console.warn('notifyNewTask',e)}
+}
+
+// Aviso de vencimento "de manhã" enquanto o app está aberto (fallback; a Cloud Function cobre o app fechado)
+function checkDueToday(){
+  try{
+    if(_pushOn())return;                              // já coberto pela Cloud Function
+    if(Notification.permission!=='granted')return;
+    if(new Date().getHours()<7)return;               // só de manhã (>=7h)
+    const myRole=getMyRole();if(!myRole)return;
+    const today=dateStr(new Date());
+    const tomorrow=dateStr(new Date(Date.now()+864e5));
+    const notified=ld('bt-due-notified',{});         // {chave: dia em que avisou}
+    let touched=false;
+    tasks.forEach(t=>{
+      if(!t.date||t.status==='done'||t.type==='alert'||t.type==='note')return;
+      const mine=!t.assignedTo||t.assignedTo===myRole||t.assignedTo==='ambos';
+      if(!mine)return;
+      // No dia do vencimento
+      if(t.date===today && notified['dia-'+t.id]!==today){
+        notified['dia-'+t.id]=today;touched=true;
+        try{const n=new Notification('É hoje',{body:t.title,tag:'due-'+t.id,renotify:true});n.onclick=()=>{window.focus();n.close()}}catch(e){}
+        toast('É hoje: '+t.title);
+      }
+      // Na véspera (só se marcado para lembrar no dia anterior)
+      if(t.remindDayBefore && t.date===tomorrow && notified['vesp-'+t.id]!==today){
+        notified['vesp-'+t.id]=today;touched=true;
+        try{const n=new Notification('Amanhã',{body:t.title,tag:'vesp-'+t.id,renotify:true});n.onclick=()=>{window.focus();n.close()}}catch(e){}
+        toast('Amanhã: '+t.title);
+      }
+    });
+    if(touched)sv('bt-due-notified',notified);
+  }catch(e){console.warn('checkDueToday',e)}
+}
+setInterval(checkDueToday,60000);
+setTimeout(checkDueToday,6000);
+
 // Foreground message handler
 if(messaging){
   messaging.onMessage((payload)=>{
-    const {title,body}=payload.notification||{};
+    // Aceita tanto notification quanto data-only (enviamos data-only p/ evitar duplicar)
+    const n=payload.notification||payload.data||{};
+    const title=n.title,body=n.body;
     if(title){
       // Show in-app toast
       toast(title+(body?': '+body:''));
@@ -2047,6 +2149,13 @@ function combineData(){
             const n=new Notification(creatorName,{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});
             n.onclick=()=>{window.focus();n.close()};
           }catch(e){}
+        }
+      }
+      // Tarefas novas vindas do parceiro — fallback local quando o push ainda nao esta ativo
+      else if(t.type!=='note'&&t.type!=='alert'&&t.createdAt>recentCutoff&&!_pushOn()){
+        toast('Nova tarefa: '+t.title);
+        if(Notification.permission==='granted'){
+          try{const n=new Notification('Nova tarefa',{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});n.onclick=()=>{window.focus();n.close()};}catch(e){}
         }
       }
     });
@@ -3086,9 +3195,10 @@ function renderMedView(){
     return new Date(a.date||0) - new Date(b.date||0);
   });
   
-  const isMed = t => t.category.match(/rem|medica/i) || t.title.match(/tomar|gotas|comprim|mg|ml/i);
-  const isCon = t => t.category.match(/consult|medic/i) || t.title.match(/consulta|dr\.|dra\./i);
-  const isExm = t => t.category.match(/exam/i) || t.title.match(/exame|sangue|ultrassom|raio/i);
+  // medType (do formulário novo) tem prioridade; senão cai no palpite por palavra-chave
+  const isMed = t => t.medType ? t.medType==='med' : ((t.category||'').match(/rem|medica/i) || (t.title||'').match(/tomar|gotas|comprim|mg|ml/i));
+  const isCon = t => t.medType ? t.medType==='consulta' : ((t.category||'').match(/consult|medic/i) || (t.title||'').match(/consulta|dr\.|dra\./i));
+  const isExm = t => t.medType ? t.medType==='exam' : ((t.category||'').match(/exam/i) || (t.title||'').match(/exame|sangue|ultrassom|raio/i));
 
   const meds = mTasks.filter(t => isMed(t));
   const cons = mTasks.filter(t => isCon(t) && !isMed(t));
@@ -3103,16 +3213,28 @@ function renderMedView(){
   } else {
     const m={man:[], tar:[], noi:[], out:[]};
     todayMeds.forEach(t=>{
+      // Se tem horário definido, agrupa por ele (manhã<12h, tarde<18h, noite>=18h)
+      if(t.alertTime&&/^\d{1,2}:/.test(t.alertTime)){
+        const h=parseInt(t.alertTime.split(':')[0],10);
+        if(h<12)m.man.push(t);else if(h<18)m.tar.push(t);else m.noi.push(t);
+        return;
+      }
       const str = (t.title+' '+(t.notes||'')).toLowerCase();
       if(str.match(/manhã|cedo|jejum|ao acordar/)) m.man.push(t);
       else if(str.match(/tarde|almoço|12h|13h|14h|15h|16h|17h/)) m.tar.push(t);
       else if(str.match(/noite|dormir|jantar|18h|19h|20h|21h|22h|23h/)) m.noi.push(t);
       else m.out.push(t);
     });
-    const renderPill = t => `<div class="med-pill ${t.status==='done'?'done':''}" onclick="toggleM('${t.id}')">
+    const renderPill = t => {
+      const sub=[];
+      if(t.alertTime) sub.push('🕐 '+t.alertTime);
+      if(t.notes) sub.push(escapeHtml(t.notes));
+      else if(t.recurrence?.freq) sub.push(recurText(t.recurrence.freq));
+      return `<div class="med-pill ${t.status==='done'?'done':''}" onclick="toggleM('${t.id}')">
       <div class="ck"><svg width="12" height="12"><use href="#i-check"/></svg></div>
-      <div class="med-pill-info"><div class="med-pill-title">${escapeHtml(t.title)}</div><div class="med-pill-sub">${escapeHtml(t.notes||(t.recurrence?.freq?recurText(t.recurrence.freq):''))}</div></div>
+      <div class="med-pill-info"><div class="med-pill-title">${escapeHtml(t.title)}</div><div class="med-pill-sub">${sub.join(' · ')}</div></div>
     </div>`;
+    };
     
     if(m.man.length) medsHtml += `<div class="med-time-group"><div class="med-time-dot"></div><div class="med-time-label">Manhã</div>${m.man.map(renderPill).join('')}</div>`;
     if(m.tar.length) medsHtml += `<div class="med-time-group"><div class="med-time-dot"></div><div class="med-time-label">Tarde</div>${m.tar.map(renderPill).join('')}</div>`;
@@ -3133,6 +3255,7 @@ function renderMedView(){
       <div class="med-ticket-info">
         <div class="med-ticket-title">${escapeHtml(t.title)}</div>
         <div class="med-ticket-sub"><svg width="12" height="12"><use href="#i-cal"/></svg> ${t.date?fmtD(t.date):'Sem data'}</div>
+        ${t.notes?`<div class="med-ticket-sub">${escapeHtml(t.notes)}</div>`:''}
       </div>
     </div>`;
   };
@@ -3443,11 +3566,14 @@ $('#ceBack').addEventListener('click',()=>{$('#catMgrView').style.display='';$('
 // Events
 // FAB: show menu for shared projects, direct openM for personal
 $('#fab').addEventListener('click',()=>{
+  if(curView==='med'){openMedForm();return}
   const ap=getActiveContextProject();
   const isShared=ap==='nos'||projects.find(p=>p.id===ap&&p.type==='shared');
   if(isShared){openFabMenu()}else{openM()}
 });
+const _medAddBtn=$('#medAddBtn');if(_medAddBtn)_medAddBtn.addEventListener('click',openMedForm);
 $('#btnAdd').addEventListener('click',()=>{
+  if(curView==='med'){openMedForm();return}
   const ap=getActiveContextProject();
   const isShared=ap==='nos'||projects.find(p=>p.id===ap&&p.type==='shared');
   if(isShared){openFabMenu()}else{openM()}
@@ -3543,6 +3669,63 @@ $('#aFreq').addEventListener('click',e=>{
   $('#aUntilWrap').style.display=isOnce?'none':'';
   $('#aDateLabel').textContent=isOnce?'Data':'A partir de';
   if(isOnce)$('#aUntil').value='';
+});
+
+// ===== SAÚDE: formulário de remédio / consulta / exame =====
+function openMedForm(){
+  const sy=window.scrollY;document.body.style.top='-'+sy+'px';document.body.classList.add('modal-open');document.body.dataset.scrollY=sy;
+  $('#medSheet').classList.add('open');$('#medOv').classList.add('open');
+  $('#medForm').reset();
+  pickVal($('#mdType'),'med');
+  pickVal($('#mdAssign'),getMyRole()||'bruno');
+  $('#mdTime').value='08:00';$('#mdDaily').checked=true;$('#mdRemind').checked=true;
+  _mdSetType('med');
+  setTimeout(()=>$('#mdName').focus(),300);
+}
+function closeMedForm(){
+  $('#medSheet').classList.remove('open');$('#medOv').classList.remove('open');
+  checkRestoreScroll();
+}
+function _mdSetType(type){
+  const isMed=type==='med';
+  $('#mdMedFields').style.display=isMed?'':'none';
+  $('#mdExamFields').style.display=isMed?'none':'';
+  $('#mdNameLabel').textContent=isMed?'Nome do remédio':(type==='consulta'?'Nome da consulta':'Nome do exame');
+  $('#mdName').placeholder=isMed?'Ex: Losartana':(type==='consulta'?'Ex: Cardiologista':'Ex: Exame de sangue');
+}
+$('#mdType').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;pickVal($('#mdType'),b.dataset.v);_mdSetType(b.dataset.v)});
+$('#mdAssign').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;pickVal($('#mdAssign'),b.dataset.v)});
+$('#medOv').addEventListener('click',closeMedForm);
+$('#mdCan').addEventListener('click',closeMedForm);
+$('#medForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const type=getPickVal($('#mdType'))||'med';
+  const name=$('#mdName').value.trim();if(!name)return;
+  const medProj=projects.find(p=>p.name.trim().toLowerCase()==='med'||p.id==='med');
+  const medProjId=medProj?medProj.id:'med';
+  let data;
+  if(type==='med'){
+    const dose=$('#mdDose').value.trim();
+    const time=$('#mdTime').value||'08:00';
+    const who=getPickVal($('#mdAssign'))||'bruno';
+    if($('#mdDaily').checked){
+      const [hh,mm]=time.split(':').map(Number);
+      const fire=new Date();fire.setHours(hh,mm,0,0);
+      if(fire.getTime()<Date.now())fire.setDate(fire.getDate()+1);
+      data={id:uid(),type:'alert',medType:'med',title:name,notes:dose,project:medProjId,assignedTo:who,alertTime:time,recurrence:{freq:'daily',until:null},date:dateStr(new Date()),nextFireAt:fire.getTime(),lastFiredAt:null,status:'todo',category:'remedios',createdAt:Date.now(),updatedAt:Date.now()};
+    }else{
+      data={id:uid(),medType:'med',title:name,notes:dose,project:medProjId,assignedTo:who,status:'todo',category:'remedios',createdAt:Date.now(),updatedAt:Date.now()};
+    }
+  }else{
+    const date=$('#mdDate').value||'';
+    const etime=$('#mdExamTime').value||'';
+    const local=$('#mdLocal').value.trim();
+    const doctor=$('#mdDoctor').value.trim();
+    const parts=[];if(etime)parts.push('🕐 '+etime);if(local)parts.push('📍 '+local);if(doctor)parts.push('👨‍⚕️ '+doctor);
+    data={id:uid(),medType:type,title:name,notes:parts.join('  •  '),project:medProjId,date:date,examTime:etime||null,examLocal:local||null,examDoctor:doctor||null,remindDayBefore:$('#mdRemind').checked,status:'todo',category:type==='exam'?'exames':'consultas',createdAt:Date.now(),updatedAt:Date.now()};
+  }
+  tasks.unshift(data);addLog('create',data);sT();closeMedForm();render();
+  toast(type==='med'?'Remédio adicionado':(type==='consulta'?'Consulta agendada':'Exame agendado'));
 });
 
 // ===== NOTES BOARD =====
@@ -3857,7 +4040,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
   const recurrence=(recurFreq?{freq:recurFreq,until:recurUntil}:null);
   const projVal=fFormProj;const assignVal=projVal==='nos'?getPickVal($('#fAssign')):null;
   const existing=id?tasks.find(t=>t.id===id):null;
-  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');
+  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,medType:existing?.medType,examTime:existing?.examTime,examLocal:existing?.examLocal,examDoctor:existing?.examDoctor,remindDayBefore:existing?.remindDayBefore,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');notifyNewTask(data);
     // Auto-expand parent deps so the new child is visible immediately
     if(mDeps.length) mDeps.forEach(pid=>expandedDeps.add(pid));
   }sT();closeM();render()});
@@ -4043,7 +4226,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=108',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=110',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -4084,7 +4267,8 @@ function processAlerts(){
       const targetName=t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'Alerta';
       const title=targetName+': '+t.title;
       toast(title);
-      if(Notification.permission==='granted'){
+      // Notificação nativa só se o push NÃO estiver ativo (senão a Cloud Function cobre, inclusive app fechado)
+      if(Notification.permission==='granted' && !_pushOn()){
         try{
           const n=new Notification(targetName,{
             body:t.title,
