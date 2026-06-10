@@ -3760,9 +3760,12 @@ window.setViewStatus = function(id, col, e) {
 function renderViewSubs(t) {
   if(t.subtasks && t.subtasks.length) {
     $('#vSubs').innerHTML = t.subtasks.map((s,i)=>`
-      <label style="display:flex; gap:12px; align-items:flex-start; cursor:pointer; opacity: ${s.done?'0.5':'1'}; transition:opacity var(--dur-fast);">
-        <input type="checkbox" ${s.done?'checked':''} onchange="toggleViewSub(${i})" style="width:18px;height:18px;margin-top:2px;cursor:pointer;accent-color:var(--blue);">
-        <span style="font-size:1rem; color:var(--label); text-decoration:${s.done?'line-through':''}; line-height:1.4;">${escapeHtml(s.text)}</span>
+      <label style="display:flex; gap:14px; align-items:flex-start; cursor:pointer; padding:12px 16px; margin:0 -16px; border-radius:12px; transition:all var(--dur-fast);" onmouseover="this.style.background='var(--fill)'" onmouseout="this.style.background='transparent'">
+        <input type="checkbox" ${s.done?'checked':''} onchange="toggleViewSub(${i})" style="display:none;">
+        <div style="width:20px; height:20px; border-radius:6px; border:2px solid ${s.done?'var(--blue)':'var(--label3)'}; background:${s.done?'var(--blue)':'transparent'}; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; transition:all var(--dur-fast);">
+           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:${s.done?'1':'0'}; transform:scale(${s.done?'1':'0.5'}); transition:all var(--dur-fast);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <span style="font-size:0.95rem; color:${s.done?'var(--label3)':'var(--label)'}; text-decoration:${s.done?'line-through':''}; line-height:1.5; transition:color var(--dur-fast);">${escapeHtml(s.text)}</span>
       </label>
     `).join('');
     $('#vSubsWrap').style.display = 'block';
