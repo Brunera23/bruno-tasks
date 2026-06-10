@@ -3670,13 +3670,13 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('\u26a1 '+msgs[newSt])}
   else if(newSt==='done'){if(ckRect)celebrateDone(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);toast('\u2728 '+msgs[newSt]+'!')}
   else{toast(msgs[newSt]||'')}}
-function spawnBurst(x,y,colors,count,spread){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=(spread*.3)+Math.random()*spread;const w=4+Math.random()*10;const h=w*(Math.random()>.5?1:.4);p.style.width=w+'px';p.style.height=h+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-spread*.5)+'px');p.style.setProperty('--cr',(Math.random()*1080-540)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.3?'50%':'2px';p.style.animationDuration=(.8+Math.random()*1)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
+function spawnBurst(x,y,colors,count,spread,scale=1){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=((spread*.3)+Math.random()*spread)*scale;const w=(4+Math.random()*10)*scale;const h=w*(Math.random()>.5?1:.4);p.style.width=w+'px';p.style.height=h+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-(spread*.5)*scale)+'px');p.style.setProperty('--cr',(Math.random()*1080-540)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.3?'50%':'2px';p.style.animationDuration=(.8+Math.random()*1)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
 function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(52,199,89,.25),rgba(0,122,255,.08) 50%,transparent 70%);z-index:9998;pointer-events:none;animation:flashFade 1s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
-function celebrateDone(x,y){
+function celebrateDone(x,y,scale=1){
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   const c1=['#FF3B30','#FF9500','#FFCC00','#34C759','#007AFF','#AF52DE','#FF2D55','#5AC8FA'];
-  spawnBurst(x,y,c1,12,180);
-  setTimeout(()=>spawnBurst(x,y-20,['#FFCC00','#34C759','#007AFF'],8,200),200);
+  spawnBurst(x,y,c1,12,180,scale);
+  setTimeout(()=>spawnBurst(x,y-20*scale,['#FFCC00','#34C759','#007AFF'],8,200,scale),200);
 }
 function showAgentPop(el, id){
   if(agents.length===0){toast('Nenhum agente cadastrado');return}
@@ -4311,16 +4311,17 @@ $('#kanban').addEventListener('click',e=>{
     const t=tasks.find(x=>x.id===id);
     if(t&&agentStatusOf(t)!==col){
       const rect=dot.getBoundingClientRect();
-      const cx = rect.left + rect.width/2;
-      const cy = rect.top + rect.height/2;
+      const cx = rect.left + rect.width/2 + 50;
+      const cy = rect.top + rect.height/2 - 10;
 
       setAgentStatus(t,col);sT();renderAgentsView();
       toast('Movido para '+KCOL_NAME[col]);
       
-      if(col==='validation') spawnBurst(cx, cy, ['#AF52DE', '#E5CEFF', '#5856D6', '#D6A8FF'], 12, 60);
-      else if (col==='bug') spawnBurst(cx, cy, ['#FF3B30', '#FFD1D1', '#FF9500', '#FF6B6B'], 12, 60);
-      else if (col==='done') celebrateDone(cx, cy);
-      else if (col==='progress') spawnBurst(cx, cy, ['#FF9500','#FFCC00','#FFD60A','#FF9F0A'], 12, 60);
+      const scl = 1.3;
+      if(col==='validation') spawnBurst(cx, cy, ['#AF52DE', '#E5CEFF', '#5856D6', '#D6A8FF'], 12, 60, scl);
+      else if (col==='bug') spawnBurst(cx, cy, ['#FF3B30', '#FFD1D1', '#FF9500', '#FF6B6B'], 12, 60, scl);
+      else if (col==='done') celebrateDone(cx, cy, scl);
+      else if (col==='progress') spawnBurst(cx, cy, ['#FF9500','#FFCC00','#FFD60A','#FF9F0A'], 12, 60, scl);
     }
     return;
   }
