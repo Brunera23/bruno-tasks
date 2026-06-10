@@ -504,8 +504,6 @@
     .confetti-burst{position:fixed;pointer-events:none;z-index:9999}
     .confetti-piece{position:absolute;border-radius:2px;animation:confettiFall 1.2s cubic-bezier(.25,.46,.45,.94) forwards}
     @keyframes confettiFall{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}60%{opacity:1;transform:translate(calc(var(--cx)*.7),calc(var(--cy)*.5)) rotate(calc(var(--cr)*.6)) scale(.9)}100%{opacity:0;transform:translate(var(--cx),var(--cy)) rotate(var(--cr)) scale(0)}}
-    .bug-piece{position:absolute;user-select:none;animation:bugScatter 1.5s cubic-bezier(.25,.46,.45,.94) forwards}
-    @keyframes bugScatter{0%{opacity:1;transform:translate(0,0) scale(0)}10%{transform:translate(0,0) scale(1.2)}100%{opacity:0;transform:translate(var(--cx),var(--cy)) scale(1)}}
     @keyframes flashFade{0%{opacity:1}100%{opacity:0}}
 
     .item-body{flex:1;min-width:0}
@@ -1620,6 +1618,30 @@
     <div class="fld adv-field"><label>Notas</label><textarea id="fN" placeholder="Detalhes, links, anotações..."></textarea></div>
     <div class="m-btns"><button type="button" class="btn btn-sec" id="mCancel">Cancelar</button><button type="submit" class="btn btn-primary">Salvar<kbd class="kb-hint">⌘↵</kbd></button></div>
   </form>
+</div>
+
+<div class="overlay" id="ovView" onclick="closeViewTask()"></div>
+<div class="modal" id="viewModal" style="max-width:550px; padding:0; background:var(--card); overflow:hidden; border-radius:16px;">
+  <!-- header -->
+  <div style="padding:24px; border-bottom:1px solid var(--sep); display:flex; justify-content:space-between; align-items:flex-start; gap:16px; background:var(--bg);">
+    <div style="flex:1;">
+      <h2 id="vTitle" style="font-size:1.35rem; font-weight:700; color:var(--label); margin-bottom:14px; line-height:1.3; word-break:break-word;"></h2>
+      <div id="vMeta" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;"></div>
+    </div>
+    <button onclick="closeViewTask()" class="btn-close" style="background:var(--fill);border:none;color:var(--label);cursor:pointer;padding:8px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background 0.2s;flex-shrink:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+  </div>
+  <!-- body -->
+  <div style="padding:24px; max-height:60vh; overflow-y:auto; scrollbar-width:thin;">
+    <div id="vNotes" style="font-size:1rem; color:var(--label2); line-height:1.6; white-space:pre-wrap; margin-bottom:24px;"></div>
+    <div id="vSubsWrap" style="display:none; margin-bottom:8px;">
+      <h4 style="font-size:0.8rem; font-weight:700; color:var(--label3); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:12px;">Subtarefas</h4>
+      <div id="vSubs" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+  </div>
+  <!-- footer -->
+  <div style="padding:16px 24px; background:var(--bg); border-top:1px solid var(--sep); display:flex; justify-content:flex-end;">
+    <button class="btn btn-primary" id="vEditBtn" style="padding:10px 20px; border-radius:10px; font-weight:600;"><svg width="16" height="16" style="margin-right:8px"><use href="#i-edit"/></svg>Editar Tarefa</button>
+  </div>
 </div>
 
 <div class="overlay" id="ovCat"></div>
@@ -3376,6 +3398,10 @@ function renderAgentsView(){
       <div class="kc-title">${escapeHtml(t.title)}</div>
       <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}</div>
       <div class="kc-foot"><span class="kc-agent tag-agent" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent || 'Sem agente')}</span></div>
+      <button class="kc-view-btn" data-vid="${t.id}" style="width:100%; margin-top:2px; padding:7px; font-size:0.75rem; font-weight:600; color:var(--label2); background:var(--fill); border:1px solid var(--sep); border-radius:8px; cursor:pointer; transition:all var(--dur-fast); display:flex; justify-content:center; align-items:center; gap:6px;" onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label2)';this.style.borderColor='var(--sep)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        Ver o card completo
+      </button>
       <div class="kc-cols">${dots}</div>
     </div>`;
   };
@@ -3657,6 +3683,56 @@ function initSubDrag(){
     touchDragIdx=null;
   },sig);
 }
+function viewTask(id) {
+  const t=tasks.find(x=>x.id===id);
+  if(!t)return;
+  $('#vTitle').textContent=t.title;
+  let metaHtml = '';
+  if(t.category) {
+    const c=ci(t.category);
+    metaHtml += `<span class="kc-cat" style="padding:4px 8px; font-size:0.8rem; background:var(--fill); border-radius:6px; display:inline-flex; align-items:center; gap:6px;"><svg width="14" height="14" style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>`;
+  }
+  if(t.priority) {
+    const pColor = t.priority==='alta'?'var(--red)':t.priority==='media'?'var(--orange)':'var(--green)';
+    metaHtml += `<span class="kc-prio" style="padding:4px 8px; font-size:0.8rem; color:${pColor}; background:${pColor}20; border-radius:6px; display:inline-flex; align-items:center; gap:6px; font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:${pColor}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`;
+  }
+  if(t.date) {
+    metaHtml += `<span class="kc-date" style="padding:4px 8px; font-size:0.8rem; background:var(--fill); border-radius:6px; display:inline-flex; align-items:center; gap:6px; color:${isOD(t.date)&&t.status!=='done'?'var(--red)':'var(--label)'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>${fDate(t.date)}</span>`;
+  }
+  if(t.agent) {
+    metaHtml += `<span class="kc-agent" style="padding:4px 8px; font-size:0.8rem; color:var(--blue); background:var(--blue)15; border-radius:6px; display:inline-flex; align-items:center; gap:6px; font-weight:600;"><svg width="14" height="14"><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span>`;
+  }
+  $('#vMeta').innerHTML = metaHtml;
+  
+  if(t.notes && t.notes.trim()) {
+    $('#vNotes').textContent = t.notes;
+    $('#vNotes').style.display = 'block';
+  } else {
+    $('#vNotes').style.display = 'none';
+  }
+  
+  if(t.subtasks && t.subtasks.length) {
+    $('#vSubs').innerHTML = t.subtasks.map(s=>`
+      <div style="display:flex; gap:10px; align-items:center; padding:12px; background:var(--fill); border-radius:10px; opacity: ${s.done?'0.6':'1'}; text-decoration: ${s.done?'line-through':''}; border:1px solid var(--sep);">
+        <svg width="18" height="18" style="color: ${s.done?'var(--green)':'var(--label3)'}; flex-shrink:0;"><use href="#${s.done?'i-check':'i-circle'}"/></svg>
+        <span style="font-size: 0.95rem; color: var(--label);">${escapeHtml(s.text)}</span>
+      </div>
+    `).join('');
+    $('#vSubsWrap').style.display = 'block';
+  } else {
+    $('#vSubsWrap').style.display = 'none';
+  }
+  
+  $('#vEditBtn').onclick = () => { closeViewTask(); edit(id); };
+  
+  $('#ovView').classList.add('open');
+  $('#viewModal').classList.add('open');
+}
+function closeViewTask(){
+  $('#ovView').classList.remove('open');
+  $('#viewModal').classList.remove('open');
+}
+
 function edit(id){const t=tasks.find(x=>x.id===id);if(t)openM(t)}
 function quickChild(parentId){const parent=tasks.find(x=>x.id===parentId);if(!parent)return;openM(null);fCCat=parent.category;renderCatPicker();mDeps=[parentId];renderDepChips();toast('Nova subtarefa de: '+parent.title)}
 function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t)addLog('delete',t);tasks=tasks.filter(t=>t.id!==delId);sT();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
@@ -3672,7 +3748,6 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('\u26a1 '+msgs[newSt])}
   else if(newSt==='done'){if(ckRect)celebrateDone(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);toast('\u2728 '+msgs[newSt]+'!')}
   else{toast(msgs[newSt]||'')}}
-function spawnBugs(x,y,scale=1){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<8;i++){const p=document.createElement('div');p.className='bug-piece';p.textContent=Math.random()>.5?'🐞':'🐛';p.style.fontSize=(18*scale)+'px';const angle=Math.random()*Math.PI*2;const dist=((60)+Math.random()*80)*scale;p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist)+'px');p.style.animationDuration=(1+Math.random()*.5)+'s';p.style.animationDelay=(Math.random()*.2)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
 function spawnBurst(x,y,colors,count,spread,scale=1){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=((spread*.3)+Math.random()*spread)*scale;const w=(4+Math.random()*10)*scale;const h=w*(Math.random()>.5?1:.4);p.style.width=w+'px';p.style.height=h+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-(spread*.5)*scale)+'px');p.style.setProperty('--cr',(Math.random()*1080-540)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.3?'50%':'2px';p.style.animationDuration=(.8+Math.random()*1)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
 function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(52,199,89,.25),rgba(0,122,255,.08) 50%,transparent 70%);z-index:9998;pointer-events:none;animation:flashFade 1s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
 function celebrateDone(x,y,scale=1){
@@ -4321,9 +4396,8 @@ $('#kanban').addEventListener('click',e=>{
       toast('Movido para '+KCOL_NAME[col]);
       
       const scl = 1.3;
-      if(col==='todo') spawnBurst(cx, cy, ['#8E8E93', '#AEAEB2', '#C7C7CC', '#D1D1D6'], 12, 60, scl);
-      else if(col==='validation') spawnBurst(cx, cy, ['#AF52DE', '#E5CEFF', '#5856D6', '#D6A8FF'], 12, 60, scl);
-      else if (col==='bug') spawnBugs(cx, cy, scl);
+      if(col==='validation') spawnBurst(cx, cy, ['#AF52DE', '#E5CEFF', '#5856D6', '#D6A8FF'], 12, 60, scl);
+      else if (col==='bug') spawnBurst(cx, cy, ['#FF3B30', '#FFD1D1', '#FF9500', '#FF6B6B'], 12, 60, scl);
       else if (col==='done') celebrateDone(cx, cy, scl);
       else if (col==='progress') spawnBurst(cx, cy, ['#FF9500','#FFCC00','#FFD60A','#FF9F0A'], 12, 60, scl);
     }
@@ -4335,6 +4409,9 @@ $('#kanban').addEventListener('click',e=>{
   if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return;}
   const dt=e.target.closest('.item-date[data-id]');
   if(dt){e.stopPropagation();showDatePop(dt,dt.dataset.id);return;}
+
+  const viewBtn=e.target.closest('.kc-view-btn');
+  if(viewBtn){e.stopPropagation();viewTask(viewBtn.dataset.vid);return;}
 
   const cardEl=e.target.closest('.kanban-card');
   if(cardEl){edit(cardEl.dataset.id)}
@@ -4353,13 +4430,11 @@ $('#kanban').addEventListener('drop',e=>{
       setAgentStatus(t,destCol);sT();renderAgentsView();
       toast('Movido para '+KCOL_NAME[destCol]);
       
-      const rect = col.getBoundingClientRect();
-      const cx = rect.left + rect.width/2;
-      const cy = rect.top + 80;
+      const cx = e.clientX;
+      const cy = e.clientY;
       const scl = 1.3;
-      if(destCol==='todo') spawnBurst(cx, cy, ['#8E8E93', '#AEAEB2', '#C7C7CC', '#D1D1D6'], 12, 60, scl);
-      else if(destCol==='validation') spawnBurst(cx, cy, ['#AF52DE', '#E5CEFF', '#5856D6', '#D6A8FF'], 12, 60, scl);
-      else if (destCol==='bug') spawnBugs(cx, cy, scl);
+      if(destCol==='validation') spawnBurst(cx, cy, ['#AF52DE', '#E5CEFF', '#5856D6', '#D6A8FF'], 12, 60, scl);
+      else if (destCol==='bug') spawnBurst(cx, cy, ['#FF3B30', '#FFD1D1', '#FF9500', '#FF6B6B'], 12, 60, scl);
       else if (destCol==='done') celebrateDone(cx, cy, scl);
       else if (destCol==='progress') spawnBurst(cx, cy, ['#FF9500','#FFCC00','#FFD60A','#FF9F0A'], 12, 60, scl);
     }
