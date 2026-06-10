@@ -4306,7 +4306,29 @@ let _kDrag=null;
 $('#agAddBtn').addEventListener('click',()=>{openM();mAgent=agents[0]||'';renderAgentPicker()});
 $('#kanban').addEventListener('click',e=>{
   const dot=e.target.closest('[data-move]');
-  if(dot){const [id,col]=dot.dataset.move.split('|');const t=tasks.find(x=>x.id===id);if(t&&agentStatusOf(t)!==col){setAgentStatus(t,col);sT();renderAgentsView();toast('Movido para '+KCOL_NAME[col])}return}
+  if(dot){
+    const [id,col]=dot.dataset.move.split('|');
+    const t=tasks.find(x=>x.id===id);
+    if(t&&agentStatusOf(t)!==col){
+      setAgentStatus(t,col);sT();renderAgentsView();
+      toast('Movido para '+KCOL_NAME[col]);
+      const rect=dot.getBoundingClientRect();
+      const cx = rect.left + rect.width/2;
+      const cy = rect.top + rect.height/2;
+      if(col==='validation') spawnBurst(cx, cy, ['#AF52DE', '#E5CEFF', '#5856D6', '#D6A8FF'], 12, 60);
+      else if (col==='bug') spawnBurst(cx, cy, ['#FF3B30', '#FFD1D1', '#FF9500', '#FF6B6B'], 12, 60);
+      else if (col==='done') celebrateDone(cx, cy);
+      else if (col==='progress') spawnBurst(cx, cy, ['#FF9500','#FFCC00','#FFD60A','#FF9F0A'], 12, 60);
+    }
+    return;
+  }
+  const at=e.target.closest('.tag-agent[data-id]');
+  if(at){e.stopPropagation();showAgentPop(at,at.dataset.id);return;}
+  const ct=e.target.closest('.tag-cat[data-id]');
+  if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return;}
+  const dt=e.target.closest('.item-date[data-id]');
+  if(dt){e.stopPropagation();showDatePop(dt,dt.dataset.id);return;}
+
   const cardEl=e.target.closest('.kanban-card');
   if(cardEl){edit(cardEl.dataset.id)}
 });
