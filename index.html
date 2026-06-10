@@ -113,11 +113,11 @@
     /* ===== LAYOUT ===== */
     .shell{display:flex;min-height:100dvh}
     .sidebar{width:260px;flex-shrink:0;background:rgba(255,255,255,.88);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-right:1px solid var(--sep);padding:24px 16px 20px;display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;transition:background var(--dur-smooth),border-color var(--dur-smooth),width var(--dur-smooth),padding var(--dur-smooth)}
-    .shell.sidebar-closed .sidebar{width:72px;padding:24px 10px 20px;}
+    .shell.sidebar-closed .sidebar{width:80px;padding:24px 10px 20px;}
     .shell.sidebar-closed .sidebar-top{flex-direction:column;gap:16px;}
     .shell.sidebar-closed .sidebar-logo{font-size:0;color:transparent;gap:0;}
-    .shell.sidebar-closed .sidebar-logo .logo-icon{margin:0 auto;}
-    .shell.sidebar-closed .sidebar-top > div {flex-direction:column;gap:10px;}
+    .shell.sidebar-closed .sidebar-logo .logo-icon{margin:0 auto;transform:scale(1.1);border-radius:10px;}
+    .shell.sidebar-closed .sidebar-top > div {flex-direction:column;gap:12px;}
     .shell.sidebar-closed .nav-label,
     .shell.sidebar-closed .sidebar-projects,
     .shell.sidebar-closed .sidebar-cats,
@@ -125,8 +125,12 @@
     .shell.sidebar-closed .su-logout,
     .shell.sidebar-closed .nav-badge {display:none}
     .shell.sidebar-closed .nav-item,
-    .shell.sidebar-closed .nav-action {font-size:0;color:transparent;justify-content:center;padding:12px 0;gap:0}
-    .shell.sidebar-closed .sidebar-user {justify-content:center;padding:12px 0}
+    .shell.sidebar-closed .nav-action {font-size:0;color:transparent;justify-content:center;padding:12px 0;gap:0;width:44px;height:44px;margin:0 auto 8px;border-radius:12px;transition:all var(--dur-fast) var(--ease-spring)}
+    .shell.sidebar-closed .nav-item:hover,
+    .shell.sidebar-closed .nav-action:hover {transform:scale(1.15) translateY(-2px);background:var(--fill);box-shadow:var(--shadow-pop)}
+    .shell.sidebar-closed .nav-item svg,
+    .shell.sidebar-closed .nav-action svg {width:20px;height:20px}
+    .shell.sidebar-closed .sidebar-user {justify-content:center;padding:12px 0;margin-top:auto}
     .shell.sidebar-closed #closeSidebarBtn svg {transform:rotate(180deg)}
     [data-theme="dark"] .sidebar{background:rgba(22,22,24,.88)}
     .sidebar::-webkit-scrollbar{display:none}
@@ -3368,8 +3372,8 @@ function renderAgentsView(){
     const dots=KCOLS.map(k=>`<button class="kc-coldot ${k.id===cur?'active':''}" style="--c:${k.color}" data-move="${t.id}|${k.id}" title="Mover para ${k.name}" aria-label="Mover para ${k.name}"></button>`).join('');
     return`<div class="kanban-card ${t.status==='done'?'kc-done':''}" draggable="true" data-id="${t.id}">
       <div class="kc-title">${escapeHtml(t.title)}</div>
-      <div class="kc-meta"><span class="kc-cat"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}</div>
-      <div class="kc-foot"><span class="kc-agent"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span></div>
+      <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}</div>
+      <div class="kc-foot"><span class="kc-agent tag-agent" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span></div>
       <div class="kc-cols">${dots}</div>
     </div>`;
   };
@@ -3678,13 +3682,13 @@ function showAgentPop(el, id){
   if(agents.length===0){toast('Nenhum agente cadastrado');return}
   const t=tasks.find(x=>x.id===id);if(!t)return;
   closeInlinePop();
-  const pop=document.createElement('div');pop.className='iq-pop';pop.id='iqPop';
+  const pop=document.createElement('div');pop.className='st-pop';pop.id='iqPop';
   let html='';
   agents.forEach(a=>{
-    const sel=a===t.agent?' current':'';
-    html+=`<div class="iq-opt${sel}" data-v="${escapeHtml(a)}"><svg><use href="#i-zap"/></svg>${escapeHtml(a)}</div>`;
+    const isCur=a===t.agent;
+    html+=`<div class="st-opt${isCur?'':' '}" data-v="${escapeHtml(a)}"><span class="st-dot" style="background:${isCur?'var(--blue)':'var(--label4)'}"></span>${escapeHtml(a)}</div>`;
   });
-  html+=`<div class="iq-sep"></div><div class="iq-opt" style="color:#FF3B30" data-v="__remove__"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Remover agente</div>`;
+  html+=`<div style="height:1px;background:var(--sep);margin:4px"></div><div class="st-opt" style="color:#FF3B30" data-v="__remove__"><span class="st-dot" style="background:#FF3B30"></span>Remover agente</div>`;
   pop.innerHTML=html;
   const r=el.getBoundingClientRect();
   pop.style.left=Math.min(r.left, window.innerWidth-180)+'px';
@@ -3692,7 +3696,7 @@ function showAgentPop(el, id){
   document.body.appendChild(pop);
   requestAnimationFrame(()=>pop.classList.add('show'));
   pop.addEventListener('click',e=>{
-    const opt=e.target.closest('.iq-opt');
+    const opt=e.target.closest('.st-opt');
     if(opt){
       e.stopPropagation();
       const v=opt.dataset.v;
