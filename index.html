@@ -5208,8 +5208,20 @@ function openMobSettings(){
   $('#msNotes').onclick=()=>{closeMobSheet();setTimeout(openNotesBoard,350)};
   $('#msCategories').onclick=()=>{closeMobSheet();setTimeout(openCatMgr,350)};
   $('#msProjects').onclick=()=>{closeMobSheet();setTimeout(openProjManager,350)};
-  $('#msNotif').onclick=async()=>{closeMobSheet();await requestNotifPermission()};
-  $('#msNotifToggle').onclick=async(e)=>{e.stopPropagation();closeMobSheet();await requestNotifPermission()};
+  
+  const handleNotifClick = async (e) => {
+    if(e) e.stopPropagation();
+    const success = await requestNotifPermission();
+    if(success){
+      const isOn = isPushEnabled();
+      $('#msNotifToggle').classList.toggle('on', isOn);
+      const sub = $('#msNotif .ms-row-sub');
+      if(sub) sub.textContent = isOn ? 'Ativas' : 'Toque para ativar';
+    }
+  };
+  $('#msNotif').onclick = handleNotifClick;
+  $('#msNotifToggle').onclick = handleNotifClick;
+  
   $('#msToggleDone').onclick=()=>{showDone=!showDone;saveUI();closeMobSheet();render()};
   $('#msTheme').onclick=()=>{toggleTheme();closeMobSheet()};
   $('#msLogout').onclick=()=>{closeMobSheet();auth.signOut()};
