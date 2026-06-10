@@ -4311,8 +4311,8 @@ $('#kanban').addEventListener('click',e=>{
     const t=tasks.find(x=>x.id===id);
     if(t&&agentStatusOf(t)!==col){
       const rect=dot.getBoundingClientRect();
-      const cx = rect.left + rect.width/2 + 50;
-      const cy = rect.top + rect.height/2 - 10;
+      const cx = rect.left + rect.width/2 + 80;
+      const cy = rect.top + rect.height/2 - 20;
 
       setAgentStatus(t,col);sT();renderAgentsView();
       toast('Movido para '+KCOL_NAME[col]);
@@ -4339,7 +4339,27 @@ $('#kanban').addEventListener('dragstart',e=>{const c=e.target.closest('.kanban-
 $('#kanban').addEventListener('dragend',e=>{const c=e.target.closest('.kanban-card');if(c)c.classList.remove('dragging');$$('.kanban-col.drop-over').forEach(x=>x.classList.remove('drop-over'));_kDrag=null});
 $('#kanban').addEventListener('dragover',e=>{const col=e.target.closest('.kanban-col');if(col&&_kDrag){e.preventDefault();col.classList.add('drop-over')}});
 $('#kanban').addEventListener('dragleave',e=>{const col=e.target.closest('.kanban-col');if(col&&!col.contains(e.relatedTarget))col.classList.remove('drop-over')});
-$('#kanban').addEventListener('drop',e=>{const col=e.target.closest('.kanban-col');if(col&&_kDrag){e.preventDefault();const t=tasks.find(x=>x.id===_kDrag);if(t&&agentStatusOf(t)!==col.dataset.col){setAgentStatus(t,col.dataset.col);sT();renderAgentsView()}col.classList.remove('drop-over')}});
+$('#kanban').addEventListener('drop',e=>{
+  const col=e.target.closest('.kanban-col');
+  if(col&&_kDrag){
+    e.preventDefault();
+    const t=tasks.find(x=>x.id===_kDrag);
+    const destCol = col.dataset.col;
+    if(t&&agentStatusOf(t)!==destCol){
+      setAgentStatus(t,destCol);sT();renderAgentsView();
+      toast('Movido para '+KCOL_NAME[destCol]);
+      
+      const cx = e.clientX;
+      const cy = e.clientY;
+      const scl = 1.3;
+      if(destCol==='validation') spawnBurst(cx, cy, ['#AF52DE', '#E5CEFF', '#5856D6', '#D6A8FF'], 12, 60, scl);
+      else if (destCol==='bug') spawnBurst(cx, cy, ['#FF3B30', '#FFD1D1', '#FF9500', '#FF6B6B'], 12, 60, scl);
+      else if (destCol==='done') celebrateDone(cx, cy, scl);
+      else if (destCol==='progress') spawnBurst(cx, cy, ['#FF9500','#FFCC00','#FFD60A','#FF9F0A'], 12, 60, scl);
+    }
+    col.classList.remove('drop-over')
+  }
+});
 
 let _kIsDown=false,_kStartX,_kScrollL;
 $('#kanban').addEventListener('mousedown',e=>{
