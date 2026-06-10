@@ -1227,29 +1227,15 @@
     .btn-focus:active{transform:scale(.97)}
     .btn-focus svg{width:15px;height:15px;color:#FF9500}
     .bf-count{font-size:.68rem;font-weight:700;background:#FF9500;color:#fff;border-radius:6px;padding:0 6px;min-width:16px;text-align:center}
-    .focus-overlay{position:fixed;inset:0;z-index:400;background:rgba(10,10,12,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px;animation:focFade .25s ease both}
+    .focus-overlay{position:fixed;inset:0;z-index:400;background:rgba(8,8,10,.7);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);display:none;align-items:center;justify-content:center;padding:20px;animation:focFade .25s ease both}
     .focus-overlay.open{display:flex}
     @keyframes focFade{from{opacity:0}to{opacity:1}}
-    .focus-panel{width:100%;max-width:440px;max-height:88dvh;overflow-y:auto;background:#161618;border-radius:20px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08)}
-    .focus-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .focus-head-title{font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:-.02em}
-    .focus-close{width:30px;height:30px;border-radius:9px;border:none;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .focus-panel{width:100%;max-width:440px;max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(140% 90% at 50% -10%,#1e1e26 0%,#0b0b0e 58%);border-radius:22px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:#fff}
+    .focus-head{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+    .focus-head-title{font-size:1.02rem;font-weight:800;color:#fff;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+    .focus-close{width:30px;height:30px;border-radius:9px;border:none;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:10px;flex-shrink:0}
     .focus-close:hover{background:rgba(255,255,255,.16)}
-    .focus-list{display:flex;flex-direction:column;gap:12px}
-    /* cards de foco — mesmas classes na janela flutuante (PIP_CSS) */
-    .foc-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px}
-    .foc-item.over{border-color:rgba(255,59,48,.5);background:rgba(255,59,48,.1)}
-    .foc-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-    .foc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-    .foc-title{font-size:.92rem;font-weight:600;color:#fff;line-height:1.3}
-    .foc-time{font-size:2.1rem;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1}
-    .foc-item.over .foc-time{color:#FF453A}
-    .foc-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin:10px 0 6px}
-    .foc-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#FF9500,#FFCC00);transition:width 1s linear}
-    .foc-item.over .foc-bar-fill{background:#FF453A}
-    .foc-sub{font-size:.74rem;color:rgba(235,235,245,.6);font-weight:500}
-    .foc-item.over .foc-sub{color:#FF8A80}
-    .focus-empty{text-align:center;color:rgba(235,235,245,.5);font-size:.86rem;padding:24px 8px}
+    /* cards .foc-* compartilhados: injetados via FOC_CARD_CSS (mesma folha da janela flutuante) */
   </style>
 </head>
 <body>
@@ -1461,7 +1447,7 @@
 <!-- Modo Foco — overlay in-app (fallback quando o navegador não suporta janela flutuante) -->
 <div class="focus-overlay" id="focusOverlay">
   <div class="focus-panel">
-    <div class="focus-head"><div class="focus-head-title">🎯 Em foco agora</div><button class="focus-close" id="focusClose" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span><button class="focus-close" id="focusClose" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="focus-list" id="focusList"></div>
   </div>
 </div>
@@ -3875,47 +3861,100 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
 function spawnBurst(x,y,colors,count,spread,scale=1){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=((spread*.3)+Math.random()*spread)*scale;const w=(4+Math.random()*10)*scale;const h=w*(Math.random()>.5?1:.4);p.style.width=w+'px';p.style.height=h+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-(spread*.5)*scale)+'px');p.style.setProperty('--cr',(Math.random()*1080-540)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.3?'50%':'2px';p.style.animationDuration=(.8+Math.random()*1)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
 // ===== MODO FOCO — janela flutuante (Document Picture-in-Picture) + fallback overlay =====
 let _pipWin=null,_focusTimer=null;
-const PIP_CSS=`*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:#0d0d0f;color:#fff;padding:14px}
-.focus-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.focus-head-title{font-size:1rem;font-weight:800;letter-spacing:-.02em}
-.focus-list{display:flex;flex-direction:column;gap:10px}
-.foc-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:13px 15px}
-.foc-item.over{border-color:rgba(255,59,48,.5);background:rgba(255,59,48,.1)}
-.foc-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
-.foc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.foc-title{font-size:.9rem;font-weight:600;line-height:1.3}
-.foc-time{font-size:2rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1}
-.foc-item.over .foc-time{color:#FF453A}
-.foc-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin:9px 0 6px}
-.foc-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#FF9500,#FFCC00);transition:width 1s linear}
-.foc-item.over .foc-bar-fill{background:#FF453A}
-.foc-sub{font-size:.72rem;color:rgba(235,235,245,.6);font-weight:500}
-.foc-item.over .foc-sub{color:#FF8A80}
-.focus-empty{text-align:center;color:rgba(235,235,245,.5);font-size:.84rem;padding:22px 8px;line-height:1.5}`;
-function fmtClock(ms){const s=Math.max(0,Math.round(ms/1000));const m=Math.floor(s/60);return m+':'+String(s%60).padStart(2,'0')}
-function focusItemsHTML(){
-  const doing=getVisibleTasks().filter(t=>t.status==='doing');
-  if(!doing.length)return '<div class="focus-empty">Nada em progresso.<br>Marque uma tarefa como “Fazendo”.</div>';
+const FOC_CARD_CSS=`
+.focus-list{display:flex;flex-direction:column;gap:10px;container-type:inline-size}
+.foc-item{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:clamp(11px,3.8cqi,14px) clamp(13px,4.5cqi,16px) clamp(11px,3.8cqi,13px) clamp(15px,5cqi,19px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 8px 24px rgba(0,0,0,.28);overflow:hidden;animation:focIn .45s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i,0)*70ms)}
+.foc-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cat,#8E8E93);box-shadow:0 0 12px var(--cat,transparent)}
+@keyframes focIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.foc-top{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.foc-dot{width:8px;height:8px;border-radius:50%;background:var(--cat,#8E8E93);flex-shrink:0;box-shadow:0 0 8px var(--cat,transparent)}
+.foc-title{font-size:clamp(.82rem,4cqi,.9rem);font-weight:600;line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.foc-pct{font-size:.66rem;font-weight:700;color:rgba(235,235,245,.65);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.05);border-radius:7px;padding:2px 8px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.foc-item.over .foc-pct{background:rgba(255,69,58,.18);border-color:rgba(255,69,58,.25);color:#FF8A80}
+.foc-time{font-size:clamp(1.35rem,11cqi,2.3rem);white-space:nowrap;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.035em;line-height:1.05;background:linear-gradient(180deg,#fff 30%,rgba(255,255,255,.72));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.foc-item.over .foc-time{background:linear-gradient(180deg,#FF6961,#FF453A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.foc-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:11px 0 8px}
+.foc-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#FF9F0A,#FFD60A);transition:width 1s linear;position:relative;overflow:hidden}
+.foc-bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.4) 50%,transparent 75%);transform:translateX(-100%);animation:focShimmer 2.8s ease-in-out infinite}
+@keyframes focShimmer{55%,100%{transform:translateX(100%)}}
+.foc-item.over{border-color:rgba(255,69,58,.4);animation:focIn .45s cubic-bezier(.16,1,.3,1) both,focOverPulse 2.4s ease-in-out .6s infinite}
+.foc-item.over::before{background:#FF453A;box-shadow:0 0 14px rgba(255,69,58,.8)}
+.foc-item.over .foc-bar-fill{background:linear-gradient(90deg,#FF453A,#FF6961)}
+@keyframes focOverPulse{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 0 1px rgba(255,69,58,.12),0 8px 24px rgba(255,69,58,.08)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 0 1px rgba(255,69,58,.3),0 8px 32px rgba(255,69,58,.22)}}
+.foc-sub{font-size:clamp(.66rem,3cqi,.72rem);color:rgba(235,235,245,.55);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foc-item.over .foc-sub{color:rgba(255,138,128,.9)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#FF9F0A;flex-shrink:0;animation:focLive 2s ease-out infinite}
+@keyframes focLive{0%{box-shadow:0 0 0 0 rgba(255,159,10,.5)}70%{box-shadow:0 0 0 8px rgba(255,159,10,0)}100%{box-shadow:0 0 0 0 rgba(255,159,10,0)}}
+.focus-count{margin-left:auto;font-size:.7rem;font-weight:700;color:rgba(235,235,245,.75);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:2px 9px;font-variant-numeric:tabular-nums}
+.focus-empty{text-align:center;color:rgba(235,235,245,.5);font-size:.84rem;padding:26px 8px;line-height:1.6}
+@container (max-width:210px){.foc-pct{display:none}.foc-top{gap:6px;margin-bottom:6px}.foc-bar{margin:8px 0 6px}}
+@container (max-width:165px){.foc-time{font-size:clamp(.9rem,9cqi,1.3rem)}}
+@container (max-width:150px){.foc-bar{display:none}}
+@media(prefers-reduced-motion:reduce){.foc-item,.foc-bar-fill::after,.live-dot{animation:none!important}}`;
+const PIP_CSS=`*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:#0b0b0e;background:radial-gradient(140% 90% at 50% -10%,#1e1e26 0%,#0b0b0e 58%) fixed;color:#fff;padding:clamp(11px,3.5vw,16px);min-height:100vh;-webkit-font-smoothing:antialiased}
+.focus-head{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.focus-head-title{font-size:clamp(.86rem,4.5vw,1rem);font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;white-space:nowrap}
+`+FOC_CARD_CSS;
+// As classes .foc-*/.focus-list/.live-dot são exclusivas do Modo Foco, então
+// reaproveito a MESMA folha no documento principal (overlay) sem risco de colisão.
+(()=>{const st=document.createElement('style');st.textContent=FOC_CARD_CSS;document.head.appendChild(st)})();
+function fmtClock(ms){
+  const s=Math.max(0,Math.round(ms/1000));
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  if(h>0)return h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+  return m+':'+String(sec).padStart(2,'0');
+}
+function focusItems(){
   const now=Date.now();
-  return doing.map(t=>{
+  const doing=getVisibleTasks().filter(t=>t.status==='doing');
+  const items=doing.map(t=>{
     const c=ci(t.category);
     const since=t.doingStartedAt||t.updatedAt||now;
     const elapsed=now-since;
+    let remain=Infinity,over=false,pct=0,clock,sub;
     if(t.estimatedTime){
-      const total=t.estimatedTime*60000,remain=total-elapsed,over=remain<0;
-      const pct=Math.min(100,Math.max(0,elapsed/total*100));
-      const clock=over?('+'+fmtClock(-remain)):fmtClock(remain);
-      const sub=over?('Passou '+fmtClock(-remain)+' do estimado ('+fmtTime(t.estimatedTime)+')'):('Faltam de '+fmtTime(t.estimatedTime)+' estimado');
-      return `<div class="foc-item ${over?'over':''}"><div class="foc-top"><span class="foc-dot" style="background:${c.color}"></span><span class="foc-title">${escapeHtml(t.title)}</span></div><div class="foc-time">${clock}</div><div class="foc-bar"><div class="foc-bar-fill" style="width:${pct}%"></div></div><div class="foc-sub">${sub}</div></div>`;
-    }
-    return `<div class="foc-item"><div class="foc-top"><span class="foc-dot" style="background:${c.color}"></span><span class="foc-title">${escapeHtml(t.title)}</span></div><div class="foc-time">${fmtClock(elapsed)}</div><div class="foc-sub">Em andamento • sem tempo estimado</div></div>`;
-  }).join('');
+      const total=t.estimatedTime*60000;remain=total-elapsed;over=remain<0;
+      pct=Math.min(100,Math.max(0,elapsed/total*100));
+      clock=over?'+'+fmtClock(-remain):fmtClock(remain);
+      sub=over?('Estourou '+fmtClock(-remain)+' · estimado '+fmtTime(t.estimatedTime)):('restantes · estimado '+fmtTime(t.estimatedTime));
+    }else{clock=fmtClock(elapsed);sub='decorridos · sem estimativa'}
+    return {t,c,remain,over,pct,clock,sub,hasEst:!!t.estimatedTime};
+  });
+  // urgência primeiro: estourados, depois menor tempo restante; sem estimativa por último
+  items.sort((a,b)=>a.remain-b.remain);
+  return items;
+}
+function focusCardHTML(it,i){
+  const pctChip=it.hasEst?`<span class="foc-pct">${Math.round(it.pct)}%</span>`:'';
+  const bar=it.hasEst?`<div class="foc-bar"><div class="foc-bar-fill" style="width:${it.pct}%"></div></div>`:'';
+  return `<div class="foc-item ${it.over?'over':''}" style="--cat:${it.c.color};--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title">${escapeHtml(it.t.title)}</span>${pctChip}</div><div class="foc-time">${it.clock}</div>${bar}<div class="foc-sub">${it.sub}</div></div>`;
+}
+// Patch cirúrgico: só recria o DOM quando o conjunto de tarefas muda;
+// a cada segundo atualiza textos/larguras — preserva shimmer e pulso das animações
+function updateFocusDoc(doc){
+  const list=doc.getElementById('focusList');if(!list)return;
+  const items=focusItems();
+  const cnt=doc.getElementById('focusCount');if(cnt)cnt.textContent=items.length;
+  const key=items.map(x=>x.t.id).join('|');
+  if(list.dataset.key!==key){
+    list.dataset.key=key;
+    list.innerHTML=items.length?items.map(focusCardHTML).join(''):'<div class="focus-empty">Nada em progresso.<br>Marque uma tarefa como “Fazendo”.</div>';
+    return;
+  }
+  items.forEach((it,i)=>{
+    const el=list.children[i];if(!el||!el.classList)return;
+    el.classList.toggle('over',it.over);
+    const time=el.querySelector('.foc-time');if(time&&time.textContent!==it.clock)time.textContent=it.clock;
+    const fill=el.querySelector('.foc-bar-fill');if(fill)fill.style.width=it.pct+'%';
+    const pctEl=el.querySelector('.foc-pct');if(pctEl)pctEl.textContent=Math.round(it.pct)+'%';
+    const sub=el.querySelector('.foc-sub');if(sub&&sub.textContent!==it.sub)sub.textContent=it.sub;
+  });
 }
 function renderFocus(){
-  const html=focusItemsHTML();
-  if(_pipWin&&!_pipWin.closed){const r=_pipWin.document.getElementById('focusList');if(r)r.innerHTML=html}
+  if(_pipWin&&!_pipWin.closed)updateFocusDoc(_pipWin.document);
   const ov=$('#focusOverlay');
-  if(ov&&ov.classList.contains('open'))$('#focusList').innerHTML=html;
+  if(ov&&ov.classList.contains('open'))updateFocusDoc(document);
 }
 function startFocusTimer(){if(!_focusTimer)_focusTimer=setInterval(renderFocus,1000)}
 function stopFocusTimer(){if(_pipWin||$('#focusOverlay').classList.contains('open'))return;clearInterval(_focusTimer);_focusTimer=null}
@@ -3925,7 +3964,7 @@ async function openFocus(auto){
       if(_pipWin&&!_pipWin.closed){_pipWin.focus();return}
       _pipWin=await documentPictureInPicture.requestWindow({width:360,height:460});
       const st=_pipWin.document.createElement('style');st.textContent=PIP_CSS;_pipWin.document.head.appendChild(st);
-      _pipWin.document.body.innerHTML='<div class="focus-head"><div class="focus-head-title">🎯 Em foco</div></div><div class="focus-list" id="focusList"></div>';
+      _pipWin.document.body.innerHTML='<div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span></div><div class="focus-list" id="focusList"></div>';
       _pipWin.document.title='Em foco';
       _pipWin.addEventListener('pagehide',()=>{_pipWin=null;stopFocusTimer()});
       renderFocus();startFocusTimer();
@@ -4880,7 +4919,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=113',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=115',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
