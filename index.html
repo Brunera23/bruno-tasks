@@ -1213,7 +1213,7 @@
     .kanban-card:active{transform:scale(.98)}
     .kanban-card.dragging{opacity:.4}
     .kanban-card.kc-done .kc-title{text-decoration:line-through;color:var(--label3)}
-    .kc-title{font-size:.84rem;font-weight:600;color:var(--label);line-height:1.35;word-break:break-word}
+    .kc-title{font-size:.84rem;font-weight:600;color:var(--label);line-height:1.35;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .kc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .kc-cat{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;font-weight:500;color:var(--label2)}
     .kc-cat svg{width:11px;height:11px}
@@ -2229,6 +2229,7 @@ function $$(s){return document.querySelectorAll(s)}
 function ld(k,def){try{const d=localStorage.getItem(k);if(d)return JSON.parse(d)}catch(e){console.warn('ld error',k,e)}sv(k,def);return JSON.parse(JSON.stringify(def))}
 function sv(k,d){try{localStorage.setItem(k,JSON.stringify(d))}catch(e){console.warn('sv error',k,e)}}
 function escapeHtml(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function escAttr(s){return escapeHtml(s).replace(/"/g,'&quot;')}
 function fmtNotes(s){
   if(!s)return'';
   return escapeHtml(s)
@@ -2885,6 +2886,7 @@ function taskKanbanStatusOf(t){
 function setTaskKanbanStatus(t, col){
   if(col==='done'){
     if(t.status!=='done'){t.status='done';t.completedAt=t.completedAt||Date.now()}
+    t.agentStatus='done';
   } else if(col==='validation'||col==='bug'){
     if(t.status==='done') t.completedAt=null;
     t.status='doing';
@@ -2922,7 +2924,7 @@ function renderTasksKanban(){
     const agentTag=t.agent?`<span class="kc-agent"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span>`:'';
     const etTag=t.estimatedTime?`<span class="kc-date">${fmtTime(t.estimatedTime)}</span>`:'';
     return`<div class="kanban-card ${t.status==='done'?'kc-done':''}" draggable="true" data-tid="${t.id}">
-      <div class="kc-title">${escapeHtml(t.title)}</div>
+      <div class="kc-title" title="${escAttr(t.title)}">${escapeHtml(t.title)}</div>
       <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'""><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}${etTag}</div>
       ${agentTag?`<div class="kc-foot">${agentTag}</div>`:''}
       <button class="kc-view-btn" data-tvid="${t.id}" style="width:100%; margin-top:2px; padding:7px; font-size:0.75rem; font-weight:600; color:var(--label2); background:var(--fill); border:1px solid var(--sep); border-radius:8px; cursor:pointer; transition:all var(--dur-fast); display:flex; justify-content:center; align-items:center; gap:6px;" onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label2)';this.style.borderColor='var(--sep)'">
@@ -2947,7 +2949,9 @@ function setTaskLayout(layout){
   taskLayout=layout;
   saveUI();
   applyTaskLayout();
+  // Re-renderiza a view de destino: ao voltar p/ Lista, reflete mudanças feitas no Quadro (e vice-versa)
   if(taskLayout==='board') renderTasksKanban();
+  else renderTasks();
 }
 
 function applyTaskLayout(){
@@ -3595,7 +3599,7 @@ function renderAgentsView(){
     const dateTag=t.date?`<span class="kc-date ${(isOD(t.date)&&t.status!=='done')?'overdue':''}">${fDate(t.date)}</span>`:'';
     const dots=KCOLS.map(k=>`<button class="kc-coldot ${k.id===cur?'active':''}" style="--c:${k.color}" data-move="${t.id}|${k.id}" title="Mover para ${k.name}" aria-label="Mover para ${k.name}"></button>`).join('');
     return`<div class="kanban-card ${t.status==='done'?'kc-done':''}" draggable="true" data-id="${t.id}">
-      <div class="kc-title">${escapeHtml(t.title)}</div>
+      <div class="kc-title" title="${escAttr(t.title)}">${escapeHtml(t.title)}</div>
       <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}</div>
       <div class="kc-foot"><span class="kc-agent tag-agent" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent || 'Sem agente')}</span></div>
       <button class="kc-view-btn" data-vid="${t.id}" style="width:100%; margin-top:2px; padding:7px; font-size:0.75rem; font-weight:600; color:var(--label2); background:var(--fill); border:1px solid var(--sep); border-radius:8px; cursor:pointer; transition:all var(--dur-fast); display:flex; justify-content:center; align-items:center; gap:6px;" onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label2)';this.style.borderColor='var(--sep)'">
@@ -3986,6 +3990,9 @@ window.setViewStatus = function(id, col, e) {
      setAgentStatus(t,col);
      sT();
      renderAgentsView();
+     // Reflete a mudança onde o usuário estiver: Quadro de Tarefas ou Lista
+     if(taskLayout==='board')renderTasksKanban();
+     renderTasks();
      renderViewStatus(t);
      toast('Movido para '+KCOL_NAME[col]);
      if(e) {
@@ -4045,6 +4052,10 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   t.status=newSt;t.completedAt=newSt==='done'?Date.now():null;t.updatedAt=Date.now();
   // Cronômetro do Modo Foco: carimba quando entra em 'fazendo', limpa quando sai
   if(newSt==='doing'){if(!t.doingStartedAt)t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
+  // Sincroniza a coluna do Quadro (agentStatus). 'Fazendo' preserva Validação/Bug (são sub-estados de doing)
+  if(newSt==='done')t.agentStatus='done';
+  else if(newSt==='todo')t.agentStatus='todo';
+  else if(newSt==='doing'&&t.agentStatus!=='validation'&&t.agentStatus!=='bug')t.agentStatus='progress';
   addLog(wasDone&&newSt!=='done'?'reopen':newSt==='done'?'complete':'edit',t);sT();
   if(newSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),800)}if(t.recurrence)setTimeout(processRecurring,100)}
   render();const msgs={todo:'A Fazer',doing:'Fazendo',done:'Conclu\u00edda'};
@@ -4061,7 +4072,7 @@ const FOC_CARD_CSS=`
 @keyframes focIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
 .foc-top{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .foc-dot{width:8px;height:8px;border-radius:50%;background:var(--cat,#8E8E93);flex-shrink:0;box-shadow:0 0 8px var(--cat,transparent)}
-.foc-title{font-size:clamp(.82rem,4cqi,.9rem);font-weight:600;line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.foc-title{font-size:clamp(.82rem,4cqi,.9rem);font-weight:600;line-height:1.3;flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .foc-pct{font-size:.66rem;font-weight:700;color:rgba(235,235,245,.65);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.05);border-radius:7px;padding:2px 8px;flex-shrink:0;font-variant-numeric:tabular-nums}
 .foc-item.over .foc-pct{background:rgba(255,69,58,.18);border-color:rgba(255,69,58,.25);color:#FF8A80}
 .foc-time{font-size:clamp(1.35rem,11cqi,2.3rem);white-space:nowrap;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.035em;line-height:1.05;background:linear-gradient(180deg,#fff 30%,rgba(255,255,255,.72));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -4159,7 +4170,7 @@ function focusCardHTML(it,i){
   if(it.subs.length)detail+=`<div class="fd-subs">`+it.subs.map(s=>`<div class="fd-sub ${s.done?'done':''}"><span class="fd-check">${s.done?'✓':''}</span>${escapeHtml(s.text)}</div>`).join('')+`</div>`;
   if(!it.notes&&!it.subs.length)detail+=`<div class="fd-empty">Sem descrição ou subtarefas.</div>`;
   const chev='<span class="foc-exp"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>';
-  return `<div class="foc-item ${it.over?'over':''} ${expanded?'expanded':''}" data-fid="${it.t.id}" style="--cat:${it.c.color};--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title">${escapeHtml(it.t.title)}</span>${pctChip}${chev}</div><div class="foc-time">${it.clock}</div>${bar}<div class="foc-sub">${it.sub}</div><div class="foc-detail">${detail}</div></div>`;
+  return `<div class="foc-item ${it.over?'over':''} ${expanded?'expanded':''}" data-fid="${it.t.id}" style="--cat:${it.c.color};--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title" title="${escAttr(it.t.title)}">${escapeHtml(it.t.title)}</span>${pctChip}${chev}</div><div class="foc-time">${it.clock}</div>${bar}<div class="foc-sub">${it.sub}</div><div class="foc-detail">${detail}</div></div>`;
 }
 function onFocusItemClick(e){
   const item=e.target.closest('.foc-item');
@@ -5340,7 +5351,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=118',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=119',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
