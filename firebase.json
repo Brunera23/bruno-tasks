@@ -1,4 +1,16 @@
 {
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/node_modules/**",
+      "functions/**",
+      ".git/**",
+      "*.log",
+      "tests/**",
+      "test-results/**"
+    ]
+  },
   "auth": {
     "providers": {
       "googleSignIn": {
