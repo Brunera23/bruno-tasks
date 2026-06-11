@@ -602,20 +602,19 @@
 
     /* ===== DASH WEEK NAVIGATOR ===== */
     .dash-week-nav{display:flex;align-items:center;gap:6px;margin-bottom:16px}
-    .dash-week-nav-btn{width:32px;height:32px;border-radius:10px;border:none;background:var(--card);color:var(--label2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--dur-fast) var(--ease-spring);box-shadow:var(--shadow)}
-    .dash-week-nav-btn svg{width:16px;height:16px}
-    .dash-week-nav-btn:hover{background:var(--label);color:var(--bg);transform:scale(1.08)}
+    .dash-week-nav-btn{width:32px;height:32px;border-radius:10px;border:none;background:var(--card);color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--dur-fast) var(--ease-spring);box-shadow:var(--shadow)}
+    .dash-week-nav-btn svg{width:15px;height:15px}
+    .dash-week-nav-btn:hover{background:var(--fill);color:var(--label);transform:scale(1.06)}
     .dash-week-nav-btn:active{transform:scale(.9);transition-duration:60ms}
-    .dash-week-nav-btn:disabled{opacity:.2;cursor:not-allowed;transform:none !important;box-shadow:none}
-    .dash-week-nav-center{flex:1;background:var(--card);border-radius:12px;padding:10px 16px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;gap:10px;min-height:44px;transition:background var(--dur-smooth)}
-    .dash-week-nav-info{display:flex;flex-direction:column;align-items:center;gap:1px}
-    .dash-week-nav-label{font-size:.82rem;font-weight:700;color:var(--label);letter-spacing:-.01em;line-height:1.2}
-    .dash-week-nav-center.offset .dash-week-nav-label{color:var(--blue)}
+    .dash-week-nav-btn:disabled{opacity:.18;cursor:not-allowed;transform:none !important;box-shadow:none}
+    .dash-week-nav-center{flex:1;background:var(--card);border-radius:12px;padding:9px 16px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;transition:background var(--dur-smooth)}
+    .dash-week-nav-info{display:flex;flex-direction:column;align-items:center;gap:1px;flex:1}
+    .dash-week-nav-label{font-size:.8rem;font-weight:700;color:var(--label);letter-spacing:-.015em;line-height:1.2}
+    .dash-week-nav-center.offset .dash-week-nav-label{color:var(--label2)}
     .dash-week-nav-sub{font-size:.62rem;color:var(--label3);font-weight:500;line-height:1.2}
-    .dash-week-nav-icon{width:18px;height:18px;color:var(--label3);flex-shrink:0;opacity:.5}
-    .dash-week-nav-center.offset .dash-week-nav-icon{color:var(--blue);opacity:.7}
-    .dash-week-nav-today{padding:5px 10px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:.68rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all var(--dur-fast) var(--ease-spring);white-space:nowrap;flex-shrink:0;letter-spacing:.01em}
-    .dash-week-nav-today:hover{transform:scale(1.05);filter:brightness(1.1)}
+    .dash-week-nav-icon{width:15px;height:15px;color:var(--label3);flex-shrink:0;opacity:.35}
+    .dash-week-nav-today{padding:4px 9px;border-radius:7px;border:1px solid var(--sep);background:transparent;color:var(--label2);font-size:.64rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all var(--dur-fast);white-space:nowrap;flex-shrink:0}
+    .dash-week-nav-today:hover{background:var(--fill);color:var(--label)}
     .dash-week-nav-today:active{transform:scale(.94);transition-duration:60ms}
     .dash-week-nav-today.hidden{display:none}
 
