@@ -2053,7 +2053,7 @@ auth.onAuthStateChanged(user=>{
     showApp();
     if(!_authBooted){
       _authBooted=true;
-      processRecurring();setGreeting();render();fbInit();
+      processRecurring();setGreeting();render();applyTaskLayout();fbInit();
       setTimeout(refreshPushToken,4000);
     }
   } else {
@@ -2843,9 +2843,105 @@ function renderTasks(){
     html+=`<div class="done-section ${showDone?'open':''}">${done.map((t,i)=>renderItem(t,i)).join('')}</div>`;
   }
   $('#list').innerHTML=html;
+  // If board layout is active, also render the kanban
+  if(taskLayout==='board') renderTasksKanban();
 }
 
-// ===== WIDGET PANEL SYSTEM =====
+// ===== TASK KANBAN (Board view for all tasks) =====
+const TASK_KCOLS=[
+  {id:'todo',name:'A Fazer',color:'#8E8E93',statusMatch:['todo']},
+  {id:'progress',name:'Em Progresso',color:'#007AFF',statusMatch:['doing']},
+  {id:'validation',name:'Validação',color:'#AF52DE',statusMatch:['validation']},
+  {id:'bug',name:'Bug',color:'#FF3B30',statusMatch:['bug']},
+  {id:'done',name:'Concluído',color:'#34C759',statusMatch:['done']}
+];
+const TASK_KCOL_NAME=Object.fromEntries(TASK_KCOLS.map(c=>[c.id,c.name]));
+
+function taskKanbanStatusOf(t){
+  if(t.status==='done') return 'done';
+  if(t.agentStatus && t.agentStatus!=='done' && TASK_KCOL_NAME[t.agentStatus]) return t.agentStatus;
+  if(t.status==='doing') return 'progress';
+  return 'todo';
+}
+
+function setTaskKanbanStatus(t, col){
+  if(col==='done'){
+    if(t.status!=='done'){t.status='done';t.completedAt=t.completedAt||Date.now()}
+  } else if(col==='validation'||col==='bug'){
+    if(t.status==='done') t.completedAt=null;
+    t.status='doing';
+    t.agentStatus=col;
+  } else if(col==='progress'){
+    if(t.status==='done') t.completedAt=null;
+    t.status='doing';
+    t.agentStatus='progress';
+  } else {
+    if(t.status==='done') t.completedAt=null;
+    t.status='todo';
+    t.agentStatus='todo';
+  }
+  if(t.status==='doing'){if(!t.doingStartedAt) t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
+  t.updatedAt=Date.now();
+}
+
+function renderTasksKanban(){
+  const wrap=$('#taskKanban');if(!wrap)return;
+  let list=getVisibleTasks().filter(t=>{
+    if(aCat!=='all'&&t.category!==aCat) return false;
+    if(qry){if(!smartFilter(t,qry)) return false}
+    return true;
+  });
+  // Don't apply status filter in board mode — all columns are visible
+  const byCol={};TASK_KCOLS.forEach(c=>byCol[c.id]=[]);
+  list.forEach(t=>{const col=taskKanbanStatusOf(t);(byCol[col]||byCol.todo).push(t)});
+
+  const card=t=>{
+    const c=ci(t.category);
+    const cur=taskKanbanStatusOf(t);
+    const prio=t.priority?`<span class="kc-prio ${t.priority}">${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
+    const dateTag=t.date?`<span class="kc-date ${(isOD(t.date)&&t.status!=='done')?'overdue':''}">${fDate(t.date)}</span>`:'';
+    const dots=TASK_KCOLS.map(k=>`<button class="kc-coldot ${k.id===cur?'active':''}" style="--c:${k.color}" data-tmove="${t.id}|${k.id}" title="Mover para ${k.name}" aria-label="Mover para ${k.name}"></button>`).join('');
+    const agentTag=t.agent?`<span class="kc-agent"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span>`:'';
+    const etTag=t.estimatedTime?`<span class="kc-date">${fmtTime(t.estimatedTime)}</span>`:'';
+    return`<div class="kanban-card ${t.status==='done'?'kc-done':''}" draggable="true" data-tid="${t.id}">
+      <div class="kc-title">${escapeHtml(t.title)}</div>
+      <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'""><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}${etTag}</div>
+      ${agentTag?`<div class="kc-foot">${agentTag}</div>`:''}
+      <button class="kc-view-btn" data-tvid="${t.id}" style="width:100%; margin-top:2px; padding:7px; font-size:0.75rem; font-weight:600; color:var(--label2); background:var(--fill); border:1px solid var(--sep); border-radius:8px; cursor:pointer; transition:all var(--dur-fast); display:flex; justify-content:center; align-items:center; gap:6px;" onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label2)';this.style.borderColor='var(--sep)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        Ver o card completo
+      </button>
+      <div class="kc-cols">${dots}</div>
+    </div>`;
+  };
+
+  wrap.innerHTML=TASK_KCOLS.map(col=>{
+    const items=byCol[col.id];
+    const body=items.length?items.map(card).join(''):'<div class="kanban-empty">Vazio</div>';
+    return`<div class="kanban-col" data-tcol="${col.id}">
+      <div class="kanban-col-head"><span class="kanban-col-dot" style="background:${col.color}"></span><span class="kanban-col-name">${col.name}</span><span class="kanban-col-count">${items.length}</span></div>
+      <div class="kanban-col-body">${body}</div>
+    </div>`;
+  }).join('');
+}
+
+function setTaskLayout(layout){
+  taskLayout=layout;
+  saveUI();
+  applyTaskLayout();
+  if(taskLayout==='board') renderTasksKanban();
+}
+
+function applyTaskLayout(){
+  const isBoard=taskLayout==='board';
+  $$('#layoutToggle button').forEach(b=>b.classList.toggle('active',b.dataset.layout===taskLayout));
+  $('#list').classList.toggle('hidden-by-layout',isBoard);
+  const grpBar=$('.grp-bar');if(grpBar) grpBar.classList.toggle('hidden-by-layout',isBoard);
+  const seg=$('#taskSeg');if(seg) seg.classList.toggle('hidden-by-layout',isBoard);
+  $('#taskKanbanWrap').classList.toggle('active',isBoard);
+}
+
+
 let wdgState=ld('bt-wdg-state',{week:{compact:false},foco:{compact:false},next:{compact:false},progress:{compact:false},blocked:{compact:true},habits:{compact:false},overdue:{compact:false}});
 let wdgOrder=ld('bt-wdg-order',['overdue','week','foco','next','progress','blocked','habits']);
 function saveWdgState(){sv('bt-wdg-state',wdgState);sv('bt-wdg-order',wdgOrder)}
@@ -4716,6 +4812,81 @@ $('#kanban').addEventListener('mousemove',e=>{
   const walk=(x-_kStartX)*1.5;
   $('#kanban').scrollLeft=_kScrollL-walk;
 });
+
+// ===== TASK KANBAN EVENT LISTENERS =====
+$('#layoutToggle').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-layout]');if(!btn)return;
+  setTaskLayout(btn.dataset.layout);
+});
+
+let _tkDrag=null;
+$('#taskKanban').addEventListener('click',e=>{
+  const dot=e.target.closest('[data-tmove]');
+  if(dot){
+    const [id,col]=dot.dataset.tmove.split('|');
+    const t=tasks.find(x=>x.id===id);
+    if(t&&taskKanbanStatusOf(t)!==col){
+      const rect=dot.getBoundingClientRect();
+      const cx=rect.left+rect.width/2+80;
+      const cy=rect.top+rect.height/2-20;
+      setTaskKanbanStatus(t,col);sT();renderTasksKanban();
+      toast('Movido para '+TASK_KCOL_NAME[col]);
+      const scl=1.3;
+      if(col==='validation') spawnBurst(cx,cy,['#AF52DE','#E5CEFF','#5856D6','#D6A8FF'],12,60,scl);
+      else if(col==='bug') spawnBurst(cx,cy,['#FF3B30','#FFD1D1','#FF9500','#FF6B6B'],12,60,scl);
+      else if(col==='done') celebrateDone(cx,cy,scl);
+      else if(col==='progress') spawnBurst(cx,cy,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60,scl);
+    }
+    return;
+  }
+  const ct=e.target.closest('.tag-cat[data-id]');
+  if(ct){e.stopPropagation();showCatPop(ct,ct.dataset.id);return;}
+  const viewBtn=e.target.closest('[data-tvid]');
+  if(viewBtn){e.stopPropagation();viewTask(viewBtn.dataset.tvid);return;}
+  const cardEl=e.target.closest('.kanban-card[data-tid]');
+  if(cardEl){edit(cardEl.dataset.tid)}
+});
+$('#taskKanban').addEventListener('dragstart',e=>{const c=e.target.closest('.kanban-card[data-tid]');if(c){_tkDrag=c.dataset.tid;c.classList.add('dragging');e.dataTransfer.effectAllowed='move'}});
+$('#taskKanban').addEventListener('dragend',e=>{const c=e.target.closest('.kanban-card');if(c)c.classList.remove('dragging');$$('#taskKanban .kanban-col.drop-over').forEach(x=>x.classList.remove('drop-over'));_tkDrag=null});
+$('#taskKanban').addEventListener('dragover',e=>{const col=e.target.closest('.kanban-col');if(col&&_tkDrag){e.preventDefault();col.classList.add('drop-over')}});
+$('#taskKanban').addEventListener('dragleave',e=>{const col=e.target.closest('.kanban-col');if(col&&!col.contains(e.relatedTarget))col.classList.remove('drop-over')});
+$('#taskKanban').addEventListener('drop',e=>{
+  const col=e.target.closest('.kanban-col');
+  if(col&&_tkDrag){
+    e.preventDefault();
+    const t=tasks.find(x=>x.id===_tkDrag);
+    const destCol=col.dataset.tcol;
+    if(t&&taskKanbanStatusOf(t)!==destCol){
+      setTaskKanbanStatus(t,destCol);sT();renderTasksKanban();
+      toast('Movido para '+TASK_KCOL_NAME[destCol]);
+      const cx=e.clientX,cy=e.clientY,scl=1.3;
+      if(destCol==='validation') spawnBurst(cx,cy,['#AF52DE','#E5CEFF','#5856D6','#D6A8FF'],12,60,scl);
+      else if(destCol==='bug') spawnBurst(cx,cy,['#FF3B30','#FFD1D1','#FF9500','#FF6B6B'],12,60,scl);
+      else if(destCol==='done') celebrateDone(cx,cy,scl);
+      else if(destCol==='progress') spawnBurst(cx,cy,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60,scl);
+    }
+    col.classList.remove('drop-over');
+  }
+});
+
+let _tkIsDown=false,_tkStartX,_tkScrollL;
+$('#taskKanban').addEventListener('mousedown',e=>{
+  if(e.target.closest('.kanban-card')||e.target.closest('button'))return;
+  _tkIsDown=true;
+  $('#taskKanban').classList.add('active');
+  _tkStartX=e.pageX-$('#taskKanban').offsetLeft;
+  _tkScrollL=$('#taskKanban').scrollLeft;
+});
+$('#taskKanban').addEventListener('mouseleave',()=>{_tkIsDown=false;$('#taskKanban').classList.remove('active')});
+$('#taskKanban').addEventListener('mouseup',()=>{_tkIsDown=false;$('#taskKanban').classList.remove('active')});
+$('#taskKanban').addEventListener('mousemove',e=>{
+  if(!_tkIsDown)return;
+  e.preventDefault();
+  const x=e.pageX-$('#taskKanban').offsetLeft;
+  const walk=(x-_tkStartX)*1.5;
+  $('#taskKanban').scrollLeft=_tkScrollL-walk;
+});
+
 function showDepResults(q){
   const editId=$('#fId').value;
   const query=(q||'').toLowerCase().trim();
