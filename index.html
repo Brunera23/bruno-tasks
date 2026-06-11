@@ -600,6 +600,19 @@
     .dash-section h2{font-size:.95rem;font-weight:700;margin-bottom:12px;letter-spacing:-.01em}
     .chart-wrap{background:var(--card);border-radius:14px;padding:18px;box-shadow:var(--shadow);transition:background var(--dur-smooth)}
 
+    /* ===== DASH WEEK NAVIGATOR ===== */
+    .dash-week-nav{display:flex;align-items:center;gap:8px;margin-bottom:18px;background:var(--card);border-radius:14px;padding:10px 14px;box-shadow:var(--shadow);transition:background var(--dur-smooth)}
+    .dash-week-nav-btn{width:34px;height:34px;border-radius:10px;border:none;background:var(--fill);color:var(--label2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--dur-fast);font-size:1rem}
+    .dash-week-nav-btn:hover{background:var(--label);color:var(--bg);transform:scale(1.05)}
+    .dash-week-nav-btn:active{transform:scale(.93);transition-duration:60ms}
+    .dash-week-nav-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+    .dash-week-nav-center{flex:1;text-align:center}
+    .dash-week-nav-label{font-size:.9rem;font-weight:700;color:var(--label);letter-spacing:-.01em;display:block}
+    .dash-week-nav-sub{font-size:.68rem;color:var(--label3);font-weight:500;margin-top:1px;display:block}
+    .dash-week-nav-today-btn{padding:5px 11px;border-radius:8px;border:1px solid var(--sep);background:transparent;color:var(--blue);font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all var(--dur-fast);white-space:nowrap;flex-shrink:0}
+    .dash-week-nav-today-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .dash-week-nav-today-btn.hidden{opacity:0;pointer-events:none}
+
     /* Week Capacity Bars */
     .week-load{display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:8px;position:relative}
     .wl-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;height:100%}
@@ -1437,9 +1450,18 @@
     <div class="dash" id="dashView">
       <div class="page-head"><div class="page-head-left"><div class="greeting" id="greeting2"></div><h1>Dashboard</h1></div></div>
       <div class="dash-filter" id="dashFilter"></div>
+      <div class="dash-week-nav" id="dashWeekNav">
+        <button class="dash-week-nav-btn" id="dashWeekPrev" title="Semana anterior" onclick="dashNavWeek(-1)">&#8249;</button>
+        <div class="dash-week-nav-center">
+          <span class="dash-week-nav-label" id="dashWeekLabel"></span>
+          <span class="dash-week-nav-sub" id="dashWeekSub"></span>
+        </div>
+        <button class="dash-week-nav-today-btn hidden" id="dashWeekTodayBtn" onclick="dashNavWeek(0)">Semana atual</button>
+        <button class="dash-week-nav-btn" id="dashWeekNext" title="Próxima semana" onclick="dashNavWeek(1)">&#8250;</button>
+      </div>
       <div class="dash-grid" id="dashCards"></div>
-      <div class="dash-section"><h2>Carga da Semana</h2><div class="chart-wrap"><div class="week-load" id="weekLoad"></div></div></div>
-      <div class="dash-section"><h2>Tempo por Categoria (esta semana)</h2><div class="chart-wrap"><div class="cat-bars" id="timeCatChart"></div></div></div>
+      <div class="dash-section"><h2 id="weekLoadTitle">Carga da Semana</h2><div class="chart-wrap"><div class="week-load" id="weekLoad"></div></div></div>
+      <div class="dash-section"><h2 id="timeCatTitle">Tempo por Categoria (esta semana)</h2><div class="chart-wrap"><div class="cat-bars" id="timeCatChart"></div></div></div>
       <div class="dash-section"><h2>Concluídas por semana</h2><div class="chart-wrap"><div class="bar-chart" id="weekChart"></div></div></div>
       <div class="charts-row" id="chartsRow">
         <div class="dash-section" style="margin-bottom:0"><h2>Por categoria</h2><div class="chart-wrap"><div class="cat-bars" id="catChart"></div></div></div>
@@ -2086,7 +2108,7 @@ let agents=ld('bt-agents',DEF_AGENTS),mAgent='';
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
 let _fbSynced=false; // true after first successful Firestore sync
 const _ui=ld('bt-ui',{});
-let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',aOwner=_ui.aOwner||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',dashProj='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null,taskLayout=_ui.taskLayout||'list';
+let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',aOwner=_ui.aOwner||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',dashProj='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null,taskLayout=_ui.taskLayout||'list',dashWeekOffset=0;
 
 // ===== PROJECT SYSTEM =====
 const DEF_PROJECTS=[
@@ -3449,17 +3471,49 @@ function getDashTasks(){
   return list;
 }
 
+function dashNavWeek(direction){
+  if(direction===0){dashWeekOffset=0;}else{dashWeekOffset+=direction;}
+  renderDash();
+}
+
 function renderDash(){
   renderDashFilter();
+
+  // === Week navigation setup ===
+  const todayReal=new Date();todayReal.setHours(0,0,0,0);
+  // Compute the start of the "viewed" week (Sun-based, offset weeks)
+  const viewedWeekStart=new Date(todayReal);
+  viewedWeekStart.setDate(viewedWeekStart.getDate()-viewedWeekStart.getDay()+dashWeekOffset*7);
+  viewedWeekStart.setHours(0,0,0,0);
+  const viewedWeekEnd=new Date(viewedWeekStart);viewedWeekEnd.setDate(viewedWeekEnd.getDate()+6);viewedWeekEnd.setHours(23,59,59,999);
+  const isCurrentWeek=dashWeekOffset===0;
+  const isFutureWeek=dashWeekOffset>0;
+
+  // Nav UI
+  const fmtNavDate=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+  const navLabel=$('#dashWeekLabel');const navSub=$('#dashWeekSub');
+  const todayBtn=$('#dashWeekTodayBtn');const nextBtn=$('#dashWeekNext');
+  if(navLabel)navLabel.textContent=isCurrentWeek?'Semana Atual':(isFutureWeek?`+${dashWeekOffset} semana${Math.abs(dashWeekOffset)>1?'s':''}`:`${Math.abs(dashWeekOffset)} semana${Math.abs(dashWeekOffset)>1?'s':''} atrás`);
+  if(navSub)navSub.textContent=`${fmtNavDate(viewedWeekStart)} – ${fmtNavDate(viewedWeekEnd)}`;
+  if(todayBtn)todayBtn.classList.toggle('hidden',isCurrentWeek);
+  // Limit future navigation to +8 weeks
+  if(nextBtn)nextBtn.disabled=dashWeekOffset>=8;
+
+  // Update section titles
+  const wlTitle=$('#weekLoadTitle');const tcTitle=$('#timeCatTitle');
+  if(wlTitle)wlTitle.textContent=isCurrentWeek?'Carga da Semana':(isFutureWeek?'Carga da Semana (Futura)':'Carga da Semana (Passada)');
+  if(tcTitle)tcTitle.textContent=isCurrentWeek?'Tempo por Categoria (esta semana)':'Tempo por Categoria (semana selecionada)';
+
   const dTasks=getDashTasks();
   const ft=dashCat==='all'?dTasks:dTasks.filter(t=>t.category===dashCat);
   const fl=dashCat==='all'?log:log.filter(l=>l.category===dashCat);
   const total=ft.length;const done=ft.filter(t=>t.status==='done').length;
   const overdue=ft.filter(t=>isOD(t.date)&&t.status!=='done').length;const pct=total?Math.round(done/total*100):0;
-  let streak=0;const today=new Date();today.setHours(0,0,0,0);
+  let streak=0;const today=todayReal;
   const dCats=dashCat==='all'?cats:cats.filter(c=>c.id===dashCat);
   for(let i=0;i<60;i++){const d=new Date(today);d.setDate(d.getDate()-i);const ds=d.getTime();const de=ds+864e5;if(ft.some(t=>t.completedAt&&t.completedAt>=ds&&t.completedAt<de))streak++;else if(i>0)break}
 
+  // Cards — today's load always refers to real today; "this week" uses viewed week
   const todayStr=dateStr(today);
   const todayTasks=ft.filter(t=>t.date===todayStr&&t.status!=='done'&&t.estimatedTime);
   const todayMin=todayTasks.reduce((s,t)=>s+(t.estimatedTime||0),0);
@@ -3469,23 +3523,28 @@ function renderDash(){
   const capClass=todayMin<=DAILY_CAP*.7?'tranquilo':todayMin<=DAILY_CAP?'cheio':'esgotado';
   const capLabel=todayMin<=DAILY_CAP*.7?'Tranquilo':todayMin<=DAILY_CAP?'Quase no limite':'Dia esgotado';
 
-  const weekStart=new Date(today);weekStart.setDate(weekStart.getDate()-weekStart.getDay());
-  const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
+  // Week card uses viewed week
   let weekMin=0;
-  ft.forEach(t=>{if(t.date&&t.status!=='done'&&t.estimatedTime){const td=new Date(t.date+'T00:00:00');if(td>=weekStart&&td<=weekEnd)weekMin+=t.estimatedTime}});
+  ft.forEach(t=>{if(t.date&&t.estimatedTime){const td=new Date(t.date+'T00:00:00');if(td>=viewedWeekStart&&td<=viewedWeekEnd)weekMin+=t.estimatedTime}});
   const weekH=(weekMin/60).toFixed(1);
+  const weekCardLabel=isCurrentWeek?'Esta Semana':(isFutureWeek?`Semana +${dashWeekOffset}`:`Semana -${Math.abs(dashWeekOffset)}`);
 
   let ci_idx=0;
   $('#dashCards').innerHTML=`
-    <div class="dash-card card-load" style="--i:${ci_idx++}"><div class="dc-label"><svg><use href="#i-clock"/></svg>Carga de Hoje</div><div class="dc-val">${todayH}h</div><div class="dc-sub">de ${(DAILY_CAP/60)}h de capacidade</div><div class="cap-bar"><div class="cap-bar-fill" style="width:${capPct}%;background:${capColor}"></div></div><div class="cap-status ${capClass}">${capLabel}</div></div>
-    <div class="dash-card" style="--i:${ci_idx++}"><div class="dc-label"><svg><use href="#i-cal"/></svg>Esta Semana</div><div class="dc-val">${weekH}h</div><div class="dc-sub">estimadas</div></div>
+    <div class="dash-card card-load" style="--i:${ci_idx++}"><div class="dc-label"><svg><use href="#i-clock"/></svg>Carga de Hoje</div><div class="dc-val">${isCurrentWeek?todayH+'h':'—'}</div><div class="dc-sub">${isCurrentWeek?'de '+(DAILY_CAP/60)+'h de capacidade':'Visualizando outra semana'}</div>${isCurrentWeek?`<div class="cap-bar"><div class="cap-bar-fill" style="width:${capPct}%;background:${capColor}"></div></div><div class="cap-status ${capClass}">${capLabel}</div>`:''}</div>
+    <div class="dash-card" style="--i:${ci_idx++}"><div class="dc-label"><svg><use href="#i-cal"/></svg>${weekCardLabel}</div><div class="dc-val">${weekH}h</div><div class="dc-sub">estimadas</div></div>
     <div class="dash-card" style="--i:${ci_idx++}"><div class="dc-label"><svg><use href="#i-check"/></svg>Concluídas</div><div class="dc-val">${pct}%</div><div class="dc-sub">${done} de ${total}</div></div>
     <div class="dash-card" style="--i:${ci_idx++}"><div class="dc-label"><svg><use href="#i-fire"/></svg>Sequência</div><div class="dc-val">${streak}</div><div class="dc-sub">${streak===1?'dia':'dias'}</div></div>
     <div class="dash-card" style="--i:${ci_idx++}"><div class="dc-label"><svg><use href="#i-alert"/></svg>Atrasadas</div><div class="dc-val">${overdue}</div><div class="dc-sub">${overdue?'atenção':'tudo em dia'}</div></div>`;
 
-  // Week Capacity
+  // Week Capacity — uses viewed week (7 days starting from viewedWeekStart)
   const days=[];
-  for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()+i);days.push({date:dateStr(d),label:d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.',''),dayNum:d.getDate(),isToday:i===0})}
+  for(let i=0;i<7;i++){
+    const d=new Date(viewedWeekStart);d.setDate(d.getDate()+i);
+    const ds=dateStr(d);
+    const isToday=ds===todayStr;
+    days.push({date:ds,label:d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.',''),dayNum:d.getDate(),isToday});
+  }
   const dayData=days.map(day=>{
     const dTasks=ft.filter(t=>t.date===day.date&&t.estimatedTime);
     const byCat={};dTasks.forEach(t=>{const k=t.category;byCat[k]=byCat[k]||{pend:0,done:0};byCat[k][t.status==='done'?'done':'pend']+=t.estimatedTime});
@@ -3509,17 +3568,17 @@ function renderDash(){
   wlHtml+=`<div class="wl-cap-line" style="bottom:${capLinePos}%"><span class="wl-cap-label">${DAILY_CAP/60}h</span></div>`;
   $('#weekLoad').innerHTML=wlHtml;
 
-  // Time by category (this week)
+  // Time by category — uses viewed week
   const catTimeWeek={};
-  ft.forEach(t=>{if(t.date&&t.status!=='done'&&t.estimatedTime){const td=new Date(t.date+'T00:00:00');if(td>=weekStart&&td<=weekEnd)catTimeWeek[t.category]=(catTimeWeek[t.category]||0)+t.estimatedTime}});
+  ft.forEach(t=>{if(t.date&&t.estimatedTime){const td=new Date(t.date+'T00:00:00');if(td>=viewedWeekStart&&td<=viewedWeekEnd)catTimeWeek[t.category]=(catTimeWeek[t.category]||0)+t.estimatedTime}});
   const maxCatTime=Math.max(...Object.values(catTimeWeek),1);
   $('#timeCatChart').innerHTML=dCats.filter(c=>catTimeWeek[c.id]).map(c=>`<div class="cat-bar-row"><div class="cat-bar-name"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:${Math.max((catTimeWeek[c.id]||0)/maxCatTime*100,2)}%;background:${c.color}"></div></div><div class="cat-bar-num">${fmtTime(catTimeWeek[c.id]||0)}</div></div>`).join('')||
     '<div style="text-align:center;padding:12px;color:var(--label3);font-size:.8rem">Nenhuma tarefa com tempo estimado nesta semana</div>';
 
-  // Completed per week
-  const weeks=[];for(let w=7;w>=0;w--){const end=new Date(today);end.setDate(end.getDate()-w*7);end.setHours(23,59,59,999);const start=new Date(end);start.setDate(start.getDate()-6);start.setHours(0,0,0,0);weeks.push({count:ft.filter(t=>t.completedAt&&t.completedAt>=start.getTime()&&t.completedAt<=end.getTime()).length,lbl:start.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})})}
+  // Completed per week — fixed historical (always anchored to real today)
+  const weeks=[];for(let w=7;w>=0;w--){const end=new Date(todayReal);end.setDate(end.getDate()-w*7);end.setHours(23,59,59,999);const start=new Date(end);start.setDate(start.getDate()-6);start.setHours(0,0,0,0);weeks.push({count:ft.filter(t=>t.completedAt&&t.completedAt>=start.getTime()&&t.completedAt<=end.getTime()).length,lbl:start.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}),isCurrent:w===0})}
   const maxW=Math.max(...weeks.map(w=>w.count),1);
-  $('#weekChart').innerHTML=weeks.map(w=>`<div class="bar-col"><div class="bar-val">${w.count}</div><div class="bar" style="height:${Math.max(w.count/maxW*110,2)}px"></div><div class="bar-lbl">${w.lbl}</div></div>`).join('');
+  $('#weekChart').innerHTML=weeks.map(w=>`<div class="bar-col"><div class="bar-val">${w.count}</div><div class="bar" style="height:${Math.max(w.count/maxW*110,2)}px${w.isCurrent?';background:var(--blue);opacity:.7':''}"></div><div class="bar-lbl">${w.lbl}</div></div>`).join('');
   const cc={};ft.forEach(t=>cc[t.category]=(cc[t.category]||0)+1);const mx=Math.max(...Object.values(cc),1);
   $('#catChart').innerHTML=dCats.map(c=>`<div class="cat-bar-row"><div class="cat-bar-name"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:${Math.max((cc[c.id]||0)/mx*100,2)}%;background:${c.color}"></div></div><div class="cat-bar-num">${cc[c.id]||0}</div></div>`).join('');
   const pH=ft.filter(t=>t.priority==='alta'&&t.status!=='done').length;const pM=ft.filter(t=>t.priority==='media'&&t.status!=='done').length;const pL=ft.filter(t=>t.priority==='baixa'&&t.status!=='done').length;const pT=pH+pM+pL||1;const ps=[pH/pT*100,pM/pT*100,pL/pT*100];
