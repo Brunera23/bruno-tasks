@@ -601,17 +601,22 @@
     .chart-wrap{background:var(--card);border-radius:14px;padding:18px;box-shadow:var(--shadow);transition:background var(--dur-smooth)}
 
     /* ===== DASH WEEK NAVIGATOR ===== */
-    .dash-week-nav{display:flex;align-items:center;gap:8px;margin-bottom:18px;background:var(--card);border-radius:14px;padding:10px 14px;box-shadow:var(--shadow);transition:background var(--dur-smooth)}
-    .dash-week-nav-btn{width:34px;height:34px;border-radius:10px;border:none;background:var(--fill);color:var(--label2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--dur-fast);font-size:1rem}
-    .dash-week-nav-btn:hover{background:var(--label);color:var(--bg);transform:scale(1.05)}
-    .dash-week-nav-btn:active{transform:scale(.93);transition-duration:60ms}
-    .dash-week-nav-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
-    .dash-week-nav-center{flex:1;text-align:center}
-    .dash-week-nav-label{font-size:.9rem;font-weight:700;color:var(--label);letter-spacing:-.01em;display:block}
-    .dash-week-nav-sub{font-size:.68rem;color:var(--label3);font-weight:500;margin-top:1px;display:block}
-    .dash-week-nav-today-btn{padding:5px 11px;border-radius:8px;border:1px solid var(--sep);background:transparent;color:var(--blue);font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all var(--dur-fast);white-space:nowrap;flex-shrink:0}
+    .dash-week-nav{display:flex;align-items:center;gap:10px;margin-bottom:20px;background:var(--card);border-radius:16px;padding:12px 16px;box-shadow:var(--shadow);border:1.5px solid var(--sep);transition:background var(--dur-smooth)}
+    .dash-week-nav-btn{width:38px;height:38px;border-radius:11px;border:1.5px solid var(--sep);background:var(--fill);color:var(--label2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--dur-fast);font-size:1.3rem;font-weight:300;line-height:1}
+    .dash-week-nav-btn:hover{background:var(--label);color:var(--bg);border-color:var(--label);transform:scale(1.06)}
+    .dash-week-nav-btn:active{transform:scale(.91);transition-duration:60ms}
+    .dash-week-nav-btn:disabled{opacity:.25;cursor:not-allowed;transform:none !important}
+    .dash-week-nav-center{flex:1;text-align:center;min-width:0}
+    .dash-week-nav-pill{display:inline-flex;flex-direction:column;align-items:center;gap:2px;background:var(--fill);border-radius:10px;padding:6px 16px;border:1px solid var(--sep)}
+    .dash-week-nav-pill.current{background:rgba(0,122,255,.08);border-color:rgba(0,122,255,.2)}
+    .dash-week-nav-label{font-size:.85rem;font-weight:700;color:var(--label);letter-spacing:-.01em;display:block}
+    .dash-week-nav-pill.current .dash-week-nav-label{color:var(--blue)}
+    .dash-week-nav-sub{font-size:.65rem;color:var(--label3);font-weight:500;display:block;white-space:nowrap}
+    .dash-week-nav-today-btn{padding:6px 13px;border-radius:9px;border:1.5px solid rgba(0,122,255,.3);background:rgba(0,122,255,.08);color:var(--blue);font-size:.72rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all var(--dur-fast);white-space:nowrap;flex-shrink:0}
     .dash-week-nav-today-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
-    .dash-week-nav-today-btn.hidden{opacity:0;pointer-events:none}
+    .dash-week-nav-today-btn.hidden{display:none}
+    .dash-week-nav-hint{font-size:.64rem;color:var(--label3);text-align:center;margin-bottom:8px;margin-top:-14px;display:flex;align-items:center;justify-content:center;gap:5px}
+    .dash-week-nav-hint svg{width:10px;height:10px;opacity:.5}
 
     /* Week Capacity Bars */
     .week-load{display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:8px;position:relative}
@@ -1450,15 +1455,23 @@
     <div class="dash" id="dashView">
       <div class="page-head"><div class="page-head-left"><div class="greeting" id="greeting2"></div><h1>Dashboard</h1></div></div>
       <div class="dash-filter" id="dashFilter"></div>
+
       <div class="dash-week-nav" id="dashWeekNav">
         <button class="dash-week-nav-btn" id="dashWeekPrev" title="Semana anterior" onclick="dashNavWeek(-1)">&#8249;</button>
         <div class="dash-week-nav-center">
-          <span class="dash-week-nav-label" id="dashWeekLabel"></span>
-          <span class="dash-week-nav-sub" id="dashWeekSub"></span>
+          <div class="dash-week-nav-pill current" id="dashWeekPill">
+            <span class="dash-week-nav-label" id="dashWeekLabel">Semana Atual</span>
+            <span class="dash-week-nav-sub" id="dashWeekSub">Carregando...</span>
+          </div>
         </div>
-        <button class="dash-week-nav-today-btn hidden" id="dashWeekTodayBtn" onclick="dashNavWeek(0)">Semana atual</button>
+        <button class="dash-week-nav-today-btn hidden" id="dashWeekTodayBtn" onclick="dashNavWeek(0)">&#8617; Hoje</button>
         <button class="dash-week-nav-btn" id="dashWeekNext" title="Próxima semana" onclick="dashNavWeek(1)">&#8250;</button>
       </div>
+      <div class="dash-week-nav-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
+        Use as setas para navegar entre semanas passadas e futuras
+      </div>
+
       <div class="dash-grid" id="dashCards"></div>
       <div class="dash-section"><h2 id="weekLoadTitle">Carga da Semana</h2><div class="chart-wrap"><div class="week-load" id="weekLoad"></div></div></div>
       <div class="dash-section"><h2 id="timeCatTitle">Tempo por Categoria (esta semana)</h2><div class="chart-wrap"><div class="cat-bars" id="timeCatChart"></div></div></div>
@@ -3492,10 +3505,11 @@ function renderDash(){
   // Nav UI
   const fmtNavDate=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
   const navLabel=$('#dashWeekLabel');const navSub=$('#dashWeekSub');
-  const todayBtn=$('#dashWeekTodayBtn');const nextBtn=$('#dashWeekNext');
-  if(navLabel)navLabel.textContent=isCurrentWeek?'Semana Atual':(isFutureWeek?`+${dashWeekOffset} semana${Math.abs(dashWeekOffset)>1?'s':''}`:`${Math.abs(dashWeekOffset)} semana${Math.abs(dashWeekOffset)>1?'s':''} atrás`);
+  const todayBtn=$('#dashWeekTodayBtn');const nextBtn=$('#dashWeekNext');const pill=$('#dashWeekPill');
+  if(navLabel)navLabel.textContent=isCurrentWeek?'Semana Atual':(isFutureWeek?`+${dashWeekOffset} semana${Math.abs(dashWeekOffset)>1?'s':''} à frente`:`${Math.abs(dashWeekOffset)} semana${Math.abs(dashWeekOffset)>1?'s':''} atrás`);
   if(navSub)navSub.textContent=`${fmtNavDate(viewedWeekStart)} – ${fmtNavDate(viewedWeekEnd)}`;
   if(todayBtn)todayBtn.classList.toggle('hidden',isCurrentWeek);
+  if(pill)pill.classList.toggle('current',isCurrentWeek);
   // Limit future navigation to +8 weeks
   if(nextBtn)nextBtn.disabled=dashWeekOffset>=8;
 
