@@ -1157,6 +1157,10 @@
     .med-pill .ck{width:20px;height:20px;border:2px solid var(--sep);border-radius:50%;display:flex;align-items:center;justify-content:center;color:transparent;transition:all var(--dur-fast);flex-shrink:0}
     .med-pill.done .ck{background:#34C759;border-color:#34C759;color:#FFF}
     .med-pill.done .med-pill-title{text-decoration:line-through;color:var(--label3)}
+    .med-pill.pause-day { opacity: 0.7; }
+    .med-pill.pause-day .ck { border: 1px dashed var(--sep); background: transparent; cursor: default; }
+    .med-pill.pause-day .med-pill-title { color: var(--label2); }
+    .med-pill.pause-day .med-pill-sub { color: #007AFF; font-weight: 500; }
     .med-pill-info{flex:1;min-width:0}
     .med-pill-title{font-size:0.9rem;font-weight:600;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color var(--dur-fast)}
     .med-pill-sub{font-size:0.75rem;color:var(--label3)}
@@ -1249,7 +1253,7 @@
     .focus-overlay{position:fixed;inset:0;z-index:400;background:rgba(8,8,10,.7);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);display:none;align-items:center;justify-content:center;padding:20px;animation:focFade .25s ease both}
     .focus-overlay.open{display:flex}
     @keyframes focFade{from{opacity:0}to{opacity:1}}
-    .focus-panel{width:100%;max-width:440px;max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(140% 90% at 50% -10%,#1e1e26 0%,#0b0b0e 58%);border-radius:22px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:#fff}
+    .focus-panel{width:100%;max-width:440px;max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(140% 90% at 50% -10%,#1e1e26 0%,#0b0b0e 58%);border-radius:22px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:#fff;container-type:inline-size}
     .focus-head{display:flex;align-items:center;gap:9px;margin-bottom:16px}
     .focus-head-title{font-size:1.02rem;font-weight:800;color:#fff;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
     .focus-close{width:30px;height:30px;border-radius:9px;border:none;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:10px;flex-shrink:0}
@@ -1475,6 +1479,7 @@
 <div class="focus-overlay" id="focusOverlay">
   <div class="focus-panel">
     <div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span><button class="focus-close" id="focusClose" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="focus-summary" id="focusSummary"></div>
     <div class="focus-list" id="focusList"></div>
   </div>
 </div>
@@ -3638,13 +3643,41 @@ function renderMedView(){
     });
     const renderPill = t => {
       const sub=[];
-      if(t.alertTime) sub.push('🕐 '+t.alertTime);
-      if(t.notes) sub.push(escapeHtml(t.notes));
-      if(t.recurrence?.freq) sub.push(recurText(t.recurrence.freq,t.recurrence.every));
-      if(t.recurrence?.until) sub.push('até '+fDate(t.recurrence.until));
-      const doneNow=(t.type==='alert'&&t.recurrence?.freq&&t.recurrence.freq!=='once')?(t.completedAt&&dateStr(new Date(t.completedAt))===todayStr):t.status==='done';
-      return `<div class="med-pill ${doneNow?'done':''}">
-      <div class="ck" onclick="toggleM('${t.id}'); event.stopPropagation();"><svg width="12" height="12"><use href="#i-check"/></svg></div>
+      const takenToday=(t.completedAt&&dateStr(new Date(t.completedAt))===todayStr);
+      const doneNow=(t.type==='alert'&&t.recurrence?.freq&&t.recurrence.freq!=='once')?takenToday:t.status==='done';
+      const nextDStr=t.nextFireAt?dateStr(new Date(t.nextFireAt)):null;
+      const isPauseDay=!takenToday&&t.type==='alert'&&t.recurrence&&t.recurrence.freq!=='daily'&&nextDStr&&nextDStr>todayStr;
+      
+      if(isPauseDay){
+        const dObj=new Date(t.nextFireAt);
+        const dayN=dObj.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','');
+        const dayNum=String(dObj.getDate()).padStart(2,'0');
+        const moNum=String(dObj.getMonth()+1).padStart(2,'0');
+        sub.push(`⏳ Próxima dose: ${dayN}, ${dayNum}/${moNum}`);
+        if(t.alertTime) sub.push(t.alertTime);
+      }else if(doneNow && t.type==='alert' && t.recurrence){
+        let refreshStr='amanhã';
+        if(t.recurrence.freq==='weekly'){
+          let nD=new Date(t.nextFireAt||Date.now());
+          if(nD<=new Date()) nD.setDate(nD.getDate()+7);
+          const dN=nD.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','');
+          const dNum=String(nD.getDate()).padStart(2,'0');
+          const mNum=String(nD.getMonth()+1).padStart(2,'0');
+          refreshStr=`${dN}, ${dNum}/${mNum}`;
+        }
+        sub.push(`✅ Dose tomada. Refresh: ${refreshStr}`);
+      }else{
+        if(t.alertTime) sub.push('🕐 '+t.alertTime);
+        if(t.notes) sub.push(escapeHtml(t.notes));
+        if(t.recurrence?.freq) sub.push(recurText(t.recurrence.freq,t.recurrence.every));
+        if(t.recurrence?.until) sub.push('até '+fDate(t.recurrence.until));
+      }
+      
+      const pCls=doneNow?'done':(isPauseDay?'pause-day':'');
+      const ckIcon=isPauseDay?'<circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" stroke-width="2" stroke-dasharray="3 4" opacity="0.4"/>':'<use href="#i-check"/>';
+      
+      return `<div class="med-pill ${pCls}">
+      <div class="ck" ${isPauseDay?'':`onclick="toggleM('${t.id}'); event.stopPropagation();"`}><svg width="12" height="12" ${isPauseDay?'viewBox="0 0 24 24"':''}>${ckIcon}</svg></div>
       <div class="med-pill-info" onclick="openMedForm('${t.id}')"><div class="med-pill-title">${escapeHtml(t.title)}</div><div class="med-pill-sub">${sub.join(' · ')}</div></div>
     </div>`;
     };
@@ -3684,8 +3717,24 @@ window.toggleM = function(id){
   if(t.type==='alert'&&t.recurrence&&t.recurrence.freq&&t.recurrence.freq!=='once'){
     // remédio recorrente: marca só a dose de hoje, sem matar a recorrência
     const takenToday=t.completedAt&&dateStr(new Date(t.completedAt))===todayS;
-    if(takenToday){t.completedAt=null;addLog('reopen',t.title,t.category)}
-    else{t.completedAt=Date.now();addLog('complete',t.title,t.category)}
+    if(takenToday){
+      t.completedAt=null;
+      addLog('reopen',t.title,t.category);
+    }else{
+      t.completedAt=Date.now();
+      addLog('complete',t.title,t.category);
+      tasks.push({
+        id: uid(),
+        title: `✅ Tomou: ${t.title}`,
+        category: t.category || 'remedios',
+        status: 'done',
+        date: todayS,
+        createdAt: Date.now(),
+        completedAt: Date.now(),
+        medType: 'history',
+        notes: t.notes
+      });
+    }
   } else if(t.status==='done'){
     t.status='todo';t.completedAt=null;addLog('reopen',t.title,t.category);
   } else {
@@ -3990,7 +4039,7 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   else{toast(msgs[newSt]||'')}}
 function spawnBurst(x,y,colors,count,spread,scale=1){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=((spread*.3)+Math.random()*spread)*scale;const w=(4+Math.random()*10)*scale;const h=w*(Math.random()>.5?1:.4);p.style.width=w+'px';p.style.height=h+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-(spread*.5)*scale)+'px');p.style.setProperty('--cr',(Math.random()*1080-540)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.3?'50%':'2px';p.style.animationDuration=(.8+Math.random()*1)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
 // ===== MODO FOCO — janela flutuante (Document Picture-in-Picture) + fallback overlay =====
-let _pipWin=null,_focusTimer=null;
+let _pipWin=null,_focusTimer=null,_focusExpanded=new Set();
 const FOC_CARD_CSS=`
 .focus-list{display:flex;flex-direction:column;gap:10px;container-type:inline-size}
 .foc-item{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:clamp(11px,3.8cqi,14px) clamp(13px,4.5cqi,16px) clamp(11px,3.8cqi,13px) clamp(15px,5cqi,19px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 8px 24px rgba(0,0,0,.28);overflow:hidden;animation:focIn .45s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i,0)*70ms)}
@@ -4013,6 +4062,23 @@ const FOC_CARD_CSS=`
 @keyframes focOverPulse{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 0 1px rgba(255,69,58,.12),0 8px 24px rgba(255,69,58,.08)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 0 1px rgba(255,69,58,.3),0 8px 32px rgba(255,69,58,.22)}}
 .foc-sub{font-size:clamp(.66rem,3cqi,.72rem);color:rgba(235,235,245,.55);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .foc-item.over .foc-sub{color:rgba(255,138,128,.9)}
+.focus-summary{font-size:.74rem;color:rgba(235,235,245,.6);font-weight:500;margin:-4px 0 13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.foc-item{cursor:pointer}
+.foc-item:hover{border-color:rgba(255,255,255,.16)}
+.foc-exp{margin-left:auto;display:flex;align-items:center;justify-content:center;color:rgba(235,235,245,.4);transition:transform .25s;flex-shrink:0}
+.foc-item.expanded .foc-exp{transform:rotate(180deg)}
+.foc-detail{max-height:0;overflow:hidden;opacity:0;transition:max-height .32s cubic-bezier(.16,1,.3,1),opacity .25s,margin-top .32s}
+.foc-item.expanded .foc-detail{max-height:500px;opacity:1;margin-top:11px}
+.fd-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+.fd-chip{font-size:clamp(.6rem,2.8cqi,.66rem);font-weight:600;color:rgba(235,235,245,.72);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.06);border-radius:6px;padding:3px 8px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.fd-catdot{width:7px;height:7px;border-radius:50%;background:var(--cat);flex-shrink:0}
+.fd-notes{font-size:clamp(.7rem,3.2cqi,.78rem);line-height:1.5;color:rgba(235,235,245,.72);white-space:pre-wrap;word-break:break-word;padding-top:9px;border-top:1px solid rgba(255,255,255,.07)}
+.fd-subs{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.fd-sub{font-size:clamp(.68rem,3cqi,.74rem);color:rgba(235,235,245,.68);display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.fd-sub.done{color:rgba(235,235,245,.4);text-decoration:line-through}
+.fd-check{width:15px;height:15px;border-radius:4px;border:1.5px solid rgba(255,255,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:.62rem;color:#34C759;flex-shrink:0;margin-top:1px;line-height:1}
+.fd-sub.done .fd-check{background:rgba(52,199,89,.2);border-color:#34C759}
+.fd-empty{font-size:.72rem;color:rgba(235,235,245,.38);font-style:italic}
 .live-dot{width:8px;height:8px;border-radius:50%;background:#FF9F0A;flex-shrink:0;animation:focLive 2s ease-out infinite}
 @keyframes focLive{0%{box-shadow:0 0 0 0 rgba(255,159,10,.5)}70%{box-shadow:0 0 0 8px rgba(255,159,10,0)}100%{box-shadow:0 0 0 0 rgba(255,159,10,0)}}
 .focus-count{margin-left:auto;font-size:.7rem;font-weight:700;color:rgba(235,235,245,.75);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:2px 9px;font-variant-numeric:tabular-nums}
@@ -4022,7 +4088,7 @@ const FOC_CARD_CSS=`
 @container (max-width:150px){.foc-bar{display:none}}
 @media(prefers-reduced-motion:reduce){.foc-item,.foc-bar-fill::after,.live-dot{animation:none!important}}`;
 const PIP_CSS=`*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:#0b0b0e;background:radial-gradient(140% 90% at 50% -10%,#1e1e26 0%,#0b0b0e 58%) fixed;color:#fff;padding:clamp(11px,3.5vw,16px);min-height:100vh;-webkit-font-smoothing:antialiased}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:#0b0b0e;background:radial-gradient(140% 90% at 50% -10%,#1e1e26 0%,#0b0b0e 58%) fixed;color:#fff;padding:clamp(11px,3.5vw,16px);min-height:100vh;-webkit-font-smoothing:antialiased;container-type:inline-size}
 .focus-head{display:flex;align-items:center;gap:9px;margin-bottom:14px}
 .focus-head-title{font-size:clamp(.86rem,4.5vw,1rem);font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;white-space:nowrap}
 `+FOC_CARD_CSS;
@@ -4049,16 +4115,44 @@ function focusItems(){
       clock=over?'+'+fmtClock(-remain):fmtClock(remain);
       sub=over?('Estourou '+fmtClock(-remain)+' · estimado '+fmtTime(t.estimatedTime)):('restantes · estimado '+fmtTime(t.estimatedTime));
     }else{clock=fmtClock(elapsed);sub='decorridos · sem estimativa'}
-    return {t,c,remain,over,pct,clock,sub,hasEst:!!t.estimatedTime};
+    return {t,c,remain,over,pct,clock,sub,hasEst:!!t.estimatedTime,notes:(t.notes||'').trim(),subs:t.subtasks||[],catName:c.name,agent:t.agent||''};
   });
   // urgência primeiro: estourados, depois menor tempo restante; sem estimativa por último
   items.sort((a,b)=>a.remain-b.remain);
   return items;
 }
+// Resumo do dia: feitas/total + tempo estimado restante das tarefas de hoje
+function focusSummaryText(){
+  const todayDs=dateStr(new Date());
+  const todays=getVisibleTasks().filter(t=>t.date===todayDs&&t.type!=='note'&&t.type!=='alert');
+  if(!todays.length)return 'Sem tarefas agendadas para hoje';
+  const done=todays.filter(t=>t.status==='done').length;
+  const remainMin=todays.filter(t=>t.status!=='done').reduce((s,t)=>s+(t.estimatedTime||0),0);
+  const parts=['Hoje '+done+'/'+todays.length+' feitas'];
+  if(remainMin>0)parts.push(fmtTime(remainMin)+' restante');
+  return parts.join('   ·   ');
+}
 function focusCardHTML(it,i){
+  const expanded=_focusExpanded.has(it.t.id);
   const pctChip=it.hasEst?`<span class="foc-pct">${Math.round(it.pct)}%</span>`:'';
   const bar=it.hasEst?`<div class="foc-bar"><div class="foc-bar-fill" style="width:${it.pct}%"></div></div>`:'';
-  return `<div class="foc-item ${it.over?'over':''}" style="--cat:${it.c.color};--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title">${escapeHtml(it.t.title)}</span>${pctChip}</div><div class="foc-time">${it.clock}</div>${bar}<div class="foc-sub">${it.sub}</div></div>`;
+  const subDone=it.subs.filter(s=>s.done).length;
+  let detail=`<div class="fd-meta"><span class="fd-chip"><span class="fd-catdot"></span>${escapeHtml(it.catName)}</span>`;
+  if(it.agent)detail+=`<span class="fd-chip">⚡ ${escapeHtml(it.agent)}</span>`;
+  if(it.subs.length)detail+=`<span class="fd-chip">${subDone}/${it.subs.length} subtarefas</span>`;
+  detail+=`</div>`;
+  if(it.notes)detail+=`<div class="fd-notes">${escapeHtml(it.notes)}</div>`;
+  if(it.subs.length)detail+=`<div class="fd-subs">`+it.subs.map(s=>`<div class="fd-sub ${s.done?'done':''}"><span class="fd-check">${s.done?'✓':''}</span>${escapeHtml(s.text)}</div>`).join('')+`</div>`;
+  if(!it.notes&&!it.subs.length)detail+=`<div class="fd-empty">Sem descrição ou subtarefas.</div>`;
+  const chev='<span class="foc-exp"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>';
+  return `<div class="foc-item ${it.over?'over':''} ${expanded?'expanded':''}" data-fid="${it.t.id}" style="--cat:${it.c.color};--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title">${escapeHtml(it.t.title)}</span>${pctChip}${chev}</div><div class="foc-time">${it.clock}</div>${bar}<div class="foc-sub">${it.sub}</div><div class="foc-detail">${detail}</div></div>`;
+}
+function onFocusItemClick(e){
+  const item=e.target.closest('.foc-item');
+  if(!item||!item.dataset.fid)return;
+  const id=item.dataset.fid;
+  if(_focusExpanded.has(id))_focusExpanded.delete(id);else _focusExpanded.add(id);
+  item.classList.toggle('expanded');
 }
 // Patch cirúrgico: só recria o DOM quando o conjunto de tarefas muda;
 // a cada segundo atualiza textos/larguras — preserva shimmer e pulso das animações
@@ -4066,6 +4160,7 @@ function updateFocusDoc(doc){
   const list=doc.getElementById('focusList');if(!list)return;
   const items=focusItems();
   const cnt=doc.getElementById('focusCount');if(cnt)cnt.textContent=items.length;
+  const sum=doc.getElementById('focusSummary');if(sum)sum.textContent=focusSummaryText();
   const key=items.map(x=>x.t.id).join('|');
   if(list.dataset.key!==key){
     list.dataset.key=key;
@@ -4094,8 +4189,9 @@ async function openFocus(auto){
       if(_pipWin&&!_pipWin.closed){_pipWin.focus();return}
       _pipWin=await documentPictureInPicture.requestWindow({width:360,height:460});
       const st=_pipWin.document.createElement('style');st.textContent=PIP_CSS;_pipWin.document.head.appendChild(st);
-      _pipWin.document.body.innerHTML='<div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span></div><div class="focus-list" id="focusList"></div>';
+      _pipWin.document.body.innerHTML='<div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span></div><div class="focus-summary" id="focusSummary"></div><div class="focus-list" id="focusList"></div>';
       _pipWin.document.title='Em foco';
+      _pipWin.document.body.addEventListener('click',onFocusItemClick);
       _pipWin.addEventListener('pagehide',()=>{_pipWin=null;stopFocusTimer()});
       renderFocus();startFocusTimer();
       return;
@@ -4109,6 +4205,7 @@ function updateFocusBtn(){const n=getVisibleTasks().filter(t=>t.status==='doing'
 const _btnFocus=$('#btnFocus');if(_btnFocus)_btnFocus.addEventListener('click',()=>openFocus(false));
 const _focusClose=$('#focusClose');if(_focusClose)_focusClose.addEventListener('click',closeFocus);
 const _focusOv=$('#focusOverlay');if(_focusOv)_focusOv.addEventListener('click',e=>{if(e.target.id==='focusOverlay')closeFocus()});
+const _focusListEl=$('#focusList');if(_focusListEl)_focusListEl.addEventListener('click',onFocusItemClick);
 function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(52,199,89,.25),rgba(0,122,255,.08) 50%,transparent 70%);z-index:9998;pointer-events:none;animation:flashFade 1s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
 function celebrateDone(x,y,scale=1){
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
@@ -5228,7 +5325,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=115',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=118',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
