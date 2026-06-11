@@ -1585,6 +1585,7 @@
           <button type="button" data-v="12">12/12h</button>
           <button type="button" data-v="8">8/8h</button>
           <button type="button" data-v="6">6/6h</button>
+          <button type="button" data-v="weekly">Semanal</button>
         </div></div>
         <div class="fld"><label>Até quando <span style="color:var(--label3)">(opcional — fim do tratamento)</span></label><input type="date" id="mdUntil"></div>
       </div>
@@ -3642,9 +3643,9 @@ function renderMedView(){
       if(t.recurrence?.freq) sub.push(recurText(t.recurrence.freq,t.recurrence.every));
       if(t.recurrence?.until) sub.push('até '+fDate(t.recurrence.until));
       const doneNow=(t.type==='alert'&&t.recurrence?.freq&&t.recurrence.freq!=='once')?(t.completedAt&&dateStr(new Date(t.completedAt))===todayStr):t.status==='done';
-      return `<div class="med-pill ${doneNow?'done':''}" onclick="toggleM('${t.id}')">
-      <div class="ck"><svg width="12" height="12"><use href="#i-check"/></svg></div>
-      <div class="med-pill-info"><div class="med-pill-title">${escapeHtml(t.title)}</div><div class="med-pill-sub">${sub.join(' · ')}</div></div>
+      return `<div class="med-pill ${doneNow?'done':''}">
+      <div class="ck" onclick="toggleM('${t.id}'); event.stopPropagation();"><svg width="12" height="12"><use href="#i-check"/></svg></div>
+      <div class="med-pill-info" onclick="openMedForm('${t.id}')"><div class="med-pill-title">${escapeHtml(t.title)}</div><div class="med-pill-sub">${sub.join(' · ')}</div></div>
     </div>`;
     };
     
@@ -3662,7 +3663,7 @@ function renderMedView(){
       day = String(d.getDate()).padStart(2,'0');
       mo = d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
     }
-    return `<div class="med-ticket ${t.status==='done'?'done':''}" onclick="editTask('${t.id}')">
+    return `<div class="med-ticket ${t.status==='done'?'done':''}" onclick="openMedForm('${t.id}')">
       <div class="med-ticket-date"><div class="med-ticket-day">${day}</div><div class="med-ticket-month">${mo}</div></div>
       <div class="med-ticket-info">
         <div class="med-ticket-title">${escapeHtml(t.title)}</div>
@@ -4373,15 +4374,70 @@ $('#aFreq').addEventListener('click',e=>{
 });
 
 // ===== SAÚDE: formulário de remédio / consulta / exame =====
-function openMedForm(){
+let medEditId=null;
+function openMedForm(editId=null){
+  medEditId=typeof editId==='string'?editId:null;
   const sy=window.scrollY;document.body.style.top='-'+sy+'px';document.body.classList.add('modal-open');document.body.dataset.scrollY=sy;
   $('#medSheet').classList.add('open');$('#medOv').classList.add('open');
   $('#medForm').reset();
-  pickVal($('#mdType'),'med');
-  pickVal($('#mdAssign'),getMyRole()||'bruno');
-  $('#mdTime').value='08:00';$('#mdDaily').checked=true;$('#mdRemind').checked=true;
-  pickVal($('#mdFreq'),'daily');$('#mdUntil').value='';$('#mdRecurFields').style.display='';
-  _mdSetType('med');
+
+  let delBtn=$('#mdDel');
+  if(!delBtn){
+    delBtn=document.createElement('button');
+    delBtn.type='button';delBtn.id='mdDel';
+    delBtn.className='btn btn-sec';
+    delBtn.style.color='#FF3B30';delBtn.style.borderColor='rgba(255,59,48,0.2)';
+    delBtn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>';
+    delBtn.onclick=()=>{
+      if(!medEditId)return;
+      if(confirm('Tem certeza que deseja deletar?')){
+        tasks=tasks.filter(t=>t.id!==medEditId);
+        addLog('delete',{id:medEditId});
+        sT();render();closeMedForm();
+      }
+    };
+    $('#mdCan').parentNode.insertBefore(delBtn,$('#mdCan'));
+  }
+  delBtn.style.display=medEditId?'':'none';
+
+  if(medEditId){
+    const t=tasks.find(x=>x.id===medEditId);
+    if(t){
+      pickVal($('#mdType'),t.medType||'med');
+      pickVal($('#mdAssign'),t.assignedTo||'bruno');
+      _mdSetType(t.medType||'med');
+      $('#mdName').value=t.title||'';
+      if(!t.medType||t.medType==='med'){
+        $('#mdDose').value=t.notes||'';
+        if(t.type==='alert'||t.recurrence){
+          $('#mdDaily').checked=true;
+          $('#mdTime').value=t.alertTime||'08:00';
+          const rec=t.recurrence||{};
+          let freqV='daily';
+          if(rec.freq==='weekly')freqV='weekly';
+          else if(rec.freq==='interval'&&rec.every)freqV=String(rec.every);
+          pickVal($('#mdFreq'),freqV);
+          $('#mdUntil').value=rec.until||'';
+          $('#mdRecurFields').style.display='';
+        }else{
+          $('#mdDaily').checked=false;
+          $('#mdRecurFields').style.display='none';
+        }
+      }else{
+        $('#mdDate').value=t.date||'';
+        $('#mdExamTime').value=t.examTime||'';
+        $('#mdLocal').value=t.examLocal||'';
+        $('#mdDoctor').value=t.examDoctor||'';
+        $('#mdRemind').checked=t.remindDayBefore!==false;
+      }
+    }
+  }else{
+    pickVal($('#mdType'),'med');
+    pickVal($('#mdAssign'),getMyRole()||'bruno');
+    $('#mdTime').value='08:00';$('#mdDaily').checked=true;$('#mdRemind').checked=true;
+    pickVal($('#mdFreq'),'daily');$('#mdUntil').value='';$('#mdRecurFields').style.display='';
+    _mdSetType('med');
+  }
   setTimeout(()=>$('#mdName').focus(),300);
 }
 function closeMedForm(){
@@ -4415,15 +4471,18 @@ $('#medForm').addEventListener('submit',e=>{
     if($('#mdDaily').checked){
       const [hh,mm]=time.split(':').map(Number);
       const freqV=getPickVal($('#mdFreq'))||'daily';
-      const every=freqV==='daily'?null:parseInt(freqV,10);
+      const every=(freqV==='daily'||freqV==='weekly')?null:parseInt(freqV,10);
       const until=$('#mdUntil').value||null;
-      const rec=every?{freq:'interval',every:every,until:until}:{freq:'daily',until:until};
+      let rec;
+      if(freqV==='weekly') rec={freq:'weekly',until:until};
+      else rec=every?{freq:'interval',every:every,until:until}:{freq:'daily',until:until};
       const fire=new Date();fire.setHours(hh,mm,0,0);
-      if(every){while(fire.getTime()<Date.now())fire.setTime(fire.getTime()+every*3600000)}
+      if(freqV==='weekly'){while(fire.getTime()<Date.now())fire.setDate(fire.getDate()+7)}
+      else if(every){while(fire.getTime()<Date.now())fire.setTime(fire.getTime()+every*3600000)}
       else if(fire.getTime()<Date.now())fire.setDate(fire.getDate()+1);
-      data={id:uid(),type:'alert',medType:'med',title:name,notes:dose,project:medProjId,assignedTo:who,alertTime:time,recurrence:rec,date:dateStr(new Date()),nextFireAt:fire.getTime(),lastFiredAt:null,status:'todo',category:'remedios',createdAt:Date.now(),updatedAt:Date.now()};
+      data={id:medEditId||uid(),type:'alert',medType:'med',title:name,notes:dose,project:medProjId,assignedTo:who,alertTime:time,recurrence:rec,date:dateStr(new Date()),nextFireAt:fire.getTime(),lastFiredAt:null,status:'todo',category:'remedios',createdAt:Date.now(),updatedAt:Date.now()};
     }else{
-      data={id:uid(),medType:'med',title:name,notes:dose,project:medProjId,assignedTo:who,status:'todo',category:'remedios',createdAt:Date.now(),updatedAt:Date.now()};
+      data={id:medEditId||uid(),medType:'med',title:name,notes:dose,project:medProjId,assignedTo:who,status:'todo',category:'remedios',createdAt:Date.now(),updatedAt:Date.now()};
     }
   }else{
     const date=$('#mdDate').value||'';
@@ -4431,10 +4490,19 @@ $('#medForm').addEventListener('submit',e=>{
     const local=$('#mdLocal').value.trim();
     const doctor=$('#mdDoctor').value.trim();
     const parts=[];if(etime)parts.push('🕐 '+etime);if(local)parts.push('📍 '+local);if(doctor)parts.push('👨‍⚕️ '+doctor);
-    data={id:uid(),medType:type,title:name,notes:parts.join('  •  '),project:medProjId,date:date,examTime:etime||null,examLocal:local||null,examDoctor:doctor||null,remindDayBefore:$('#mdRemind').checked,status:'todo',category:type==='exam'?'exames':'consultas',createdAt:Date.now(),updatedAt:Date.now()};
+    data={id:medEditId||uid(),medType:type,title:name,notes:parts.join('  •  '),project:medProjId,date:date,examTime:etime||null,examLocal:local||null,examDoctor:doctor||null,remindDayBefore:$('#mdRemind').checked,status:'todo',category:type==='exam'?'exames':'consultas',createdAt:Date.now(),updatedAt:Date.now()};
   }
-  tasks.unshift(data);addLog('create',data);sT();closeMedForm();render();
-  toast(type==='med'?'Remédio adicionado':(type==='consulta'?'Consulta agendada':'Exame agendado'));
+  if(medEditId){
+    data.createdAt=tasks.find(x=>x.id===medEditId)?.createdAt||Date.now();
+    const idx=tasks.findIndex(x=>x.id===medEditId);
+    if(idx>=0)tasks[idx]=data;
+    addLog('edit',data);
+    toast(type==='med'?'Remédio atualizado':(type==='consulta'?'Consulta atualizada':'Exame atualizado'));
+  }else{
+    tasks.unshift(data);addLog('create',data);
+    toast(type==='med'?'Remédio adicionado':(type==='consulta'?'Consulta agendada':'Exame agendado'));
+  }
+  sT();closeMedForm();render();
 });
 
 // ===== NOTES BOARD =====
