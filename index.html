@@ -391,11 +391,28 @@
     .search-filter-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:6px;background:transparent;border:none;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--dur-fast)}
     .search-filter-btn:hover{background:var(--fill);color:var(--label)}
     .search-filter-btn svg{width:16px;height:16px}
-    .qf-pop{position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;z-index:100;opacity:0;pointer-events:none;transform:translateY(-4px);transition:all var(--dur-fast) var(--ease-std);min-width:160px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+    .qf-pop{position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--sep);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;z-index:100;opacity:0;pointer-events:none;transform:translateY(-4px);transition:all var(--dur-fast) var(--ease-std);min-width:180px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
     .qf-pop.show{opacity:1;pointer-events:auto;transform:translateY(0)}
-    .qf-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:0.8rem;font-weight:500;color:var(--label);border-radius:8px;cursor:pointer;transition:background var(--dur-fast)}
+    .qf-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:0.8rem;font-weight:500;color:var(--label);border-radius:8px;cursor:pointer;transition:background var(--dur-fast);user-select:none}
     .qf-opt:hover{background:var(--fill)}
-    .qf-opt svg{width:14px;height:14px;color:var(--label3)}
+    .qf-opt svg{width:14px;height:14px;color:var(--label3);flex-shrink:0}
+    .qf-opt .qf-ck{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--sep);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--dur-fast)}
+    .qf-opt.active .qf-ck{background:var(--blue);border-color:var(--blue)}
+    .qf-opt.active .qf-ck svg{color:#fff}
+    .qf-opt .qf-ck svg{width:10px;height:10px;color:transparent}
+    .qf-pop-footer{display:flex;gap:6px;padding:6px 6px 2px;border-top:1px solid var(--sep);margin-top:4px}
+    .qf-pop-footer button{flex:1;padding:7px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:all var(--dur-fast)}
+    .qf-pop-clear{background:var(--fill);color:var(--label2)}
+    .qf-pop-clear:hover{background:var(--sep)}
+    .qf-pop-apply{background:var(--blue);color:#fff}
+    .qf-pop-apply:hover{filter:brightness(1.1)}
+    /* Active filter chips */
+    .qf-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+    .qf-chips:empty{display:none}
+    .qf-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px 4px 10px;background:var(--fill);border:1px solid var(--sep);border-radius:8px;font-size:.7rem;font-weight:600;color:var(--label2);cursor:default;transition:all var(--dur-fast);animation:chipIn .25s cubic-bezier(.16,1,.3,1)}
+    @keyframes chipIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+    .qf-chip svg{width:12px;height:12px;cursor:pointer;color:var(--label3);transition:color var(--dur-fast)}
+    .qf-chip svg:hover{color:var(--label)}
     .search-clear-btn{position:absolute;right:40px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--fill);border:none;color:var(--label3);cursor:pointer;display:none;align-items:center;justify-content:center;transition:all var(--dur-fast)}
     .search-clear-btn:hover{background:var(--label3);color:var(--bg)}
     .search-clear-btn svg{width:12px;height:12px;stroke-width:2.5}
@@ -1433,13 +1450,18 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
           </button>
           <div class="qf-pop" id="qfPop">
-            <div class="qf-opt" onclick="setQF('hoje')"><svg><use href="#i-cal"/></svg>Hoje</div>
-            <div class="qf-opt" onclick="setQF('amanhã')"><svg><use href="#i-cal"/></svg>Amanhã</div>
-            <div class="qf-opt" onclick="setQF('atrasada')"><svg><use href="#i-clock"/></svg>Atrasadas</div>
-            <div class="qf-opt" onclick="setQF('alta')"><svg><use href="#i-flag"/></svg>Alta Prioridade</div>
-            <div class="qf-opt" onclick="setQF('agente')"><svg><use href="#i-zap"/></svg>Com Agente IA</div>
-            <div class="qf-opt" onclick="setQF('sem agente')"><svg><use href="#i-zap"/></svg>Sem Agente IA</div>
+            <div class="qf-opt" data-qf="hoje"><span class="qf-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg><use href="#i-cal"/></svg>Hoje</div>
+            <div class="qf-opt" data-qf="amanhã"><span class="qf-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg><use href="#i-cal"/></svg>Amanhã</div>
+            <div class="qf-opt" data-qf="atrasada"><span class="qf-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg><use href="#i-clock"/></svg>Atrasadas</div>
+            <div class="qf-opt" data-qf="alta"><span class="qf-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg><use href="#i-flag"/></svg>Alta Prioridade</div>
+            <div class="qf-opt" data-qf="agente"><span class="qf-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg><use href="#i-zap"/></svg>Com Agente IA</div>
+            <div class="qf-opt" data-qf="sem agente"><span class="qf-ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg><use href="#i-zap"/></svg>Sem Agente IA</div>
+            <div class="qf-pop-footer">
+              <button class="qf-pop-clear" onclick="clearQF()">Limpar</button>
+              <button class="qf-pop-apply" onclick="applyQF()">Filtrar</button>
+            </div>
           </div>
+          <div class="qf-chips" id="qfChips"></div>
           <div class="smart-suggest" id="smartSuggest"></div>
         </div>
         <div class="seg" id="taskSeg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="done">Feitas</button></div>
@@ -2799,6 +2821,15 @@ const SMART_TERMS=[
 ];
 function smartFilter(t,q){
   const s=q.toLowerCase().trim();
+  // Multi-filter: comma-separated terms use AND logic
+  if(s.includes(',')){
+    const terms=s.split(',').map(x=>x.trim()).filter(Boolean);
+    return terms.every(term=>{
+      const match=SMART_TERMS.find(st=>st.term===term);
+      if(match) return match.fn(t);
+      return t.title.toLowerCase().includes(term)||(t.notes||'').toLowerCase().includes(term);
+    });
+  }
   const match=SMART_TERMS.find(st=>st.term===s);
   if(match)return match.fn(t);
   return t.title.toLowerCase().includes(s)||(t.notes||'').toLowerCase().includes(s);
@@ -2822,11 +2853,65 @@ function showSmartSuggest(q){
 }
 function hideSmartSuggest(){setTimeout(()=>{$('#smartSuggest').classList.remove('show');$('#smartSuggest').innerHTML=''},150)}
 function toggleQF(e){e.stopPropagation();$('#qfPop').classList.toggle('show')}
+// Quick filter multi-select
+let _qfSelected=new Set();
+function toggleQFOpt(term){
+  if(_qfSelected.has(term)) _qfSelected.delete(term);
+  else _qfSelected.add(term);
+  syncQFCheckboxes();
+}
+function syncQFCheckboxes(){
+  $$('#qfPop .qf-opt').forEach(el=>{
+    el.classList.toggle('active',_qfSelected.has(el.dataset.qf));
+  });
+}
+function applyQF(){
+  if(_qfSelected.size===0){clearAllFilters();$('#qfPop').classList.remove('show');return}
+  const combined=[..._qfSelected].join(',');
+  $('#q').value=combined;
+  qry=combined;
+  renderTasks();
+  renderQFChips();
+  $('#qfPop').classList.remove('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function clearQF(){
+  _qfSelected.clear();
+  syncQFCheckboxes();
+  $('#q').value='';qry='';
+  renderTasks();
+  renderQFChips();
+}
+function removeQFChip(term){
+  _qfSelected.delete(term);
+  if(_qfSelected.size===0){$('#q').value='';qry='';}
+  else{const combined=[..._qfSelected].join(',');$('#q').value=combined;qry=combined;}
+  syncQFCheckboxes();
+  renderTasks();
+  renderQFChips();
+}
+function renderQFChips(){
+  const box=$('#qfChips');if(!box)return;
+  if(_qfSelected.size===0){box.innerHTML='';return}
+  const labels={'hoje':'Hoje','amanhã':'Amanhã','atrasada':'Atrasadas','alta':'Alta Prioridade','agente':'Com Agente IA','sem agente':'Sem Agente IA'};
+  box.innerHTML=[..._qfSelected].map(t=>`<span class="qf-chip">${labels[t]||t}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" onclick="removeQFChip('${t}')"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>`).join('');
+}
 function setQF(v){$('#q').value=v;$('#q').dispatchEvent(new Event('input',{bubbles:true}));$('#qfPop').classList.remove('show');window.scrollTo({top:0,behavior:'smooth'})}
 document.addEventListener('click', e => { if(!e.target.closest('#qfPop') && !e.target.closest('.search-filter-btn')) $('#qfPop')?.classList.remove('show'); });
+// QF popup click handler — toggle checkboxes
+$('#qfPop').addEventListener('click',e=>{
+  const opt=e.target.closest('.qf-opt');
+  if(!opt)return;
+  e.stopPropagation();
+  toggleQFOpt(opt.dataset.qf);
+  // On desktop, if not shift-held, auto-apply single filter for speed
+  // On mobile or shift-held, stay open for multi-select
+  if(!e.shiftKey && window.innerWidth>768 && _qfSelected.size<=1){applyQF()}
+});
 function clearAllFilters(){
-  $('#q').value='';qry='';aSt='all';aCat='all';aOwner='all';widgetFilter=null;
+  $('#q').value='';qry='';aSt='all';aCat='all';aOwner='all';widgetFilter=null;_qfSelected.clear();
   saveUI();
+  syncQFCheckboxes();renderQFChips();
   $$('.seg button').forEach(x=>x.classList.toggle('active',x.dataset.s==='all'));
   $$('#mobCats .m-chip').forEach(x=>x.classList.toggle('active',x.dataset.c==='all'));
   $$('.cat-nav-item').forEach(x=>x.classList.toggle('active',x.dataset.c==='all'));
