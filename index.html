@@ -5266,7 +5266,7 @@ $('#taskKanban').addEventListener('click',e=>{
       const scl=1.3;
       if(col==='validation') spawnBurst(cx,cy,['#AF52DE','#E5CEFF','#5856D6','#D6A8FF'],12,60,scl);
       else if(col==='bug') spawnBurst(cx,cy,['#FF3B30','#FFD1D1','#FF9500','#FF6B6B'],12,60,scl);
-      else if(col==='done'){celebrateDone(cx,cy,scl)}
+      else if(col==='done'){celebrateDone(cx,cy,scl);showCompletionNote(t.id)}
       else if(col==='progress') spawnBurst(cx,cy,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60,scl);
     }
     return;
@@ -5294,7 +5294,7 @@ $('#taskKanban').addEventListener('drop',e=>{
       const cx=e.clientX,cy=e.clientY,scl=1.3;
       if(destCol==='validation') spawnBurst(cx,cy,['#AF52DE','#E5CEFF','#5856D6','#D6A8FF'],12,60,scl);
       else if(destCol==='bug') spawnBurst(cx,cy,['#FF3B30','#FFD1D1','#FF9500','#FF6B6B'],12,60,scl);
-      else if(destCol==='done'){celebrateDone(cx,cy,scl)}
+      else if(destCol==='done'){celebrateDone(cx,cy,scl);showCompletionNote(t.id)}
       else if(destCol==='progress') spawnBurst(cx,cy,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60,scl);
     }
     col.classList.remove('drop-over');
