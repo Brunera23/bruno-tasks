@@ -3108,11 +3108,26 @@ function setTaskKanbanStatus(t, col){
 
 function renderTasksKanban(){
   const wrap=$('#taskKanban');if(!wrap)return;
+  const todayDs=dateStr(new Date());
   let list=getVisibleTasks().filter(t=>{
     if(aCat!=='all'&&t.category!==aCat) return false;
     if(qry){if(!smartFilter(t,qry)) return false}
     return true;
   });
+  // Apply widget filter in board mode too
+  if(widgetFilter){
+    const weekEndDs=dateStr(new Date(Date.now()+7*864e5));
+    switch(widgetFilter){
+      case 'foco':list=list.filter(t=>t.date===todayDs);break;
+      case 'next':list=list.filter(t=>t.status!=='done'&&!isBlocked(t));break;
+      case 'blocked':list=list.filter(t=>t.status!=='done'&&isBlocked(t));break;
+      case 'progress':list=list.filter(t=>t.completedAt&&t.completedAt>=Date.now()-7*864e5);break;
+      case 'habits':list=list.filter(t=>t.recurrence&&t.recurrence.freq);break;
+      case 'overdue':list=list.filter(t=>t.status!=='done'&&t.date&&t.date<todayDs);break;
+      case 'week':break;
+      default:if(widgetFilter.startsWith('day:')){const ds=widgetFilter.slice(4);list=list.filter(t=>t.date===ds)}
+    }
+  }
   // Don't apply status filter in board mode — all columns are visible
   const byCol={};TASK_KCOLS.forEach(c=>byCol[c.id]=[]);
   list.forEach(t=>{const col=taskKanbanStatusOf(t);(byCol[col]||byCol.todo).push(t)});
@@ -3196,12 +3211,11 @@ function renderWidgets(){
 }
 function applyWidgetFilter(key){
   if(widgetFilter===key||key==='week'){widgetFilter=null}else{widgetFilter=key}
-  // Widget filter forces list view so all filtered results are visible together
-  if(widgetFilter && taskLayout==='board'){setTaskLayout('list')}
   renderTasks();
+  if(taskLayout==='board') renderTasksKanban();
   if(window.innerWidth<=768){$('#wdgPanel').classList.remove('open');$('#wkToggle').classList.remove('open');$('.main').classList.remove('wdg-open')}
 }
-function clearWidgetFilter(){widgetFilter=null;renderTasks()}
+function clearWidgetFilter(){widgetFilter=null;renderTasks();if(taskLayout==='board')renderTasksKanban()}
 
 function buildWidgetCard(key,icon,name,gradient,renderFn){
   const st=wdgState[key]||{compact:false};
