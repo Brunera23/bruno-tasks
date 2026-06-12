@@ -2871,6 +2871,7 @@ function applyQF(){
   $('#q').value=combined;
   qry=combined;
   renderTasks();
+  if(taskLayout==='board') renderTasksKanban();
   renderQFChips();
   $('#qfPop').classList.remove('show');
   window.scrollTo({top:0,behavior:'smooth'});
@@ -2880,6 +2881,7 @@ function clearQF(){
   syncQFCheckboxes();
   $('#q').value='';qry='';
   renderTasks();
+  if(taskLayout==='board') renderTasksKanban();
   renderQFChips();
 }
 function removeQFChip(term){
@@ -2888,6 +2890,7 @@ function removeQFChip(term){
   else{const combined=[..._qfSelected].join(',');$('#q').value=combined;qry=combined;}
   syncQFCheckboxes();
   renderTasks();
+  if(taskLayout==='board') renderTasksKanban();
   renderQFChips();
 }
 function renderQFChips(){
@@ -5382,9 +5385,9 @@ $('#grpMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.grp-dd
 });
 $$('.nav-item').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
 $$('.mob-tab[data-view]').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
-$('#q').addEventListener('input',e=>{qry=e.target.value;showSmartSuggest(qry);renderTasks()});
+$('#q').addEventListener('input',e=>{qry=e.target.value;showSmartSuggest(qry);renderTasks();if(taskLayout==='board')renderTasksKanban()});
 $('#q').addEventListener('blur',()=>hideSmartSuggest());
-$('#smartSuggest').addEventListener('mousedown',e=>{const item=e.target.closest('.smart-suggest-item');if(!item)return;e.preventDefault();const term=item.dataset.term;$('#q').value=term;qry=term;$('#smartSuggest').classList.remove('show');$('#smartSuggest').innerHTML='';renderTasks()});
+$('#smartSuggest').addEventListener('mousedown',e=>{const item=e.target.closest('.smart-suggest-item');if(!item)return;e.preventDefault();const term=item.dataset.term;$('#q').value=term;qry=term;$('#smartSuggest').classList.remove('show');$('#smartSuggest').innerHTML='';renderTasks();if(taskLayout==='board')renderTasksKanban()});
 $('#cfNo').addEventListener('click',()=>{delId=null;$('#cfWrap').classList.remove('open')});
 $('#cfWrap').addEventListener('click',e=>{if(e.target===$('#cfWrap')){delId=null;$('#cfWrap').classList.remove('open')}});
 $('#catMgrBtn').addEventListener('click',openCatMgr);
