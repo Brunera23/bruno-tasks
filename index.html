@@ -618,6 +618,32 @@
     .dash-week-nav-today:active{transform:scale(.94);transition-duration:60ms}
     .dash-week-nav-today.hidden{display:none}
 
+    /* ===== COMPLETION NOTE MODAL ===== */
+    .done-note-ov{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .25s}
+    .done-note-ov.open{opacity:1;pointer-events:all}
+    .done-note-modal{position:fixed;z-index:301;top:50%;left:50%;transform:translate(-50%,-48%) scale(.96);opacity:0;background:var(--card);border-radius:18px;padding:24px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15),0 0 0 .5px rgba(0,0,0,.04);pointer-events:none;transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .2s}
+    .done-note-modal.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all}
+    @media(max-width:640px){.done-note-modal{top:auto;bottom:0;left:0;right:0;transform:translateY(100%);border-radius:18px 18px 0 0;width:100%;max-width:100%}.done-note-modal.open{transform:translateY(0)}}
+    .done-note-modal .dn-icon{width:40px;height:40px;border-radius:12px;background:rgba(52,199,89,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+    .done-note-modal .dn-icon svg{width:20px;height:20px;color:#34C759}
+    .done-note-modal .dn-title{font-size:.95rem;font-weight:700;text-align:center;margin-bottom:4px;color:var(--label)}
+    .done-note-modal .dn-sub{font-size:.72rem;color:var(--label3);text-align:center;margin-bottom:14px}
+    .done-note-modal textarea{width:100%;padding:10px 13px;background:var(--bg);border:1px solid var(--sep);border-radius:12px;color:var(--label);font-family:inherit;font-size:.88rem;outline:none;resize:vertical;min-height:60px;max-height:120px;box-sizing:border-box;transition:border-color .15s}
+    .done-note-modal textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.08)}
+    .done-note-modal textarea::placeholder{color:var(--label3)}
+    .done-note-modal .dn-btns{display:flex;gap:8px;margin-top:14px}
+    .done-note-modal .dn-btns button{flex:1;padding:10px;border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;border:none}
+    .done-note-modal .dn-skip{background:var(--fill);color:var(--label2)}
+    .done-note-modal .dn-skip:hover{background:var(--sep)}
+    .done-note-modal .dn-save{background:#34C759;color:#fff}
+    .done-note-modal .dn-save:hover{filter:brightness(1.08)}
+
+    /* Completion note display in edit form */
+    .cn-display{background:rgba(52,199,89,.06);border:1px solid rgba(52,199,89,.15);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+    .cn-display-label{font-size:.68rem;font-weight:600;color:#34C759;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+    .cn-display-label svg{width:12px;height:12px}
+    .cn-display .cn-text{font-size:.82rem;color:var(--label);line-height:1.4;white-space:pre-wrap}
+
     /* Week Capacity Bars */
     .week-load{display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:8px;position:relative}
     .wl-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;height:100%}
@@ -1693,6 +1719,7 @@
       <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-users"/></svg></span>Ambos</button>
     </div></div>
     <div class="fld"><label>O que vamos fazer?</label><input type="text" id="fT" placeholder="Ex: Pagar a conta de luz..." required></div>
+    <div class="fld"><label>Notas <span style="color:var(--label3);font-weight:400">(opcional)</span></label><textarea id="fN" placeholder="Detalhes, links, anotações..." rows="2"></textarea></div>
     <div class="fld"><label>Onde se encaixa?</label>
       <div class="cs-wrap" id="fCWrap" tabindex="0">
         <div class="cs-val"><div class="cs-val-inner" id="fCVal">Selecione</div><svg class="cs-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
@@ -1710,9 +1737,27 @@
     <div class="fld"><label>Tempo estimado</label><div class="time-chips" id="timeChips"><button type="button" class="time-chip" data-min="5">5min</button><button type="button" class="time-chip" data-min="15">15min</button><button type="button" class="time-chip" data-min="30">30min</button><button type="button" class="time-chip" data-min="60">1h</button><button type="button" class="time-chip" data-min="120">2h</button><button type="button" class="time-chip" data-min="240">4h</button><button type="button" class="time-chip" data-min="custom">Outro</button></div><div class="time-custom-wrap" id="timeCustom"><input type="number" id="fET" min="1" max="960" placeholder="90"><span>minutos</span></div></div>
     <div class="sub-edit-section adv-field"><label>Subtarefas</label><div class="sub-edit-list" id="subList"></div><button type="button" class="add-sub-btn" id="addSub"><svg width="13" height="13"><use href="#i-plus"/></svg>Adicionar subtarefa</button></div>
     <div class="fld adv-field"><label>Depende de</label><div class="dep-picker" id="depPicker"><input type="text" class="dep-search" id="depSearch" placeholder="Buscar tarefa..." autocomplete="off"><div class="dep-results" id="depResults"></div></div><div class="dep-chips" id="depChips"></div></div>
-    <div class="fld adv-field"><label>Notas</label><textarea id="fN" placeholder="Detalhes, links, anotações..."></textarea></div>
+
+
+    <div class="cn-display" id="completionNoteDisplay" style="display:none">
+      <div class="cn-display-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Nota de conclusão</div>
+      <div class="cn-text"></div>
+    </div>
     <div class="m-btns"><button type="button" class="btn btn-sec" id="mCancel">Cancelar</button><button type="submit" class="btn btn-primary">Salvar<kbd class="kb-hint">⌘↵</kbd></button></div>
   </form>
+</div>
+
+<!-- Completion Note Modal -->
+<div class="done-note-ov" id="dnOv"></div>
+<div class="done-note-modal" id="dnModal">
+  <div class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+  <div class="dn-title">Tarefa concluída! 🎉</div>
+  <div class="dn-sub">Quer registrar o que foi feito? <strong>(opcional)</strong></div>
+  <textarea id="dnNote" placeholder="Ex: Enviei o relatório por e-mail ao gerente..."></textarea>
+  <div class="dn-btns">
+    <button type="button" class="dn-skip" id="dnSkip">Pular</button>
+    <button type="button" class="dn-save" id="dnSave">Salvar nota</button>
+  </div>
 </div>
 
 <div class="overlay" id="ovView" onclick="closeViewTask()"></div>
@@ -3909,6 +3954,9 @@ function openM(task){
   renderAgentPicker();
   $('#fAgWrap').classList.remove('open');
   $('#fN').value=e?(task.notes||''):'';
+  // Show completion note if exists (readonly display when editing)
+  const cnWrap=$('#completionNoteDisplay');
+  if(cnWrap){if(e&&task.completionNote){cnWrap.style.display='';cnWrap.querySelector('.cn-text').textContent=task.completionNote}else{cnWrap.style.display='none'}}
   mSubs=e?(task.subtasks||[]).map(s=>({...s})):[];
   mDeps=e?(task.blockedBy||[]).filter(id=>tasks.some(x=>x.id===id)):[];
   const et=e?(task.estimatedTime||0):(fFormProj==='nos'?5:0);
@@ -4130,8 +4178,32 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   if(newSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),800)}if(t.recurrence)setTimeout(processRecurring,100)}
   render();const msgs={todo:'A Fazer',doing:'Fazendo',done:'Conclu\u00edda'};
   if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('\u26a1 '+msgs[newSt]);openFocus(true)}
-  else if(newSt==='done'){if(ckRect)celebrateDone(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);toast('\u2728 '+msgs[newSt]+'!')}
+  else if(newSt==='done'){if(ckRect)celebrateDone(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);showCompletionNote(id)}
   else{toast(msgs[newSt]||'')}}
+
+// === Completion Note Modal ===
+let _dnTaskId=null;
+function showCompletionNote(id){
+  _dnTaskId=id;
+  const t=tasks.find(x=>x.id===id);
+  $('#dnNote').value=t?.completionNote||'';
+  $('#dnOv').classList.add('open');
+  $('#dnModal').classList.add('open');
+  setTimeout(()=>$('#dnNote').focus(),300);
+}
+function closeCompletionNote(){
+  $('#dnOv').classList.remove('open');
+  $('#dnModal').classList.remove('open');
+  _dnTaskId=null;
+}
+$('#dnSkip').addEventListener('click',()=>{closeCompletionNote();toast('\u2728 Conclu\u00edda!')});
+$('#dnSave').addEventListener('click',()=>{
+  const t=tasks.find(x=>x.id===_dnTaskId);
+  if(t){t.completionNote=$('#dnNote').value.trim();t.updatedAt=Date.now();sT()}
+  closeCompletionNote();toast('\u2728 Conclu\u00edda + nota salva!');
+});
+$('#dnOv').addEventListener('click',()=>{closeCompletionNote();toast('\u2728 Conclu\u00edda!')});
+$('#dnNote').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#dnSave').click()}});
 function spawnBurst(x,y,colors,count,spread,scale=1){const burst=document.createElement('div');burst.className='confetti-burst';burst.style.left=x+'px';burst.style.top=y+'px';for(let i=0;i<count;i++){const p=document.createElement('div');p.className='confetti-piece';const angle=Math.random()*Math.PI*2;const dist=((spread*.3)+Math.random()*spread)*scale;const w=(4+Math.random()*10)*scale;const h=w*(Math.random()>.5?1:.4);p.style.width=w+'px';p.style.height=h+'px';p.style.setProperty('--cx',(Math.cos(angle)*dist)+'px');p.style.setProperty('--cy',(Math.sin(angle)*dist-(spread*.5)*scale)+'px');p.style.setProperty('--cr',(Math.random()*1080-540)+'deg');p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>.3?'50%':'2px';p.style.animationDuration=(.8+Math.random()*1)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';burst.appendChild(p)}document.body.appendChild(burst);setTimeout(()=>burst.remove(),2500)}
 // ===== MODO FOCO — janela flutuante (Document Picture-in-Picture) + fallback overlay =====
 let _pipWin=null,_focusTimer=null,_focusExpanded=new Set();
@@ -5189,7 +5261,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
   // Cronômetro do Modo Foco: preserva o início se já estava 'fazendo', carimba ao entrar, limpa ao sair
   let doingStartedAtVal=null;
   if(status==='doing')doingStartedAtVal=(existing?.status==='doing'&&existing?.doingStartedAt)?existing.doingStartedAt:Date.now();
-  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,agent:agentVal,agentStatus:agentStatusVal,doingStartedAt:doingStartedAtVal,medType:existing?.medType,examTime:existing?.examTime,examLocal:existing?.examLocal,examDoctor:existing?.examDoctor,remindDayBefore:existing?.remindDayBefore,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');notifyNewTask(data);
+  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,agent:agentVal,agentStatus:agentStatusVal,doingStartedAt:doingStartedAtVal,medType:existing?.medType,examTime:existing?.examTime,examLocal:existing?.examLocal,examDoctor:existing?.examDoctor,remindDayBefore:existing?.remindDayBefore,completionNote:existing?.completionNote||null,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');notifyNewTask(data);
     // Auto-expand parent deps so the new child is visible immediately
     if(mDeps.length) mDeps.forEach(pid=>expandedDeps.add(pid));
   }sT();closeM();render()});
