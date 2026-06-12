@@ -1437,6 +1437,8 @@
             <div class="qf-opt" onclick="setQF('amanhã')"><svg><use href="#i-cal"/></svg>Amanhã</div>
             <div class="qf-opt" onclick="setQF('atrasada')"><svg><use href="#i-clock"/></svg>Atrasadas</div>
             <div class="qf-opt" onclick="setQF('alta')"><svg><use href="#i-flag"/></svg>Alta Prioridade</div>
+            <div class="qf-opt" onclick="setQF('agente')"><svg><use href="#i-zap"/></svg>Com Agente IA</div>
+            <div class="qf-opt" onclick="setQF('sem agente')"><svg><use href="#i-zap"/></svg>Sem Agente IA</div>
           </div>
           <div class="smart-suggest" id="smartSuggest"></div>
         </div>
@@ -2788,7 +2790,12 @@ const SMART_TERMS=[
   {term:'bloqueadas',hint:'tarefas bloqueadas',fn:t=>t.status!=='done'&&isBlocked(t)},
   {term:'rápida',hint:'≤ 15 min',fn:t=>t.estimatedTime&&t.estimatedTime<=15},
   {term:'rapida',hint:'≤ 15 min',fn:t=>t.estimatedTime&&t.estimatedTime<=15},
-  {term:'quick',hint:'≤ 15 min',fn:t=>t.estimatedTime&&t.estimatedTime<=15}
+  {term:'quick',hint:'≤ 15 min',fn:t=>t.estimatedTime&&t.estimatedTime<=15},
+  {term:'agente',hint:'tarefas com agente IA',fn:t=>!!t.agent},
+  {term:'agentes',hint:'tarefas com agente IA',fn:t=>!!t.agent},
+  {term:'ia',hint:'tarefas com agente IA',fn:t=>!!t.agent},
+  {term:'com agente',hint:'tarefas com agente IA',fn:t=>!!t.agent},
+  {term:'sem agente',hint:'tarefas sem agente IA',fn:t=>!t.agent}
 ];
 function smartFilter(t,q){
   const s=q.toLowerCase().trim();
@@ -3071,6 +3078,8 @@ function renderWidgets(){
 }
 function applyWidgetFilter(key){
   if(widgetFilter===key||key==='week'){widgetFilter=null}else{widgetFilter=key}
+  // Widget filter forces list view so all filtered results are visible together
+  if(widgetFilter && taskLayout==='board'){setTaskLayout('list')}
   renderTasks();
   if(window.innerWidth<=768){$('#wdgPanel').classList.remove('open');$('#wkToggle').classList.remove('open');$('.main').classList.remove('wdg-open')}
 }
@@ -5172,7 +5181,7 @@ $('#taskKanban').addEventListener('click',e=>{
       const scl=1.3;
       if(col==='validation') spawnBurst(cx,cy,['#AF52DE','#E5CEFF','#5856D6','#D6A8FF'],12,60,scl);
       else if(col==='bug') spawnBurst(cx,cy,['#FF3B30','#FFD1D1','#FF9500','#FF6B6B'],12,60,scl);
-      else if(col==='done') celebrateDone(cx,cy,scl);
+      else if(col==='done'){celebrateDone(cx,cy,scl);showCompletionNote(t.id)}
       else if(col==='progress') spawnBurst(cx,cy,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60,scl);
     }
     return;
@@ -5200,7 +5209,7 @@ $('#taskKanban').addEventListener('drop',e=>{
       const cx=e.clientX,cy=e.clientY,scl=1.3;
       if(destCol==='validation') spawnBurst(cx,cy,['#AF52DE','#E5CEFF','#5856D6','#D6A8FF'],12,60,scl);
       else if(destCol==='bug') spawnBurst(cx,cy,['#FF3B30','#FFD1D1','#FF9500','#FF6B6B'],12,60,scl);
-      else if(destCol==='done') celebrateDone(cx,cy,scl);
+      else if(destCol==='done'){celebrateDone(cx,cy,scl);showCompletionNote(t.id)}
       else if(destCol==='progress') spawnBurst(cx,cy,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60,scl);
     }
     col.classList.remove('drop-over');
