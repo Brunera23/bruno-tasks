@@ -2819,16 +2819,34 @@ const SMART_TERMS=[
   {term:'com agente',hint:'tarefas com agente IA',fn:t=>!!t.agent},
   {term:'sem agente',hint:'tarefas sem agente IA',fn:t=>!t.agent}
 ];
+// Filter type groups: 'scope' filters OR among themselves, 'attr' filters AND with everything
+const SCOPE_TERMS=new Set(['hoje','amanhã','amanha','atrasada','atrasadas','sem data','esta semana','semana','bloqueada','bloqueadas','em andamento','fazendo','a fazer','pendente','pendentes','feita','feitas','concluída','concluida','concluidas','rápida','rapida','quick']);
 function smartFilter(t,q){
   const s=q.toLowerCase().trim();
-  // Multi-filter: comma-separated terms use AND logic
+  // Multi-filter: comma-separated terms
   if(s.includes(',')){
     const terms=s.split(',').map(x=>x.trim()).filter(Boolean);
-    return terms.every(term=>{
-      const match=SMART_TERMS.find(st=>st.term===term);
-      if(match) return match.fn(t);
-      return t.title.toLowerCase().includes(term)||(t.notes||'').toLowerCase().includes(term);
-    });
+    const scopeTerms=terms.filter(t=>SCOPE_TERMS.has(t)||SMART_TERMS.some(st=>st.term===t&&SCOPE_TERMS.has(st.term)));
+    const attrTerms=terms.filter(t=>!SCOPE_TERMS.has(t));
+    // Scope group: OR (task matches ANY scope filter)
+    let scopePass=true;
+    if(scopeTerms.length>0){
+      scopePass=scopeTerms.some(term=>{
+        const match=SMART_TERMS.find(st=>st.term===term);
+        if(match) return match.fn(t);
+        return t.title.toLowerCase().includes(term)||(t.notes||'').toLowerCase().includes(term);
+      });
+    }
+    // Attribute group: AND (task must match ALL attribute filters)
+    let attrPass=true;
+    if(attrTerms.length>0){
+      attrPass=attrTerms.every(term=>{
+        const match=SMART_TERMS.find(st=>st.term===term);
+        if(match) return match.fn(t);
+        return t.title.toLowerCase().includes(term)||(t.notes||'').toLowerCase().includes(term);
+      });
+    }
+    return scopePass&&attrPass;
   }
   const match=SMART_TERMS.find(st=>st.term===s);
   if(match)return match.fn(t);
