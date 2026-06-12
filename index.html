@@ -1822,6 +1822,14 @@
     <!-- Notes -->
     <div id="vNotes" style="font-size:1rem; color:var(--label2); line-height:1.6; white-space:pre-wrap; margin-bottom:32px; display:none;"></div>
 
+    <!-- Completion Note (shown for done tasks) -->
+    <div id="vCompNote" style="display:none; margin-bottom:24px;">
+      <div class="cn-display">
+        <div class="cn-display-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Nota de conclusão</div>
+        <div class="cn-text" id="vCompNoteText"></div>
+      </div>
+    </div>
+
     <!-- Subtasks -->
     <div id="vSubsWrap" style="display:none; margin-bottom:8px;">
        <h4 style="font-size:0.75rem; font-weight:700; color:var(--label3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:16px;">Subtarefas</h4>
@@ -4230,6 +4238,19 @@ function viewTask(id) {
     $('#vNotes').style.display = 'none';
   }
 
+  // Show/hide completion note
+  const cnEl=$('#vCompNote');
+  if(t.status==='done' && t.completionNote && t.completionNote.trim()){
+    $('#vCompNoteText').textContent=t.completionNote;
+    cnEl.style.display='block';
+  } else {
+    cnEl.style.display='none';
+  }
+
+  // Hide edit button for done tasks
+  const editBtn=$('#vEditBtn');
+  if(t.status==='done'){editBtn.style.display='none'}else{editBtn.style.display='flex'}
+
   renderViewStatus(t);
   renderViewSubs(t);
   
@@ -4305,7 +4326,7 @@ function closeViewTask(){
   $('#viewModal').classList.remove('open');
 }
 
-function edit(id){const t=tasks.find(x=>x.id===id);if(t)openM(t)}
+function edit(id){const t=tasks.find(x=>x.id===id);if(!t)return;if(t.status==='done'){viewTask(id);return}openM(t)}
 function quickChild(parentId){const parent=tasks.find(x=>x.id===parentId);if(!parent)return;openM(null);fCCat=parent.category;renderCatPicker();mDeps=[parentId];renderDepChips();toast('Nova subtarefa de: '+parent.title)}
 function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t)addLog('delete',t);tasks=tasks.filter(t=>t.id!==delId);sT();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
 function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
