@@ -1978,10 +1978,18 @@ async function requestNotifPermission(){
   }
   try{
     const permission=await Notification.requestPermission();
-    if(permission!=='granted'){toast('Permissão de notificação negada');return false}
-    // Get SW registration for messaging
-    const swReg=await navigator.serviceWorker.getRegistration();
-    if(!swReg){toast('Service Worker não encontrado');return false}
+    if(permission!=='granted'){toast('Permissão negada — vá em Ajustes > Notificações > Tasks e permita.');return false}
+    // SW pode não estar pronto logo após instalar a PWA — espera ele ficar ativo
+    let swReg=await navigator.serviceWorker.getRegistration();
+    if(!swReg)swReg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),10000))]);
+    if(!swReg){toast('Service Worker ainda carregando. Feche e reabra o app e tente de novo.');return false}
+    // Limpa inscrição de push antiga/corrompida — causa comum de AbortError após reinstalar a PWA no iOS.
+    // Sem isso, o getToken tenta reaproveitar uma inscrição morta e falha.
+    try{
+      const oldSub=await swReg.pushManager.getSubscription();
+      if(oldSub)await oldSub.unsubscribe();
+      if(messaging.deleteToken)await messaging.deleteToken().catch(()=>{});
+    }catch(_){}
     const token=await messaging.getToken({
       vapidKey:VAPID_KEY,
       serviceWorkerRegistration:swReg
@@ -1989,12 +1997,18 @@ async function requestNotifPermission(){
     if(token){
       pushToken=token;
       await savePushToken(token);
-      toast('Notificações ativadas');
+      toast('Notificações ativadas ✅');
       return true;
     }
+    toast('Não foi possível obter o token de push.');
   }catch(err){
     console.error('Push subscription failed:',err);
-    toast('Erro ao ativar notificações');
+    // Mostra o erro REAL na tela para diagnóstico (não engole mais)
+    const code=err&&(err.code||err.name)||'';
+    const msg=(err&&err.message)||String(err);
+    if(code.includes('permission-blocked')||code==='NotAllowedError') toast('iOS bloqueou: Ajustes > Notificações > Tasks > permitir.');
+    else if(code.includes('unsupported-browser')) toast('Navegador não suporta push aqui. Use o app da Tela Inicial.');
+    else toast('Erro ao ativar: '+(code||msg).slice(0,80));
   }
   return false;
 }
@@ -2020,11 +2034,14 @@ async function refreshPushToken(){
   try{
     if(!messaging||!VAPID_KEY)return;
     if(!('Notification' in window)||Notification.permission!=='granted')return;
-    if(!isPushEnabled())return;
-    const swReg=await navigator.serviceWorker.getRegistration();
+    // Permissão concedida => re-registra SEMPRE, mesmo sem a flag local.
+    // (No iOS, reinstalar a PWA mata a inscrição antiga e apaga o localStorage;
+    // sem isso o token no servidor fica apontando para a instalação morta.)
+    let swReg=await navigator.serviceWorker.getRegistration();
+    if(!swReg)swReg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),10000))]);
     if(!swReg)return;
     const token=await messaging.getToken({vapidKey:VAPID_KEY,serviceWorkerRegistration:swReg});
-    if(token)await savePushToken(token);
+    if(token){await savePushToken(token);console.log('[push] token re-registrado')}
   }catch(e){console.warn('[push] refresh do token falhou',e)}
 }
 
@@ -5660,7 +5677,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=119',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=122',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately

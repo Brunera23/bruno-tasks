@@ -95,7 +95,10 @@ async function tokensForUid(uid) {
 // Envia DATA-ONLY; o sw.js monta a notificação a partir de {title, body, tag}
 async function sendToTokens(tokens, title, body, tag) {
   const list = [...new Set((tokens || []).filter(Boolean))];
-  if (!list.length) return {sent: 0};
+  if (!list.length) {
+    logger.warn("sendToTokens: nenhum token de destino", {title, tag});
+    return {sent: 0};
+  }
 
   const message = {
     tokens: list,
@@ -117,6 +120,13 @@ async function sendToTokens(tokens, title, body, tag) {
   res.responses.forEach((r, i) => {
     if (!r.success) {
       const code = (r.error && r.error.code) || "";
+      // loga o motivo exato de cada falha — sem isso o "sent: 0" é um mistério
+      logger.error("push falhou", {
+        title, tag,
+        tokenPreview: list[i].slice(0, 16) + "...",
+        code,
+        msg: (r.error && r.error.message) || "",
+      });
       if (
         code.includes("registration-token-not-registered") ||
         code.includes("invalid-registration-token") ||
