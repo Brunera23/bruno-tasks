@@ -1909,7 +1909,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 <div class="mob-sheet-ov" id="mobSheetOv"></div>
 <div class="mob-sheet" id="mobSheet">
   <div class="mob-sheet-handle"></div>
@@ -1942,16 +1941,18 @@ db.enablePersistence({synchronizeTabs:true}).catch(e=>{console.warn('Persistence
 const FB_DOC='bruno-main';
 let _fbReady=false,_fbSaving=false,_fbListening=false;
 
-// ===== PUSH NOTIFICATIONS (FCM) =====
-let messaging=null;
-let pushToken=null;
-const VAPID_KEY='BBWa_x7BFyHOJWEWYq_4-imPkpOHpJ_OhMiOGHrqJ4JAKu96VVJWMoaDg57Yoe1o4LhC_Y778OzLPAfHTgvK5Rk';
-
-try{
-  if(firebase.messaging.isSupported()){
-    messaging=firebase.messaging();
-  }
-}catch(e){console.log('FCM not supported in this browser')}
+// ===== PUSH NOTIFICATIONS (Web Push nativo — sem FCM) =====
+let pushSub=null;
+// Chave VAPID PÚBLICA (par próprio; a privada fica no secret das Cloud Functions)
+const VAPID_PUBLIC='BPduzDRHuxAMlmDANcKN3Vo0JY71ipAm8MqJuckEEyj1fNu76Fh64cegY094YSX1wkpt_QWsLzBu69mcntIpBNo';
+const pushSupported=('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+function urlBase64ToUint8Array(b64){
+  const pad='='.repeat((4-b64.length%4)%4);
+  const base64=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);
+  return arr;
+}
 
 // Request permission and get token
 async function requestNotifPermission(){
@@ -1967,13 +1968,8 @@ async function requestNotifPermission(){
     toast('Adicione à Tela Inicial (Compartilhar > Adicionar à Tela Inicial) para ativar notificações.');
     return false;
   }
-  if(!messaging){
-    toast('Notificações não suportadas (FCM off).');
-    return false;
-  }
-  if(!VAPID_KEY){
-    console.error('[push] VAPID_KEY vazio em index.html. Cole a "Key pair" de: Firebase Console > Project Settings > Cloud Messaging > Web Push certificates.');
-    toast('Push ainda não configurado (falta a chave VAPID).');
+  if(!pushSupported){
+    toast('Notificações não suportadas neste navegador.');
     return false;
   }
   try{
@@ -1983,66 +1979,58 @@ async function requestNotifPermission(){
     let swReg=await navigator.serviceWorker.getRegistration();
     if(!swReg)swReg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),10000))]);
     if(!swReg){toast('Service Worker ainda carregando. Feche e reabra o app e tente de novo.');return false}
-    // Limpa inscrição de push antiga/corrompida — causa comum de AbortError após reinstalar a PWA no iOS.
-    // Sem isso, o getToken tenta reaproveitar uma inscrição morta e falha.
-    try{
-      const oldSub=await swReg.pushManager.getSubscription();
-      if(oldSub)await oldSub.unsubscribe();
-      if(messaging.deleteToken)await messaging.deleteToken().catch(()=>{});
-    }catch(_){}
-    const token=await messaging.getToken({
-      vapidKey:VAPID_KEY,
-      serviceWorkerRegistration:swReg
+    // Limpa inscrição antiga (do FCM ou corrompida após reinstalar a PWA) antes de criar a nova
+    try{const old=await swReg.pushManager.getSubscription();if(old)await old.unsubscribe();}catch(_){}
+    const sub=await swReg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)
     });
-    if(token){
-      pushToken=token;
-      await savePushToken(token);
-      toast('Notificações ativadas ✅');
-      return true;
-    }
-    toast('Não foi possível obter o token de push.');
+    pushSub=sub;
+    await savePushSub(sub);
+    toast('Notificações ativadas ✅');
+    return true;
   }catch(err){
     console.error('Push subscription failed:',err);
-    // Mostra o erro REAL na tela para diagnóstico (não engole mais)
-    const code=err&&(err.code||err.name)||'';
+    const code=err&&(err.name||err.code)||'';
     const msg=(err&&err.message)||String(err);
-    if(code.includes('permission-blocked')||code==='NotAllowedError') toast('iOS bloqueou: Ajustes > Notificações > Tasks > permitir.');
-    else if(code.includes('unsupported-browser')) toast('Navegador não suporta push aqui. Use o app da Tela Inicial.');
+    if(code==='NotAllowedError') toast('iOS bloqueou: Ajustes > Notificações > Tasks > permitir.');
     else toast('Erro ao ativar: '+(code||msg).slice(0,80));
   }
   return false;
 }
 
-// Save FCM token to Firestore linked to current user role
-async function savePushToken(token){
+// Salva a inscrição de Web Push no Firestore, ligada ao papel do usuário
+async function savePushSub(sub){
   if(!currentUser)return;
   const userRole=localStorage.getItem('btUserRole')||'bruno';
   try{
     await db.collection('push_tokens').doc(userRole+'_'+currentUser.uid).set({
-      token:token,
+      subscription:sub.toJSON(),
+      token:firebase.firestore.FieldValue.delete(), // remove o token FCM antigo
       role:userRole,
       uid:currentUser.uid,
       updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
       platform:navigator.userAgent.includes('iPhone')?'ios':'other'
     },{merge:true});
     localStorage.setItem('btPushEnabled','1');
-  }catch(e){console.error('Token save failed:',e)}
+  }catch(e){console.error('Sub save failed:',e)}
 }
 
-// Renova o token FCM no login (tokens expiram/rotacionam). Silencioso, sem pedir permissão.
+// Renova a inscrição no login. Silencioso, sem pedir permissão.
+// (No iOS, reinstalar a PWA mata a inscrição antiga e apaga o localStorage.)
 async function refreshPushToken(){
   try{
-    if(!messaging||!VAPID_KEY)return;
-    if(!('Notification' in window)||Notification.permission!=='granted')return;
-    // Permissão concedida => re-registra SEMPRE, mesmo sem a flag local.
-    // (No iOS, reinstalar a PWA mata a inscrição antiga e apaga o localStorage;
-    // sem isso o token no servidor fica apontando para a instalação morta.)
+    if(!pushSupported||Notification.permission!=='granted')return;
     let swReg=await navigator.serviceWorker.getRegistration();
     if(!swReg)swReg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),10000))]);
     if(!swReg)return;
-    const token=await messaging.getToken({vapidKey:VAPID_KEY,serviceWorkerRegistration:swReg});
-    if(token){await savePushToken(token);console.log('[push] token re-registrado')}
-  }catch(e){console.warn('[push] refresh do token falhou',e)}
+    let sub=await swReg.pushManager.getSubscription();
+    if(!sub){
+      if(!isPushEnabled())return; // nunca ativou neste aparelho — não inscreve sozinho
+      sub=await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC)});
+    }
+    if(sub){pushSub=sub;await savePushSub(sub);console.log('[push] inscrição re-registrada')}
+  }catch(e){console.warn('[push] refresh da inscrição falhou',e)}
 }
 
 // Send push notification to a user role (bruno/parceira/ambos)
@@ -2117,22 +2105,8 @@ function checkDueToday(){
 setInterval(checkDueToday,60000);
 setTimeout(checkDueToday,6000);
 
-// Foreground message handler
-if(messaging){
-  messaging.onMessage((payload)=>{
-    // Aceita tanto notification quanto data-only (enviamos data-only p/ evitar duplicar)
-    const n=payload.notification||payload.data||{};
-    const title=n.title,body=n.body;
-    if(title){
-      // Show in-app toast
-      toast(title+(body?': '+body:''));
-      // Also show native notification if page is visible
-      if(Notification.permission==='granted'){
-        new Notification(title,{body:body||'',icon:'./manifest-icon.png',badge:'./manifest-icon.png'});
-      }
-    }
-  });
-}
+// No Web Push nativo, o evento 'push' no Service Worker dispara mesmo com o app aberto,
+// e o próprio sw.js mostra a notificação — não precisa de handler de foreground aqui.
 
 // Check if push is already enabled
 function isPushEnabled(){return localStorage.getItem('btPushEnabled')==='1'}
@@ -2399,6 +2373,22 @@ let _unsubP=null;
 const _unsubShared={};
 const sharedTasksMap={};
 const sharedLogMap={};
+const sharedDeletedMap={}; // {pid: {taskId: deletedAt}} vindo do servidor
+const deletedByProj={};    // {pid: {taskId: deletedAt}} tombstones locais de exclusão
+function isSharedProj(pid){return projects.some(p=>p.id===pid&&p.type==='shared')}
+// União por id; em conflito, vence o updatedAt mais novo (empate: 'local' por vir depois)
+function mergeTasksById(server,local){
+  const m=new Map();
+  for(const t of (server||[])) if(t&&t.id) m.set(t.id,t);
+  for(const t of (local||[])){ if(!t||!t.id)continue; const ex=m.get(t.id); if(!ex||(t.updatedAt||0)>=(ex.updatedAt||0)) m.set(t.id,t); }
+  return [...m.values()];
+}
+// Merge de mapas de exclusão; vence o timestamp mais novo
+function mergeDel(a,b){
+  const out={...(a||{})};
+  for(const id in (b||{})) if(!out[id]||b[id]>=out[id]) out[id]=b[id];
+  return out;
+}
 
 function _fbDirectSave(){
   if(!currentUser) return Promise.resolve();
@@ -2421,13 +2411,21 @@ function _fbDirectSave(){
   },{merge:true}));
 
   sharedProjs.forEach(pid => {
-    const sTasks = tasks.filter(t=>t.project===pid);
+    // MERGE em vez de sobrescrever: une o que está no servidor com a visão local,
+    // assim nunca apagamos uma tarefa que o parceiro adicionou e ainda não sincronizou.
+    const localTasks = tasks.filter(t=>t.project===pid);
+    const serverTasks = sharedTasksMap[pid]||[];
+    const mergedDel = mergeDel(sharedDeletedMap[pid]||{}, deletedByProj[pid]||{});
+    deletedByProj[pid]=mergedDel; // mantém o tombstone local atualizado
+    let merged = mergeTasksById(serverTasks, localTasks)
+      .filter(t=> !(mergedDel[t.id] && mergedDel[t.id] >= (t.updatedAt||0))); // aplica exclusões
     const sLog = log.filter(l=>l.project===pid);
     promises.push(db.collection('shared').doc(pid).set({
-      tasks:JSON.stringify(sTasks),
+      tasks:JSON.stringify(merged),
+      deleted:JSON.stringify(mergedDel),
       log:JSON.stringify(sLog.slice(0,100)),
       updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-      taskCount:sTasks.length
+      taskCount:merged.filter(t=>!t.deleted).length
     },{merge:true}));
   });
 
@@ -2496,7 +2494,11 @@ function combineData(){
   if(_fbSaveCompletedAt && (Date.now()-_fbSaveCompletedAt)<800)return;
   const newTasks=[...pTasks];
   for (let pid in sharedTasksMap) {
-    if(Array.isArray(sharedTasksMap[pid])) newTasks.push(...sharedTasksMap[pid]);
+    if(!Array.isArray(sharedTasksMap[pid])) continue;
+    // aplica exclusões (tombstones) ao montar o estado local a partir do servidor
+    const del = mergeDel(sharedDeletedMap[pid]||{}, deletedByProj[pid]||{});
+    deletedByProj[pid]=del;
+    newTasks.push(...sharedTasksMap[pid].filter(t=> !(del[t.id] && del[t.id] >= (t.updatedAt||0))));
   }
   
   if(JSON.stringify(newTasks)===JSON.stringify(tasks)){_fbSynced=true;return}
@@ -2603,13 +2605,15 @@ function fbListen(){
            sharedLoaded[p.id] = true;
            if (sSnap.exists) {
              const sd = sSnap.data();
-             if(!_fbSaving) {
-               sharedTasksMap[p.id] = JSON.parse(sd.tasks||'[]');
-               sharedLogMap[p.id] = JSON.parse(sd.log||'[]');
-             }
+             // SEMPRE guarda o estado do servidor (mesmo durante save) para o merge não perder dados.
+             // O combineData abaixo é que respeita o _fbSaving para não atropelar edição local.
+             sharedTasksMap[p.id] = JSON.parse(sd.tasks||'[]');
+             sharedLogMap[p.id] = JSON.parse(sd.log||'[]');
+             sharedDeletedMap[p.id] = JSON.parse(sd.deleted||'{}');
            } else {
              if (!sharedTasksMap[p.id]) sharedTasksMap[p.id] = [];
              if (!sharedLogMap[p.id]) sharedLogMap[p.id] = [];
+             if (!sharedDeletedMap[p.id]) sharedDeletedMap[p.id] = {};
            }
            if(pLoaded) combineData();
         }, e => console.warn(`FB sListener error for ${p.id}`, e));
@@ -4345,7 +4349,7 @@ function closeViewTask(){
 
 function edit(id){const t=tasks.find(x=>x.id===id);if(!t)return;if(t.status==='done'){viewTask(id);return}openM(t)}
 function quickChild(parentId){const parent=tasks.find(x=>x.id===parentId);if(!parent)return;openM(null);fCCat=parent.category;renderCatPicker();mDeps=[parentId];renderDepChips();toast('Nova subtarefa de: '+parent.title)}
-function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t)addLog('delete',t);tasks=tasks.filter(t=>t.id!==delId);sT();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
+function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t){addLog('delete',t);if(t.project&&isSharedProj(t.project)){(deletedByProj[t.project]=deletedByProj[t.project]||{})[t.id]=Date.now()}}tasks=tasks.filter(t=>t.id!==delId);sT();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
 function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   if(isBlocked(t)&&newSt==='done'){toast('Complete a tarefa anterior primeiro');return}
   const wasDone=t.status==='done';
@@ -5677,7 +5681,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=122',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=124',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately

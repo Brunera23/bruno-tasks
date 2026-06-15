@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bruno-tasks-v122';
+const CACHE_NAME = 'bruno-tasks-v124';
 const ASSETS = ['./index.html', './manifest.json', './apple-touch-icon.png', './manifest-icon.png'];
 
 self.addEventListener('install', e => {
@@ -41,7 +41,7 @@ self.addEventListener('push', e => {
     icon: data.icon || './manifest-icon.png',
     badge: data.badge || './manifest-icon.png',
     vibrate: [100, 50, 100],
-    data: {url: data.click_action || './index.html'},
+    data: {url: data.url || data.click_action || './index.html'},
     actions: data.actions || [],
     tag: data.tag || 'default',
     renotify: true

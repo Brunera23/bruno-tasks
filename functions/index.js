@@ -14,13 +14,18 @@
 
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
+const {defineSecret} = require("firebase-functions/params");
 const {initializeApp} = require("firebase-admin/app");
 const {getFirestore} = require("firebase-admin/firestore");
-const {getMessaging} = require("firebase-admin/messaging");
+const webpush = require("web-push");
 const logger = require("firebase-functions/logger");
 
 initializeApp();
 const db = getFirestore();
+
+// Web Push nativo (contorna o fcmregistrations quebrado do projeto). Par VAPID próprio.
+const VAPID_PUBLIC = "BPduzDRHuxAMlmDANcKN3Vo0JY71ipAm8MqJuckEEyj1fNu76Fh64cegY094YSX1wkpt_QWsLzBu69mcntIpBNo";
+const VAPID_PRIVATE = defineSecret("VAPID_PRIVATE");
 
 // ---------- helpers ----------
 function parseTasks(raw) {
@@ -70,97 +75,89 @@ function alertFiresToday(t, date, dow) {
   return false;
 }
 
-async function tokensForRole(role) {
+// Retorna as inscrições de push (Web Push nativo) com o ref do doc p/ limpeza
+async function subsForRole(role) {
   let query = db.collection("push_tokens");
   if (role && role !== "ambos") query = query.where("role", "==", role);
   const snap = await query.get();
-  const toks = [];
+  const subs = [];
   snap.forEach((d) => {
     const x = d.data();
-    if (x && x.token) toks.push(x.token);
+    if (x && x.subscription && x.subscription.endpoint) subs.push({ref: d.ref, sub: x.subscription});
   });
-  return [...new Set(toks)];
+  return subs;
 }
 
-async function tokensForUid(uid) {
+async function subsForUid(uid) {
   const snap = await db.collection("push_tokens").where("uid", "==", uid).get();
-  const toks = [];
+  const subs = [];
   snap.forEach((d) => {
     const x = d.data();
-    if (x && x.token) toks.push(x.token);
+    if (x && x.subscription && x.subscription.endpoint) subs.push({ref: d.ref, sub: x.subscription});
   });
-  return [...new Set(toks)];
+  return subs;
 }
 
-// Envia DATA-ONLY; o sw.js monta a notificação a partir de {title, body, tag}
-async function sendToTokens(tokens, title, body, tag) {
-  const list = [...new Set((tokens || []).filter(Boolean))];
+// Envia via Web Push nativo. O sw.js monta a notificação a partir de {title, body, tag, url}.
+async function sendToSubs(subs, title, body, tag) {
+  // dedup por endpoint
+  const seen = new Set();
+  const list = (subs || []).filter((s) => {
+    const ep = s.sub && s.sub.endpoint;
+    if (!ep || seen.has(ep)) return false;
+    seen.add(ep);
+    return true;
+  });
   if (!list.length) {
-    logger.warn("sendToTokens: nenhum token de destino", {title, tag});
+    logger.warn("sendToSubs: nenhuma inscrição de destino", {title, tag});
     return {sent: 0};
   }
 
-  const message = {
-    tokens: list,
-    data: {
-      title: String(title || "Bruno Tasks"),
-      body: String(body || ""),
-      tag: String(tag || "task"),
-      click_action: "./index.html",
-    },
-    // dica de prioridade para entrega rápida
-    android: {priority: "high"},
-    webpush: {headers: {Urgency: "high", TTL: "86400"}},
-  };
+  webpush.setVapidDetails("mailto:brunohsantos00@gmail.com", VAPID_PUBLIC, VAPID_PRIVATE.value());
+  const payload = JSON.stringify({
+    title: String(title || "Bruno Tasks"),
+    body: String(body || ""),
+    tag: String(tag || "task"),
+    url: "./index.html",
+  });
 
-  const res = await getMessaging().sendEachForMulticast(message);
-
-  // limpa tokens inválidos para a coleção não acumular lixo
-  const dead = [];
-  res.responses.forEach((r, i) => {
-    if (!r.success) {
-      const code = (r.error && r.error.code) || "";
-      // loga o motivo exato de cada falha — sem isso o "sent: 0" é um mistério
-      logger.error("push falhou", {
-        title, tag,
-        tokenPreview: list[i].slice(0, 16) + "...",
-        code,
-        msg: (r.error && r.error.message) || "",
-      });
-      if (
-        code.includes("registration-token-not-registered") ||
-        code.includes("invalid-registration-token") ||
-        code.includes("invalid-argument")
-      ) {
-        dead.push(list[i]);
+  let sent = 0;
+  let failed = 0;
+  for (const {ref, sub} of list) {
+    try {
+      await webpush.sendNotification(sub, payload, {TTL: 86400, urgency: "high"});
+      sent++;
+    } catch (e) {
+      failed++;
+      const code = e && e.statusCode;
+      logger.error("web-push falhou", {title, tag, code: code || "?", msg: (e && e.body) || String(e && e.message || e)});
+      // 404/410 = inscrição expirada/cancelada → remove o doc
+      if (code === 404 || code === 410) {
+        try {
+          await ref.delete();
+        } catch (_) { /* ignore */ }
       }
     }
-  });
-  for (const tok of dead) {
-    try {
-      const s = await db.collection("push_tokens").where("token", "==", tok).get();
-      await Promise.all(s.docs.map((d) => d.ref.delete()));
-    } catch (e) {
-      logger.warn("falha ao remover token morto", e);
-    }
   }
-  return {sent: res.successCount, failed: res.failureCount};
+  return {sent, failed};
 }
 
 // ---------- 1) Fila de push (nova tarefa) ----------
-exports.processPushQueue = onDocumentCreated("push_queue/{id}", async (event) => {
-  const snap = event.data;
-  if (!snap) return;
-  const data = snap.data() || {};
-  if (data.processed) return;
+exports.processPushQueue = onDocumentCreated(
+    {document: "push_queue/{id}", secrets: [VAPID_PRIVATE]},
+    async (event) => {
+      const snap = event.data;
+      if (!snap) return;
+      const data = snap.data() || {};
+      if (data.processed) return;
 
-  try {
-    const result = await sendToTokens(
-        await tokensForRole(data.targetRole),
-        data.title,
-        data.body,
-        data.tag || "task",
-    );
+      try {
+        const result = await sendToSubs(
+            await subsForRole(data.targetRole),
+            data.title,
+            data.body,
+            data.tag || "task",
+        );
     logger.info("push_queue enviado", {targetRole: data.targetRole, ...result});
     await snap.ref.update({processed: true, processedAt: new Date()});
   } catch (e) {
@@ -174,7 +171,7 @@ exports.processPushQueue = onDocumentCreated("push_queue/{id}", async (event) =>
 
 // ---------- 2) Vencimento (no dia) + véspera (toda manhã, 08:00 BRT) ----------
 exports.dueTodayReminder = onSchedule(
-    {schedule: "0 8 * * *", timeZone: "America/Sao_Paulo"},
+    {schedule: "0 8 * * *", timeZone: "America/Sao_Paulo", secrets: [VAPID_PRIVATE]},
     async () => {
       const today = todaySaoPaulo();
       const tomorrow = tomorrowSaoPaulo();
@@ -192,9 +189,9 @@ exports.dueTodayReminder = onSchedule(
             if (t.date === today) title = "É hoje";
             else if (t.date === tomorrow && t.remindDayBefore) title = "Amanhã";
             if (!title) continue;
-            const tokens = (byRole && t.assignedTo) ?
-              await tokensForRole(t.assignedTo) : await tokensForUid(doc.id);
-            const r = await sendToTokens(tokens, title, t.title, "due-" + t.id + "-" + t.date);
+            const subs = (byRole && t.assignedTo) ?
+              await subsForRole(t.assignedTo) : await subsForUid(doc.id);
+            const r = await sendToSubs(subs, title, t.title, "due-" + t.id + "-" + t.date);
             total += r.sent || 0;
           }
         }
@@ -209,7 +206,7 @@ exports.dueTodayReminder = onSchedule(
 
 // ---------- 3) Remédios/alertas no horário (a cada 15 min, app fechado) ----------
 exports.alertReminders = onSchedule(
-    {schedule: "*/15 * * * *", timeZone: "America/Sao_Paulo"},
+    {schedule: "*/15 * * * *", timeZone: "America/Sao_Paulo", secrets: [VAPID_PRIVATE]},
     async () => {
       const {date, minutes, dow} = nowSaoPaulo();
       let total = 0;
@@ -244,10 +241,10 @@ exports.alertReminders = onSchedule(
             const seen = await logRef.get();
             if (seen.exists) continue;
 
-            const tokens = t.assignedTo ?
-              await tokensForRole(t.assignedTo) : await tokensForUid(doc.id);
+            const subs = t.assignedTo ?
+              await subsForRole(t.assignedTo) : await subsForUid(doc.id);
             const title = t.medType === "med" ? "💊 " + t.title : t.title;
-            const r = await sendToTokens(tokens, title, t.notes || "", "alert-" + t.id);
+            const r = await sendToSubs(subs, title, t.notes || "", "alert-" + t.id);
             await logRef.set({taskId: t.id, date, at: new Date()});
             total += r.sent || 0;
           }
