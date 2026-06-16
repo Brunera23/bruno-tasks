@@ -1578,7 +1578,7 @@
 <!-- Modo Foco — overlay in-app (fallback quando o navegador não suporta janela flutuante) -->
 <div class="focus-overlay" id="focusOverlay">
   <div class="focus-panel">
-    <div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span><button class="focus-close" id="focusClose" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span><button class="foc-view-toggle" id="focViewToggle" title="Alternar visualização"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button><button class="focus-close" id="focusClose" aria-label="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="focus-summary" id="focusSummary"></div>
     <div class="focus-list" id="focusList"></div>
   </div>
@@ -1807,6 +1807,7 @@
     <!-- Top actions -->
     <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px;">
        <button class="btn-icon" id="vEditBtn" title="Editar Tarefa" style="background:var(--fill); border:none; color:var(--label); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background var(--dur-fast);" onmouseover="this.style.background='var(--blue)';this.style.color='#fff'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label)'"><svg width="16" height="16"><use href="#i-edit"/></svg></button>
+       <button class="btn-icon" id="vDelBtn" title="Excluir Tarefa" style="background:var(--fill); border:none; color:var(--label); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background var(--dur-fast);" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label)'"><svg width="16" height="16"><use href="#i-trash"/></svg></button>
        <button onclick="closeViewTask()" class="btn-icon" title="Fechar" style="background:var(--fill); border:none; color:var(--label); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background var(--dur-fast);" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
 
@@ -4281,6 +4282,7 @@ function viewTask(id) {
   renderViewSubs(t);
   
   $('#vEditBtn').onclick = () => { closeViewTask(); edit(id); };
+  $('#vDelBtn').onclick = () => { closeViewTask(); askDel(id); };
   
   $('#ovView').classList.add('open');
   $('#viewModal').classList.add('open');
@@ -4443,12 +4445,17 @@ const FOC_CARD_CSS=`
 @keyframes focLive{0%{box-shadow:0 0 0 0 rgba(255,159,10,.5)}70%{box-shadow:0 0 0 8px rgba(255,159,10,0)}100%{box-shadow:0 0 0 0 rgba(255,159,10,0)}}
 .focus-count{margin-left:auto;font-size:.7rem;font-weight:700;color:rgba(235,235,245,.75);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:2px 9px;font-variant-numeric:tabular-nums}
 .focus-empty{text-align:center;color:rgba(235,235,245,.5);font-size:.84rem;padding:26px 8px;line-height:1.6}
-.foc-item.bug{border-color:rgba(255,59,48,.35);background:linear-gradient(180deg,rgba(255,59,48,.08),rgba(255,59,48,.03))}
-.foc-item.bug::before{background:#FF3B30;box-shadow:0 0 14px rgba(255,59,48,.6)}
-.foc-item.bug:hover{border-color:rgba(255,59,48,.5)}
-.foc-bug-badge{display:inline-flex;align-items:center;gap:5px;font-size:clamp(.68rem,3cqi,.76rem);font-weight:700;color:#FF6961;background:rgba(255,59,48,.14);border:1px solid rgba(255,59,48,.25);border-radius:8px;padding:3px 10px;white-space:nowrap}
-.foc-bug-badge svg{flex-shrink:0}
-.foc-bug-label{font-size:clamp(.78rem,4cqi,.88rem);color:rgba(255,138,128,.85);font-weight:500;margin-top:2px}
+.foc-view-toggle{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:5px 8px;color:rgba(235,235,245,.6);cursor:pointer;display:flex;align-items:center;transition:all .2s}
+.foc-view-toggle:hover{background:rgba(255,255,255,.15);color:#fff}
+.foc-view-toggle.compact svg{opacity:.5}
+.foc-compact .foc-item{padding:clamp(7px,2.5cqi,10px) clamp(10px,3.5cqi,14px) clamp(7px,2.5cqi,10px) clamp(12px,4cqi,16px)}
+.foc-compact .foc-top{margin-bottom:4px}
+.foc-compact .foc-time{font-size:clamp(.9rem,7cqi,1.3rem)}
+.foc-compact .foc-bar{margin:6px 0 4px;height:5px}
+.foc-compact .foc-sub{font-size:clamp(.6rem,2.5cqi,.66rem)}
+.foc-compact .foc-detail{display:none!important}
+.foc-compact .foc-exp{display:none}
+.foc-compact .foc-pct{font-size:.6rem;padding:1px 6px}
 @container (max-width:210px){.foc-pct{display:none}.foc-top{gap:6px;margin-bottom:6px}.foc-bar{margin:8px 0 6px}}
 @container (max-width:165px){.foc-time{font-size:clamp(.9rem,9cqi,1.3rem)}}
 @container (max-width:150px){.foc-bar{display:none}}
@@ -4467,15 +4474,12 @@ function fmtClock(ms){
   if(h>0)return h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
   return m+':'+String(sec).padStart(2,'0');
 }
+let _focusCompact=false;
 function focusItems(){
   const now=Date.now();
-  const active=getVisibleTasks().filter(t=>t.status==='doing'||t.status==='bug');
-  const items=active.map(t=>{
+  const doing=getVisibleTasks().filter(t=>t.status==='doing');
+  const items=doing.map(t=>{
     const c=ci(t.category);
-    const isBug=t.status==='bug';
-    if(isBug){
-      return {t,c,remain:Infinity,over:false,pct:0,clock:'',sub:'',hasEst:false,isBug:true,notes:(t.notes||'').trim(),subs:t.subtasks||[],catName:c.name,agent:t.agent||''};
-    }
     const since=t.doingStartedAt||t.updatedAt||now;
     const elapsed=now-since;
     let remain=Infinity,over=false,pct=0,clock,sub;
@@ -4485,13 +4489,10 @@ function focusItems(){
       clock=over?'+'+fmtClock(-remain):fmtClock(remain);
       sub=over?('Estourou '+fmtClock(-remain)+' · estimado '+fmtTime(t.estimatedTime)):('restantes · estimado '+fmtTime(t.estimatedTime));
     }else{clock=fmtClock(elapsed);sub='decorridos · sem estimativa'}
-    return {t,c,remain,over,pct,clock,sub,hasEst:!!t.estimatedTime,isBug:false,notes:(t.notes||'').trim(),subs:t.subtasks||[],catName:c.name,agent:t.agent||''};
+    return {t,c,remain,over,pct,clock,sub,hasEst:!!t.estimatedTime,notes:(t.notes||'').trim(),subs:t.subtasks||[],catName:c.name,agent:t.agent||''};
   });
-  // urgência primeiro: estourados, depois menor tempo restante; bugs e sem estimativa por último
-  items.sort((a,b)=>{
-    if(a.isBug!==b.isBug)return a.isBug?1:-1;
-    return a.remain-b.remain;
-  });
+  // urgência primeiro: estourados, depois menor tempo restante; sem estimativa por último
+  items.sort((a,b)=>a.remain-b.remain);
   return items;
 }
 // Resumo do dia: feitas/total + tempo estimado restante das tarefas de hoje
@@ -4507,19 +4508,6 @@ function focusSummaryText(){
 }
 function focusCardHTML(it,i){
   const expanded=_focusExpanded.has(it.t.id);
-  if(it.isBug){
-    const bugBadge='<span class="foc-bug-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.88 1.88"/><path d="M14.12 3.88L16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg>Bug</span>';
-    const subDone=it.subs.filter(s=>s.done).length;
-    let detail=`<div class="fd-meta"><span class="fd-chip"><span class="fd-catdot"></span>${escapeHtml(it.catName)}</span>`;
-    if(it.agent)detail+=`<span class="fd-chip">⚡ ${escapeHtml(it.agent)}</span>`;
-    if(it.subs.length)detail+=`<span class="fd-chip">${subDone}/${it.subs.length} subtarefas</span>`;
-    detail+=`</div>`;
-    if(it.notes)detail+=`<div class="fd-notes">${escapeHtml(it.notes)}</div>`;
-    if(it.subs.length)detail+=`<div class="fd-subs">`+it.subs.map(s=>`<div class="fd-sub ${s.done?'done':''}"><span class="fd-check">${s.done?'✓':''}</span>${escapeHtml(s.text)}</div>`).join('')+`</div>`;
-    if(!it.notes&&!it.subs.length)detail+=`<div class="fd-empty">Sem descrição ou subtarefas.</div>`;
-    const chev='<span class="foc-exp"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>';
-    return `<div class="foc-item bug ${expanded?'expanded':''}" data-fid="${it.t.id}" data-bug="1" style="--cat:#FF3B30;--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title" title="${escAttr(it.t.title)}">${escapeHtml(it.t.title)}</span>${bugBadge}${chev}</div><div class="foc-bug-label">Sem contagem — aguardando correção</div><div class="foc-detail">${detail}</div></div>`;
-  }
   const pctChip=it.hasEst?`<span class="foc-pct">${Math.round(it.pct)}%</span>`:'';
   const bar=it.hasEst?`<div class="foc-bar"><div class="foc-bar-fill" style="width:${it.pct}%"></div></div>`:'';
   const subDone=it.subs.filter(s=>s.done).length;
@@ -4534,23 +4522,24 @@ function focusCardHTML(it,i){
   return `<div class="foc-item ${it.over?'over':''} ${expanded?'expanded':''}" data-fid="${it.t.id}" style="--cat:${it.c.color};--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title" title="${escAttr(it.t.title)}">${escapeHtml(it.t.title)}</span>${pctChip}${chev}</div><div class="foc-time">${it.clock}</div>${bar}<div class="foc-sub">${it.sub}</div><div class="foc-detail">${detail}</div></div>`;
 }
 function onFocusItemClick(e){
+  if(_focusCompact)return;
   const item=e.target.closest('.foc-item');
   if(!item||!item.dataset.fid)return;
   const id=item.dataset.fid;
   if(_focusExpanded.has(id))_focusExpanded.delete(id);else _focusExpanded.add(id);
   item.classList.toggle('expanded');
 }
-// Patch cirúrgico: só recria o DOM quando o conjunto de tarefas muda;
-// a cada segundo atualiza textos/larguras — preserva shimmer e pulso das animações
 function updateFocusDoc(doc){
   const list=doc.getElementById('focusList');if(!list)return;
   const items=focusItems();
   const cnt=doc.getElementById('focusCount');if(cnt)cnt.textContent=items.length;
   const sum=doc.getElementById('focusSummary');if(sum)sum.textContent=focusSummaryText();
-  const key=items.map(x=>x.t.id).join('|');
+  list.classList.toggle('foc-compact',_focusCompact);
+  const tog=doc.getElementById('focViewToggle');if(tog)tog.classList.toggle('compact',_focusCompact);
+  const key=items.map(x=>x.t.id).join('|')+'|'+(_focusCompact?'c':'d');
   if(list.dataset.key!==key){
     list.dataset.key=key;
-    list.innerHTML=items.length?items.map(focusCardHTML).join(''):'<div class="focus-empty">Nada em progresso.<br>Marque uma tarefa como “Fazendo”.</div>';
+    list.innerHTML=items.length?items.map(focusCardHTML).join(''):'<div class="focus-empty">Nada em progresso.<br>Marque uma tarefa como "Fazendo".</div>';
     return;
   }
   items.forEach((it,i)=>{
@@ -4576,9 +4565,10 @@ async function openFocus(auto){
       if(_pipWin&&!_pipWin.closed){_pipWin.focus();return}
       _pipWin=await documentPictureInPicture.requestWindow({width:360,height:460});
       const st=_pipWin.document.createElement('style');st.textContent=PIP_CSS;_pipWin.document.head.appendChild(st);
-      _pipWin.document.body.innerHTML='<div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span></div><div class="focus-summary" id="focusSummary"></div><div class="focus-list" id="focusList"></div>';
+      _pipWin.document.body.innerHTML='<div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span><button class="foc-view-toggle" id="focViewToggle" title="Alternar visualização"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button></div><div class="focus-summary" id="focusSummary"></div><div class="focus-list" id="focusList"></div>';
       _pipWin.document.title='Em foco';
       _pipWin.document.body.addEventListener('click',onFocusItemClick);
+      _pipWin.document.body.addEventListener('click',onFocusToggleClick);
       _pipWin.addEventListener('pagehide',()=>{_pipWin=null;stopFocusTimer()});
       renderFocus();startFocusTimer();
       return;
@@ -4588,11 +4578,13 @@ async function openFocus(auto){
   $('#focusOverlay').classList.add('open');renderFocus();startFocusTimer();
 }
 function closeFocus(){$('#focusOverlay').classList.remove('open');if(_pipWin&&!_pipWin.closed){try{_pipWin.close()}catch(e){}}_pipWin=null;stopFocusTimer()}
-function updateFocusBtn(){const n=getVisibleTasks().filter(t=>t.status==='doing'||t.status==='bug').length;const b=$('#btnFocus');if(b){b.style.display=n>0?'flex':'none';const c=$('#bfCount');if(c)c.textContent=n}}
+function updateFocusBtn(){const n=getVisibleTasks().filter(t=>t.status==='doing').length;const b=$('#btnFocus');if(b){b.style.display=n>0?'flex':'none';const c=$('#bfCount');if(c)c.textContent=n}}
+function onFocusToggleClick(e){const btn=e.target.closest('.foc-view-toggle');if(!btn)return;_focusCompact=!_focusCompact;renderFocus()}
 const _btnFocus=$('#btnFocus');if(_btnFocus)_btnFocus.addEventListener('click',()=>openFocus(false));
 const _focusClose=$('#focusClose');if(_focusClose)_focusClose.addEventListener('click',closeFocus);
 const _focusOv=$('#focusOverlay');if(_focusOv)_focusOv.addEventListener('click',e=>{if(e.target.id==='focusOverlay')closeFocus()});
-const _focusListEl=$('#focusList');if(_focusListEl)_focusListEl.addEventListener('click',onFocusItemClick);
+const _focusListEl=$('#focusList');if(_focusListEl){_focusListEl.addEventListener('click',onFocusItemClick)}
+const _focViewTog=$('#focViewToggle');if(_focViewTog)_focViewTog.addEventListener('click',onFocusToggleClick);
 function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(52,199,89,.25),rgba(0,122,255,.08) 50%,transparent 70%);z-index:9998;pointer-events:none;animation:flashFade 1s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
 function celebrateDone(x,y,scale=1){
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
