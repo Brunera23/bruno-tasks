@@ -48,7 +48,7 @@
 
     html{height:100%;scroll-behavior:smooth}
     body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--label);min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;line-height:1.47;transition:background var(--dur-smooth) var(--ease-std),color var(--dur-smooth) var(--ease-std)}
-    .svg-defs{display:none}
+    .svg-defs{position:absolute;width:0;height:0;overflow:hidden}
 
     /* ===== LOGIN SCREEN ===== */
     .login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;animation:loginFadeIn .6s var(--ease-expo) both}
