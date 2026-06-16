@@ -238,9 +238,9 @@
     .wk-day-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
     .wk-day-ring .ring-bg{stroke:var(--fill)}
     .wk-day-ring .ring-fill{transition:stroke-dashoffset .8s cubic-bezier(.34,1.56,.64,1)}
-    .wk-day-ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .wk-day-ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
     .wk-day-ring-num{font-size:.66rem;font-weight:700;line-height:1;color:var(--label)}
-    .wk-day-ring-day{font-size:.48rem;font-weight:600;text-transform:uppercase;color:var(--label3);line-height:1;margin-top:1px}
+    .wk-day-ring-day{font-size:.44rem;font-weight:600;text-transform:uppercase;color:var(--label3);line-height:1;margin-top:1px;max-width:28px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .wk-day.is-today .wk-day-ring-num{color:var(--blue)}
     .wk-day-info{flex:1;min-width:0}
     .wk-day-label{font-size:.74rem;font-weight:600;color:var(--label);line-height:1.2}
@@ -1287,6 +1287,9 @@
     .kanban-card:active{transform:scale(.98)}
     .kanban-card.dragging{opacity:.4}
     .kanban-card.kc-done .kc-title{text-decoration:line-through;color:var(--label3)}
+    .kanban-card.kc-blocked{opacity:.6;border-style:dashed;border-color:var(--orange)}
+    .kanban-card.kc-blocked:hover{opacity:.85}
+    .kc-dep-tag{display:flex;align-items:center;gap:5px;font-size:.62rem;font-weight:600;color:var(--orange);padding:3px 8px;background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.2);border-radius:6px;margin-top:-2px}
     .kc-title{font-size:.84rem;font-weight:600;color:var(--label);line-height:1.35;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .kc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .kc-cat{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;font-weight:500;color:var(--label2)}
@@ -1476,7 +1479,7 @@
           </div>
           <div class="smart-suggest" id="smartSuggest"></div>
         </div>
-        <div class="seg" id="taskSeg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="done">Feitas</button></div>
+        <div class="seg" id="taskSeg"><button class="active" data-s="all">Todas</button><button data-s="todo">A fazer</button><button data-s="doing">Fazendo</button><button data-s="validation">Validação</button><button data-s="bug">Bug</button><button data-s="done">Feitas</button></div>
         <div class="seg" id="ownerSeg" style="display:none"><button class="active" data-owner="all">Todos</button><button data-owner="bruno">Bruno</button><button data-owner="parceira">Clara</button></div>
         <div class="layout-toggle" id="layoutToggle">
           <button class="active" data-layout="list" title="Visualização em lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Lista</button>
@@ -2994,7 +2997,7 @@ function renderTasks(){
   const filterActive=!!qry||aSt!=='all'||aCat!=='all'||!!widgetFilter;
   const scBtn=$('#searchClearBtn');if(scBtn)scBtn.style.display=filterActive?'flex':'none';
   const ap=getActiveContextProject();
-  let list=getVisibleTasks().filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'&&t.status!==aSt)return false;if(ap==='nos'&&aOwner!=='all'){if(t.project==='nos'&&t.assignedTo!==aOwner&&t.assignedTo!=='ambos')return false;}if(qry){if(!smartFilter(t,qry))return false}return true});
+  let list=getVisibleTasks().filter(t=>{if(aCat!=='all'&&t.category!==aCat)return false;if(aSt!=='all'){if(aSt==='validation'){if(!(t.status==='doing'&&t.agentStatus==='validation'))return false}else if(aSt==='bug'){if(t.status!=='bug')return false}else if(aSt==='doing'){if(t.status!=='doing'||t.agentStatus==='validation')return false}else{if(t.status!==aSt)return false}}if(ap==='nos'&&aOwner!=='all'){if(t.project==='nos'&&t.assignedTo!==aOwner&&t.assignedTo!=='ambos')return false;}if(qry){if(!smartFilter(t,qry))return false}return true});
   // Widget filter
   if(widgetFilter){
     const todayDs=dateStr(new Date());
@@ -3180,14 +3183,17 @@ function renderTasksKanban(){
   const card=t=>{
     const c=ci(t.category);
     const cur=taskKanbanStatusOf(t);
+    const blocked=isBlocked(t)&&t.status!=='done';
     const prio=t.priority?`<span class="kc-prio ${t.priority}">${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
     const dateTag=t.date?`<span class="kc-date ${(isOD(t.date)&&t.status!=='done')?'overdue':''}">${fDate(t.date)}</span>`:'';
     const dots=TASK_KCOLS.map(k=>`<button class="kc-coldot ${k.id===cur?'active':''}" style="--c:${k.color}" data-tmove="${t.id}|${k.id}" title="Mover para ${k.name}" aria-label="Mover para ${k.name}"></button>`).join('');
     const agentTag=t.agent?`<span class="kc-agent"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span>`:'';
     const etTag=t.estimatedTime?`<span class="kc-date">${fmtTime(t.estimatedTime)}</span>`:'';
-    return`<div class="kanban-card ${t.status==='done'?'kc-done':''}" draggable="true" data-tid="${t.id}">
+    const blockedTag=blocked?`<div class="kc-dep-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Aguardando dependência</div>`:'';
+    return`<div class="kanban-card ${t.status==='done'?'kc-done':''}${blocked?' kc-blocked':''}" draggable="true" data-tid="${t.id}">
       <div class="kc-title" title="${escAttr(t.title)}">${escapeHtml(t.title)}</div>
       <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'""><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}${etTag}</div>
+      ${blockedTag}
       ${agentTag?`<div class="kc-foot">${agentTag}</div>`:''}
       <button class="kc-view-btn" data-tvid="${t.id}" style="width:100%; margin-top:2px; padding:7px; font-size:0.75rem; font-weight:600; color:var(--label2); background:var(--fill); border:1px solid var(--sep); border-radius:8px; cursor:pointer; transition:all var(--dur-fast); display:flex; justify-content:center; align-items:center; gap:6px;" onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label2)';this.style.borderColor='var(--sep)'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -6049,7 +6055,7 @@ function openMobSheet(){
       <div class="mob-sheet-opts" id="mobSheetSort"></div>
     </div>
   `;
-  const statuses=[{s:'all',n:'Todas'},{s:'todo',n:'A fazer'},{s:'doing',n:'Fazendo'},{s:'done',n:'Feitas'}];
+  const statuses=[{s:'all',n:'Todas'},{s:'todo',n:'A fazer'},{s:'doing',n:'Fazendo'},{s:'validation',n:'Validação'},{s:'bug',n:'Bug'},{s:'done',n:'Feitas'}];
   $('#mobSheetSeg').innerHTML=statuses.map(st=>`<button class="${aSt===st.s?'active':''}" data-ms="${st.s}">${st.n}</button>`).join('');
   const groups=[{g:'none',n:'Padr\u00e3o'},{g:'category',n:'Categoria'},{g:'priority',n:'Prioridade'},{g:'today',n:'Hoje'},{g:'time',n:'Tempo estimado'}];
   $('#mobSheetGrp').innerHTML=groups.map(g=>`<button class="${groupBy===g.g?'active':''}" data-mg="${g.g}">${g.n}</button>`).join('');
