@@ -1301,7 +1301,8 @@
     .kc-title{font-size:.84rem;font-weight:600;color:var(--label);line-height:1.35;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .kc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .kc-rep-icon{color:var(--label3);display:inline-flex;align-items:center;justify-content:center;transition:transform 0.8s cubic-bezier(0.2,0.8,0.2,1)}
-    .kanban-card:hover .kc-rep-icon{transform:rotate(360deg) scale(1.15);--rep-c:url(#rep-grad)}
+    .kanban-card:hover .kc-rep-icon{transform:rotate(360deg) scale(1.15)}
+    .kanban-card:hover .kc-rep-icon svg{stroke:url(#rep-grad)}
     .kc-cat{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;font-weight:500;color:var(--label2);background:var(--fill);padding:2px 6px;border-radius:6px}
     .kc-cat svg{width:11px;height:11px}
     .kc-prio{font-size:.62rem;font-weight:700;padding:1px 7px;border-radius:6px}
@@ -1399,7 +1400,7 @@
   <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
   <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-6H7L5 12z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M3 17h2M19 17h2"/></symbol>
   <symbol id="i-pill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5l-6-6a4.95 4.95 0 117-7l6 6a4.95 4.95 0 11-7 7z"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></symbol>
-  <symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="var(--rep-c, currentColor)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></symbol>
   <linearGradient id="rep-grad" x1="0%" y1="0%" x2="100%" y2="100%">
     <stop offset="0%" stop-color="#007AFF" />
     <stop offset="100%" stop-color="#5856D6" />
@@ -3225,7 +3226,7 @@ function renderTasksKanban(){
     const blockedTag=blocked?`<div class="kc-dep-tag" onclick="viewTask('${t.blockedBy[0]}');event.stopPropagation()" style="cursor:pointer" title="Ver tarefa dependente"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Aguardando dependência</div>`:'';
     return`<div class="kanban-card ${t.status==='done'?'kc-done':''}${blocked?' kc-blocked':''}" draggable="true" data-tid="${t.id}">
       <div class="kc-title" title="${escAttr(t.title)}">${escapeHtml(t.title)}</div>
-      <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${t.recurrence&&t.recurrence.freq?`<span class="kc-rep-icon" title="Tarefa Recorrente"><svg width="14" height="14"><use href="#i-repeat"/></svg></span>`:''}${prio}${dateTag}${etTag}</div>
+      <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${t.recurrence&&t.recurrence.freq?`<span class="kc-rep-icon" title="Tarefa Recorrente"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg></span>`:''}${prio}${dateTag}${etTag}</div>
       ${blockedTag}
       ${agentTag?`<div class="kc-foot">${agentTag}</div>`:''}
       <button class="kc-view-btn" data-tvid="${t.id}" style="width:100%; margin-top:2px; padding:7px; font-size:0.75rem; font-weight:600; color:var(--label2); background:var(--fill); border:1px solid var(--sep); border-radius:8px; cursor:pointer; transition:all var(--dur-fast); display:flex; justify-content:center; align-items:center; gap:6px;" onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label2)';this.style.borderColor='var(--sep)'">
