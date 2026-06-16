@@ -4458,31 +4458,35 @@ const FOC_CARD_CSS=`
 .foc-view-toggle{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:5px 8px;color:rgba(235,235,245,.6);cursor:pointer;display:flex;align-items:center;transition:all .2s}
 .foc-view-toggle:hover{background:rgba(255,255,255,.15);color:#fff}
 .foc-view-toggle.compact svg{color:#3186FF}
-.foc-rings{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:8px 0;animation:focRingsIn .4s cubic-bezier(.16,1,.3,1) both}
+.foc-rings{display:flex;flex-wrap:wrap;gap:clamp(8px,3cqi,14px);justify-content:center;padding:4px 0;animation:focRingsIn .4s cubic-bezier(.16,1,.3,1) both;overflow:visible;position:relative}
 @keyframes focRingsIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
-.foc-ring{position:relative;width:clamp(72px,22cqi,96px);height:clamp(72px,22cqi,96px);display:flex;align-items:center;justify-content:center;cursor:default;transition:transform .2s}
-.foc-ring:hover{transform:scale(1.08)}
-.foc-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-.foc-ring-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:3}
-.foc-ring-fg{fill:none;stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.foc-ring{position:relative;width:clamp(52px,28cqi,96px);height:clamp(52px,28cqi,96px);display:flex;align-items:center;justify-content:center;cursor:default;transition:transform .25s cubic-bezier(.16,1,.3,1);animation:focRingPop .5s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i,0)*80ms)}
+@keyframes focRingPop{from{opacity:0;transform:scale(.5) rotate(-30deg)}to{opacity:1;transform:none}}
+.foc-ring:hover{transform:scale(1.12)}
+.foc-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);filter:drop-shadow(0 0 6px var(--ring-glow,rgba(49,134,255,.3)))}
+.foc-ring-bg{fill:none;stroke:rgba(255,255,255,.06);stroke-width:2.8}
+.foc-ring-fg{fill:none;stroke-width:2.8;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.foc-ring-over svg{filter:drop-shadow(0 0 10px rgba(255,69,58,.5))}
 .foc-ring-over .foc-ring-fg{animation:focRingPulse 2s ease-in-out infinite}
-@keyframes focRingPulse{0%,100%{opacity:1}50%{opacity:.5}}
-.foc-ring-time{font-size:clamp(.7rem,3.5cqi,.88rem);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#fff;z-index:1;line-height:1;text-align:center}
+@keyframes focRingPulse{0%,100%{opacity:1;filter:brightness(1)}50%{opacity:.6;filter:brightness(1.3)}}
+.foc-ring-time{font-size:clamp(.58rem,3.8cqi,.88rem);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#fff;z-index:1;line-height:1;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .foc-ring-over .foc-ring-time{color:#FF6961}
-.foc-ring-label{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-size:clamp(.48rem,2cqi,.56rem);color:rgba(235,235,245,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;font-weight:500}
-.foc-ring-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(20,20,24,.95);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 12px;white-space:nowrap;font-size:.7rem;color:rgba(235,235,245,.85);font-weight:500;pointer-events:none;opacity:0;transition:opacity .2s;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,.4);backdrop-filter:blur(8px)}
-.foc-ring:hover .foc-ring-tip{opacity:1}
+.foc-ring-label{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-size:clamp(.42rem,1.8cqi,.54rem);color:rgba(235,235,245,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;font-weight:500}
+.foc-ring-tip{position:fixed;z-index:9999;background:rgba(16,16,20,.96);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;font-size:.72rem;color:rgba(235,235,245,.9);font-weight:500;pointer-events:none;opacity:0;transition:opacity .18s;box-shadow:0 8px 24px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(12px);max-width:240px;white-space:normal;line-height:1.45}
+.foc-ring-tip .tip-title{font-weight:700;font-size:.76rem;margin-bottom:4px;color:#fff}
+.foc-ring-tip .tip-sub{color:rgba(235,235,245,.6);font-size:.66rem}
 .foc-switch-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
 .foc-switch-anim svg{width:48px;height:48px;animation:focSwitchSpin .5s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes focSwitchSpin{0%{opacity:1;transform:rotate(0deg) scale(1)}60%{opacity:1;transform:rotate(270deg) scale(1.1)}100%{opacity:0;transform:rotate(360deg) scale(.8)}}
 @container (max-width:210px){.foc-pct{display:none}.foc-top{gap:6px;margin-bottom:6px}.foc-bar{margin:8px 0 6px}}
 @container (max-width:165px){.foc-time{font-size:clamp(.9rem,9cqi,1.3rem)}}
-@container (max-width:150px){.foc-bar{display:none}}
-@media(prefers-reduced-motion:reduce){.foc-item,.foc-bar-fill::after,.live-dot,.foc-ring-fg,.foc-switch-anim svg{animation:none!important}}`;
+@container (max-width:150px){.foc-bar{display:none}.foc-rings{gap:6px}}
+@container (max-width:120px){.foc-ring-label{display:none}.focus-summary{display:none}}
+@media(prefers-reduced-motion:reduce){.foc-item,.foc-bar-fill::after,.live-dot,.foc-ring-fg,.foc-switch-anim svg,.foc-ring{animation:none!important}}`;
 const PIP_CSS=`*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:#0b0b0e;background:radial-gradient(140% 90% at 50% -10%,#1e1e26 0%,#0b0b0e 58%) fixed;color:#fff;padding:clamp(11px,3.5vw,16px);min-height:100vh;-webkit-font-smoothing:antialiased;container-type:inline-size}
-.focus-head{display:flex;align-items:center;gap:9px;margin-bottom:14px}
-.focus-head-title{font-size:clamp(.86rem,4.5vw,1rem);font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;white-space:nowrap}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:#0b0b0e;background:radial-gradient(140% 90% at 50% -10%,#1e1e26 0%,#0b0b0e 58%) fixed;color:#fff;padding:clamp(6px,2.5vw,16px);min-height:100vh;-webkit-font-smoothing:antialiased;container-type:inline-size;overflow:visible}
+.focus-head{display:flex;align-items:center;gap:clamp(4px,2vw,9px);margin-bottom:clamp(6px,2.5vw,14px);flex-wrap:wrap}
+.focus-head-title{font-size:clamp(.7rem,4vw,1rem);font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:clamp(4px,2vw,9px);white-space:nowrap}
 `+FOC_CARD_CSS;
 // As classes .foc-*/.focus-list/.live-dot são exclusivas do Modo Foco, então
 // reaproveito a MESMA folha no documento principal (overlay) sem risco de colisão.
@@ -4550,12 +4554,10 @@ function onFocusItemClick(e){
 }
 function focusRingHTML(it,i){
   const R=15.9,C=2*Math.PI*R,dash=it.hasEst?(it.pct/100)*C:0;
-  const col=it.over?'#FF453A':it.c.color;
   const gradId='frg'+i;
   const noEst=!it.hasEst;
-  const elapsed=noEst?C*0.01:0; // tiny dash for no-estimate
-  return `<div class="foc-ring ${it.over?'foc-ring-over':''}" style="--i:${i}">`
-    +`<div class="foc-ring-tip">${escapeHtml(it.t.title)}<br>${it.sub}</div>`
+  const elapsed=noEst?C*0.01:0;
+  return `<div class="foc-ring ${it.over?'foc-ring-over':''}" style="--i:${i}" data-tip-t="${escAttr(it.t.title)}" data-tip-s="${escAttr(it.sub)}">`
     +`<svg viewBox="0 0 36 36">`
     +`<defs><linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">`
     +`<stop offset="0%" stop-color="${it.over?'#FF453A':'#3186FF'}"/>`
@@ -4567,6 +4569,28 @@ function focusRingHTML(it,i){
     +`<span class="foc-ring-time" data-rt="1">${it.clock}</span>`
     +`<span class="foc-ring-label">${escapeHtml(it.t.title.length>12?it.t.title.slice(0,11)+'…':it.t.title)}</span>`
     +`</div>`;
+}
+function _focTipInit(root){
+  let tip=null;
+  root.addEventListener('mouseenter',e=>{
+    const ring=e.target.closest('.foc-ring[data-tip-t]');if(!ring)return;
+    if(!tip){tip=root.createElement?root.createElement('div'):document.createElement('div');tip.className='foc-ring-tip';(root.body||root.documentElement||root).appendChild(tip)}
+    tip.innerHTML='<div class="tip-title">'+ring.dataset.tipT+'</div><div class="tip-sub">'+ring.dataset.tipS+'</div>';
+    tip.style.opacity='1';
+  },true);
+  root.addEventListener('mousemove',e=>{
+    if(!tip||tip.style.opacity==='0')return;
+    const ring=e.target.closest('.foc-ring[data-tip-t]');
+    if(!ring){tip.style.opacity='0';return}
+    const bw=(root===document?window.innerWidth:root.defaultView?root.defaultView.innerWidth:320);
+    let x=e.clientX+12,y=e.clientY-10;
+    if(x+250>bw)x=e.clientX-250;
+    if(y<6)y=e.clientY+18;
+    tip.style.left=x+'px';tip.style.top=y+'px';
+  },true);
+  root.addEventListener('mouseleave',e=>{
+    if(!tip)return;const ring=e.target.closest('.foc-ring[data-tip-t]');if(ring)tip.style.opacity='0';
+  },true);
 }
 const FOC_SWITCH_SVG='<svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="fswg" x1="0" y1="0" x2="18" y2="18" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3186FF"/><stop offset="50%" stop-color="#1895DB"/><stop offset="100%" stop-color="#0EBC5F"/></linearGradient></defs><circle cx="18" cy="18" r="15" stroke="url(#fswg)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="20 75" fill="none"/></svg>';
 function updateFocusDoc(doc){
@@ -4631,6 +4655,7 @@ async function openFocus(auto){
       _pipWin.document.title='Em foco';
       _pipWin.document.body.addEventListener('click',onFocusItemClick);
       _pipWin.document.body.addEventListener('click',onFocusToggleClick);
+      _focTipInit(_pipWin.document);
       _pipWin.addEventListener('pagehide',()=>{_pipWin=null;stopFocusTimer()});
       renderFocus();startFocusTimer();
       return;
@@ -4654,6 +4679,7 @@ const _focusClose=$('#focusClose');if(_focusClose)_focusClose.addEventListener('
 const _focusOv=$('#focusOverlay');if(_focusOv)_focusOv.addEventListener('click',e=>{if(e.target.id==='focusOverlay')closeFocus()});
 const _focusListEl=$('#focusList');if(_focusListEl){_focusListEl.addEventListener('click',onFocusItemClick)}
 const _focViewTog=$('#focViewToggle');if(_focViewTog)_focViewTog.addEventListener('click',onFocusToggleClick);
+_focTipInit(document);
 function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(52,199,89,.25),rgba(0,122,255,.08) 50%,transparent 70%);z-index:9998;pointer-events:none;animation:flashFade 1s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
 function celebrateDone(x,y,scale=1){
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
