@@ -1300,8 +1300,8 @@
     .kc-dep-tag{display:flex;align-items:center;gap:5px;font-size:.62rem;font-weight:600;color:var(--orange);padding:3px 8px;background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.2);border-radius:6px;margin-top:-2px}
     .kc-title{font-size:.84rem;font-weight:600;color:var(--label);line-height:1.35;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .kc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-    .kc-rep-icon{color:var(--label3);display:inline-flex;align-items:center;justify-content:center;transition:transform 0.8s cubic-bezier(0.2,0.8,0.2,1),color 0.4s ease,filter 0.4s ease}
-    .kanban-card:hover .kc-rep-icon{transform:rotate(360deg) scale(1.15);color:var(--blue);filter:drop-shadow(0 0 6px rgba(0,122,255,0.6))}
+    .kc-rep-icon{color:var(--label3);display:inline-flex;align-items:center;justify-content:center;transition:transform 0.8s cubic-bezier(0.2,0.8,0.2,1)}
+    .kanban-card:hover .kc-rep-icon{transform:rotate(360deg) scale(1.15);--rep-c:url(#rep-grad)}
     .kc-cat{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;font-weight:500;color:var(--label2);background:var(--fill);padding:2px 6px;border-radius:6px}
     .kc-cat svg{width:11px;height:11px}
     .kc-prio{font-size:.62rem;font-weight:700;padding:1px 7px;border-radius:6px}
@@ -1399,7 +1399,11 @@
   <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
   <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-6H7L5 12z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M3 17h2M19 17h2"/></symbol>
   <symbol id="i-pill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5l-6-6a4.95 4.95 0 117-7l6 6a4.95 4.95 0 11-7 7z"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></symbol>
-  <symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="var(--rep-c, currentColor)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></symbol>
+  <linearGradient id="rep-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#007AFF" />
+    <stop offset="100%" stop-color="#5856D6" />
+  </linearGradient>
 </svg>
 
 <!-- LOGIN SCREEN -->
