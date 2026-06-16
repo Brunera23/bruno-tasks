@@ -4411,7 +4411,7 @@ function closeViewTask(){
 
 function edit(id){const t=tasks.find(x=>x.id===id);if(!t)return;if(t.status==='done'){viewTask(id);return}openM(t)}
 function quickChild(parentId){const parent=tasks.find(x=>x.id===parentId);if(!parent)return;openM(null);fCCat=parent.category;renderCatPicker();mDeps=[parentId];renderDepChips();toast('Nova subtarefa de: '+parent.title)}
-function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t){addLog('delete',t);if(t.project&&isSharedProj(t.project)){(deletedByProj[t.project]=deletedByProj[t.project]||{})[t.id]=Date.now()}}tasks=tasks.filter(t=>t.id!==delId);sT();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
+function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t){addLog('delete',t);if(t.project&&isSharedProj(t.project)){(deletedByProj[t.project]=deletedByProj[t.project]||{})[t.id]=Date.now()}if(t.recurrence){tasks.forEach(x=>{if(x.title===t.title&&x.recurrence){x.recurrence=null;x.updatedAt=Date.now()}})}}tasks=tasks.filter(x=>x.id!==delId);sT();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
 function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   if(isBlocked(t)&&newSt==='done'){toast('Complete a tarefa anterior primeiro');return}
   const wasDone=t.status==='done';
