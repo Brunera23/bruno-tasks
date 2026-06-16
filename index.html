@@ -507,8 +507,14 @@
     .ck{flex-shrink:0;width:22px;height:22px;margin-top:1px;border-radius:50%;border:1.8px solid var(--label3);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:transparent;transition:border-color var(--dur-norm) var(--ease-spring),background var(--dur-norm) var(--ease-spring),color var(--dur-fast),transform var(--dur-spring) var(--ease-spring),box-shadow var(--dur-norm)}
     .ck:hover{border-color:var(--label2);transform:scale(1.08);box-shadow:0 0 0 4px rgba(52,199,89,.06)}
     .ck.on{border-color:#34C759;background:#34C759;color:#fff;animation:ckBounce var(--dur-spring) var(--ease-spring),ckGlow .8s var(--ease-std)}
-    .ck.doing-st{border-color:#FF9500;border-width:2px;background:transparent;color:transparent;position:relative;padding:0;overflow:hidden;-webkit-appearance:none}
-    .ck.doing-st::after{content:'';width:9px;height:9px;border-radius:50%;background:#FF9500;position:absolute;top:50%;right:0;transform:translateY(-50%)}
+    .ck.doing-st, .ck.val-st, .ck.bug-st{border-width:2px;background:transparent;color:transparent;position:relative;padding:0;overflow:hidden;-webkit-appearance:none}
+    .ck.doing-st{border-color:#FF9500}
+    .ck.val-st{border-color:#AF52DE}
+    .ck.bug-st{border-color:#FF3B30}
+    .ck.doing-st::after, .ck.val-st::after, .ck.bug-st::after{content:'';width:9px;height:9px;border-radius:50%;position:absolute;top:50%;right:0;transform:translateY(-50%)}
+    .ck.doing-st::after{background:#FF9500}
+    .ck.val-st::after{background:#AF52DE}
+    .ck.bug-st::after{background:#FF3B30}
     @keyframes ckBounce{0%{transform:scale(1)}25%{transform:scale(1.25)}50%{transform:scale(.95)}75%{transform:scale(1.05)}100%{transform:scale(1)}}
     @keyframes ckGlow{0%{box-shadow:0 0 0 0 rgba(52,199,89,.4)}70%{box-shadow:0 0 0 8px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}
     .ck svg{width:11px;height:11px;stroke-width:3}
@@ -520,6 +526,8 @@
     .st-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;border:1.5px solid}
     .st-dot.todo{border-color:var(--label3);background:transparent}
     .st-dot.doing{border-color:#FF9500;background:#FF9500}
+    .st-dot.validation{border-color:#AF52DE;background:#AF52DE}
+    .st-dot.bug{border-color:#FF3B30;background:#FF3B30}
     .st-dot.done{border-color:#34C759;background:#34C759}
     /* Reward animations */
     @keyframes rewardPulse{0%{box-shadow:0 0 0 0 rgba(255,149,0,.5)}50%{box-shadow:0 0 0 12px rgba(255,149,0,0)}100%{box-shadow:0 0 0 0 rgba(255,149,0,0)}}
@@ -2839,10 +2847,12 @@ function renderItem(t,i,isChild=false,depsOpen=false,isLast=false){
   const prioTag=t.priority?`<span class="tag-meta"><span class="pdot ${t.priority}"></span>${t.priority==='alta'?'Alta':t.priority==='media'?'Média':'Baixa'}</span>`:'';
   const agentTag=`<span class="tag-agent" data-id="${t.id}"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent || 'Sem agente')}</span>`;
   const dateTag=t.date?`<span class="item-date ${od?'overdue':''}" data-id="${t.id}"><svg><use href="#i-cal"/></svg>${fDate(t.date)}</span>`:`<span class="item-date" data-id="${t.id}" style="opacity:.4"><svg><use href="#i-cal"/></svg>Prazo</span>`;
-  const ckCls=t.status==='done'?'on':t.status==='doing'?'doing-st':'';
+  let realState=t.status;if(t.status==='doing'&&t.agentStatus==='validation')realState='validation';
+  const ckCls=realState==='done'?'on':realState==='doing'?'doing-st':realState==='validation'?'val-st':realState==='bug'?'bug-st':'';
   const assignTag=t.project==='nos'&&t.assignedTo?`<span class="tag-meta assign-tag"><span class="assign-mini" style="background:${t.assignedTo==='bruno'?'linear-gradient(135deg,#007AFF,#5AC8FA)':t.assignedTo==='parceira'?'linear-gradient(135deg,#FF2D55,#FF6482)':'linear-gradient(135deg,#AF52DE,#5856D6)'}"><svg width="10" height="10"><use href="${t.assignedTo==='ambos'?'#i-users':'#i-user'}"/></svg></span>${t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'Ambos'}</span>`:'';
   const projDot=t.project==='nos'?'<span class="proj-dot-nos" title="Nós"></span>':'';
-  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><button class="ck ${ckCls}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button></div><div class="item-body"><div class="item-title">${projDot}${t.title}</div><div class="item-meta"><span class="tag tag-cat" data-id="${t.id}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${assignTag}${prioTag}${waitTag}${recurTag}${agentTag}${etTag}${t.status==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:''}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-right">${dateTag}<div class="item-acts">${t.status!=='done'?`<button class="a-btn" onclick="quickChild('${t.id}')" title="Adicionar subtarefa"><svg><use href="#i-plus"/></svg></button>`:''}<button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${fmtNotes(t.notes)}</div>`:''}</div>`;
+  const statusTag=realState==='doing'?`<span class="tag-meta doing"><svg><use href="#i-clock"/></svg>Fazendo</span>`:realState==='validation'?`<span class="tag-meta validation" style="color:#AF52DE;background:rgba(175,82,222,0.1)"><svg><use href="#i-clock"/></svg>Validação</span>`:realState==='bug'?`<span class="tag-meta bug" style="color:#FF3B30;background:rgba(255,59,48,0.1)"><svg><use href="#i-clock"/></svg>Bug</span>`:'';
+  return`<div class="${cls.join(' ')}" style="--i:${i}"><div class="item-row"><div class="ck-wrap"><button class="ck ${ckCls}" data-id="${t.id}"><svg><use href="#i-check"/></svg></button></div><div class="item-body"><div class="item-title">${projDot}${t.title}</div><div class="item-meta"><span class="tag tag-cat" data-id="${t.id}"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${assignTag}${prioTag}${waitTag}${recurTag}${agentTag}${etTag}${statusTag}${subs.length?`<span class="tag-meta">${sd}/${subs.length}</span>`:''}</div></div><div class="item-right">${dateTag}<div class="item-acts">${t.status!=='done'?`<button class="a-btn" onclick="quickChild('${t.id}')" title="Adicionar subtarefa"><svg><use href="#i-plus"/></svg></button>`:''}<button class="a-btn" onclick="edit('${t.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="askDel('${t.id}')"><svg><use href="#i-trash"/></svg></button></div></div></div>${subs.length?`<div class="subs">${subs.map((s,si)=>`<div class="sub ${s.done?'done':''}"><button class="sub-ck ${s.done?'on':''}" data-t="${t.id}" data-s="${si}"><svg><use href="#i-check"/></svg></button><span>${s.text}</span></div>`).join('')}</div>`:''}${t.notes?`<div class="note-preview">${fmtNotes(t.notes)}</div>`:''}</div>`;
 }
 
 function getChildren(parentId,list){return list.filter(t=>t.blockedBy&&t.blockedBy.includes(parentId))}
@@ -3204,7 +3214,7 @@ function renderTasksKanban(){
     const dots=TASK_KCOLS.map(k=>`<button class="kc-coldot ${k.id===cur?'active':''}" style="--c:${k.color}" data-tmove="${t.id}|${k.id}" title="Mover para ${k.name}" aria-label="Mover para ${k.name}"></button>`).join('');
     const agentTag=t.agent?`<span class="kc-agent"><svg><use href="#i-zap"/></svg>${escapeHtml(t.agent)}</span>`:'';
     const etTag=t.estimatedTime?`<span class="kc-date">${fmtTime(t.estimatedTime)}</span>`:'';
-    const blockedTag=blocked?`<div class="kc-dep-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Aguardando dependência</div>`:'';
+    const blockedTag=blocked?`<div class="kc-dep-tag" onclick="viewTask('${t.blockedBy[0]}');event.stopPropagation()" style="cursor:pointer" title="Ver tarefa dependente"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Aguardando dependência</div>`:'';
     return`<div class="kanban-card ${t.status==='done'?'kc-done':''}${blocked?' kc-blocked':''}" draggable="true" data-tid="${t.id}">
       <div class="kc-title" title="${escAttr(t.title)}">${escapeHtml(t.title)}</div>
       <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'""><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}${etTag}</div>
@@ -4393,18 +4403,24 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   const wasDone=t.status==='done';
   const ckEl=document.querySelector(`.ck[data-id="${id}"]`);
   const ckRect=ckEl?ckEl.getBoundingClientRect():null;
-  t.status=newSt;t.completedAt=newSt==='done'?Date.now():null;t.updatedAt=Date.now();
-  // Cronômetro do Modo Foco: carimba quando entra em 'fazendo', limpa quando sai
-  if(newSt==='doing'){if(!t.doingStartedAt)t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
-  // Sincroniza a coluna do Quadro (agentStatus). 'Fazendo' preserva Validação/Bug (são sub-estados de doing)
+  
+  let realSt=newSt;
+  if(newSt==='validation')realSt='doing';
+  
+  t.status=realSt;t.completedAt=realSt==='done'?Date.now():null;t.updatedAt=Date.now();
+  if(realSt==='doing'){if(!t.doingStartedAt)t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
+  
   if(newSt==='done')t.agentStatus='done';
   else if(newSt==='todo')t.agentStatus='todo';
-  else if(newSt==='doing'&&t.agentStatus!=='validation'&&t.agentStatus!=='bug')t.agentStatus='progress';
-  addLog(wasDone&&newSt!=='done'?'reopen':newSt==='done'?'complete':'edit',t);sT();
-  if(newSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),800)}if(t.recurrence)setTimeout(processRecurring,100)}
-  render();const msgs={todo:'A Fazer',doing:'Fazendo',done:'Conclu\u00edda'};
+  else if(newSt==='validation')t.agentStatus='validation';
+  else if(newSt==='bug')t.agentStatus='bug';
+  else if(newSt==='doing')t.agentStatus='progress';
+  
+  addLog(wasDone&&realSt!=='done'?'reopen':realSt==='done'?'complete':'edit',t);sT();
+  if(realSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),800)}if(t.recurrence)setTimeout(processRecurring,100)}
+  render();const msgs={todo:'A Fazer',doing:'Fazendo',validation:'Validação',bug:'Bug',done:'Concluída'};
   if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('\u26a1 '+msgs[newSt]);openFocus(true)}
-  else if(newSt==='done'){if(ckRect)celebrateDone(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);showCompletionNote(id)}
+  else if(realSt==='done'){if(ckRect)celebrateDone(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);showCompletionNote(id)}
   else{toast(msgs[newSt]||'')}}
 
 // === Completion Note Modal ===
@@ -4489,9 +4505,9 @@ const FOC_CARD_CSS=`
 .foc-ring-fg{fill:none;stroke-width:2.8;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
 .foc-ring-over .foc-ring-fg{animation:focRingPulse 2s ease-in-out infinite}
 @keyframes focRingPulse{0%,100%{opacity:1;filter:brightness(1)}50%{opacity:.6;filter:brightness(1.3)}}
-.foc-ring-time{font-size:clamp(.58rem,3.8cqi,.88rem);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#fff;z-index:1;line-height:1;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.foc-ring-time{font-size:clamp(.72rem,4.5cqi,1.1rem);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#fff;z-index:1;line-height:1;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .foc-ring-over .foc-ring-time{color:#FF6961}
-.foc-ring-label{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-size:clamp(.42rem,1.8cqi,.54rem);color:rgba(235,235,245,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;font-weight:500}
+.foc-ring-label{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-size:clamp(.54rem,2.5cqi,.72rem);color:rgba(235,235,245,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;font-weight:500}
 .foc-switch-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
 .foc-switch-anim svg{width:48px;height:48px;animation:focSwitchSpin .5s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes focSwitchSpin{0%{opacity:1;transform:rotate(0deg) scale(1)}60%{opacity:1;transform:rotate(270deg) scale(1.1)}100%{opacity:0;transform:rotate(360deg) scale(.8)}}
@@ -4645,7 +4661,7 @@ async function openFocus(auto){
   if('documentPictureInPicture' in window){
     try{
       if(_pipWin&&!_pipWin.closed){_pipWin.focus();return}
-      _pipWin=await documentPictureInPicture.requestWindow({width:360,height:460});
+      _pipWin=await documentPictureInPicture.requestWindow({width:240,height:460});
       const st=_pipWin.document.createElement('style');st.textContent=PIP_CSS;_pipWin.document.head.appendChild(st);
       _pipWin.document.body.innerHTML='<div class="focus-head"><div class="focus-head-title"><span class="live-dot"></span>Em foco</div><span class="focus-count" id="focusCount">0</span><button class="foc-view-toggle" id="focViewToggle" title="Alternar visualização"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button></div><div class="focus-summary" id="focusSummary"></div><div class="focus-list" id="focusList"></div>';
       _pipWin.document.title='Em foco';
@@ -4718,7 +4734,9 @@ function showStatusPop(ckEl,id){
   closeStatusPop();
   const rect=ckEl.getBoundingClientRect();
   const pop=document.createElement('div');pop.className='st-pop';pop.id='stPop';
-  pop.innerHTML=['todo','doing','done'].filter(s=>s!==t.status).map(s=>`<div class="st-opt" data-st="${s}"><span class="st-dot ${s}"></span>${s==='todo'?'A Fazer':s==='doing'?'Fazendo':'Conclu\u00edda'}</div>`).join('');
+  let curSt=t.status;
+  if(t.status==='doing'&&t.agentStatus==='validation')curSt='validation';
+  pop.innerHTML=['todo','doing','validation','bug','done'].filter(s=>s!==curSt).map(s=>`<div class="st-opt" data-st="${s}"><span class="st-dot ${s}"></span>${s==='todo'?'A Fazer':s==='doing'?'Fazendo':s==='validation'?'Validação':s==='bug'?'Bug':'Concluída'}</div>`).join('');
   pop.style.left=(rect.right+8)+'px';
   pop.style.top=(rect.top-4)+'px';
   document.body.appendChild(pop);
