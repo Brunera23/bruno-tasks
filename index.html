@@ -4464,12 +4464,12 @@ const FOC_CARD_CSS=`
 .foc-time{font-size:clamp(1.35rem,11cqi,2.3rem);white-space:nowrap;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.035em;line-height:1.05;background:linear-gradient(180deg,#fff 30%,rgba(255,255,255,.72));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .foc-item.over .foc-time{background:linear-gradient(180deg,#FF6961,#FF453A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .foc-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:11px 0 8px}
-.foc-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#FF9F0A,#FFD60A);transition:width 1s linear;position:relative;overflow:hidden}
+.foc-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--bc1,#FF9F0A),var(--bc2,#FFD60A));transition:width 1s linear;position:relative;overflow:hidden}
 .foc-bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.4) 50%,transparent 75%);transform:translateX(-100%);animation:focShimmer 2.8s ease-in-out infinite}
 @keyframes focShimmer{55%,100%{transform:translateX(100%)}}
 .foc-item.over{border-color:rgba(255,69,58,.4);animation:focIn .45s cubic-bezier(.16,1,.3,1) both,focOverPulse 2.4s ease-in-out .6s infinite}
 .foc-item.over::before{background:#FF453A;box-shadow:0 0 14px rgba(255,69,58,.8)}
-.foc-item.over .foc-bar-fill{background:linear-gradient(90deg,#FF453A,#FF6961)}
+.foc-item.over .foc-bar-fill{background:linear-gradient(90deg,#FF453A,#FF6961)!important}
 @keyframes focOverPulse{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 0 1px rgba(255,69,58,.12),0 8px 24px rgba(255,69,58,.08)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 0 1px rgba(255,69,58,.3),0 8px 32px rgba(255,69,58,.22)}}
 .foc-sub{font-size:clamp(.66rem,3cqi,.72rem);color:rgba(235,235,245,.55);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .foc-item.over .foc-sub{color:rgba(255,138,128,.9)}
@@ -4571,8 +4571,14 @@ function focusSummaryText(){
 }
 function focusCardHTML(it,i){
   const expanded=_focusExpanded.has(it.t.id);
+  const st=taskKanbanStatusOf(it.t);
+  let c1='#3186FF', c2='#0EBC5F';
+  if(st==='progress'){c1='#FF9500';c2='#FFD60A'}
+  else if(st==='validation'){c1='#AF52DE';c2='#D6A8FF'}
+  else if(st==='bug'){c1='#FF3B30';c2='#FF6B6B'}
+  
   const pctChip=it.hasEst?`<span class="foc-pct">${Math.round(it.pct)}%</span>`:'';
-  const bar=it.hasEst?`<div class="foc-bar"><div class="foc-bar-fill" style="width:${it.pct}%"></div></div>`:'';
+  const bar=it.hasEst?`<div class="foc-bar"><div class="foc-bar-fill" style="width:${it.pct}%;--bc1:${c1};--bc2:${c2}"></div></div>`:'';
   const subDone=it.subs.filter(s=>s.done).length;
   let detail=`<div class="fd-meta"><span class="fd-chip"><span class="fd-catdot"></span>${escapeHtml(it.catName)}</span>`;
   if(it.agent)detail+=`<span class="fd-chip">⚡ ${escapeHtml(it.agent)}</span>`;
