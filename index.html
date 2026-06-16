@@ -3158,6 +3158,7 @@ function setTaskKanbanStatus(t, col){
   if(col==='done'){
     if(t.status!=='done'){t.status='done';t.completedAt=t.completedAt||Date.now()}
     t.agentStatus='done';
+    if(t.recurrence)setTimeout(processRecurring,100);
   } else if(col==='bug'){
     if(t.status==='done') t.completedAt=null;
     t.status='bug';
@@ -3217,7 +3218,7 @@ function renderTasksKanban(){
     const blockedTag=blocked?`<div class="kc-dep-tag" onclick="viewTask('${t.blockedBy[0]}');event.stopPropagation()" style="cursor:pointer" title="Ver tarefa dependente"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Aguardando dependência</div>`:'';
     return`<div class="kanban-card ${t.status==='done'?'kc-done':''}${blocked?' kc-blocked':''}" draggable="true" data-tid="${t.id}">
       <div class="kc-title" title="${escAttr(t.title)}">${escapeHtml(t.title)}</div>
-      <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'""><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${prio}${dateTag}${etTag}</div>
+      <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'""><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${t.recurrence&&t.recurrence.freq?`<span class="kc-chip" style="background:var(--fill);color:var(--label2);font-weight:bold" title="Tarefa Recorrente">↻</span>`:''}${prio}${dateTag}${etTag}</div>
       ${blockedTag}
       ${agentTag?`<div class="kc-foot">${agentTag}</div>`:''}
       <button class="kc-view-btn" data-tvid="${t.id}" style="width:100%; margin-top:2px; padding:7px; font-size:0.75rem; font-weight:600; color:var(--label2); background:var(--fill); border:1px solid var(--sep); border-radius:8px; cursor:pointer; transition:all var(--dur-fast); display:flex; justify-content:center; align-items:center; gap:6px;" onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label2)';this.style.borderColor='var(--sep)'">
@@ -5934,11 +5935,13 @@ setTimeout(processAlerts,5000);
 function processRecurring(){
   const today=dateStr(new Date());
   let changed=false;
+  const newTasks = [];
   tasks.forEach(t=>{
     if(t.status!=='done'||!t.recurrence||!t.recurrence.freq)return;
     if(t.recurrence.until&&today>t.recurrence.until)return;
-    // Check if next instance already exists
+    // Check if next instance already exists in both old and new tasks
     if(tasks.some(x=>x.title===t.title&&x.status!=='done'&&x.recurrence))return;
+    if(newTasks.some(x=>x.title===t.title&&x.status!=='done'&&x.recurrence))return;
     // Calculate next date
     const base=t.date?new Date(t.date+'T00:00:00'):new Date();
     let next=new Date(base);
@@ -5951,10 +5954,10 @@ function processRecurring(){
     const nextStr=dateStr(next);
     if(t.recurrence.until&&nextStr>t.recurrence.until)return;
     const newTask={id:uid(),title:t.title,category:t.category,priority:t.priority,date:nextStr,status:'todo',notes:t.notes,subtasks:(t.subtasks||[]).map(s=>({...s,done:false})),estimatedTime:t.estimatedTime,blockedBy:null,recurrence:{...t.recurrence},createdAt:Date.now(),completedAt:null};
-    tasks.unshift(newTask);
+    newTasks.push(newTask);
     changed=true;
   });
-  if(changed){sT();render()}
+  if(changed){tasks.unshift(...newTasks);sT();render()}
 }
 // ===== RESTORE UI STATE =====
 (function restoreUI(){
