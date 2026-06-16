@@ -3120,6 +3120,7 @@ const TASK_KCOL_NAME=Object.fromEntries(TASK_KCOLS.map(c=>[c.id,c.name]));
 
 function taskKanbanStatusOf(t){
   if(t.status==='done') return 'done';
+  if(t.status==='bug') return 'bug';
   if(t.agentStatus && t.agentStatus!=='done' && TASK_KCOL_NAME[t.agentStatus]) return t.agentStatus;
   if(t.status==='doing') return 'progress';
   return 'todo';
@@ -3129,10 +3130,14 @@ function setTaskKanbanStatus(t, col){
   if(col==='done'){
     if(t.status!=='done'){t.status='done';t.completedAt=t.completedAt||Date.now()}
     t.agentStatus='done';
-  } else if(col==='validation'||col==='bug'){
+  } else if(col==='bug'){
+    if(t.status==='done') t.completedAt=null;
+    t.status='bug';
+    t.agentStatus='bug';
+  } else if(col==='validation'){
     if(t.status==='done') t.completedAt=null;
     t.status='doing';
-    t.agentStatus=col;
+    t.agentStatus='validation';
   } else if(col==='progress'){
     if(t.status==='done') t.completedAt=null;
     t.status='doing';
@@ -3852,6 +3857,7 @@ const KCOL_NAME=Object.fromEntries(KCOLS.map(c=>[c.id,c.name]));
 function agentTasks(){return getVisibleTasks().filter(t=>t.agent&&t.type!=='note')}
 function agentStatusOf(t){
   if(t.status==='done')return 'done'; // concluída em qualquer lugar do app => coluna DONE
+  if(t.status==='bug')return 'bug';
   if(t.agentStatus&&t.agentStatus!=='done'&&KCOL_NAME[t.agentStatus])return t.agentStatus;
   if(t.status==='doing')return 'progress';
   return 'todo';
@@ -3860,6 +3866,10 @@ function agentStatusOf(t){
 function setAgentStatus(t,col){
   t.agentStatus=col;
   if(col==='done'){if(t.status!=='done'){t.status='done';t.completedAt=t.completedAt||Date.now()}}
+  else if(col==='bug'){
+    if(t.status==='done'){t.completedAt=null}
+    t.status='bug';
+  }
   else{
     if(t.status==='done'){t.completedAt=null}
     t.status=(col==='todo')?'todo':'doing';
