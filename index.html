@@ -4464,6 +4464,7 @@ const FOC_CARD_CSS=`
 .foc-item.over .foc-pct{background:rgba(255,69,58,.18);border-color:rgba(255,69,58,.25);color:#FF8A80}
 .foc-time{font-size:clamp(1.35rem,11cqi,2.3rem);white-space:nowrap;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.035em;line-height:1.05;background:linear-gradient(180deg,#fff 30%,rgba(255,255,255,.72));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .foc-item.over .foc-time{background:linear-gradient(180deg,#FF6961,#FF453A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.foc-time.is-bug{background:linear-gradient(180deg,#FF6961,#FF3B30);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .foc-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:11px 0 8px}
 .foc-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--bc1,#FF9F0A),var(--bc2,#FFD60A));transition:width 1s linear;position:relative;overflow:hidden}
 .foc-bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.4) 50%,transparent 75%);transform:translateX(-100%);animation:focShimmer 2.8s ease-in-out infinite}
@@ -4514,7 +4515,7 @@ const FOC_CARD_CSS=`
 .foc-ring-info{display:flex;flex-direction:column;min-width:0;flex:1}
 .foc-ring-title{font-size:.85rem;color:rgba(255,255,255,.95);font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .foc-ring-sub{font-size:.65rem;color:rgba(235,235,245,.45);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.foc-ring-bug-badge{font-size:1.4rem;font-weight:800;color:#FF3B30;text-shadow:0 0 12px rgba(255,59,48,.5);animation:focBugPulse 2s ease-in-out infinite}
+.foc-ring-bug-badge{font-size:1.4rem;font-weight:800;color:#FF3B30;animation:focBugPulse 2s ease-in-out infinite}
 @keyframes focBugPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.7}}
 .foc-switch-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
 .foc-switch-anim svg{width:48px;height:48px;animation:focSwitchSpin .5s cubic-bezier(.4,0,.2,1) forwards}
@@ -4589,7 +4590,7 @@ function focusCardHTML(it,i){
   if(it.subs.length)detail+=`<div class="fd-subs">`+it.subs.map(s=>`<div class="fd-sub ${s.done?'done':''}"><span class="fd-check">${s.done?'✓':''}</span>${escapeHtml(s.text)}</div>`).join('')+`</div>`;
   if(!it.notes&&!it.subs.length)detail+=`<div class="fd-empty">Sem descrição ou subtarefas.</div>`;
   const chev='<span class="foc-exp"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>';
-  return `<div class="foc-item ${it.over?'over':''} ${expanded?'expanded':''}" data-fid="${it.t.id}" style="--cat:${it.c.color};--stc:${c1};--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title" title="${escAttr(it.t.title)}">${escapeHtml(it.t.title)}</span>${pctChip}${chev}</div><div class="foc-time">${it.clock}</div>${bar}<div class="foc-sub">${it.sub}</div><div class="foc-detail">${detail}</div></div>`;
+  return `<div class="foc-item ${it.over?'over':''} ${expanded?'expanded':''}" data-fid="${it.t.id}" style="--cat:${it.c.color};--stc:${c1};--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title" title="${escAttr(it.t.title)}">${escapeHtml(it.t.title)}</span>${pctChip}${chev}</div><div class="foc-time ${st==='bug'?'is-bug':''}">${st==='bug'?'BUG':it.clock}</div>${bar}<div class="foc-sub">${it.sub}</div><div class="foc-detail">${detail}</div></div>`;
 }
 function onFocusItemClick(e){
   if(_focusCompact)return;
@@ -4674,7 +4675,13 @@ function updateFocusDoc(doc){
     items.forEach((it,i)=>{
       const el=list.children[i];if(!el||!el.classList)return;
       el.classList.toggle('over',it.over);
-      const time=el.querySelector('.foc-time');if(time&&time.textContent!==it.clock)time.textContent=it.clock;
+      const st = taskKanbanStatusOf(it.t);
+      const timeStr = st === 'bug' ? 'BUG' : it.clock;
+      const time=el.querySelector('.foc-time');
+      if(time){
+        if(time.textContent!==timeStr)time.textContent=timeStr;
+        time.classList.toggle('is-bug', st === 'bug');
+      }
       const fill=el.querySelector('.foc-bar-fill');if(fill)fill.style.width=it.pct+'%';
       const pctEl=el.querySelector('.foc-pct');if(pctEl)pctEl.textContent=Math.round(it.pct)+'%';
       const sub=el.querySelector('.foc-sub');if(sub&&sub.textContent!==it.sub)sub.textContent=it.sub;
