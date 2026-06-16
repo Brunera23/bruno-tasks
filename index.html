@@ -2067,7 +2067,7 @@ function notifyNewTask(t){
       target=_otherRole(myRole); // tarefa pessoal/projeto → avisa o parceiro
     }
     if(!target||target===myRole)return;
-    sendPushToRole(target,'Nova tarefa de '+_roleName(myRole),t.title);
+    sendPushToRole(target,'📋 Nova tarefa de '+_roleName(myRole),t.title);
   }catch(e){console.warn('notifyNewTask',e)}
 }
 
@@ -2089,13 +2089,13 @@ function checkDueToday(){
       // No dia do vencimento
       if(t.date===today && notified['dia-'+t.id]!==today){
         notified['dia-'+t.id]=today;touched=true;
-        try{const n=new Notification('É hoje',{body:t.title,tag:'due-'+t.id,renotify:true});n.onclick=()=>{window.focus();n.close()}}catch(e){}
+        try{const n=new Notification('📅 Vence hoje',{body:t.title,tag:'due-'+t.id,renotify:true});n.onclick=()=>{window.focus();n.close()}}catch(e){}
         toast('É hoje: '+t.title);
       }
       // Na véspera (só se marcado para lembrar no dia anterior)
       if(t.remindDayBefore && t.date===tomorrow && notified['vesp-'+t.id]!==today){
         notified['vesp-'+t.id]=today;touched=true;
-        try{const n=new Notification('Amanhã',{body:t.title,tag:'vesp-'+t.id,renotify:true});n.onclick=()=>{window.focus();n.close()}}catch(e){}
+        try{const n=new Notification('📅 Vence amanhã',{body:t.title,tag:'vesp-'+t.id,renotify:true});n.onclick=()=>{window.focus();n.close()}}catch(e){}
         toast('Amanhã: '+t.title);
       }
     });
@@ -2520,7 +2520,7 @@ function combineData(){
         toast(ntitle);
         if(Notification.permission==='granted'){
           try{
-            const n=new Notification(creatorName,{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});
+            const n=new Notification('💬 '+creatorName,{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});
             n.onclick=()=>{window.focus();n.close()};
           }catch(e){}
         }
@@ -2529,7 +2529,7 @@ function combineData(){
       else if(t.type!=='note'&&t.type!=='alert'&&t.createdAt>recentCutoff&&!_pushOn()){
         toast('Nova tarefa: '+t.title);
         if(Notification.permission==='granted'){
-          try{const n=new Notification('Nova tarefa',{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});n.onclick=()=>{window.focus();n.close()};}catch(e){}
+          try{const n=new Notification('📋 Nova tarefa',{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});n.onclick=()=>{window.focus();n.close()};}catch(e){}
         }
       }
     });
@@ -4438,6 +4438,12 @@ const FOC_CARD_CSS=`
 @keyframes focLive{0%{box-shadow:0 0 0 0 rgba(255,159,10,.5)}70%{box-shadow:0 0 0 8px rgba(255,159,10,0)}100%{box-shadow:0 0 0 0 rgba(255,159,10,0)}}
 .focus-count{margin-left:auto;font-size:.7rem;font-weight:700;color:rgba(235,235,245,.75);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:2px 9px;font-variant-numeric:tabular-nums}
 .focus-empty{text-align:center;color:rgba(235,235,245,.5);font-size:.84rem;padding:26px 8px;line-height:1.6}
+.foc-item.bug{border-color:rgba(255,59,48,.35);background:linear-gradient(180deg,rgba(255,59,48,.08),rgba(255,59,48,.03))}
+.foc-item.bug::before{background:#FF3B30;box-shadow:0 0 14px rgba(255,59,48,.6)}
+.foc-item.bug:hover{border-color:rgba(255,59,48,.5)}
+.foc-bug-badge{display:inline-flex;align-items:center;gap:5px;font-size:clamp(.68rem,3cqi,.76rem);font-weight:700;color:#FF6961;background:rgba(255,59,48,.14);border:1px solid rgba(255,59,48,.25);border-radius:8px;padding:3px 10px;white-space:nowrap}
+.foc-bug-badge svg{flex-shrink:0}
+.foc-bug-label{font-size:clamp(.78rem,4cqi,.88rem);color:rgba(255,138,128,.85);font-weight:500;margin-top:2px}
 @container (max-width:210px){.foc-pct{display:none}.foc-top{gap:6px;margin-bottom:6px}.foc-bar{margin:8px 0 6px}}
 @container (max-width:165px){.foc-time{font-size:clamp(.9rem,9cqi,1.3rem)}}
 @container (max-width:150px){.foc-bar{display:none}}
@@ -4458,9 +4464,13 @@ function fmtClock(ms){
 }
 function focusItems(){
   const now=Date.now();
-  const doing=getVisibleTasks().filter(t=>t.status==='doing');
-  const items=doing.map(t=>{
+  const active=getVisibleTasks().filter(t=>t.status==='doing'||t.status==='bug');
+  const items=active.map(t=>{
     const c=ci(t.category);
+    const isBug=t.status==='bug';
+    if(isBug){
+      return {t,c,remain:Infinity,over:false,pct:0,clock:'',sub:'',hasEst:false,isBug:true,notes:(t.notes||'').trim(),subs:t.subtasks||[],catName:c.name,agent:t.agent||''};
+    }
     const since=t.doingStartedAt||t.updatedAt||now;
     const elapsed=now-since;
     let remain=Infinity,over=false,pct=0,clock,sub;
@@ -4470,10 +4480,13 @@ function focusItems(){
       clock=over?'+'+fmtClock(-remain):fmtClock(remain);
       sub=over?('Estourou '+fmtClock(-remain)+' · estimado '+fmtTime(t.estimatedTime)):('restantes · estimado '+fmtTime(t.estimatedTime));
     }else{clock=fmtClock(elapsed);sub='decorridos · sem estimativa'}
-    return {t,c,remain,over,pct,clock,sub,hasEst:!!t.estimatedTime,notes:(t.notes||'').trim(),subs:t.subtasks||[],catName:c.name,agent:t.agent||''};
+    return {t,c,remain,over,pct,clock,sub,hasEst:!!t.estimatedTime,isBug:false,notes:(t.notes||'').trim(),subs:t.subtasks||[],catName:c.name,agent:t.agent||''};
   });
-  // urgência primeiro: estourados, depois menor tempo restante; sem estimativa por último
-  items.sort((a,b)=>a.remain-b.remain);
+  // urgência primeiro: estourados, depois menor tempo restante; bugs e sem estimativa por último
+  items.sort((a,b)=>{
+    if(a.isBug!==b.isBug)return a.isBug?1:-1;
+    return a.remain-b.remain;
+  });
   return items;
 }
 // Resumo do dia: feitas/total + tempo estimado restante das tarefas de hoje
@@ -4489,6 +4502,19 @@ function focusSummaryText(){
 }
 function focusCardHTML(it,i){
   const expanded=_focusExpanded.has(it.t.id);
+  if(it.isBug){
+    const bugBadge='<span class="foc-bug-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.88 1.88"/><path d="M14.12 3.88L16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg>Bug</span>';
+    const subDone=it.subs.filter(s=>s.done).length;
+    let detail=`<div class="fd-meta"><span class="fd-chip"><span class="fd-catdot"></span>${escapeHtml(it.catName)}</span>`;
+    if(it.agent)detail+=`<span class="fd-chip">⚡ ${escapeHtml(it.agent)}</span>`;
+    if(it.subs.length)detail+=`<span class="fd-chip">${subDone}/${it.subs.length} subtarefas</span>`;
+    detail+=`</div>`;
+    if(it.notes)detail+=`<div class="fd-notes">${escapeHtml(it.notes)}</div>`;
+    if(it.subs.length)detail+=`<div class="fd-subs">`+it.subs.map(s=>`<div class="fd-sub ${s.done?'done':''}"><span class="fd-check">${s.done?'✓':''}</span>${escapeHtml(s.text)}</div>`).join('')+`</div>`;
+    if(!it.notes&&!it.subs.length)detail+=`<div class="fd-empty">Sem descrição ou subtarefas.</div>`;
+    const chev='<span class="foc-exp"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>';
+    return `<div class="foc-item bug ${expanded?'expanded':''}" data-fid="${it.t.id}" data-bug="1" style="--cat:#FF3B30;--i:${i}"><div class="foc-top"><span class="foc-dot"></span><span class="foc-title" title="${escAttr(it.t.title)}">${escapeHtml(it.t.title)}</span>${bugBadge}${chev}</div><div class="foc-bug-label">Sem contagem — aguardando correção</div><div class="foc-detail">${detail}</div></div>`;
+  }
   const pctChip=it.hasEst?`<span class="foc-pct">${Math.round(it.pct)}%</span>`:'';
   const bar=it.hasEst?`<div class="foc-bar"><div class="foc-bar-fill" style="width:${it.pct}%"></div></div>`:'';
   const subDone=it.subs.filter(s=>s.done).length;
@@ -4524,6 +4550,7 @@ function updateFocusDoc(doc){
   }
   items.forEach((it,i)=>{
     const el=list.children[i];if(!el||!el.classList)return;
+    if(it.isBug)return; // bug cards are static, no time updates
     el.classList.toggle('over',it.over);
     const time=el.querySelector('.foc-time');if(time&&time.textContent!==it.clock)time.textContent=it.clock;
     const fill=el.querySelector('.foc-bar-fill');if(fill)fill.style.width=it.pct+'%';
@@ -4556,7 +4583,7 @@ async function openFocus(auto){
   $('#focusOverlay').classList.add('open');renderFocus();startFocusTimer();
 }
 function closeFocus(){$('#focusOverlay').classList.remove('open');if(_pipWin&&!_pipWin.closed){try{_pipWin.close()}catch(e){}}_pipWin=null;stopFocusTimer()}
-function updateFocusBtn(){const n=getVisibleTasks().filter(t=>t.status==='doing').length;const b=$('#btnFocus');if(b){b.style.display=n>0?'flex':'none';const c=$('#bfCount');if(c)c.textContent=n}}
+function updateFocusBtn(){const n=getVisibleTasks().filter(t=>t.status==='doing'||t.status==='bug').length;const b=$('#btnFocus');if(b){b.style.display=n>0?'flex':'none';const c=$('#bfCount');if(c)c.textContent=n}}
 const _btnFocus=$('#btnFocus');if(_btnFocus)_btnFocus.addEventListener('click',()=>openFocus(false));
 const _focusClose=$('#focusClose');if(_focusClose)_focusClose.addEventListener('click',closeFocus);
 const _focusOv=$('#focusOverlay');if(_focusOv)_focusOv.addEventListener('click',e=>{if(e.target.id==='focusOverlay')closeFocus()});
@@ -5681,7 +5708,7 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',e=>{
     if(e.data&&e.data.type==='SW_UPDATED'&&!refreshing){refreshing=true;location.reload()}
   });
-  navigator.serviceWorker.register('./sw.js?v=124',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=125',{updateViaCache:'none'}).then(reg=>{
     // Force update check on every page load
     reg.update();
     // If there's already a waiting SW, activate it immediately
@@ -5725,8 +5752,9 @@ function processAlerts(){
       // Notificação nativa só se o push NÃO estiver ativo (senão a Cloud Function cobre, inclusive app fechado)
       if(Notification.permission==='granted' && !_pushOn()){
         try{
-          const n=new Notification(targetName,{
-            body:t.title,
+          const isMed=t.medType==='med';
+          const n=new Notification((isMed?'💊 ':'🔔 ')+t.title,{
+            body:isMed?(t.notes?'Tomar agora · '+t.notes:'Hora de tomar'):(t.notes||''),
             tag:t.id,
             renotify:true,
             vibrate:[200,100,200,100,200]
