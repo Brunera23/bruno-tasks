@@ -1799,7 +1799,7 @@
       <div class="cn-display-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Nota de conclusão</div>
       <div class="cn-text"></div>
     </div>
-    <div class="m-btns"><button type="button" class="btn btn-sec" id="mCancel">Cancelar</button><button type="submit" class="btn btn-primary">Salvar<kbd class="kb-hint">⌘↵</kbd></button></div>
+    <div class="m-btns"><button type="button" class="btn" id="mDelBtn" style="display:none;background:var(--fill);color:var(--red);border:1px solid var(--sep);margin-right:auto"><svg width="14" height="14" style="margin-right:4px"><use href="#i-trash"/></svg>Excluir</button><button type="button" class="btn btn-sec" id="mCancel">Cancelar</button><button type="submit" class="btn btn-primary">Salvar<kbd class="kb-hint">⌘↵</kbd></button></div>
   </form>
 </div>
 
@@ -4156,6 +4156,11 @@ function renderDepChips(){
 function openM(task){
   const e=!!task;
   $('#mTitle').textContent=e?'Editar Tarefa':'Nova Tarefa';
+  const mDelBtn=$('#mDelBtn');
+  if(mDelBtn){
+    if(e){mDelBtn.style.display='flex';mDelBtn.onclick=()=>{closeM();askDel(task.id)}}
+    else{mDelBtn.style.display='none'}
+  }
   $('#fId').value=e?task.id:'';
   $('#fT').value=e?task.title:'';
   
@@ -5611,7 +5616,7 @@ $('#depChips').addEventListener('click',e=>{const rm=e.target.closest('.dc-rm');
 $('#form').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.ctrlKey&&!e.metaKey&&document.activeElement.tagName!=='TEXTAREA'){e.preventDefault()}});
 $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').value;const isNew=!id;const etVal=parseInt($('#fET').value)||0;const cat=fCCat;const prio=getPickVal($('#fP'));const status=getPickVal($('#fS'));let title=$('#fT').value.trim();if(!title)return;
   // Deduplicate title
-  const others=tasks.filter(t=>t.id!==id);
+  const others=tasks.filter(t=>t.id!==id&&t.status!=='done');
   let base=title,n=1;
   while(others.some(t=>t.title===title)){title=base+' ('+n+')';n++}
   const recurFreq=$('#recurFreq .active')?.dataset.rf||null;const recurUntil=$('#recurUntil').value||null;
