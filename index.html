@@ -4513,6 +4513,8 @@ const FOC_CARD_CSS=`
 .foc-ring-info{display:flex;flex-direction:column;min-width:0;flex:1}
 .foc-ring-title{font-size:.85rem;color:rgba(255,255,255,.95);font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .foc-ring-sub{font-size:.65rem;color:rgba(235,235,245,.45);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foc-ring-bug-badge{font-size:1.4rem;font-weight:800;color:#FF3B30;text-shadow:0 0 12px rgba(255,59,48,.5);animation:focBugPulse 2s ease-in-out infinite}
+@keyframes focBugPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.7}}
 .foc-switch-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
 .foc-switch-anim svg{width:48px;height:48px;animation:focSwitchSpin .5s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes focSwitchSpin{0%{opacity:1;transform:rotate(0deg) scale(1)}60%{opacity:1;transform:rotate(270deg) scale(1.1)}100%{opacity:0;transform:rotate(360deg) scale(.8)}}
@@ -4538,7 +4540,7 @@ function fmtClock(ms){
 let _focusCompact=false;
 function focusItems(){
   const now=Date.now();
-  const doing=getVisibleTasks().filter(t=>t.status==='doing');
+  const doing=getVisibleTasks().filter(t=>t.status==='doing'||t.status==='bug');
   const items=doing.map(t=>{
     const c=ci(t.category);
     const since=t.doingStartedAt||t.updatedAt||now;
@@ -4596,17 +4598,29 @@ function focusRingHTML(it,i){
   const noEst=!it.hasEst;
   const elapsed=noEst?C*0.01:0;
   const tipText=it.t.title+'\n'+it.sub;
-  return `<div class="foc-ring-row ${it.over?'foc-ring-over':''}" style="--i:${i}" title="${escAttr(tipText)}">`
-    +`<div class="foc-ring">`
-    +`<svg viewBox="0 0 36 36">`
+  const st=taskKanbanStatusOf(it.t);
+  let c1='#3186FF', c2='#0EBC5F';
+  if(st==='progress'){c1='#FF9500';c2='#FFD60A'}
+  else if(st==='validation'){c1='#AF52DE';c2='#D6A8FF'}
+  
+  let ringHtml='';
+  if(st==='bug'){
+    ringHtml=`<div class="foc-ring-bug-badge">BUG</div>`;
+  }else{
+    ringHtml=`<svg viewBox="0 0 36 36">`
     +`<defs><linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">`
-    +`<stop offset="0%" stop-color="${it.over?'#FF453A':'#3186FF'}"/>`
-    +`<stop offset="100%" stop-color="${it.over?'#FF6961':'#0EBC5F'}"/>`
+    +`<stop offset="0%" stop-color="${it.over?'#FF453A':c1}"/>`
+    +`<stop offset="100%" stop-color="${it.over?'#FF6961':c2}"/>`
     +`</linearGradient></defs>`
     +`<circle class="foc-ring-bg" cx="18" cy="18" r="${R}"/>`
     +`<circle class="foc-ring-fg" cx="18" cy="18" r="${R}" stroke="url(#${gradId})" stroke-dasharray="${C}" stroke-dashoffset="${C-(noEst?elapsed:dash)}" data-circ="${C}"/>`
     +`</svg>`
-    +`<span class="foc-ring-time" data-rt="1">${it.clock}</span>`
+    +`<span class="foc-ring-time" data-rt="1">${it.clock}</span>`;
+  }
+  
+  return `<div class="foc-ring-row ${it.over?'foc-ring-over':''}" style="--i:${i}" title="${escAttr(tipText)}">`
+    +`<div class="foc-ring">`
+    +ringHtml
     +`</div>`
     +`<div class="foc-ring-info">`
     +`<div class="foc-ring-title">${escapeHtml(it.t.title)}</div>`
