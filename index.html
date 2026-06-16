@@ -2443,6 +2443,7 @@ function fbSave(){
   // Set saving flag IMMEDIATELY to block combineData during the entire save cycle
   _fbSaving=true;
   _fbSaveTs=Date.now();
+  _fbDirty=true; // mark that there are unsaved changes
   clearTimeout(_fbTimer);
   _fbTimer=setTimeout(()=>{
     showSync('Salvando...');
@@ -2451,12 +2452,26 @@ function fbSave(){
     _fbDirectSave().then(()=>{
       showSync('Sincronizado ✓',true);
       _fbSaveCompletedAt=Date.now();
+      _fbDirty=false;
       // Grace period: onSnapshot fires twice after write (cache + server)
       // Block combineData for 800ms after write completes
       setTimeout(()=>{_fbSaving=false},800);
     }).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
   },300);
 }
+let _fbDirty=false;
+// CRITICAL: Flush pending saves before page unloads to prevent data loss
+function _fbFlushBeforeUnload(){
+  if(!_fbDirty||!_fbSynced||!_fbReady)return;
+  clearTimeout(_fbTimer); // cancel the debounce
+  // Save to localStorage SYNCHRONOUSLY (always works)
+  try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents)}catch(e){}
+  // Fire-and-forget Firebase write (best-effort on unload)
+  try{_fbDirectSave()}catch(e){}
+  _fbDirty=false;
+}
+window.addEventListener('beforeunload',_fbFlushBeforeUnload);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')_fbFlushBeforeUnload()});
 
 function fbInit(){
   if(!currentUser) return;
@@ -4469,18 +4484,14 @@ const FOC_CARD_CSS=`
 .foc-ring{position:relative;width:clamp(52px,28cqi,96px);height:clamp(52px,28cqi,96px);display:flex;align-items:center;justify-content:center;cursor:default;transition:transform .25s cubic-bezier(.16,1,.3,1);animation:focRingPop .5s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i,0)*80ms)}
 @keyframes focRingPop{from{opacity:0;transform:scale(.5) rotate(-30deg)}to{opacity:1;transform:none}}
 .foc-ring:hover{transform:scale(1.12)}
-.foc-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);filter:drop-shadow(0 0 6px var(--ring-glow,rgba(49,134,255,.3)))}
+.foc-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .foc-ring-bg{fill:none;stroke:rgba(255,255,255,.06);stroke-width:2.8}
 .foc-ring-fg{fill:none;stroke-width:2.8;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
-.foc-ring-over svg{filter:drop-shadow(0 0 10px rgba(255,69,58,.5))}
 .foc-ring-over .foc-ring-fg{animation:focRingPulse 2s ease-in-out infinite}
 @keyframes focRingPulse{0%,100%{opacity:1;filter:brightness(1)}50%{opacity:.6;filter:brightness(1.3)}}
 .foc-ring-time{font-size:clamp(.58rem,3.8cqi,.88rem);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#fff;z-index:1;line-height:1;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .foc-ring-over .foc-ring-time{color:#FF6961}
 .foc-ring-label{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-size:clamp(.42rem,1.8cqi,.54rem);color:rgba(235,235,245,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;font-weight:500}
-.foc-ring-tip{position:fixed;z-index:9999;background:rgba(16,16,20,.96);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;font-size:.72rem;color:rgba(235,235,245,.9);font-weight:500;pointer-events:none;opacity:0;transition:opacity .18s;box-shadow:0 8px 24px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(12px);max-width:240px;white-space:normal;line-height:1.45}
-.foc-ring-tip .tip-title{font-weight:700;font-size:.76rem;margin-bottom:4px;color:#fff}
-.foc-ring-tip .tip-sub{color:rgba(235,235,245,.6);font-size:.66rem}
 .foc-switch-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
 .foc-switch-anim svg{width:48px;height:48px;animation:focSwitchSpin .5s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes focSwitchSpin{0%{opacity:1;transform:rotate(0deg) scale(1)}60%{opacity:1;transform:rotate(270deg) scale(1.1)}100%{opacity:0;transform:rotate(360deg) scale(.8)}}
@@ -4563,7 +4574,8 @@ function focusRingHTML(it,i){
   const gradId='frg'+i;
   const noEst=!it.hasEst;
   const elapsed=noEst?C*0.01:0;
-  return `<div class="foc-ring ${it.over?'foc-ring-over':''}" style="--i:${i}" data-tip-t="${escAttr(it.t.title)}" data-tip-s="${escAttr(it.sub)}">`
+  const tipText=it.t.title+'\n'+it.sub;
+  return `<div class="foc-ring ${it.over?'foc-ring-over':''}" style="--i:${i}" title="${escAttr(tipText)}">`
     +`<svg viewBox="0 0 36 36">`
     +`<defs><linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">`
     +`<stop offset="0%" stop-color="${it.over?'#FF453A':'#3186FF'}"/>`
@@ -4573,30 +4585,8 @@ function focusRingHTML(it,i){
     +`<circle class="foc-ring-fg" cx="18" cy="18" r="${R}" stroke="url(#${gradId})" stroke-dasharray="${C}" stroke-dashoffset="${C-(noEst?elapsed:dash)}" data-circ="${C}"/>`
     +`</svg>`
     +`<span class="foc-ring-time" data-rt="1">${it.clock}</span>`
-    +`<span class="foc-ring-label">${escapeHtml(it.t.title.length>12?it.t.title.slice(0,11)+'…':it.t.title)}</span>`
+    +`<span class="foc-ring-label">${escapeHtml(it.t.title.length>12?it.t.title.slice(0,11)+'\u2026':it.t.title)}</span>`
     +`</div>`;
-}
-function _focTipInit(root){
-  let tip=null;
-  root.addEventListener('mouseenter',e=>{
-    const ring=e.target.closest('.foc-ring[data-tip-t]');if(!ring)return;
-    if(!tip){tip=root.createElement?root.createElement('div'):document.createElement('div');tip.className='foc-ring-tip';(root.body||root.documentElement||root).appendChild(tip)}
-    tip.innerHTML='<div class="tip-title">'+ring.dataset.tipT+'</div><div class="tip-sub">'+ring.dataset.tipS+'</div>';
-    tip.style.opacity='1';
-  },true);
-  root.addEventListener('mousemove',e=>{
-    if(!tip||tip.style.opacity==='0')return;
-    const ring=e.target.closest('.foc-ring[data-tip-t]');
-    if(!ring){tip.style.opacity='0';return}
-    const bw=(root===document?window.innerWidth:root.defaultView?root.defaultView.innerWidth:320);
-    let x=e.clientX+12,y=e.clientY-10;
-    if(x+250>bw)x=e.clientX-250;
-    if(y<6)y=e.clientY+18;
-    tip.style.left=x+'px';tip.style.top=y+'px';
-  },true);
-  root.addEventListener('mouseleave',e=>{
-    if(!tip)return;const ring=e.target.closest('.foc-ring[data-tip-t]');if(ring)tip.style.opacity='0';
-  },true);
 }
 const FOC_SWITCH_SVG='<svg viewBox="0 0 36 36" fill="none"><defs><linearGradient id="fswg" x1="0" y1="0" x2="18" y2="18" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3186FF"/><stop offset="50%" stop-color="#1895DB"/><stop offset="100%" stop-color="#0EBC5F"/></linearGradient></defs><circle cx="18" cy="18" r="15" stroke="url(#fswg)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="20 75" fill="none"/></svg>';
 function updateFocusDoc(doc){
@@ -4661,7 +4651,7 @@ async function openFocus(auto){
       _pipWin.document.title='Em foco';
       _pipWin.document.body.addEventListener('click',onFocusItemClick);
       _pipWin.document.body.addEventListener('click',onFocusToggleClick);
-      _focTipInit(_pipWin.document);
+
       _pipWin.addEventListener('pagehide',()=>{_pipWin=null;stopFocusTimer()});
       renderFocus();startFocusTimer();
       return;
@@ -4685,7 +4675,7 @@ const _focusClose=$('#focusClose');if(_focusClose)_focusClose.addEventListener('
 const _focusOv=$('#focusOverlay');if(_focusOv)_focusOv.addEventListener('click',e=>{if(e.target.id==='focusOverlay')closeFocus()});
 const _focusListEl=$('#focusList');if(_focusListEl){_focusListEl.addEventListener('click',onFocusItemClick)}
 const _focViewTog=$('#focViewToggle');if(_focViewTog)_focViewTog.addEventListener('click',onFocusToggleClick);
-_focTipInit(document);
+
 function spawnFlash(){const f=document.createElement('div');f.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at 50% 40%,rgba(52,199,89,.25),rgba(0,122,255,.08) 50%,transparent 70%);z-index:9998;pointer-events:none;animation:flashFade 1s ease-out forwards';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
 function celebrateDone(x,y,scale=1){
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
