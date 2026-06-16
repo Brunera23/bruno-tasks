@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "static",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "-p", "8087", "-c-1"],
+      "port": 8087
+    },
+    {
+      "name": "e2e-server",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "-p", "8081", "-c-1"],
+      "port": 8081
+    },
+    {
+      "name": "firebase-functions-emulator",
+      "runtimeExecutable": "firebase",
+      "runtimeArgs": ["emulators:start", "--only", "functions"],
+      "port": 5001
+    }
+  ]
+}

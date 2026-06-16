@@ -1,0 +1,10 @@
+--- index.html
++++ index.html
+@@ -3225,6 +3225,7 @@
+   if(!document.querySelector('.modal.open, .mob-sheet.open')){
+     document.body.classList.remove('modal-open');document.body.style.top='';
+     document.documentElement.style.scrollBehavior='auto';
++    void document.body.offsetHeight;
+     window.scrollTo(0,parseInt(document.body.dataset.scrollY||'0'));
+     setTimeout(()=>document.documentElement.style.scrollBehavior='',10);
+   }

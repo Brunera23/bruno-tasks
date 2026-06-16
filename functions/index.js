@@ -186,8 +186,8 @@ exports.dueTodayReminder = onSchedule(
           const items = parseTasks(doc.data().tasks).filter(notDone);
           for (const t of items) {
             let title = null;
-            if (t.date === today) title = "É hoje";
-            else if (t.date === tomorrow && t.remindDayBefore) title = "Amanhã";
+            if (t.date === today) title = "📅 Vence hoje";
+            else if (t.date === tomorrow && t.remindDayBefore) title = "📅 Vence amanhã";
             if (!title) continue;
             const subs = (byRole && t.assignedTo) ?
               await subsForRole(t.assignedTo) : await subsForUid(doc.id);
@@ -243,8 +243,12 @@ exports.alertReminders = onSchedule(
 
             const subs = t.assignedTo ?
               await subsForRole(t.assignedTo) : await subsForUid(doc.id);
-            const title = t.medType === "med" ? "💊 " + t.title : t.title;
-            const r = await sendToSubs(subs, title, t.notes || "", "alert-" + t.id);
+            const isMed = t.medType === "med";
+            const title = isMed ? "💊 " + t.title : "🔔 " + t.title;
+            const body = isMed ?
+              (t.notes ? "Tomar agora · " + t.notes : "Hora de tomar") :
+              (t.notes || "");
+            const r = await sendToSubs(subs, title, body, "alert-" + t.id);
             await logRef.set({taskId: t.id, date, at: new Date()});
             total += r.sent || 0;
           }

@@ -1,0 +1,45 @@
+--- tests/e2e/bug_fix_verification.spec.ts
++++ tests/e2e/bug_fix_verification.spec.ts
+@@ -200,4 +200,41 @@
+     const hasModalOpenFinal = await page.evaluate(() => document.body.classList.contains('modal-open'));
+     expect(hasModalOpenFinal).toBe(false);
+   });
++
++  test('Hypothesis 5: Double-click text selection works and does NOT open the edit modal', async ({ page }) => {
++    await page.evaluate(() => {
++        (window as any).tasks = [{
++            id: 'dbl-sel-task',
++            title: 'Doubleclick me',
++            status: 'todo'
++        }];
++        (window as any).render();
++        const titles = document.querySelectorAll('.item-title');
++        if (titles.length > 0) {
++            titles[0].id = 'dbl-sel-title';
++        }
++    });
++
++    let editCalled = false;
++    await page.exposeFunction('markEditCalledDblSel', (id: string) => {
++        editCalled = true;
++    });
++
++    await page.evaluate(() => {
++        const originalEdit = (window as any).edit;
++        (window as any).edit = (id: any) => {
++            (window as any).markEditCalledDblSel(id);
++            if (originalEdit) originalEdit(id);
++        };
++    });
++
++    // Double-click the text
++    await page.locator('#dbl-sel-title').dblclick();
++    
++    // Wait for the single-click timeout (250ms) to ensure it doesn't trigger
++    await page.waitForTimeout(350);
++
++    const selection = await page.evaluate(() => window.getSelection()?.toString() || '');
++    expect(selection.length).toBeGreaterThan(0);
++    expect(editCalled).toBe(false);
++  });
+ });

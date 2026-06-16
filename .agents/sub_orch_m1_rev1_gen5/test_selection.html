@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="text">Select this text.</div>
+  <div id="target" style="padding:20px; background:#ccc;">Click me</div>
+  <script>
+    document.getElementById('target').addEventListener('click', (e) => {
+      console.log('Selection length:', window.getSelection().toString().length);
+      console.log('Selection:', window.getSelection().toString());
+    });
+  </script>
+</body>
+</html>

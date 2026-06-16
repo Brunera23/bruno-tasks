@@ -1,0 +1,86 @@
+--- tests/e2e/bug_fix_verification.spec.ts
++++ tests/e2e/bug_fix_verification.spec.ts
+@@ -5,26 +5,26 @@
+     // Navigate to the local index.html
+     await page.goto('file:///' + process.cwd().replace(/\\/g, '/') + '/index.html');
+     
+-    // Inject tasks directly without using the UI
++    // Bypass Firebase login and initialize app state properly
+     await page.evaluate(() => {
+-        const list = document.getElementById('list');
+-        if (list) {
+-            for (let i = 0; i < 30; i++) {
+-                const item = document.createElement('div');
+-                item.className = 'item';
+-                item.innerHTML = `
+-                    <div class="item-row">
+-                        <div class="ck-wrap"><button class="ck" data-id="task-${i}"></button></div>
+-                        <div class="item-body">
+-                            <div class="item-title">Test Task ${i}</div>
+-                        </div>
+-                    </div>
+-                `;
+-                list.appendChild(item);
+-            }
+-        }
+-        document.body.style.minHeight = '3000px';
++        const ls = document.getElementById('loginScreen');
++        if (ls) ls.style.display = 'none';
++        if (typeof (window as any).showApp === 'function') (window as any).showApp();
++        
++        const testTasks = [];
++        for (let i = 0; i < 30; i++) {
++            testTasks.push({
++                id: 'task-' + i,
++                title: 'Test Task ' + i,
++                status: 'todo',
++                project: 'bruno',
++                category: 'manual',
++                priority: 'media'
++            });
++        }
++        (window as any).tasks = testTasks;
++        if (typeof (window as any).render === 'function') (window as any).render();
+     });
+   });
+ 
+   test('Hypothesis 1: Scroll position is maintained when rapidly closing and opening modals', async ({ page }) => {
+     // Scroll down to a specific position
+-    await page.evaluate(() => window.scrollTo(0, 1000));
++    await page.evaluate(() => {
++        document.documentElement.style.scrollBehavior = 'auto';
++        window.scrollTo(0, 1000);
++        document.body.style.minHeight = '3000px';
++    });
+     
+     // Check initial scroll
+@@ -112,21 +116,16 @@
+   test('Hypothesis 3: Highlighting text in .item-body does not open the edit modal', async ({ page }) => {
+-    // Inject a specific test task
+     await page.evaluate(() => {
+-        const list = document.getElementById('list');
+-        if (list) {
+-            const item = document.createElement('div');
+-            item.className = 'item';
+-            item.innerHTML = `
+-                <div class="item-row">
+-                    <div class="ck-wrap"><button class="ck" data-id="sel-task"></button></div>
+-                    <div class="item-body">
+-                        <div class="item-title" id="sel-title">This is a long task title for text selection</div>
+-                    </div>
+-                </div>
+-            `;
+-            list.appendChild(item);
+-        }
++        (window as any).tasks = [{
++            id: 'sel-task',
++            title: 'This is a long task title for text selection',
++            status: 'todo'
++        }];
++        (window as any).render();
++        // Add an ID to the rendered title for easy selection
++        const titles = document.querySelectorAll('.item-title');
++        if (titles.length > 0) {
++            titles[0].id = 'sel-title';
++        }
+     });

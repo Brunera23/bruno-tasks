@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div class="item-body">Click me once to edit, double click to select</div>
+  <script>
+    let _itemClickTimeout = null;
+    document.addEventListener('click', e => {
+      const b = e.target.closest('.item-body');
+      if (b) {
+        if (window.getSelection().toString().length > 0) return;
+        e.stopPropagation();
+        if (e.detail === 1) {
+          _itemClickTimeout = setTimeout(() => {
+            if (window.getSelection().toString().length === 0) {
+              console.log('edit() called');
+            }
+          }, 250);
+        } else if (e.detail === 2) {
+          clearTimeout(_itemClickTimeout);
+          console.log('Double click prevented edit');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

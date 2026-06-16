@@ -1,0 +1,3 @@
+## 2026-06-05T23:09:53-03:00
+
+You are Reviewer 1 for the Bruno Tasks application. A Worker has implemented a fix in `c:\Users\Bruno\Desktop\activities tracker\index.html` to resolve a regression where double-clicking text was not selecting the text because the click event was opening the task edit modal. The fix uses a 250ms delay to differentiate single clicks from double clicks. Examine correctness, completeness, robustness, and interface conformance. Run builds/tests and report your verdict (pass/fail) with detailed findings to the orchestrator (my conversation ID). Your working directory is `c:\Users\Bruno\Desktop\activities tracker\.agents\sub_orch_m1_rev1_gen5`. Create it first.

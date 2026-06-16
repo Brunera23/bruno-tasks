@@ -1,0 +1,5 @@
+- Investigated `index.html` for Filter & Search functionality
+- Found `smartFilter` and `SMART_TERMS` logic.
+- Identified inputs like `#q`, `.search-filter-btn`, `.qf-opt`, `#searchClearBtn`, `.seg button`.
+- Wrote 5 test cases in `f4-filtering-search.spec.ts`.
+- Running tests in background to verify.

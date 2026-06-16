@@ -1300,7 +1300,7 @@
     .kc-dep-tag{display:flex;align-items:center;gap:5px;font-size:.62rem;font-weight:600;color:var(--orange);padding:3px 8px;background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.2);border-radius:6px;margin-top:-2px}
     .kc-title{font-size:.84rem;font-weight:600;color:var(--label);line-height:1.35;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .kc-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-    .kc-cat{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;font-weight:500;color:var(--label2)}
+    .kc-cat{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;font-weight:500;color:var(--label2);background:var(--fill);padding:2px 6px;border-radius:6px}
     .kc-cat svg{width:11px;height:11px}
     .kc-prio{font-size:.62rem;font-weight:700;padding:1px 7px;border-radius:6px}
     .kc-prio.alta{background:rgba(255,59,48,.12);color:#FF3B30}
@@ -3218,7 +3218,7 @@ function renderTasksKanban(){
     const blockedTag=blocked?`<div class="kc-dep-tag" onclick="viewTask('${t.blockedBy[0]}');event.stopPropagation()" style="cursor:pointer" title="Ver tarefa dependente"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Aguardando dependência</div>`:'';
     return`<div class="kanban-card ${t.status==='done'?'kc-done':''}${blocked?' kc-blocked':''}" draggable="true" data-tid="${t.id}">
       <div class="kc-title" title="${escAttr(t.title)}">${escapeHtml(t.title)}</div>
-      <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'""><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${t.recurrence&&t.recurrence.freq?`<span class="kc-chip" style="background:var(--fill);color:var(--label2);font-weight:bold" title="Tarefa Recorrente">↻</span>`:''}${prio}${dateTag}${etTag}</div>
+      <div class="kc-meta"><span class="kc-cat tag-cat" data-id="${t.id}" style="cursor:pointer;transition:transform var(--dur-fast)" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg>${c.name}</span>${t.recurrence&&t.recurrence.freq?`<span class="kc-chip" style="background:var(--fill);color:var(--label2);font-weight:bold;padding:2px 6px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center" title="Tarefa Recorrente">↻</span>`:''}${prio}${dateTag}${etTag}</div>
       ${blockedTag}
       ${agentTag?`<div class="kc-foot">${agentTag}</div>`:''}
       <button class="kc-view-btn" data-tvid="${t.id}" style="width:100%; margin-top:2px; padding:7px; font-size:0.75rem; font-weight:600; color:var(--label2); background:var(--fill); border:1px solid var(--sep); border-radius:8px; cursor:pointer; transition:all var(--dur-fast); display:flex; justify-content:center; align-items:center; gap:6px;" onmouseover="this.style.background='var(--blue)';this.style.color='#fff';this.style.borderColor='var(--blue)'" onmouseout="this.style.background='var(--fill)';this.style.color='var(--label2)';this.style.borderColor='var(--sep)'">

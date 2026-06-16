@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="list">
+    <div class="item"><div class="item-body"><div class="item-title">Task A</div><input type="checkbox" class="ck" data-id="A"></div></div>
+    <div class="item"><div class="item-body"><div class="item-title">Task B</div><input type="checkbox" class="ck" data-id="B"></div></div>
+  </div>
+  <div id="log"></div>
+  <script>
+    function edit(id) {
+      document.getElementById('log').innerHTML += id + ' opened<br>';
+    }
+    let _itemClickTimeout = null;
+    document.getElementById('list').addEventListener('click', e => {
+      const b = e.target.closest('.item-body');
+      if(b) {
+        if(window.getSelection().toString().length > 0) return;
+        const item = b.closest('.item');
+        if(item) {
+          const id = item.querySelector('.ck')?.dataset.id;
+          if(id) {
+            e.stopPropagation();
+            if(e.detail === 1) {
+              _itemClickTimeout = setTimeout(() => {
+                if(window.getSelection().toString().length === 0) edit(id)
+              }, 250);
+            } else if(e.detail === 2) {
+              clearTimeout(_itemClickTimeout);
+            }
+            return;
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+--- tests/e2e/tier1-feature/f2-modal-ui-state.spec.ts	
++++ tests/e2e/tier1-feature/f2-modal-ui-state.spec.ts	
+@@ -128,19 +128,14 @@
+     await expect(itemBodies.nth(1)).toBeVisible();
+ 
+     // Click the title instead of the body center to avoid clicking .tag-cat or other tags
+-    // Wait for insertion animation to complete
+-    await page.waitForTimeout(500);
+     const itemTitles = page.locator('.item-title');
+-    await itemTitles.nth(0).click({ force: true });
++    await itemTitles.nth(0).click();
+     const modal = page.locator('#modal');
+     await expect(modal).toHaveClass(/open/);
+     const firstTitle = await page.locator('#fT').inputValue();
+ 
+     await page.locator('#mCancel').click();
+     await expect(modal).not.toHaveClass(/open/);
+ 
+-    await page.waitForTimeout(500);
+-    await itemTitles.nth(1).click({ force: true });
++    await itemTitles.nth(1).click();
+     await expect(modal).toHaveClass(/open/);
+     
+     const secondTitle = await page.locator('#fT').inputValue();
+@@ -166,9 +161,6 @@
+ 
+     // 5. Verify only ONE task was created
+     const itemBodies = page.locator('.item-body');
+-    // We should wait a little bit just in case
+-    await page.waitForTimeout(500);
+-    
+     // There should be exactly 1 item if double submit is prevented
+     await expect(itemBodies).toHaveCount(1);
