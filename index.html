@@ -3175,7 +3175,7 @@ function setTaskKanbanStatus(t, col){
     t.status='todo';
     t.agentStatus='todo';
   }
-  if(t.status==='doing'){if(!t.doingStartedAt) t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
+  if(t.status==='doing'||t.status==='bug'){if(!t.doingStartedAt) t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
   t.updatedAt=Date.now();
 }
 
@@ -3906,7 +3906,7 @@ function setAgentStatus(t,col){
     t.status=(col==='todo')?'todo':'doing';
   }
   // Cronômetro do Modo Foco: carimba/limpa conforme entra ou sai de 'fazendo'
-  if(t.status==='doing'){if(!t.doingStartedAt)t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
+  if(t.status==='doing'||t.status==='bug'){if(!t.doingStartedAt)t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
   t.updatedAt=Date.now();
 }
 let _agInlineNew=false;
@@ -4408,7 +4408,7 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   if(newSt==='validation')realSt='doing';
   
   t.status=realSt;t.completedAt=realSt==='done'?Date.now():null;t.updatedAt=Date.now();
-  if(realSt==='doing'){if(!t.doingStartedAt)t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
+  if(realSt==='doing'||realSt==='bug'){if(!t.doingStartedAt)t.doingStartedAt=Date.now()}else{t.doingStartedAt=null}
   
   if(newSt==='done')t.agentStatus='done';
   else if(newSt==='todo')t.agentStatus='todo';
@@ -4600,11 +4600,11 @@ function onFocusItemClick(e){
 }
 function focusRingHTML(it,i){
   const R=15.9,C=2*Math.PI*R,dash=it.hasEst?(it.pct/100)*C:0;
-  const gradId='frg'+i;
   const noEst=!it.hasEst;
   const elapsed=noEst?C*0.01:0;
   const tipText=it.t.title+'\n'+it.sub;
   const st=taskKanbanStatusOf(it.t);
+  const gradId='frg_'+i+'_'+st;
   let c1='#3186FF', c2='#0EBC5F';
   if(st==='progress'){c1='#FF9500';c2='#FFD60A'}
   else if(st==='validation'){c1='#AF52DE';c2='#D6A8FF'}
