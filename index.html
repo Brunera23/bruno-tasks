@@ -4419,7 +4419,9 @@ function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   addLog(wasDone&&realSt!=='done'?'reopen':realSt==='done'?'complete':'edit',t);sT();
   if(realSt==='done'){const unblocked=getBlockedBy(id);if(unblocked.length){const names=unblocked.filter(u=>!isBlocked(u)).map(u=>u.title);if(names.length)setTimeout(()=>toast('Desbloqueada: '+names[0]),800)}if(t.recurrence)setTimeout(processRecurring,100)}
   render();const msgs={todo:'A Fazer',doing:'Fazendo',validation:'Validação',bug:'Bug',done:'Concluída'};
-  if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('\u26a1 '+msgs[newSt]);openFocus(true)}
+  if(newSt==='validation'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#AF52DE','#E5CEFF','#5856D6','#D6A8FF'],12,60);toast('⚡ '+msgs[newSt]);openFocus(true)}
+  else if(newSt==='bug'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF3B30','#FFD1D1','#FF9500','#FF6B6B'],12,60);toast('⚡ '+msgs[newSt]);openFocus(true)}
+  else if(newSt==='doing'){if(ckRect)spawnBurst(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2,['#FF9500','#FFCC00','#FFD60A','#FF9F0A'],12,60);toast('⚡ '+msgs[newSt]);openFocus(true)}
   else if(realSt==='done'){if(ckRect)celebrateDone(ckRect.left+ckRect.width/2,ckRect.top+ckRect.height/2);showCompletionNote(id)}
   else{toast(msgs[newSt]||'')}}
 
@@ -4505,9 +4507,9 @@ const FOC_CARD_CSS=`
 .foc-ring-fg{fill:none;stroke-width:2.8;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
 .foc-ring-over .foc-ring-fg{animation:focRingPulse 2s ease-in-out infinite}
 @keyframes focRingPulse{0%,100%{opacity:1;filter:brightness(1)}50%{opacity:.6;filter:brightness(1.3)}}
-.foc-ring-time{font-size:clamp(.72rem,4.5cqi,1.1rem);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#fff;z-index:1;line-height:1;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.foc-ring-time{font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#fff;z-index:1;line-height:1;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .foc-ring-over .foc-ring-time{color:#FF6961}
-.foc-ring-label{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-size:clamp(.54rem,2.5cqi,.72rem);color:rgba(235,235,245,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;font-weight:500}
+.foc-ring-label{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-size:.72rem;color:rgba(235,235,245,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;font-weight:500}
 .foc-switch-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
 .foc-switch-anim svg{width:48px;height:48px;animation:focSwitchSpin .5s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes focSwitchSpin{0%{opacity:1;transform:rotate(0deg) scale(1)}60%{opacity:1;transform:rotate(270deg) scale(1.1)}100%{opacity:0;transform:rotate(360deg) scale(.8)}}
