@@ -2187,7 +2187,7 @@ auth.onAuthStateChanged(user=>{
     showApp();
     if(!_authBooted){
       _authBooted=true;
-      processRecurring();setGreeting();render();applyTaskLayout();fbInit();
+      setGreeting();render();applyTaskLayout();fbInit();
       setTimeout(refreshPushToken,4000);
     }
   } else {
@@ -2380,7 +2380,7 @@ function isSharedProj(pid){return projects.some(p=>p.id===pid&&p.type==='shared'
 function mergeTasksById(server,local){
   const m=new Map();
   for(const t of (server||[])) if(t&&t.id) m.set(t.id,t);
-  for(const t of (local||[])){ if(!t||!t.id)continue; const ex=m.get(t.id); if(!ex||(t.updatedAt||0)>=(ex.updatedAt||0)) m.set(t.id,t); }
+  for(const t of (local||[])){ if(!t||!t.id)continue; const ex=m.get(t.id); if(!ex||(t.updatedAt||0)>(ex.updatedAt||0)) m.set(t.id,t); }
   return [...m.values()];
 }
 // Merge de mapas de exclusão; vence o timestamp mais novo
@@ -2434,6 +2434,8 @@ function _fbDirectSave(){
 
 function fbSave(){
   if(!_fbReady||!_fbInitDone)return;
+  // CRITICAL: never save stale localStorage data before Firebase has loaded
+  if(!_fbSynced){console.warn('⚠️ fbSave blocked: Firebase not yet synced');return}
   // Set saving flag IMMEDIATELY to block combineData during the entire save cycle
   _fbSaving=true;
   _fbSaveTs=Date.now();
@@ -2534,6 +2536,7 @@ function combineData(){
       }
     });
   }
+  const wasFirstCombine=_firstCombine;
   _firstCombine=false;
   _fbSynced=true;
 
@@ -2551,6 +2554,8 @@ function combineData(){
   try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50))}catch(e){}
   
   if(typeof render==='function')render();
+  // Run processRecurring only AFTER first Firebase sync — never on stale localStorage
+  if(wasFirstCombine && typeof processRecurring==='function'){processRecurring()}
   showSync('Atualizado ✓',true);
 }
 
@@ -2565,7 +2570,7 @@ function fbListen(){
 
   _unsubP=db.collection('users').doc(uid).onSnapshot(snap=>{
     pLoaded=true;
-    if(snap.exists&&!_fbSaving){
+    if(snap.exists){
       const d=snap.data();
       pTasks=JSON.parse(d.tasks||'[]');
       pCats=JSON.parse(d.cats||'[]');
