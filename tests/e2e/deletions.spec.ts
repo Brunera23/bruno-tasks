@@ -105,3 +105,31 @@ test('categoria regravada por outro aparelho continua excluída', async ({ page 
 
   expect(await page.evaluate(()=>(eval('cats') as any[]).map(c=>c.id))).not.toContain('financeiro');
 });
+
+/**
+ * Servidor recusando gravações (regra de segurança, chave de API, conta sem
+ * permissão): a exclusão não pode evaporar no F5 — o tombstone local segura o
+ * item fora da tela — e a falha tem que aparecer NA TELA, não num console.
+ */
+test('com o servidor recusando gravações, a exclusão sobrevive ao F5 e o erro fica visível', async ({ page }) => {
+  await bootApp(page,{user,failWrites:true,
+    store:{users:{'uid-B':{tasks:JSON.stringify(tarefas),cats:JSON.stringify(cats),log:'[]'}}}});
+  await page.waitForSelector('.shell',{state:'visible'});
+  await page.waitForTimeout(900);
+
+  await page.evaluate(()=>(eval('askDel') as any)('t1'));
+  await page.locator('#cfYes').click();
+
+  // o aviso de falha aparece na tela, com o código do erro
+  await expect(page.locator('#syncProblem')).toBeVisible({timeout:5000});
+  await expect(page.locator('#syncProblem')).toContainText('permission-denied');
+
+  // F5: o servidor ainda tem t1, mas o tombstone local mantém a exclusão
+  await page.reload();
+  await page.waitForSelector('.shell',{state:'visible'});
+  await page.waitForTimeout(1200);
+  const server=await page.evaluate(()=>JSON.parse(JSON.parse(sessionStorage.getItem('__mockStore')||'{}').users['uid-B'].tasks).map((t:any)=>t.id));
+  expect(server).toContain('t1'); // gravação de fato falhou
+  expect(await page.evaluate(()=>(eval('tasks') as any[]).map(t=>t.id))).not.toContain('t1');
+  await expect(page.locator('body')).not.toContainText('Tarefa Um');
+});

@@ -39,11 +39,14 @@ if(!window.firebase){
   var hangWrites=readJSON('__mockHangWrites',false);
   // Latencia de gravacao: o Firestore real nao confirma na hora
   var writeDelay=readJSON('__mockWriteDelay',0);
+  // Servidor recusando gravacoes (regra de seguranca, chave invalida...)
+  var failWrites=readJSON('__mockFailWrites',false);
   var docRef=function(c,d){
     return {
       get:function(){return Promise.resolve(snapOf(c,d))},
       set:function(data,opts){
         if(hangWrites)return new Promise(function(){});
+        if(failWrites&&c==='users'){var err=new Error('Missing or insufficient permissions.');err.code='permission-denied';return Promise.reject(err)}
         if(writeDelay)return new Promise(function(res){setTimeout(function(){setDoc(c,d,data,opts);res()},writeDelay)});
         setDoc(c,d,data,opts);return Promise.resolve();
       },
@@ -110,6 +113,7 @@ export type MockOptions = {
   pendingUser?: MockUser;
   hangWrites?: boolean;
   writeDelayMs?: number;
+  failWrites?: boolean;
 };
 
 export async function bootApp(page: Page, opts: MockOptions = {}) {
@@ -126,6 +130,7 @@ export async function bootApp(page: Page, opts: MockOptions = {}) {
       if (o.popupError) s.setItem('__mockPopupError', JSON.stringify(o.popupError));
       if (o.hangWrites) s.setItem('__mockHangWrites', JSON.stringify(true));
       if (o.writeDelayMs) s.setItem('__mockWriteDelay', JSON.stringify(o.writeDelayMs));
+      if (o.failWrites) s.setItem('__mockFailWrites', JSON.stringify(true));
       s.setItem('__mockStore', JSON.stringify(o.store || {}));
       Object.entries(o.localStorage || {}).forEach(([k, v]) => window.localStorage.setItem(k, v as string));
     } catch (e) { /* about:blank não tem storage acessível */ }

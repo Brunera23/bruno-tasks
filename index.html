@@ -2228,7 +2228,7 @@ let _loggingOut=false;
 // outra entra, o cache da anterior continua lá, aparece na tela da conta nova e
 // pode até ser gravado por cima dos dados dela no Firestore. Estas chaves são
 // dados de conta e precisam morrer junto com a sessão.
-const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled'];
+const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel'];
 const LS_ACCOUNT_UID='bt-account-uid'; // uid dono do cache que está no disco agora
 function clearAccountCache(){ACCOUNT_LS_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}
 
@@ -2624,6 +2624,23 @@ function sL(){fbSave()}
 // Like Todoist/Notion: Firebase is the single source of truth.
 // Local storage is only a cache for offline use.
 function showSync(msg,ok){const el=$('#syncDot');if(!el)return;el.className='sync-dot'+(ok?' synced':' saving');if(ok)setTimeout(()=>{el.className='sync-dot'},1500)}
+// Falha de persistência era um pontinho colorido de 1,5s — invisível. Uma
+// gravação recusada (regra, chave, conta errada) precisa gritar, senão o
+// usuário só descobre quando os dados "voltam".
+function syncProblem(msg,err){
+  const code=(err&&(err.code||err.message))||'';
+  let el=document.getElementById('syncProblem');
+  if(!el){
+    el=document.createElement('div');el.id='syncProblem';
+    el.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:80px;z-index:600;background:#FF3B30;color:#fff;padding:10px 16px;border-radius:12px;font-size:.8rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer;max-width:92vw;text-align:center;line-height:1.4';
+    el.onclick=()=>{alert('Diagnóstico de sincronização\n\nConta: '+(currentUser&&currentUser.email||'—')+'\nuid: '+(currentUser&&currentUser.uid||'—')+'\nSincronizado: '+_fbSynced+'\nErro: '+(el.dataset.detail||'—'))};
+    document.body.appendChild(el);
+  }
+  el.textContent='⚠️ '+msg+(code?' ('+code+')':'')+' — toque para detalhes';
+  el.dataset.detail=code||msg;
+  el.style.display='block';
+}
+function syncProblemClear(){const el=document.getElementById('syncProblem');if(el)el.style.display='none'}
 let _fbTimer=null,_fbInitDone=false,_fbSaveTs=0,_fbSaveCompletedAt=0;
 let _syncedUid=null; // uid que o estado em memória representa — trava gravação cruzada
 let pTasks=[],pCats=[],pLog=[];
@@ -2632,20 +2649,33 @@ const _unsubShared={};
 const sharedTasksMap={};
 const sharedLogMap={};
 const sharedDeletedMap={}; // {pid: {taskId: deletedAt}} vindo do servidor
-const deletedByProj={};    // {pid: {taskId: deletedAt}} tombstones locais de exclusão
+// Tombstones locais persistidos em localStorage: uma exclusão precisa
+// sobreviver ao F5 MESMO que a gravação no servidor esteja falhando (regra,
+// chave de API, offline). Sem isso ela morria em memória e o servidor
+// devolvia a lista antiga no recarregamento seguinte.
+const deletedByProj=ld('bt-projdel',{}); // {pid: {taskId: deletedAt}}
 // Tombstones das TAREFAS PESSOAIS e das CATEGORIAS.
 // O documento pessoal é gravado inteiro: qualquer outro aparelho aberto com a
 // lista antiga em memória regravava o item apagado — exclusão "voltava".
 // Com o marcador salvo no próprio documento (campos `deleted`/`catsDeleted`),
 // todo cliente filtra o que foi excluído ao carregar e ao gravar, então mesmo
 // uma regravação atrasada é desfeita no ciclo seguinte.
-let pDelServer={},pDelLocal={};       // {taskId: deletedAt}
-let pCatDelServer={},pCatDelLocal={}; // {catId: deletedAt}
+let pDelServer={},pDelLocal=ld('bt-del',{});          // {taskId: deletedAt}
+let pCatDelServer={},pCatDelLocal=ld('bt-catdel',{}); // {catId: deletedAt}
+function persistTombstones(){try{sv('bt-del',pDelLocal);sv('bt-catdel',pCatDelLocal);sv('bt-projdel',deletedByProj)}catch(e){}}
 function markTaskDeleted(t){
   if(!t)return;
   if(t.project&&isSharedProj(t.project)){(deletedByProj[t.project]=deletedByProj[t.project]||{})[t.id]=Date.now()}
   else{pDelLocal[t.id]=Date.now()}
+  persistTombstones();
 }
+// Primeiro paint vem do cache local, que pode conter itens já excluídos —
+// filtra na largada para o item nem piscar antes da sincronização.
+tasks=tasks.filter(t=>{
+  const m=(t.project&&deletedByProj[t.project])||pDelLocal;
+  return !(m[t.id]&&m[t.id]>=(t.updatedAt||0));
+});
+cats=cats.filter(c=>!pCatDelLocal[c.id]);
 function isSharedProj(pid){return projects.some(p=>p.id===pid&&p.type==='shared')}
 // União por id; em conflito, vence o updatedAt mais novo (empate: 'local' por vir depois)
 function mergeTasksById(server,local){
@@ -2677,7 +2707,7 @@ function _fbDirectSave(){
   const tombCutoff=Date.now()-60*864e5;
   for(const k in pDel)if(pDel[k]<tombCutoff)delete pDel[k];
   for(const k in pCatDel)if(pCatDel[k]<tombCutoff)delete pCatDel[k];
-  pDelLocal=pDel;pCatDelLocal=pCatDel;
+  pDelLocal=pDel;pCatDelLocal=pCatDel;persistTombstones();
 
   const myPTasks=tasks.filter(t=>(!t.project || !sharedProjs.includes(t.project)) && !(pDel[t.id]&&pDel[t.id]>=(t.updatedAt||0)));
   const myCats=cats.filter(c=>!pCatDel[c.id]);
@@ -2736,13 +2766,13 @@ function fbSave(){
     // Snapshot current state to localStorage as offline cache
     try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents)}catch(e){}
     _fbDirectSave().then(()=>{
-      showSync('Sincronizado ✓',true);
+      showSync('Sincronizado ✓',true);syncProblemClear();
       _fbSaveCompletedAt=Date.now();
       _fbDirty=false;
       // Grace period: onSnapshot fires twice after write (cache + server)
       // Block combineData for 800ms after write completes
       setTimeout(()=>{_fbSaving=false},800);
-    }).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
+    }).catch(e=>{showSync('Erro ao salvar',false);syncProblem('Suas alterações NÃO estão sendo salvas',e);console.warn('FB save error',e);_fbSaving=false});
   },300);
 }
 // Gravacao imediata, sem o debounce de 300ms.
@@ -2752,7 +2782,7 @@ function fbSave(){
 // Agrupar edicoes continua fazendo sentido; agrupar exclusoes nao.
 function fbSaveNow(){
   if(!_fbReady||!_fbInitDone||_loggingOut)return Promise.resolve();
-  if(!_fbSynced){console.warn('⚠️ fbSaveNow bloqueado: ainda nao sincronizou');return Promise.resolve()}
+  if(!_fbSynced){console.warn('⚠️ fbSaveNow bloqueado: ainda nao sincronizou');syncProblem('Ainda conectando ao banco — a mudança está só neste aparelho por enquanto');return Promise.resolve()}
   if(!currentUser||(_syncedUid&&_syncedUid!==currentUser.uid))return Promise.resolve();
   clearTimeout(_fbTimer);
   _fbSaving=true;
@@ -2761,11 +2791,11 @@ function fbSaveNow(){
   showSync('Salvando...');
   try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents)}catch(e){}
   return _fbDirectSave().then(()=>{
-    showSync('Sincronizado ✓',true);
+    showSync('Sincronizado ✓',true);syncProblemClear();
     _fbSaveCompletedAt=Date.now();
     _fbDirty=false;
     setTimeout(()=>{_fbSaving=false},800);
-  }).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
+  }).catch(e=>{showSync('Erro ao salvar',false);syncProblem('A exclusão NÃO chegou ao servidor',e);console.warn('FB save error',e);_fbSaving=false});
 }
 let _fbDirty=false;
 // CRITICAL: Flush pending saves before page unloads to prevent data loss
@@ -2995,7 +3025,7 @@ function fbListen(){
     });
 
     if(pLoaded) combineData();
-  },e=>console.warn('FB pListener error',e));
+  },e=>{console.warn('FB pListener error',e);syncProblem('Sem acesso ao banco de dados',e)});
 }
 
 function ci(id){return cats.find(c=>c.id===id)||NOS_CATS.find(c=>c.id===id)||{name:id,icon:'i-layers',color:'#8E8E93'}}
@@ -5232,7 +5262,7 @@ function closeCatMgr(){$('#ovCat').classList.remove('open');$('#modalCat').class
 function renderCatMgrList(){$('#catMgrList').innerHTML=cats.map(c=>`<div class="cat-mgr-item"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg><span class="cat-mgr-name">${c.name}</span><div class="cat-mgr-actions"><button class="a-btn" onclick="editCat('${c.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="delCat('${c.id}')"><svg><use href="#i-trash"/></svg></button></div></div>`).join('')}
 function openCatEdit(cat){editingCatId=cat?cat.id:null;$('#catMgrView').style.display='none';$('#catEditView').style.display='';$('#catModalTitle').textContent=cat?'Editar':'Nova Categoria';$('#ceN').value=cat?cat.name:'';const si=cat?cat.icon:'i-star';const sc=cat?cat.color:'#007AFF';$('#ceIcons').innerHTML=ICONS.map(ic=>`<button type="button" class="icon-opt ${ic===si?'active':''}" data-icon="${ic}"><svg><use href="#${ic}"/></svg></button>`).join('');$('#ceColors').innerHTML=COLORS.map(co=>`<button type="button" class="color-opt ${co===sc?'active':''}" data-color="${co}" style="background:${co}"></button>`).join('');setTimeout(()=>$('#ceN').focus(),200)}
 function editCat(id){const c=cats.find(x=>x.id===id);if(c)openCatEdit(c)}
-function delCat(id){closeCatMgr();delId=id;$('#cfTitle').textContent='Excluir Categoria';$('#cfMsg').textContent='Tarefas serão mantidas.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{pCatDelLocal[id]=Date.now();cats=cats.filter(c=>c.id!==id);sC();fbSaveNow();render();toast('Categoria excluída');$('#cfWrap').classList.remove('open');openCatMgr()}}
+function delCat(id){closeCatMgr();delId=id;$('#cfTitle').textContent='Excluir Categoria';$('#cfMsg').textContent='Tarefas serão mantidas.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{pCatDelLocal[id]=Date.now();persistTombstones();cats=cats.filter(c=>c.id!==id);sC();fbSaveNow();render();toast('Categoria excluída');$('#cfWrap').classList.remove('open');openCatMgr()}}
 $('#ceIcons').addEventListener('click',e=>{const o=e.target.closest('.icon-opt');if(!o)return;$$('#ceIcons .icon-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active')});
 $('#ceColors').addEventListener('click',e=>{const o=e.target.closest('.color-opt');if(!o)return;$$('#ceColors .color-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active')});
 $('#ceSave').addEventListener('click',()=>{const name=$('#ceN').value.trim();if(!name)return;const icon=$('#ceIcons .icon-opt.active')?.dataset.icon||'i-star';const color=$('#ceColors .color-opt.active')?.dataset.color||'#007AFF';if(editingCatId){const c=cats.find(x=>x.id===editingCatId);if(c){c.name=name;c.icon=icon;c.color=color}toast('Atualizada')}else{cats.push({id:name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')+'_'+uid().slice(-3),name,icon,color});toast('Criada')}sC();render();$('#catMgrView').style.display='';$('#catEditView').style.display='none';$('#catModalTitle').textContent='Categorias';renderCatMgrList()});
