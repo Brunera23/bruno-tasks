@@ -43,7 +43,7 @@ test.describe('Feature 2: Adversarial Modal UI State', () => {
         }
       };
       window.firebase.firestore.FieldValue = { serverTimestamp: () => Date.now() };
-      window.firebase.auth.GoogleAuthProvider = class {};
+      window.firebase.auth.GoogleAuthProvider = class { setCustomParameters(p) { this._params = p; } };
     });
 
     await page.goto('/');

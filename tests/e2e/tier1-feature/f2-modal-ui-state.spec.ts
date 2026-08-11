@@ -47,7 +47,7 @@ test.describe('Feature 2: Modal & UI State Resilience (Tier 1)', () => {
         }
       };
       window.firebase.firestore.FieldValue = { serverTimestamp: () => Date.now() };
-      window.firebase.auth.GoogleAuthProvider = class {};
+      window.firebase.auth.GoogleAuthProvider = class { setCustomParameters(p) { this._params = p; } };
     });
 
     await page.goto('/');

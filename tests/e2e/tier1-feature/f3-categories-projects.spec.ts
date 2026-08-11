@@ -69,6 +69,7 @@ test.describe('Feature 3: Categories & Projects', () => {
       });
       mockFb.messaging.isSupported = () => false;
       mockFb.auth.GoogleAuthProvider = function() {};
+      mockFb.auth.GoogleAuthProvider.prototype.setCustomParameters = function(p) { this._params = p; };
       mockFb.firestore.FieldValue = {
         serverTimestamp: () => Date.now()
       };

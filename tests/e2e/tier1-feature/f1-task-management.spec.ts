@@ -55,6 +55,7 @@ test.describe('Feature 1 - Task Management', () => {
       });
       mockFb.messaging.isSupported = () => false;
       mockFb.auth.GoogleAuthProvider = function() {};
+      mockFb.auth.GoogleAuthProvider.prototype.setCustomParameters = function(p) { this._params = p; };
       mockFb.firestore.FieldValue = {
         serverTimestamp: () => Date.now()
       };

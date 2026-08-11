@@ -1412,7 +1412,7 @@
   <div class="login-card">
     <div class="login-logo"><div class="login-logo-icon" style="background: transparent; box-shadow: none;"><img src="./manifest-icon.png" width="72" height="72" style="border-radius: 18px; object-fit: cover;" /></div></div>
     <h1 class="login-title">Berserk</h1>
-    <p class="login-sub">Faça login para continuar</p>
+    <p class="login-sub" id="loginSub">Faça login para continuar</p>
     <button class="login-google-btn" id="loginBtn">
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
       Entrar com Google
@@ -1450,6 +1450,7 @@
     <div class="sidebar-user" id="sidebarUser" style="display:none">
       <div class="su-avatar" id="suAvatar">?</div>
       <div class="su-info"><span class="su-name" id="suName">—</span><span class="su-email" id="suEmail">—</span></div>
+      <button class="su-logout" id="switchAccountBtn" title="Trocar de conta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></button>
       <button class="su-logout" id="logoutBtn" title="Sair"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
     </div>
   </aside>
@@ -2022,7 +2023,9 @@ async function requestNotifPermission(){
 // Salva a inscrição de Web Push no Firestore, ligada ao papel do usuário
 async function savePushSub(sub){
   if(!currentUser)return;
-  const userRole=localStorage.getItem('btUserRole')||'bruno';
+  // Papel derivado da conta logada — 'btUserRole' era do navegador, então
+  // sobrevivia à troca de conta e registrava o push no papel errado.
+  const userRole=getMyRole()||'bruno';
   try{
     await db.collection('push_tokens').doc(userRole+'_'+currentUser.uid).set({
       subscription:sub.toJSON(),
@@ -2062,7 +2065,7 @@ async function sendPushToRole(targetRole,title,body){
       targetRole:targetRole,
       title:title,
       body:body,
-      sentBy:localStorage.getItem('btUserRole')||'bruno',
+      sentBy:getMyRole()||'bruno',
       createdAt:firebase.firestore.FieldValue.serverTimestamp(),
       processed:false
     });
@@ -2135,7 +2138,39 @@ function isPushEnabled(){return localStorage.getItem('btPushEnabled')==='1'}
 // ===== AUTH =====
 const auth=firebase.auth();
 const googleProvider=new firebase.auth.GoogleAuthProvider();
+// SEMPRE abrir o seletor de contas do Google.
+// Sem `prompt:'select_account'`, quando há mais de uma conta Google logada no
+// navegador o Google escolhe sozinho a sessão "padrão" e o app entra numa conta
+// aleatória, sem perguntar nada.
+googleProvider.setCustomParameters({prompt:'select_account'});
+try{auth.useDeviceLanguage()}catch(e){}
 let currentUser=null;
+let _loggingOut=false;
+
+// ===== ISOLAMENTO POR CONTA =====
+// O localStorage pertence ao NAVEGADOR, não à conta Google. Se uma conta sai e
+// outra entra, o cache da anterior continua lá, aparece na tela da conta nova e
+// pode até ser gravado por cima dos dados dela no Firestore. Estas chaves são
+// dados de conta e precisam morrer junto com a sessão.
+const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled'];
+const LS_ACCOUNT_UID='bt-account-uid'; // uid dono do cache que está no disco agora
+function clearAccountCache(){ACCOUNT_LS_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}
+
+// Desliga todos os listeners do Firestore (senão continuam apontando p/ o uid antigo)
+function detachFbListeners(){
+  try{if(_unsubP){_unsubP();_unsubP=null}}catch(e){}
+  Object.keys(_unsubShared).forEach(pid=>{try{_unsubShared[pid]()}catch(e){}delete _unsubShared[pid]});
+}
+
+// Zera o estado em memória para não misturar dados de duas contas
+function resetInMemoryState(){
+  tasks=[];log=[];
+  cats=JSON.parse(JSON.stringify(DEF_CATS));
+  projects=JSON.parse(JSON.stringify(DEF_PROJECTS));
+  agents=DEF_AGENTS.slice();
+  pTasks=[];pCats=[];pLog=[];
+  [sharedTasksMap,sharedLogMap,sharedDeletedMap,deletedByProj].forEach(m=>Object.keys(m).forEach(k=>delete m[k]));
+}
 
 // Handle redirect result (fallback when popup is blocked on mobile)
 auth.getRedirectResult().catch(err=>{console.warn('Redirect result:',err)});
@@ -2169,24 +2204,60 @@ function updateSidebarUser(user){
   }
 }
 
+const GOOGLE_BTN_HTML='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Entrar com Google';
+// PWA instalada (iOS/Android): o popup abre num contexto separado e o resultado
+// nunca volta p/ o app — nesses casos o fluxo tem que ser por redirect.
+function _isStandalone(){
+  try{return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}catch(e){return false}
+}
+// Erros de popup que só se resolvem indo pelo redirect.
+// (auth/popup-closed-by-user fica de fora de propósito: se o usuário fechou o
+// seletor por vontade própria, redirecionar a página inteira seria pior.)
+const POPUP_FALLBACK_ERRS=['auth/popup-blocked','auth/operation-not-supported-in-this-environment','auth/web-storage-unsupported'];
+
+function _resetLoginBtn(){
+  const btn=$('#loginBtn');if(!btn)return;
+  btn.disabled=false;btn.innerHTML=GOOGLE_BTN_HTML;
+}
+function _showLoginError(err){
+  const loginErr=$('#loginErr');
+  if(!loginErr)return;
+  if(err.code==='auth/popup-blocked'){
+    loginErr.innerHTML='<b>Popup bloqueado!</b><br>O Safari/Chrome bloqueou a janela de login.<br>1. Clique em "Permitir" se o navegador perguntar.<br>2. Se estiver dentro do Instagram/WhatsApp, abra o link no Safari/Chrome.';
+  } else if(err.code==='auth/popup-closed-by-user'||err.code==='auth/cancelled-popup-request'){
+    loginErr.textContent='Login cancelado. Toque em "Entrar com Google" e escolha a conta.';
+  } else if(err.code==='auth/unauthorized-domain'){
+    loginErr.textContent='Domínio não autorizado. Adicione este domínio no Firebase Console → Authentication → Settings → Authorized domains.';
+  } else if(err.code==='auth/operation-not-allowed'){
+    loginErr.textContent='Google Sign-In não está habilitado. Ative no Firebase Console → Authentication → Sign-in method → Google.';
+  } else {
+    loginErr.textContent='Erro: '+err.message;
+  }
+}
+
 function doGoogleLogin(){
   const btn=$('#loginBtn');
   btn.disabled=true;btn.textContent='Conectando...';
+  const loginErr=$('#loginErr');if(loginErr)loginErr.textContent='';
+  if(_isStandalone()){
+    auth.signInWithRedirect(googleProvider).catch(err=>{
+      console.error('Redirect login error:',err);
+      _resetLoginBtn();_showLoginError(err);
+    });
+    return;
+  }
   auth.signInWithPopup(googleProvider).catch(err=>{
     console.error('Login error:',err);
-    btn.disabled=false;btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Entrar com Google';
-    const loginErr=$('#loginErr');
-    if(!loginErr) return;
-    
-    if(err.code==='auth/popup-blocked'){
-      loginErr.innerHTML='<b>Popup bloqueado!</b><br>O Safari/Chrome bloqueou a janela de login.<br>1. Clique em "Permitir" se o navegador perguntar.<br>2. Se estiver dentro do Instagram/WhatsApp, abra o link no Safari/Chrome.';
-    } else if(err.code==='auth/unauthorized-domain'){
-      loginErr.textContent='Domínio não autorizado. Adicione este domínio no Firebase Console → Authentication → Settings → Authorized domains.';
-    } else if(err.code==='auth/operation-not-allowed'){
-      loginErr.textContent='Google Sign-In não está habilitado. Ative no Firebase Console → Authentication → Sign-in method → Google.';
-    } else {
-      loginErr.textContent='Erro: '+err.message;
+    // Popup bloqueado/indisponível → tenta pelo redirect antes de desistir
+    if(POPUP_FALLBACK_ERRS.includes(err.code)){
+      btn.textContent='Redirecionando...';
+      auth.signInWithRedirect(googleProvider).catch(e2=>{
+        console.error('Redirect fallback error:',e2);
+        _resetLoginBtn();_showLoginError(err); // mostra o motivo original
+      });
+      return;
     }
+    _resetLoginBtn();_showLoginError(err);
   });
 }
 
@@ -2196,7 +2267,20 @@ let _pendingInvite=null;
 auth.onAuthStateChanged(user=>{
   currentUser=user;
   if(user){
-    console.log('Auth OK:',user.uid,user.displayName);
+    console.log('Auth OK:',user.uid,user.email);
+    // Conta diferente da dona do cache local? Nada da conta anterior pode
+    // sobreviver — nem no disco, nem em memória, nem nos listeners.
+    const prevUid=localStorage.getItem(LS_ACCOUNT_UID);
+    if(prevUid&&prevUid!==user.uid){
+      detachFbListeners();
+      clearAccountCache();
+      try{localStorage.setItem(LS_ACCOUNT_UID,user.uid)}catch(e){}
+      // Se o app já tinha bootado com a outra conta, só um reload garante
+      // que nenhum estado em memória atravesse a troca.
+      if(_authBooted){location.reload();return}
+      resetInMemoryState();
+    }
+    try{localStorage.setItem(LS_ACCOUNT_UID,user.uid)}catch(e){}
     const params=new URLSearchParams(location.search);
     const inv=params.get('invite');
     if(inv){
@@ -2209,12 +2293,43 @@ auth.onAuthStateChanged(user=>{
       _authBooted=true;
       setGreeting();render();applyTaskLayout();fbInit();
       setTimeout(refreshPushToken,4000);
+      // Deixa explícito em qual conta entrou — se o Google escolher a errada,
+      // dá para ver na hora em vez de descobrir pelos dados faltando.
+      if(user.email)setTimeout(()=>toast('Conectado como '+user.email),900);
     }
   } else {
     showLoginScreen();
     updateSidebarUser(null);
+    // Mensagem de "escolha a conta" depois de um logout/troca explícita
+    try{
+      if(sessionStorage.getItem('bt-switch-account')){
+        sessionStorage.removeItem('bt-switch-account');
+        const ls=$('#loginSub');if(ls)ls.textContent='Escolha a conta que você quer usar';
+      }
+    }catch(e){}
   }
 });
+
+// Sair da conta: sobe o que faltou, desliga os listeners, apaga o cache local
+// desta conta e recarrega. Sem isso a próxima conta a entrar herdava o cache
+// (e os listeners) da anterior.
+function doLogout(switchAccount){
+  if(_loggingOut)return;
+  _loggingOut=true;
+  clearTimeout(_fbTimer);
+  if(switchAccount){try{sessionStorage.setItem('bt-switch-account','1')}catch(e){}}
+  const finish=()=>{
+    detachFbListeners();
+    clearAccountCache();
+    try{localStorage.removeItem(LS_ACCOUNT_UID)}catch(e){}
+    auth.signOut().catch(e=>console.warn('signOut',e)).then(()=>location.reload());
+  };
+  // Não perde alterações que ainda não subiram
+  if(_fbDirty&&_fbSynced&&_fbReady&&currentUser){
+    _fbDirectSave().catch(e=>console.warn('flush no logout',e)).then(finish);
+  } else finish();
+}
+function doSwitchAccount(){doLogout(true)}
 
 // Firestore is the SINGLE SOURCE OF TRUTH.
 // localStorage is ONLY a fallback cache for offline/first-paint.
@@ -2388,6 +2503,7 @@ function sL(){fbSave()}
 // Local storage is only a cache for offline use.
 function showSync(msg,ok){const el=$('#syncDot');if(!el)return;el.className='sync-dot'+(ok?' synced':' saving');if(ok)setTimeout(()=>{el.className='sync-dot'},1500)}
 let _fbTimer=null,_fbInitDone=false,_fbSaveTs=0,_fbSaveCompletedAt=0;
+let _syncedUid=null; // uid que o estado em memória representa — trava gravação cruzada
 let pTasks=[],pCats=[],pLog=[];
 let _unsubP=null;
 const _unsubShared={};
@@ -2413,6 +2529,9 @@ function mergeDel(a,b){
 function _fbDirectSave(){
   if(!currentUser) return Promise.resolve();
   const uid=currentUser.uid;
+  // O estado em memória é de outra conta: gravar aqui escreveria os dados de um
+  // usuário dentro do documento de outro.
+  if(_syncedUid&&_syncedUid!==uid){console.warn('⚠️ fbSave bloqueado: estado é da conta '+_syncedUid);return Promise.resolve()}
   const sharedProjs = projects.filter(p=>p.type==='shared').map(p=>p.id);
   
   const myPTasks=tasks.filter(t=>!t.project || !sharedProjs.includes(t.project));
@@ -2454,8 +2573,11 @@ function _fbDirectSave(){
 
 function fbSave(){
   if(!_fbReady||!_fbInitDone)return;
+  if(_loggingOut)return;
   // CRITICAL: never save stale localStorage data before Firebase has loaded
   if(!_fbSynced){console.warn('⚠️ fbSave blocked: Firebase not yet synced');return}
+  // CRITICAL: never write one account's state into another account's document
+  if(!currentUser||(_syncedUid&&_syncedUid!==currentUser.uid))return;
   // Set saving flag IMMEDIATELY to block combineData during the entire save cycle
   _fbSaving=true;
   _fbSaveTs=Date.now();
@@ -2479,6 +2601,8 @@ let _fbDirty=false;
 // CRITICAL: Flush pending saves before page unloads to prevent data loss
 function _fbFlushBeforeUnload(){
   if(!_fbDirty||!_fbSynced||!_fbReady)return;
+  if(_loggingOut)return; // o logout já cuidou do flush
+  if(!currentUser||(_syncedUid&&_syncedUid!==currentUser.uid))return;
   clearTimeout(_fbTimer); // cancel the debounce
   // Save to localStorage SYNCHRONOUSLY (always works)
   try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents)}catch(e){}
@@ -2491,26 +2615,39 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 function fbInit(){
   if(!currentUser) return;
+  const uid=currentUser.uid;
+  _syncedUid=uid; // a partir daqui o estado em memória pertence a esta conta
   showSync('Conectando...');
-  
-  // Check for legacy single-document migration
-  db.collection('data').doc('bruno-main').get().then(snap=>{
-    if(snap.exists){
+
+  // Migração do documento legado (`data/bruno-main`), que é ÚNICO para todo mundo.
+  // Só migra se ESTA conta ainda não tem dados próprios: antes, qualquer conta
+  // que logasse puxava o banco antigo para si e apagava a origem — o dono
+  // legítimo entrava depois e encontrava a conta vazia.
+  Promise.all([
+    db.collection('data').doc(FB_DOC).get(),
+    db.collection('users').doc(uid).get()
+  ]).then(([snap,mine])=>{
+    let mineHasData=false;
+    if(mine.exists){
+      try{mineHasData=JSON.parse(mine.data().tasks||'[]').length>0}catch(e){mineHasData=true}
+    }
+    if(snap.exists&&!mineHasData){
       console.log('Migrating legacy data to new collaborative architecture...');
       const d=snap.data();
       tasks=JSON.parse(d.tasks||'[]');
       cats=JSON.parse(d.cats||'[]');
       log=JSON.parse(d.log||'[]');
       if(d.agents){try{const a=JSON.parse(d.agents);if(Array.isArray(a)&&a.length)agents=a}catch(e){}}
-      
+
       _fbReady=true; _fbInitDone=true;
       showSync('Migrando banco de dados...');
       _fbDirectSave().then(()=>{
-        db.collection('data').doc('bruno-main').delete().catch(console.warn);
+        db.collection('data').doc(FB_DOC).delete().catch(console.warn);
         showSync('Sincronizado ✓',true);
         fbListen();
       }).catch(e=>{console.warn('Migration save error',e);fbListen()});
     } else {
+      if(snap.exists)console.log('Documento legado ignorado: esta conta já tem dados próprios.');
       _fbReady=true; _fbInitDone=true;
       showSync('Pronto',true);
       fbListen();
@@ -2526,6 +2663,7 @@ function fbInit(){
 let _firstCombine=true;
 function combineData(){
   if(_fbSaving||!_fbInitDone)return;
+  if(!currentUser||(_syncedUid&&_syncedUid!==currentUser.uid))return;
   // Guard: ignore snapshots that arrive too close to a save completion
   // (onSnapshot fires twice: local cache echo + server confirmation)
   if(_fbSaveCompletedAt && (Date.now()-_fbSaveCompletedAt)<800)return;
@@ -2599,11 +2737,12 @@ const sharedLoaded={};
 function fbListen(){
   if(!currentUser) return;
   const uid=currentUser.uid;
-  if(_unsubP) _unsubP();
-  
+  detachFbListeners(); // inclusive os de projetos compartilhados da sessão anterior
+
   let pLoaded=false;
 
   _unsubP=db.collection('users').doc(uid).onSnapshot(snap=>{
+    if(!currentUser||currentUser.uid!==uid)return; // snapshot de uma conta que já saiu
     pLoaded=true;
     if(snap.exists){
       const d=snap.data();
@@ -2612,8 +2751,12 @@ function fbListen(){
       pLog=JSON.parse(d.log||'[]');
       if(d.projects) projects=JSON.parse(d.projects);
       if(d.agents){try{const a=JSON.parse(d.agents);if(Array.isArray(a)&&a.length)agents=a}catch(e){}}
+    } else {
+      // Conta sem documento ainda: começa vazia em vez de herdar o que sobrou
+      // em memória de outra conta.
+      pTasks=[];pCats=[];pLog=[];
     }
-    
+
     // Process pending invite
     if(_pendingInvite){
       if(!projects.find(p=>p.id===_pendingInvite.id)){
@@ -2642,6 +2785,7 @@ function fbListen(){
     sharedProjects.forEach(p => {
       if (!_unsubShared[p.id]) {
         _unsubShared[p.id] = db.collection('shared').doc(p.id).onSnapshot(sSnap => {
+           if(!currentUser||currentUser.uid!==uid)return; // listener de conta antiga
            sharedLoaded[p.id] = true;
            if (sSnap.exists) {
              const sd = sSnap.data();
@@ -5994,7 +6138,9 @@ function processRecurring(){
 // Boot is now handled by auth.onAuthStateChanged
 // Only run processRecurring and initial render once auth confirms
 $('#loginBtn').addEventListener('click',doGoogleLogin);
-$('#logoutBtn').addEventListener('click',()=>{auth.signOut()});
+$('#logoutBtn').addEventListener('click',()=>{doLogout(false)});
+const _swBtn=$('#switchAccountBtn');
+if(_swBtn)_swBtn.addEventListener('click',doSwitchAccount);
 
 $('#addProjBtn').addEventListener('click', () => {
   editProjId = null;
@@ -6185,6 +6331,10 @@ function openMobSettings(){
 
     <div class="ms-section-label">Conta</div>
     <div class="ms-group">
+      <button class="ms-row" id="msSwitchAccount">
+        <span class="ms-row-icon" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></span>
+        <span class="ms-row-body"><span class="ms-row-label">Trocar de conta</span><span class="ms-row-sub">${escapeHtml(currentUser&&currentUser.email||'')}</span></span>
+      </button>
       <button class="ms-row" id="msLogout" style="color:#FF3B30">
         <span class="ms-row-icon" style="background:linear-gradient(135deg,#FF3B30,#FF6961)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
         <span class="ms-row-body"><span class="ms-row-label" style="color:#FF3B30">Sair da conta</span></span>
@@ -6212,7 +6362,8 @@ function openMobSettings(){
   
   $('#msToggleDone').onclick=()=>{showDone=!showDone;saveUI();closeMobSheet();render()};
   $('#msTheme').onclick=()=>{toggleTheme();closeMobSheet()};
-  $('#msLogout').onclick=()=>{closeMobSheet();auth.signOut()};
+  $('#msSwitchAccount').onclick=()=>{closeMobSheet();doSwitchAccount()};
+  $('#msLogout').onclick=()=>{closeMobSheet();doLogout(false)};
 }
 
 function openProjManager(){

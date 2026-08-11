@@ -45,7 +45,7 @@ test('auth test error log', async ({ page }) => {
             };
           }
         };
-        window.firebase.auth.GoogleAuthProvider = class {};
+        window.firebase.auth.GoogleAuthProvider = class { setCustomParameters(p) { this._params = p; } };
         window.firebase.firestore.FieldValue = { serverTimestamp: () => new Date() };
       `
     });
