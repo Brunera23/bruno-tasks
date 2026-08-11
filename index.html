@@ -1800,17 +1800,17 @@
       <button type="button" data-v="bruno" class="active"><span class="pick-dot" style="background:#007AFF"></span>Bruno</button>
       <button type="button" data-v="nos"><span class="pick-dot" style="background:#FF2D55"></span>Nós 💑</button>
     </div></div>
-    <div class="fld half" id="fAssignWrap" style="display:none"><label>De quem é a missão?</label><div class="pick-seg assign-seg" id="fAssign">
-      <button type="button" data-v="bruno" class="active"><span class="assign-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Bruno</button>
-      <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Clara</button>
-      <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-users"/></svg></span>Ambos</button>
-    </div></div>
     <div class="fld half"><label>Onde se encaixa?</label>
       <div class="cs-wrap" id="fCWrap" tabindex="0">
         <div class="cs-val"><div class="cs-val-inner" id="fCVal">Selecione</div><svg class="cs-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
         <div class="cs-menu" id="fCMenu"></div>
       </div>
     </div>
+    <div class="fld half" id="fAssignWrap" style="display:none"><label>De quem é a missão?</label><div class="pick-seg assign-seg" id="fAssign">
+      <button type="button" data-v="bruno" class="active"><span class="assign-avatar" style="background:linear-gradient(135deg,#007AFF,#5AC8FA)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Bruno</button>
+      <button type="button" data-v="parceira"><span class="assign-avatar" style="background:linear-gradient(135deg,#FF2D55,#FF6482)"><svg width="14" height="14"><use href="#i-user"/></svg></span>Clara</button>
+      <button type="button" data-v="ambos"><span class="assign-avatar both" style="background:linear-gradient(135deg,#AF52DE,#5856D6)"><svg width="14" height="14"><use href="#i-users"/></svg></span>Ambos</button>
+    </div></div>
     <div class="fld"><label>Notas <span style="color:var(--label3);font-weight:400">(opcional)</span></label><textarea id="fN" placeholder="Detalhes, links, anotações..." rows="2"></textarea></div>
     <div class="fld-row"><div class="fld"><label>Qual a urgência?</label><div class="pick-seg" id="fP"><button type="button" data-v="alta"><span class="pick-dot" style="background:#FF3B30"></span>Alta</button><button type="button" data-v="media" class="active"><span class="pick-dot" style="background:#FF9500"></span>Média</button><button type="button" data-v="baixa"><span class="pick-dot" style="background:#34C759"></span>Baixa</button></div></div><div class="fld"><label>Em que pé está?</label><div class="pick-seg" id="fS"><button type="button" data-v="todo" class="active">A Fazer</button><button type="button" data-v="doing">Fazendo</button><button type="button" data-v="done">Feita</button></div></div></div>
     <div class="fld half"><label>Até quando?</label><input type="date" id="fD"><div class="adv-field" style="position:relative"><button type="button" class="recur-btn" id="recurBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg><span id="recurLabel">Repetir</span></button><div class="recur-pop" id="recurPop"><div class="recur-freq" id="recurFreq"><button type="button" data-rf="daily">Diário</button><button type="button" data-rf="weekdays">Dias úteis</button><button type="button" data-rf="weekly">Semanal</button><button type="button" data-rf="monthly">Mensal</button><button type="button" data-rf="">Nenhum</button></div><div class="recur-until"><span>Até:</span><input type="date" id="recurUntil"></div></div></div></div>
@@ -2717,6 +2717,28 @@ function fbSave(){
       setTimeout(()=>{_fbSaving=false},800);
     }).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
   },300);
+}
+// Gravacao imediata, sem o debounce de 300ms.
+// Exclusao nao pode esperar: se a pagina recarregar dentro da janela do
+// debounce, a escrita nunca sai e o servidor devolve o item apagado — foi
+// exatamente isso que fazia tarefas e categorias "voltarem" apos um F5.
+// Agrupar edicoes continua fazendo sentido; agrupar exclusoes nao.
+function fbSaveNow(){
+  if(!_fbReady||!_fbInitDone||_loggingOut)return Promise.resolve();
+  if(!_fbSynced){console.warn('⚠️ fbSaveNow bloqueado: ainda nao sincronizou');return Promise.resolve()}
+  if(!currentUser||(_syncedUid&&_syncedUid!==currentUser.uid))return Promise.resolve();
+  clearTimeout(_fbTimer);
+  _fbSaving=true;
+  _fbSaveTs=Date.now();
+  _fbDirty=true;
+  showSync('Salvando...');
+  try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents)}catch(e){}
+  return _fbDirectSave().then(()=>{
+    showSync('Sincronizado ✓',true);
+    _fbSaveCompletedAt=Date.now();
+    _fbDirty=false;
+    setTimeout(()=>{_fbSaving=false},800);
+  }).catch(e=>{showSync('Erro ao salvar',false);console.warn('FB save error',e);_fbSaving=false});
 }
 let _fbDirty=false;
 // CRITICAL: Flush pending saves before page unloads to prevent data loss
@@ -4450,11 +4472,12 @@ function openM(task){
   pickVal($('#fProj'),fFormProj);
   updateFormProject();
   
-  // Hide project selector if creating new task inside a specific project
+  // O projeto do contexto ja vem pre-selecionado acima, mas o seletor continua
+  // visivel: escondendo, uma tarefa criada com um unico projeto na barra
+  // lateral ficava presa nele, sem como corrigir a nao ser cancelar, trocar o
+  // filtro e abrir de novo.
   const fProjFld=$('#fProj').closest('.fld');
-  if(fProjFld){
-    fProjFld.style.display=(!e && ap!=='all') ? 'none' : '';
-  }
+  if(fProjFld)fProjFld.style.display='';
 
   // Category uses correct project
   const projCats=getCatsForProject(fFormProj);
@@ -4690,7 +4713,7 @@ function closeViewTask(){
 
 function edit(id){const t=tasks.find(x=>x.id===id);if(!t)return;if(t.status==='done'){viewTask(id);return}openM(t)}
 function quickChild(parentId){const parent=tasks.find(x=>x.id===parentId);if(!parent)return;openM(null);fCCat=parent.category;renderCatPicker();mDeps=[parentId];renderDepChips();toast('Nova subtarefa de: '+parent.title)}
-function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t){addLog('delete',t);if(t.project&&isSharedProj(t.project)){(deletedByProj[t.project]=deletedByProj[t.project]||{})[t.id]=Date.now()}if(t.recurrence){tasks.forEach(x=>{if(x.title===t.title&&x.recurrence){x.recurrence=null;x.updatedAt=Date.now()}})}}tasks=tasks.filter(x=>x.id!==delId);sT();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
+function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t){addLog('delete',t);if(t.project&&isSharedProj(t.project)){(deletedByProj[t.project]=deletedByProj[t.project]||{})[t.id]=Date.now()}if(t.recurrence){tasks.forEach(x=>{if(x.title===t.title&&x.recurrence){x.recurrence=null;x.updatedAt=Date.now()}})}}tasks=tasks.filter(x=>x.id!==delId);sT();fbSaveNow();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
 function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   if(isBlocked(t)&&newSt==='done'){toast('Complete a tarefa anterior primeiro');return}
   const wasDone=t.status==='done';
@@ -5159,10 +5182,9 @@ function delProj(id) {
     log = log.filter(l => (l.project || 'bruno') !== id);
     if (activeProject === id) activeProject = 'all';
     if (fFormProj === id) fFormProj = 'bruno';
-    saveUI(); sT(); sL(); render();
+    saveUI(); sT(); sL(); fbSaveNow(); render();
     toast('Projeto excluído');
     $('#cfWrap').classList.remove('open');
-    if (typeof _fbDirectSave === 'function') _fbDirectSave();
   };
 }
 
@@ -5176,7 +5198,7 @@ function closeCatMgr(){$('#ovCat').classList.remove('open');$('#modalCat').class
 function renderCatMgrList(){$('#catMgrList').innerHTML=cats.map(c=>`<div class="cat-mgr-item"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg><span class="cat-mgr-name">${c.name}</span><div class="cat-mgr-actions"><button class="a-btn" onclick="editCat('${c.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="delCat('${c.id}')"><svg><use href="#i-trash"/></svg></button></div></div>`).join('')}
 function openCatEdit(cat){editingCatId=cat?cat.id:null;$('#catMgrView').style.display='none';$('#catEditView').style.display='';$('#catModalTitle').textContent=cat?'Editar':'Nova Categoria';$('#ceN').value=cat?cat.name:'';const si=cat?cat.icon:'i-star';const sc=cat?cat.color:'#007AFF';$('#ceIcons').innerHTML=ICONS.map(ic=>`<button type="button" class="icon-opt ${ic===si?'active':''}" data-icon="${ic}"><svg><use href="#${ic}"/></svg></button>`).join('');$('#ceColors').innerHTML=COLORS.map(co=>`<button type="button" class="color-opt ${co===sc?'active':''}" data-color="${co}" style="background:${co}"></button>`).join('');setTimeout(()=>$('#ceN').focus(),200)}
 function editCat(id){const c=cats.find(x=>x.id===id);if(c)openCatEdit(c)}
-function delCat(id){closeCatMgr();delId=id;$('#cfTitle').textContent='Excluir Categoria';$('#cfMsg').textContent='Tarefas serão mantidas.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{cats=cats.filter(c=>c.id!==id);sC();render();toast('Categoria excluída');$('#cfWrap').classList.remove('open');openCatMgr()}}
+function delCat(id){closeCatMgr();delId=id;$('#cfTitle').textContent='Excluir Categoria';$('#cfMsg').textContent='Tarefas serão mantidas.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{cats=cats.filter(c=>c.id!==id);sC();fbSaveNow();render();toast('Categoria excluída');$('#cfWrap').classList.remove('open');openCatMgr()}}
 $('#ceIcons').addEventListener('click',e=>{const o=e.target.closest('.icon-opt');if(!o)return;$$('#ceIcons .icon-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active')});
 $('#ceColors').addEventListener('click',e=>{const o=e.target.closest('.color-opt');if(!o)return;$$('#ceColors .color-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active')});
 $('#ceSave').addEventListener('click',()=>{const name=$('#ceN').value.trim();if(!name)return;const icon=$('#ceIcons .icon-opt.active')?.dataset.icon||'i-star';const color=$('#ceColors .color-opt.active')?.dataset.color||'#007AFF';if(editingCatId){const c=cats.find(x=>x.id===editingCatId);if(c){c.name=name;c.icon=icon;c.color=color}toast('Atualizada')}else{cats.push({id:name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')+'_'+uid().slice(-3),name,icon,color});toast('Criada')}sC();render();$('#catMgrView').style.display='';$('#catEditView').style.display='none';$('#catModalTitle').textContent='Categorias';renderCatMgrList()});
@@ -5632,7 +5654,7 @@ $('#nbInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.
 function nbDeleteNote(id){
   const t=tasks.find(x=>x.id===id);
   if(t) addLog('delete',t);
-  tasks=tasks.filter(t=>t.id!==id);sT();render();nbRender();
+  tasks=tasks.filter(t=>t.id!==id);sT();fbSaveNow();render();nbRender();
 }
 // Render board
 // Keyword magic for Notes Board — safe single-pass (no HTML corruption)

@@ -194,3 +194,30 @@ test('conta com todos os projetos ocultos ainda mostra as tarefas', async ({ pag
   await expect.poll(() => page.evaluate(() => (eval('getVisibleTasks') as any)().length)).toBe(1);
   await expect(page.locator('body')).toContainText('Tarefa que sumia');
 });
+
+/**
+ * Nova tarefa criada com um único projeto visível na barra lateral ficava presa
+ * nele: o seletor de projeto era escondido (`display:none`) e não havia como
+ * corrigir sem cancelar, trocar o filtro e abrir de novo.
+ */
+test('seletor de projeto continua acessível ao criar tarefa dentro de um projeto', async ({ page }) => {
+  const projetos = [
+    { id: 'bruno', name: 'Bruno', icon: 'i-user', color: '#007AFF', gradient: 'g', type: 'personal', visible: false, order: 0 },
+    { id: 'nos', name: 'Nós', icon: 'i-heart', color: '#FF2D55', gradient: 'g', type: 'shared', visible: true, order: 1 }
+  ];
+  await bootApp(page, {
+    user,
+    store: { users: { 'uid-B': { tasks: '[]', cats: '[]', log: '[]', projects: JSON.stringify(projetos) } } }
+  });
+  await expect(page.locator('.shell')).toBeVisible();
+  await page.waitForTimeout(600);
+
+  // só o projeto compartilhado visível — era exatamente o caso que travava
+  await page.evaluate(() => (eval('openM') as any)(null));
+  await page.waitForTimeout(300);
+
+  await expect(page.locator('#fProj')).toBeVisible();
+  // e dá para sair dele
+  await page.locator('#fProj button[data-v="bruno"]').click();
+  expect(await page.evaluate(() => eval('fFormProj'))).toBe('bruno');
+});
