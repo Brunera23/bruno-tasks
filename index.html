@@ -1301,6 +1301,54 @@
     .layout-toggle button.active{background:var(--card);color:var(--label);box-shadow:0 1px 4px rgba(0,0,0,.1)}
     .layout-toggle button svg{width:14px;height:14px}
     .task-kanban-wrap{display:none}
+    /* ===== TIMELINE ===== */
+    .task-tl-wrap{display:none}
+    .task-tl-wrap.active{display:block}
+    .tl-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .tl-zoom{display:inline-flex;background:var(--fill);border-radius:9px;padding:2px;gap:2px}
+    .tl-zoom button{border:none;background:transparent;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--label2);padding:5px 11px;border-radius:7px;cursor:pointer;transition:all var(--dur-fast)}
+    .tl-zoom button.active{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    .tl-today-btn{border:1px solid var(--sep);background:var(--card);font-family:inherit;font-size:.72rem;font-weight:600;color:var(--label);padding:5px 12px;border-radius:8px;cursor:pointer}
+    .tl-today-btn:hover{background:var(--fill)}
+    .tl-legend{display:inline-flex;align-items:center;gap:6px;font-size:.68rem;color:var(--label3);font-weight:500;margin-left:auto}
+    .tl-lg{width:9px;height:9px;border-radius:3px;display:inline-block;margin-left:8px}
+    .tl-lg-late{background:#FF3B30}.tl-lg-doing{background:#FF9500}.tl-lg-done{background:#34C759}
+    .tl-lg-devia{background:#AF52DE}
+    .tl-bar-item.devia{background:#AF52DE}
+    /* duracao desconhecida: listrada, para nao passar por duracao real */
+    .tl-bar-item.incerta{background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.28) 0 5px,transparent 5px 10px)}
+    .tl-scroll{overflow-x:auto;overflow-y:hidden;border:1px solid var(--sep);border-radius:14px;background:var(--card)}
+    .tl-inner{position:relative;min-width:100%}
+    /* cabecalho de datas fica colado no topo ao rolar */
+    .tl-head{position:sticky;top:0;z-index:3;display:flex;background:var(--card);border-bottom:1px solid var(--sep)}
+    .tl-head-lbl{flex-shrink:0;border-right:1px solid var(--sep);background:var(--card);position:sticky;left:0;z-index:4}
+    .tl-cols{display:flex;position:relative}
+    .tl-col{flex-shrink:0;text-align:center;font-size:.62rem;font-weight:600;color:var(--label3);padding:7px 0 6px;border-right:1px solid var(--sep);line-height:1.3}
+    .tl-col.wknd{background:var(--fill)}
+    .tl-col.today{color:var(--blue)}
+    .tl-col b{display:block;font-size:.72rem;color:var(--label2);font-weight:700}
+    .tl-col.today b{color:var(--blue)}
+    .tl-grp{font-size:.66rem;font-weight:700;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;padding:9px 12px 5px;position:sticky;left:0;background:var(--card);z-index:2}
+    .tl-row{display:flex;align-items:center;height:34px;position:relative}
+    .tl-row:hover{background:var(--fill)}
+    .tl-row-lbl{flex-shrink:0;position:sticky;left:0;z-index:2;background:var(--card);padding:0 10px;font-size:.74rem;font-weight:500;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid var(--sep);height:100%;display:flex;align-items:center;gap:7px}
+    .tl-row:hover .tl-row-lbl{background:var(--fill)}
+    .tl-row-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .tl-track{position:relative;height:100%;flex:1}
+    .tl-bar-item{position:absolute;top:50%;transform:translateY(-50%);height:19px;border-radius:6px;background:var(--blue);cursor:pointer;display:flex;align-items:center;padding:0 7px;font-size:.62rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;min-width:8px;transition:filter var(--dur-fast)}
+    .tl-bar-item:hover{filter:brightness(1.12)}
+    .tl-bar-item.late{background:#FF3B30}
+    .tl-bar-item.doing{background:#FF9500}
+    .tl-bar-item.done{background:#34C759;opacity:.62}
+    /* linha do "hoje" atravessando as raias */
+    .tl-now{position:absolute;top:0;bottom:0;width:2px;background:var(--blue);z-index:1;pointer-events:none;opacity:.55}
+    .tl-nodate{margin-top:12px}
+    .tl-nodate-t{font-size:.68rem;font-weight:700;color:var(--label3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+    .tl-nd-chips{display:flex;flex-wrap:wrap;gap:6px}
+    .tl-nd-chip{font-size:.72rem;font-weight:500;color:var(--label2);background:var(--fill);border:1px solid var(--sep);border-radius:8px;padding:5px 10px;cursor:pointer}
+    .tl-nd-chip:hover{background:var(--card);color:var(--label)}
+    .tl-empty{padding:34px 12px;text-align:center;color:var(--label3);font-size:.8rem}
+    @media(max-width:640px){.tl-legend{display:none}}
     .task-kanban-wrap.active{display:block}
     .tasks-view .tl.hidden-by-layout{display:none}
     .tasks-view .grp-bar.hidden-by-layout{display:none}
@@ -1531,6 +1579,7 @@
         <div class="layout-toggle" id="layoutToggle">
           <button class="active" data-layout="list" title="Visualização em lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Lista</button>
           <button data-layout="board" title="Visualização em quadro Kanban"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="9" rx="1"/></svg>Quadro</button>
+          <button data-layout="timeline" title="Linha do tempo — do início ao prazo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="7" x2="14" y2="7"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="12" y2="17"/></svg>Timeline</button>
         </div>
         <button class="btn-focus" id="btnFocus" style="display:none" title="Modo Foco — janela flutuante com o que você está fazendo agora"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></svg>Foco<span class="bf-count" id="bfCount">0</span></button>
         <button class="btn-add" id="btnAdd"><svg><use href="#i-plus"/></svg>Nova tarefa</button>
@@ -1562,6 +1611,19 @@
       <div class="tl" id="list"></div>
       <div class="task-kanban-wrap" id="taskKanbanWrap">
         <div class="kanban" id="taskKanban"></div>
+      </div>
+      <div class="task-tl-wrap" id="taskTimelineWrap">
+        <div class="tl-bar">
+          <div class="tl-zoom" id="tlZoom">
+            <button data-tlz="day">Dias</button>
+            <button data-tlz="week" class="active">Semanas</button>
+            <button data-tlz="month">Meses</button>
+          </div>
+          <button class="tl-today-btn" id="tlToday">Hoje</button>
+          <span class="tl-legend">barra = começar → prazo <i class="tl-lg tl-lg-devia"></i>Devia ter começado <i class="tl-lg tl-lg-late"></i>Atrasada <i class="tl-lg tl-lg-doing"></i>Fazendo <i class="tl-lg tl-lg-done"></i>Feita</span>
+        </div>
+        <div class="tl-scroll" id="tlScroll"><div class="tl-inner" id="taskTimeline"></div></div>
+        <div class="tl-nodate" id="tlNoDate"></div>
       </div>
     </div>
 
@@ -2472,7 +2534,7 @@ const NOS_CATS=[
   {id:'financas-casal',name:'Finanças',icon:'i-wallet',color:'#FF3B30'}
 ];
 
-function saveUI(){sv('bt-ui',{aCat,aSt,aOwner,curView,groupBy,sortBy,showDone,taskLayout});sv('bt-projects',projects)}
+function saveUI(){sv('bt-ui',{aCat,aSt,aOwner,curView,groupBy,sortBy,showDone,taskLayout,tlZoom});sv('bt-projects',projects)}
 
 function getCatsForProject(projId){
   return projId==='nos'?NOS_CATS:cats;
@@ -3613,22 +3675,143 @@ function renderTasksKanban(){
   }).join('');
 }
 
+// ===== TIMELINE =====
+// O prazo e o FIM; o inicio sai de tras para frente: prazo - tempo estimado.
+// Assim a barra responde "quando preciso comecar para entregar no prazo", que e
+// a pergunta util no planejamento. A estimativa vem em minutos e a timeline e em
+// dias, entao converte pela capacidade diaria que o app ja usa (DAILY_CAP, 8h).
+// Sem estimativa nao da para saber a duracao: vira uma barra de um dia, marcada
+// como incerta em vez de fingir uma duracao que nao existe.
+let tlZoom=_ui.tlZoom||'week';
+const TL_LBL=190; // largura da coluna de titulos
+function tlDayMs(){return 864e5}
+function tlColWidth(){return tlZoom==='day'?52:tlZoom==='week'?26:11}
+function tlDurDias(t){
+  if(!t.estimatedTime)return {dias:1,estimado:false};
+  return {dias:Math.max(1,Math.ceil(t.estimatedTime/DAILY_CAP)),estimado:true};
+}
+// Data em que a tarefa precisa comecar para caber ate o prazo
+function tlComecoDs(t){
+  if(!t.date)return null;
+  const {dias}=tlDurDias(t);
+  const d=new Date(t.date+'T00:00:00');
+  d.setDate(d.getDate()-(dias-1));
+  return dateStr(d);
+}
+function tlStartOf(t){
+  if(!t.date)return null;
+  return new Date(tlComecoDs(t)+'T00:00:00').getTime();
+}
+function tlTasks(){
+  return getVisibleTasks().filter(t=>{
+    if(t.type==='note')return false;
+    if(aCat!=='all'&&t.category!==aCat)return false;
+    if(qry&&!smartFilter(t,qry))return false;
+    if(!showDone&&t.status==='done')return false;
+    return true;
+  });
+}
+function renderTasksTimeline(){
+  const inner=$('#taskTimeline');if(!inner)return;
+  const all=tlTasks();
+  const comPrazo=all.filter(t=>t.date), semPrazo=all.filter(t=>!t.date);
+
+  // faixa sem prazo, embaixo
+  const nd=$('#tlNoDate');
+  nd.innerHTML=semPrazo.length
+    ? `<div class="tl-nodate-t">Sem prazo — ${semPrazo.length}</div><div class="tl-nd-chips">`+
+      semPrazo.map(t=>`<button class="tl-nd-chip" onclick="edit('${t.id}')">${escapeHtml(t.title)}</button>`).join('')+`</div>`
+    : '';
+
+  if(!comPrazo.length){
+    inner.innerHTML='<div class="tl-empty">Nenhuma tarefa com prazo para mostrar aqui.</div>';
+    return;
+  }
+
+  const dia=tlDayMs(), cw=tlColWidth();
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  let min=Math.min(...comPrazo.map(tlStartOf)), max=Math.max(...comPrazo.map(t=>new Date(t.date+'T00:00:00').getTime()));
+  min=Math.min(min,hoje.getTime()-3*dia); max=Math.max(max,hoje.getTime()+7*dia);
+  const d0=new Date(min);d0.setHours(0,0,0,0);
+  const dias=Math.max(1,Math.round((max-d0.getTime())/dia)+1);
+  const larguraTotal=dias*cw;
+  const px=ms=>((ms-d0.getTime())/dia)*cw;
+
+  // cabecalho de datas
+  const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const DOW=['D','S','T','Q','Q','S','S'];
+  let cols='';
+  for(let i=0;i<dias;i++){
+    const d=new Date(d0.getTime()+i*dia);
+    const fds=d.getDay()===0||d.getDay()===6;
+    const eHoje=d.getTime()===hoje.getTime();
+    const cls='tl-col'+(fds?' wknd':'')+(eHoje?' today':'');
+    let txt;
+    if(tlZoom==='day') txt=`${DOW[d.getDay()]}<b>${d.getDate()}</b>`;
+    else if(tlZoom==='week') txt=(d.getDate()===1||i===0)?`${MES[d.getMonth()]}<b>${d.getDate()}</b>`:`<b>${d.getDate()}</b>`;
+    else txt=(d.getDate()===1)?`<b>${MES[d.getMonth()]}</b>`:'';
+    cols+=`<div class="${cls}" style="width:${cw}px">${txt}</div>`;
+  }
+
+  // agrupado por projeto, com as mais urgentes em cima
+  const porProj={};
+  comPrazo.forEach(t=>{const k=t.project||'bruno';(porProj[k]=porProj[k]||[]).push(t)});
+  const hojeDs=dateStr(new Date());
+  let linhas='';
+  Object.keys(porProj).forEach(pid=>{
+    const p=projects.find(x=>x.id===pid);
+    linhas+=`<div class="tl-grp">${escapeHtml(p?p.name:pid)}</div>`;
+    porProj[pid].sort((a,b)=>a.date.localeCompare(b.date)).forEach(t=>{
+      const c=ci(t.category);
+      const ini=tlStartOf(t), fim=new Date(t.date+'T00:00:00').getTime();
+      const left=px(ini), width=Math.max(8,px(fim+dia)-left);
+      const comecoDs=tlComecoDs(t), {estimado}=tlDurDias(t);
+      let cls='tl-bar-item';
+      if(t.status==='done')cls+=' done';
+      else if(t.date<hojeDs)cls+=' late';
+      else if(t.status==='doing')cls+=' doing';
+      else if(comecoDs<hojeDs)cls+=' devia';  // ja passou da hora de comecar
+      if(!estimado)cls+=' incerta';
+      const rotulo=width>58?escapeHtml(t.title):'';
+      const dica=t.title+' — começar '+fDate(comecoDs)+', vence '+fDate(t.date)
+        +(estimado?' ('+fmtTime(t.estimatedTime)+')':' (sem estimativa)');
+      linhas+=`<div class="tl-row">`
+        +`<div class="tl-row-lbl" style="width:${TL_LBL}px" title="${escAttr(t.title)}"><span class="tl-row-dot" style="background:${c.color}"></span>${escapeHtml(t.title)}</div>`
+        +`<div class="tl-track" style="width:${larguraTotal}px">`
+        +`<div class="${cls}" style="left:${left}px;width:${width}px" onclick="edit('${t.id}')" title="${escAttr(dica)}">${rotulo}</div>`
+        +`</div></div>`;
+    });
+  });
+
+  const nowLeft=TL_LBL+px(hoje.getTime())+cw/2;
+  inner.innerHTML=`<div class="tl-head"><div class="tl-head-lbl" style="width:${TL_LBL}px"></div><div class="tl-cols" style="width:${larguraTotal}px">${cols}</div></div>`
+    +`<div style="position:relative">${linhas}<div class="tl-now" style="left:${nowLeft}px"></div></div>`;
+  inner.style.width=(TL_LBL+larguraTotal)+'px';
+}
+function tlScrollToToday(){
+  const sc=$('#tlScroll');if(!sc)return;
+  const now=sc.querySelector('.tl-now');
+  if(now)sc.scrollLeft=Math.max(0,parseFloat(now.style.left)-sc.clientWidth/2);
+}
+
 function setTaskLayout(layout){
   taskLayout=layout;
   saveUI();
   applyTaskLayout();
   // Re-renderiza a view de destino: ao voltar p/ Lista, reflete mudanças feitas no Quadro (e vice-versa)
   if(taskLayout==='board') renderTasksKanban();
+  else if(taskLayout==='timeline'){renderTasksTimeline();setTimeout(tlScrollToToday,30)}
   else renderTasks();
 }
 
 function applyTaskLayout(){
-  const isBoard=taskLayout==='board';
+  const isBoard=taskLayout==='board', isTl=taskLayout==='timeline';
   $$('#layoutToggle button').forEach(b=>b.classList.toggle('active',b.dataset.layout===taskLayout));
-  $('#list').classList.toggle('hidden-by-layout',isBoard);
-  const grpBar=$('.grp-bar');if(grpBar) grpBar.classList.toggle('hidden-by-layout',isBoard);
+  $('#list').classList.toggle('hidden-by-layout',isBoard||isTl);
+  const grpBar=$('.grp-bar');if(grpBar) grpBar.classList.toggle('hidden-by-layout',isBoard||isTl);
   const seg=$('#taskSeg');if(seg) seg.classList.toggle('hidden-by-layout',isBoard);
   $('#taskKanbanWrap').classList.toggle('active',isBoard);
+  const tw=$('#taskTimelineWrap');if(tw)tw.classList.toggle('active',isTl);
 }
 
 
@@ -4078,7 +4261,7 @@ function toggleAlertBar(){
   if(bar) bar.classList.toggle('open',_alertBarOpen);
 }
 
-function render(){renderProjNav();renderCatNav();renderTasks();renderWidgets();updateFocusBtn();if(curView==='dash')renderDash();if(curView==='med')renderMedView();if(curView==='agents')renderAgentsView();else{const b=$('#navBadgeAg');if(b)b.textContent=agentTasks().filter(t=>t.status!=='done').length}
+function render(){renderProjNav();renderCatNav();renderTasks();if(taskLayout==='timeline')renderTasksTimeline();renderWidgets();updateFocusBtn();if(curView==='dash')renderDash();if(curView==='med')renderMedView();if(curView==='agents')renderAgentsView();else{const b=$('#navBadgeAg');if(b)b.textContent=agentTasks().filter(t=>t.status!=='done').length}
   const ap=getActiveContextProject();
   if(ap==='nos'){
     $('#ownerSeg').style.display='';
@@ -5934,6 +6117,15 @@ $('#kanban').addEventListener('mousemove',e=>{
 });
 
 // ===== TASK KANBAN EVENT LISTENERS =====
+const _tlz=$('#tlZoom');
+if(_tlz)_tlz.addEventListener('click',e=>{
+  const b=e.target.closest('[data-tlz]');if(!b)return;
+  tlZoom=b.dataset.tlz;
+  $$('#tlZoom button').forEach(x=>x.classList.toggle('active',x.dataset.tlz===tlZoom));
+  saveUI();
+  renderTasksTimeline();setTimeout(tlScrollToToday,20);
+});
+const _tlt=$('#tlToday');if(_tlt)_tlt.addEventListener('click',tlScrollToToday);
 $('#layoutToggle').addEventListener('click',e=>{
   const btn=e.target.closest('[data-layout]');if(!btn)return;
   setTaskLayout(btn.dataset.layout);
