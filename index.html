@@ -1355,8 +1355,12 @@
     .cv-note{border-radius:2px;box-shadow:0 5px 14px rgba(0,0,0,.17);border:none}
     .cv-note::after{content:'';position:absolute;right:0;bottom:0;width:17px;height:17px;background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.13) 50%)}
     /* Formas: diagrama. Contorno definido, sem sombra, canto arredondado. */
-    .cv-rect{border-radius:10px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.22)}
-    .cv-ellipse .cv-shape-bg,.cv-diamond .cv-shape-bg{box-shadow:inset 0 0 0 2px rgba(0,0,0,.22)}
+    .cv-rect{border-radius:10px}
+    /* borda opcional, ligada pelo botao ▢ */
+    .cv-node.bd.cv-rect{box-shadow:inset 0 0 0 2px rgba(0,0,0,.28)}
+    .cv-node.bd .cv-shape-bg{box-shadow:inset 0 0 0 2px rgba(0,0,0,.28)!important}
+    .cv-node.bd.cv-note{box-shadow:0 5px 14px rgba(0,0,0,.17),inset 0 0 0 2px rgba(0,0,0,.28)}
+    .cv-node.bd.cv-text{box-shadow:inset 0 0 0 2px var(--sep);border-radius:8px}
     .cv-node.sel{outline:2px solid var(--blue);outline-offset:3px}
     .cv-node.dragging{cursor:grabbing;box-shadow:0 12px 30px rgba(0,0,0,.22);z-index:5}
     .cv-node.cv-alvo{outline:2px solid var(--blue);outline-offset:2px}
@@ -1368,7 +1372,18 @@
     .cv-ellipse .cv-node-txt,.cv-diamond .cv-node-txt{position:relative;z-index:1;text-align:center;padding:0 14px}
     .cv-ellipse,.cv-diamond{display:flex;align-items:center;justify-content:center}
     .cv-text{background:transparent!important;box-shadow:none;border:none;padding:6px 8px 24px;font-size:1rem;font-weight:600;color:var(--label)}
-    .cv-node-txt{outline:none;white-space:pre-wrap;word-break:break-word;min-height:24px;cursor:text;width:100%;overflow:hidden}
+    /* fora do modo de edicao o texto nao captura o ponteiro: o arrasto pega
+       o objeto inteiro, inclusive por cima das letras */
+    .cv-node-txt{outline:none;white-space:pre-wrap;word-break:break-word;min-height:24px;width:100%;overflow:hidden;pointer-events:none;user-select:none}
+    .cv-node.editando .cv-node-txt{pointer-events:auto;user-select:text;cursor:text}
+    .cv-node.editando{cursor:default;outline:2px solid var(--blue);outline-offset:3px}
+    /* marcadores de triagem */
+    .cv-reacts{position:absolute;top:-9px;left:9px;display:flex;gap:2px;z-index:4}
+    .cv-reacts span{background:var(--card);border:1px solid var(--sep);border-radius:20px;font-size:.72rem;line-height:1;padding:3px 5px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+    .cv-emos{display:flex;gap:1px;margin-right:3px}
+    .cv-emos button{font-size:.72rem;width:21px;height:23px;background:transparent}
+    .cv-emos button:hover{background:rgba(0,0,0,.12)}
+    .cv-acts button.on{background:rgba(0,0,0,.24)}
     .cv-node-txt:empty::before{content:'Escreva...';opacity:.45}
     .cv-acts{position:absolute;right:6px;bottom:5px;display:flex;gap:3px;opacity:0;transition:opacity var(--dur-fast);z-index:2}
     .cv-node:hover .cv-acts{opacity:1}
@@ -3113,7 +3128,7 @@ function combineData(){
   const pCatDel=mergeDel(pCatDelServer,pCatDelLocal);pCatDelLocal=pCatDel;
   cats=pCats.filter(c=>!pCatDel[c.id]);
   // Canvas: nao troca o estado embaixo de quem esta arrastando ou digitando
-  if(!_cvDrag&&!_cvPan&&!_cvLink&&!_cvResize){
+  if(!_cvDrag&&!_cvPan&&!_cvLink&&!_cvResize&&!_cvEditando){
     const mudou=(pCanvas&&JSON.stringify(pCanvas)!==JSON.stringify(canvasItems))
       ||(pCvBoards&&JSON.stringify(pCvBoards)!==JSON.stringify(canvasBoards))
       ||(pCvEdges&&JSON.stringify(pCvEdges)!==JSON.stringify(canvasEdges));
@@ -3868,6 +3883,9 @@ function cvApplyCam(){
 // Ponto de conexao no meio de cada lado. Sao quatro por objeto: a seta sai e
 // chega por onde faz sentido no desenho, nao sempre pela direita.
 const CV_LADOS=['top','right','bottom','left'];
+// Marcadores rapidos: servem para triagem no quadro (o que e prioridade, o que
+// travou, o que ja foi decidido) sem precisar escrever.
+const CV_EMOS=['⭐','🔥','❗','✅','❓'];
 function cvPonto(n,lado){
   if(lado==='top')return {x:n.x+n.w/2,y:n.y};
   if(lado==='bottom')return {x:n.x+n.w/2,y:n.y+n.h};
@@ -3904,11 +3922,16 @@ function cvNodeHTML(n){
   const fundo=k==='text'?'':`background:${cor}`;
   const cores=CV_CORES.map(c=>`<i data-cvcolor="${n.id}" data-c="${c}" style="background:${c}"></i>`).join('');
   const sel=n.id===_cvSel?' sel':'';
-  return `<div class="cv-node cv-${k}${sel}" data-cv="${n.id}" style="${est};${fundo}">
+  const bd=n.bordered?' bd':'';
+  const reacoes=(n.reacts&&n.reacts.length)?`<div class="cv-reacts">${n.reacts.map(r=>`<span>${r}</span>`).join('')}</div>`:'';
+  return `<div class="cv-node cv-${k}${sel}${bd}" data-cv="${n.id}" style="${est};${fundo}">
+    ${reacoes}
     ${k==='ellipse'||k==='diamond'?`<div class="cv-shape-bg" style="background:${cor}"></div>`:''}
-    <div class="cv-node-txt" contenteditable="true" data-cvtxt="${n.id}">${escapeHtml(n.text||'')}</div>
+    <div class="cv-node-txt" contenteditable="false" data-cvtxt="${n.id}">${escapeHtml(n.text||'')}</div>
     ${k!=='text'?`<div class="cv-colors">${cores}</div>`:''}
     <div class="cv-acts">
+      <div class="cv-emos">${CV_EMOS.map(em=>`<button data-cvreact="${n.id}" data-em="${em}" title="Marcar ${em}">${em}</button>`).join('')}</div>
+      <button data-cvbd="${n.id}" title="Borda" class="${n.bordered?'on':''}">▢</button>
       <button data-cvtask="${n.id}" title="Virar tarefa">↗</button>
       <button data-cvdel="${n.id}" title="Apagar">✕</button>
     </div>
@@ -3954,6 +3977,18 @@ function renderCanvas(){
   } else if(vazio) vazio.remove();
   renderCvBoards();
   cvApplyCam();
+  // um re-render (ate o vindo da sincronizacao) trocava o DOM e tirava o
+  // usuario do meio da digitacao: devolve o modo de edicao a quem estava nele
+  if(_cvEditando&&itens.some(n=>n.id===_cvEditando)){
+    const el=w.querySelector(`[data-cvtxt="${_cvEditando}"]`);
+    if(el&&el.getAttribute('contenteditable')!=='true'){
+      el.setAttribute('contenteditable','true');
+      el.closest('.cv-node')?.classList.add('editando');
+      const r=document.createRange();r.selectNodeContents(el);r.collapse(false);
+      const sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);
+      el.focus();
+    }
+  } else if(_cvEditando) _cvEditando=null;
 }
 function renderCvBoards(){
   const el=$('#cvBoards');if(!el)return;
@@ -3975,9 +4010,11 @@ function cvAdd(kind,x,y){
   else if(_cvMouse)pos={x:_cvMouse.x-dim.w/2,y:_cvMouse.y-dim.h/2}; // nasce sob o cursor
   else{const r=st.getBoundingClientRect();pos=cvParaMundo(r.left+r.width/2-dim.w/2,r.top+r.height/2-dim.h/2)}
   const n={id:uid(),board:cvBoard,kind:k,x:Math.round(pos.x),y:Math.round(pos.y),w:dim.w,h:dim.h,text:'',
+    bordered:k==='rect'||k==='ellipse'||k==='diamond',
     color:CV_CORES[cvDoQuadro().length%CV_CORES.length],updatedAt:Date.now()};
   canvasItems.push(n);cvSave();renderCanvas();
-  setTimeout(()=>{const el=document.querySelector(`[data-cvtxt="${n.id}"]`);if(el)el.focus()},40);
+  cvSelecionar(n.id);
+  cvEditar(n.id); // recem-criado ja aceita digitacao (sincrono: evita corrida)
 }
 function cvZoom(fator,cx,cy){
   const st=$('#cvStage');if(!st)return;
@@ -4015,6 +4052,30 @@ function cvDelBoard(){
   cvBoard=canvasBoards[0].id;
   cvSave();fbSaveNow();renderCanvas();toast('Quadro excluído');
 }
+// Regra de interacao: um clique seleciona, dois cliques editam.
+// Com o texto sempre editavel, arrastar a partir do meio do objeto virava
+// cursor de digitacao em vez de mover — o motivo de "clico para arrastar e ele
+// entra no texto". Fora do modo de edicao o texto nao intercepta o ponteiro,
+// entao o arrasto funciona de qualquer ponto do objeto.
+let _cvEditando=null;
+function cvEditar(id){
+  cvSairEdicao();
+  _cvEditando=id;
+  const el=document.querySelector(`[data-cvtxt="${id}"]`);if(!el)return;
+  el.setAttribute('contenteditable','true');
+  el.closest('.cv-node')?.classList.add('editando');
+  el.focus();
+  const r=document.createRange();r.selectNodeContents(el);r.collapse(false);
+  const sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);
+}
+function cvSairEdicao(){
+  _cvEditando=null;
+  document.querySelectorAll('.cv-node-txt[contenteditable="true"]').forEach(el=>{
+    el.setAttribute('contenteditable','false');
+    el.closest('.cv-node')?.classList.remove('editando');
+  });
+}
+
 // Selecao serve aos atalhos: sem ela, Delete nao teria alvo.
 function cvSelecionar(id){
   if(_cvSel===id)return;
@@ -4044,7 +4105,13 @@ function cvInit(){
   st.dataset.ready='1';
 
   st.addEventListener('dblclick',e=>{
-    if(e.target.closest('.cv-node'))return;
+    // setPointerCapture (usado no arrasto) redireciona os eventos seguintes para
+    // o elemento que capturou: e.target viria como o palco mesmo com o duplo
+    // clique em cima de um objeto — e o app criava um post-it novo em vez de
+    // editar. A posicao do ponteiro nao mente.
+    const alvo=document.elementFromPoint(e.clientX,e.clientY);
+    const no=alvo&&alvo.closest?alvo.closest('.cv-node'):null;
+    if(no){cvEditar(no.dataset.cv);return}
     const p=cvParaMundo(e.clientX,e.clientY);cvAdd('note',p.x-95,p.y-56);
   });
 
@@ -4063,16 +4130,15 @@ function cvInit(){
       st.setPointerCapture(e.pointerId);e.preventDefault();return;
     }
     const no=e.target.closest('.cv-node');
-    if(no&&!e.target.closest('.cv-node-txt')&&!e.target.closest('button')&&!e.target.closest('.cv-colors')){
+    const editando=no&&no.classList.contains('editando');
+    if(no&&!editando&&!e.target.closest('button')&&!e.target.closest('.cv-colors')){
       const it=canvasItems.find(x=>x.id===no.dataset.cv);if(!it)return;
-      cvSelecionar(it.id);
+      cvSairEdicao();cvSelecionar(it.id);
       const p=cvParaMundo(e.clientX,e.clientY);
       _cvDrag={id:it.id,dx:p.x-it.x,dy:p.y-it.y,el:no};
       no.classList.add('dragging');st.setPointerCapture(e.pointerId);
-    } else if(no&&e.target.closest('.cv-node-txt')){
-      cvSelecionar(no.dataset.cv);
     } else if(!no){
-      cvSelecionar(null);
+      cvSairEdicao();cvSelecionar(null);
       const c=cvCam();
       _cvPan={sx:e.clientX,sy:e.clientY,ox:c.x,oy:c.y};
       st.classList.add('panning');st.setPointerCapture(e.pointerId);
@@ -4134,8 +4200,11 @@ function cvInit(){
     }
     if(_cvDrag){
       const it=canvasItems.find(x=>x.id===_cvDrag.id);
-      if(it){it.x=parseInt(_cvDrag.el.style.left);it.y=parseInt(_cvDrag.el.style.top);it.updatedAt=Date.now();cvSave()}
-      _cvDrag.el.classList.remove('dragging');_cvDrag=null;renderCanvas();
+      const nx=parseInt(_cvDrag.el.style.left), ny=parseInt(_cvDrag.el.style.top);
+      const moveu=it&&(it.x!==nx||it.y!==ny);
+      if(moveu){it.x=nx;it.y=ny;it.updatedAt=Date.now();cvSave()}
+      _cvDrag.el.classList.remove('dragging');_cvDrag=null;
+      if(moveu)renderCanvas(); // clique parado nao redesenha (atrapalharia o duplo clique)
     }
     if(_cvResize){
       const it=canvasItems.find(x=>x.id===_cvResize.id);
@@ -4168,6 +4237,16 @@ function cvInit(){
       canvasEdges=canvasEdges.filter(x=>x.id!==ar.dataset.cvedge);
       cvSave();fbSaveNow();renderCanvas();toast('Dependência removida');return;
     }
+    const bd=e.target.closest('[data-cvbd]');
+    if(bd){const it=canvasItems.find(x=>x.id===bd.dataset.cvbd);if(it){it.bordered=!it.bordered;it.updatedAt=Date.now();cvSave();renderCanvas()}return}
+    const rea=e.target.closest('[data-cvreact]');
+    if(rea){
+      const it=canvasItems.find(x=>x.id===rea.dataset.cvreact);if(!it)return;
+      const em=rea.dataset.em;
+      it.reacts=it.reacts||[];
+      it.reacts=it.reacts.includes(em)?it.reacts.filter(x=>x!==em):it.reacts.concat(em);
+      it.updatedAt=Date.now();cvSave();renderCanvas();return;
+    }
     const cor=e.target.closest('[data-cvcolor]');
     if(cor){const it=canvasItems.find(x=>x.id===cor.dataset.cvcolor);if(it){it.color=cor.dataset.c;it.updatedAt=Date.now();cvSave();renderCanvas()}return}
     const del=e.target.closest('[data-cvdel]');
@@ -4192,7 +4271,14 @@ function cvInit(){
   if(bs)bs.addEventListener('click',e=>{
     if(e.target.closest('#cvBoardAdd')){cvAddBoard();return}
     const t=e.target.closest('[data-cvb]');
-    if(t){cvBoard=t.dataset.cvb;cvSave();renderCanvas()}
+    if(t&&t.dataset.cvb!==cvBoard){cvSairEdicao();cvBoard=t.dataset.cvb;cvSave();renderCanvas()}
+  });
+  // duplo clique na aba renomeia o quadro
+  if(bs)bs.addEventListener('dblclick',e=>{
+    const t=e.target.closest('[data-cvb]');if(!t)return;
+    const b=canvasBoards.find(x=>x.id===t.dataset.cvb);if(!b)return;
+    const nome=prompt('Renomear quadro:',b.name);
+    if(nome&&nome.trim()){b.name=nome.trim().slice(0,40);cvSave();renderCanvas()}
   });
   const pal=$('#cvPalette');
   if(pal)pal.addEventListener('click',e=>{const b=e.target.closest('[data-cvk]');if(b)cvAdd(b.dataset.cvk)});
@@ -6857,7 +6943,7 @@ document.addEventListener('keydown',e=>{
   // Ctrl+Enter saves from anywhere in modal
   if(isModalOpen&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();$('#form').requestSubmit();return}
   // Escape closes
-  if(e.key==='Escape'&&curView==='canvas'&&_cvSel&&!document.activeElement.isContentEditable){cvSelecionar(null);return}
+  if(e.key==='Escape'&&curView==='canvas'){if(document.activeElement.isContentEditable){cvSairEdicao();return}if(_cvSel){cvSelecionar(null);return}}
   if(e.key==='Escape'){closeM();closeCatMgr();$('#cfWrap').classList.remove('open');$('#wdgPanel').classList.remove('open');$('#wkToggle').classList.remove('open');$('.main').classList.remove('wdg-open');return}
   // Atalhos globais (fora de campos de texto): N nova tarefa, / busca, 1-9 troca de view
   if(!isModalOpen){

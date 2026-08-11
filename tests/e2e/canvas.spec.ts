@@ -187,7 +187,7 @@ test('teclas criam cada tipo de objeto', async ({ page }) => {
 test('atalho NÃO dispara enquanto se digita num objeto', async ({ page }) => {
   await abrir(page,[{id:'n1',board:'ideias',kind:'note',x:60,y:60,w:190,h:112,text:''}]);
   const txt=page.locator('.cv-node-txt');
-  await txt.click();
+  await page.locator('[data-cv="n1"]').dblclick();   // entra em edição
   await txt.pressSequentially('nota rodando');
   await page.waitForTimeout(300);
   // continua um só objeto: as letras viraram texto, não novos objetos
@@ -242,4 +242,56 @@ test('a paleta anuncia o atalho de cada ferramenta', async ({ page }) => {
   for(const [k,dica] of Object.entries(esperado)){
     await expect(page.locator(`[data-cvk="${k}"]`)).toHaveAttribute('data-dica',dica);
   }
+});
+
+/** Arrastar x editar, bordas, reações e renomear quadro */
+
+test('um clique arrasta; só o duplo clique entra no texto', async ({ page }) => {
+  await abrir(page,[{id:'n1',board:'ideias',kind:'note',x:120,y:120,w:190,h:112,text:'Arrasta pelo meio'}]);
+  const no=page.locator('[data-cv="n1"]');
+  const b=await no.boundingBox();
+  // pressiona EM CIMA DO TEXTO e arrasta — antes isso virava cursor de digitação
+  await page.mouse.move(b!.x+90,b!.y+30);
+  await page.mouse.down();
+  await page.mouse.move(b!.x+290,b!.y+230,{steps:8});
+  await page.mouse.up();
+  await page.waitForTimeout(600);
+  const it=await page.evaluate(()=>(eval('canvasItems') as any[])[0]);
+  expect(it.x).toBeGreaterThan(280);
+  expect(await page.evaluate(()=>document.activeElement?.isContentEditable||false)).toBe(false);
+
+  // duplo clique entra em edição
+  await no.dblclick();
+  await expect(no).toHaveClass(/editando/);
+  expect(await page.evaluate(()=>document.activeElement?.isContentEditable||false)).toBe(true);
+});
+
+test('borda liga e desliga no shape e no texto', async ({ page }) => {
+  await abrir(page,[
+    {id:'r1',board:'ideias',kind:'rect',x:60,y:60,w:180,h:100,text:'R',bordered:true},
+    {id:'t1',board:'ideias',kind:'text',x:60,y:220,w:200,h:44,text:'T'}
+  ]);
+  await expect(page.locator('[data-cv="r1"]')).toHaveClass(/\bbd\b/);
+  await page.locator('[data-cvbd="r1"]').click();
+  await expect(page.locator('[data-cv="r1"]')).not.toHaveClass(/\bbd\b/);
+  await page.locator('[data-cvbd="t1"]').click();
+  await expect(page.locator('[data-cv="t1"]')).toHaveClass(/\bbd\b/);
+});
+
+test('reação marca e desmarca o objeto', async ({ page }) => {
+  await abrir(page,[{id:'n1',board:'ideias',kind:'note',x:60,y:60,w:190,h:112,text:'Prioridade'}]);
+  await page.locator('[data-cvreact="n1"][data-em="🔥"]').click();
+  await expect(page.locator('.cv-reacts')).toContainText('🔥');
+  await page.locator('[data-cvreact="n1"][data-em="🔥"]').click();
+  await expect(page.locator('.cv-reacts')).toHaveCount(0);
+});
+
+test('duplo clique na aba renomeia o quadro', async ({ page }) => {
+  await abrir(page,[{id:'n1',board:'ideias',kind:'note',x:60,y:60,w:190,h:112,text:'x'}]);
+  page.on('dialog',d=>d.accept('Planejamento 2026'));
+  await page.locator('[data-cvb="ideias"]').dblclick();
+  await page.waitForTimeout(400);
+  await expect(page.locator('.cv-tab.active')).toContainText('Planejamento 2026');
+  const salvo=await page.evaluate(()=>JSON.parse(JSON.parse(sessionStorage.getItem('__mockStore')||'{}').users['uid-B'].canvasBoards||'[]'));
+  expect(salvo[0].name).toBe('Planejamento 2026');
 });
