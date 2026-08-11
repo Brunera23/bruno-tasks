@@ -77,24 +77,30 @@
 
     /* ===== PROJECT SELECTOR ===== */
     .sidebar-projects{margin-bottom:8px}
-    .proj-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;border:none;background:transparent;width:100%;text-align:left;font-family:inherit;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-size:.82rem;color:var(--label2)}
+    /* Lista pensada para muitos projetos: mesma densidade das categorias.
+       O icone de 30px era o que inflava a linha (46px vs 33px de uma categoria). */
+    #projNav{max-height:40vh;overflow-y:auto;overscroll-behavior:contain}
+    #projNav::-webkit-scrollbar{width:6px}
+    #projNav::-webkit-scrollbar-thumb{background:var(--fill);border-radius:3px}
+    .proj-item{display:flex;align-items:center;gap:9px;padding:5px 10px;border-radius:8px;border:none;background:transparent;width:100%;text-align:left;font-family:inherit;cursor:pointer;transition:all var(--dur-fast) var(--ease-std);font-size:.82rem;color:var(--label2)}
     .proj-item:hover{background:var(--fill);color:var(--label)}
     .proj-item:active{transform:scale(.98)}
     .proj-item.active{background:var(--fill);color:var(--label)}
-    .proj-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .proj-icon svg{width:14px;height:14px;color:#fff}
+    .proj-icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .proj-icon svg{width:11px;height:11px;color:#fff}
     .proj-info{flex:1;min-width:0;display:flex;flex-direction:column}
-    .proj-name{font-weight:600;font-size:.8rem;color:var(--label);line-height:1.2}
+    /* uma linha sempre: nome comprido nao pode engordar a linha e quebrar o ritmo da lista */
+    .proj-name{font-weight:600;font-size:.8rem;color:var(--label);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .proj-actions{display:flex;align-items:center;gap:4px;opacity:0;transition:opacity var(--dur-fast)}
     .proj-item:hover .proj-actions{opacity:1}
     .proj-actions .a-btn{width:24px;height:24px;padding:0;background:transparent;border:none;color:var(--label3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all var(--dur-fast)}
     .proj-actions .a-btn:hover{background:var(--fill);color:var(--label)}
     .proj-actions .a-btn svg{width:16px;height:16px}
-    .proj-badge{font-size:.68rem;font-weight:600;color:var(--label3);min-width:18px;text-align:center;margin-left:auto;margin-right:8px}
-    .proj-toggle{width:34px;height:20px;border-radius:10px;background:var(--fill);position:relative;cursor:pointer;transition:background var(--dur-norm) var(--ease-spring);flex-shrink:0;border:none;padding:0}
-    .proj-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform var(--dur-norm) var(--ease-spring)}
+    .proj-badge{font-size:.68rem;font-weight:600;color:var(--label3);min-width:16px;text-align:center;margin-left:auto;margin-right:6px}
+    .proj-toggle{width:26px;height:15px;border-radius:8px;background:var(--fill);position:relative;cursor:pointer;transition:background var(--dur-norm) var(--ease-spring);flex-shrink:0;border:none;padding:0}
+    .proj-toggle::after{content:'';position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform var(--dur-norm) var(--ease-spring)}
     .proj-toggle.on{background:#34C759}
-    .proj-toggle.on::after{transform:translateX(14px)}
+    .proj-toggle.on::after{transform:translateX(11px)}
     .proj-avatars{display:flex;margin-right:2px}
     .proj-avatar{width:18px;height:18px;border-radius:50%;color:#fff;font-size:.5rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--card);margin-left:-5px}
     .proj-avatar:first-child{margin-left:0}
