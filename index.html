@@ -1305,6 +1305,9 @@
     .canvas-view{display:none}
     .canvas-view.active{display:flex;flex-direction:column;height:calc(100dvh - 40px)}
     .cv-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    /* o botao flutuante de Widgets vive no canto superior direito: com a view
+       ocupando a largura toda, a barra passou a colidir com ele */
+    @media(min-width:1024px){.canvas-view .cv-tools{margin-right:150px}}
     .cv-palette{display:inline-flex;background:var(--fill);border-radius:10px;padding:3px;gap:2px}
     .cv-palette button{display:inline-flex;align-items:center;gap:6px;border:none;background:transparent;font-family:inherit;font-size:.74rem;font-weight:600;color:var(--label2);padding:6px 10px;border-radius:8px;cursor:pointer}
     .cv-palette button:hover{background:var(--card);color:var(--label)}
@@ -1340,11 +1343,20 @@
     .cv-edge:hover .cv-edge-x-bg,.cv-edge:hover .cv-edge-x{opacity:1}
     .cv-link-live{stroke:var(--blue);stroke-width:2;stroke-dasharray:5 4}
     /* objetos */
-    .cv-node{position:absolute;border-radius:12px;padding:11px 12px 30px;box-shadow:0 3px 10px rgba(0,0,0,.12);font-size:.8rem;line-height:1.45;color:#1c1c1e;cursor:grab;border:1px solid rgba(0,0,0,.07)}
+    .cv-node{position:absolute;padding:11px 12px 30px;font-size:.8rem;line-height:1.45;color:#1c1c1e;cursor:grab}
+    /* Post-it: papel. Sem borda, canto quase reto, sombra projetada e o canto
+       dobrado embaixo — para nao ser confundido com o retangulo do diagrama. */
+    .cv-note{border-radius:2px;box-shadow:0 5px 14px rgba(0,0,0,.17);border:none}
+    .cv-note::after{content:'';position:absolute;right:0;bottom:0;width:17px;height:17px;background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.13) 50%)}
+    /* Formas: diagrama. Contorno definido, sem sombra, canto arredondado. */
+    .cv-rect{border-radius:10px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.22)}
+    .cv-ellipse .cv-shape-bg,.cv-diamond .cv-shape-bg{box-shadow:inset 0 0 0 2px rgba(0,0,0,.22)}
+    .cv-node.sel{outline:2px solid var(--blue);outline-offset:3px}
     .cv-node.dragging{cursor:grabbing;box-shadow:0 12px 30px rgba(0,0,0,.22);z-index:5}
     .cv-node.cv-alvo{outline:2px solid var(--blue);outline-offset:2px}
     .cv-ellipse,.cv-diamond{background:transparent!important;box-shadow:none;border:none}
-    .cv-shape-bg{position:absolute;inset:0;z-index:0;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+    .cv-shape-bg{box-shadow:none!important}
+    .cv-shape-bg{position:absolute;inset:0;z-index:0}
     .cv-ellipse .cv-shape-bg{border-radius:50%}
     .cv-diamond .cv-shape-bg{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
     .cv-ellipse .cv-node-txt,.cv-diamond .cv-node-txt{position:relative;z-index:1;text-align:center;padding:0 14px}
@@ -1425,6 +1437,7 @@
     /* ===== AGENTS / KANBAN VIEW ===== */
     .agents-view{display:none}.agents-view.active{display:block}
     @media(min-width:1024px){.main:has(#agentsView.active){max-width:1500px}}
+    @media(min-width:1024px){.main:has(.canvas-view.active){max-width:none;padding-right:24px}}
     @media(min-width:1024px){.main:has(.task-kanban-wrap.active){max-width:1500px}}
     .kanban{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;overflow-y:visible;padding:4px 2px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;cursor:grab;user-select:none}
     .kanban.active{cursor:grabbing}
@@ -1583,7 +1596,7 @@
       <button class="nav-item active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas<span class="nav-badge" id="navBadge">0</span></button>
       <button class="nav-item" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
       <button class="nav-item" data-view="med"><svg><use href="#i-pill"/></svg>Saúde</button>
-      <button class="nav-item" data-view="canvas"><svg><use href="#i-bulb"/></svg>Ideias</button>
+      <button class="nav-item" data-view="canvas"><svg><use href="#i-bulb"/></svg>Quadros</button>
       <button class="nav-action" id="sideNotes"><svg><use href="#i-edit"/></svg>Quadro de Notas</button>
     </div>
     <div class="sidebar-projects">
@@ -1736,7 +1749,7 @@
       </div>
     </div>
     <div class="canvas-view" id="canvasView">
-      <div class="page-head"><div class="page-head-left"><div class="greeting">Espaço livre</div><h1>Ideias</h1></div>
+      <div class="page-head"><div class="page-head-left"><div class="greeting">Espaço livre para pensar</div><h1>Quadros</h1></div>
         <div class="cv-tools">
           <div class="cv-palette" id="cvPalette">
             <button data-cvk="note" title="Post-it"><i class="cvk cvk-note"></i>Post-it</button>
@@ -1751,7 +1764,7 @@
       </div>
       <div class="cv-tabs" id="cvBoards"></div>
       <div class="cv-stage" id="cvStage"><div class="cv-world" id="cvWorld"></div></div>
-      <span class="cv-hint">Duplo clique cria · arraste o fundo para navegar · Ctrl+roda amplia · arraste a bolinha da borda para ligar (A → B = B depende de A)</span>
+      <span class="cv-hint">Atalhos: <b>N</b> post-it · <b>R</b> retângulo · <b>O</b> elipse · <b>D</b> losango · <b>T</b> texto · <b>Del</b> apaga o selecionado · <b>Esc</b> desmarca — arraste a bolinha da borda para ligar (A → B = B depende de A) · Ctrl+roda amplia</span>
     </div>
 
     <div class="agents-view" id="agentsView">
@@ -3802,7 +3815,7 @@ let canvasItems=ld('bt-canvas',[]);
 let canvasEdges=ld('bt-cv-edges',[]);
 let cvBoard=ld('bt-cv-cur','ideias');
 let cvCams=ld('bt-cv-cam',{});
-let _cvDrag=null,_cvPan=null,_cvLink=null,_cvResize=null;
+let _cvDrag=null,_cvPan=null,_cvLink=null,_cvResize=null,_cvSel=null;
 
 // Compatibilidade: os post-its criados antes de existirem quadros e formas
 // nao tinham `board` nem `kind`. Sem isso eles sumiriam da tela.
@@ -3854,7 +3867,8 @@ function cvNodeHTML(n){
   const cor=n.color||CV_CORES[0];
   const fundo=k==='text'?'':`background:${cor}`;
   const cores=CV_CORES.map(c=>`<i data-cvcolor="${n.id}" data-c="${c}" style="background:${c}"></i>`).join('');
-  return `<div class="cv-node cv-${k}" data-cv="${n.id}" style="${est};${fundo}">
+  const sel=n.id===_cvSel?' sel':'';
+  return `<div class="cv-node cv-${k}${sel}" data-cv="${n.id}" style="${est};${fundo}">
     ${k==='ellipse'||k==='diamond'?`<div class="cv-shape-bg" style="background:${cor}"></div>`:''}
     <div class="cv-node-txt" contenteditable="true" data-cvtxt="${n.id}">${escapeHtml(n.text||'')}</div>
     ${k!=='text'?`<div class="cv-colors">${cores}</div>`:''}
@@ -3961,6 +3975,30 @@ function cvDelBoard(){
   cvBoard=canvasBoards[0].id;
   cvSave();fbSaveNow();renderCanvas();toast('Quadro excluído');
 }
+// Selecao serve aos atalhos: sem ela, Delete nao teria alvo.
+function cvSelecionar(id){
+  if(_cvSel===id)return;
+  _cvSel=id;
+  $$('.cv-node').forEach(n=>n.classList.toggle('sel',n.dataset.cv===_cvSel));
+}
+function cvApagarSel(){
+  if(!_cvSel)return false;
+  const id=_cvSel;_cvSel=null;
+  canvasItems=canvasItems.filter(x=>x.id!==id);
+  canvasEdges=canvasEdges.filter(x=>x.from!==id&&x.to!==id);
+  cvSave();fbSaveNow();renderCanvas();toast('Item apagado');
+  return true;
+}
+// Atalhos do quadro. So valem nesta view e nunca enquanto se digita num
+// objeto — a checagem de contenteditable acontece antes, no handler global.
+const CV_ATALHOS={n:'note',r:'rect',o:'ellipse',d:'diamond',t:'text'};
+function cvAtalho(e){
+  if(curView!=='canvas')return false;
+  const k=(e.key||'').toLowerCase();
+  if(CV_ATALHOS[k]){cvAdd(CV_ATALHOS[k]);return true}
+  if(e.key==='Delete'||e.key==='Backspace')return cvApagarSel();
+  return false;
+}
 function cvInit(){
   const st=$('#cvStage');if(!st||st.dataset.ready)return;
   st.dataset.ready='1';
@@ -3986,10 +4024,14 @@ function cvInit(){
     const no=e.target.closest('.cv-node');
     if(no&&!e.target.closest('.cv-node-txt')&&!e.target.closest('button')&&!e.target.closest('.cv-colors')){
       const it=canvasItems.find(x=>x.id===no.dataset.cv);if(!it)return;
+      cvSelecionar(it.id);
       const p=cvParaMundo(e.clientX,e.clientY);
       _cvDrag={id:it.id,dx:p.x-it.x,dy:p.y-it.y,el:no};
       no.classList.add('dragging');st.setPointerCapture(e.pointerId);
+    } else if(no&&e.target.closest('.cv-node-txt')){
+      cvSelecionar(no.dataset.cv);
     } else if(!no){
+      cvSelecionar(null);
       const c=cvCam();
       _cvPan={sx:e.clientX,sy:e.clientY,ox:c.x,oy:c.y};
       st.classList.add('panning');st.setPointerCapture(e.pointerId);
@@ -6759,12 +6801,14 @@ document.addEventListener('keydown',e=>{
   // Ctrl+Enter saves from anywhere in modal
   if(isModalOpen&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();$('#form').requestSubmit();return}
   // Escape closes
+  if(e.key==='Escape'&&curView==='canvas'&&_cvSel&&!document.activeElement.isContentEditable){cvSelecionar(null);return}
   if(e.key==='Escape'){closeM();closeCatMgr();$('#cfWrap').classList.remove('open');$('#wdgPanel').classList.remove('open');$('#wkToggle').classList.remove('open');$('.main').classList.remove('wdg-open');return}
   // Atalhos globais (fora de campos de texto): N nova tarefa, / busca, 1-9 troca de view
   if(!isModalOpen){
     const ae=document.activeElement;const tg=ae.tagName;
     if(tg==='INPUT'||tg==='TEXTAREA'||tg==='SELECT'||ae.isContentEditable)return;
     if(e.ctrlKey||e.metaKey||e.altKey)return;
+    if(cvAtalho(e)){e.preventDefault();return}
     if(e.key==='n'){openM();return}
     if(e.key==='/'){e.preventDefault();const s=$('.search-box input');if(s)s.focus();return}
     if(/^[1-9]$/.test(e.key)){const navs=$$('.nav-item[data-view]');const nv=navs[+e.key-1];if(nv)switchView(nv.dataset.view);return}

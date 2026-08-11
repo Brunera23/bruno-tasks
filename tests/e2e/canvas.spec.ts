@@ -41,7 +41,7 @@ test('post-it vira tarefa com o texto preenchido', async ({ page }) => {
   await abrir(page,[{id:'n1',x:60,y:40,text:'Renegociar contrato do servidor',color:'#B6E3FF'}]);
   await page.locator('[data-cvtask="n1"]').click();
   await page.waitForTimeout(400);
-  await expect(page.locator('#modal')).toBeVisible();
+  await expect(page.locator('#modal')).toHaveClass(/\bopen\b/);
   expect(await page.locator('#fT').inputValue()).toBe('Renegociar contrato do servidor');
 });
 
@@ -130,4 +130,53 @@ test('apagar um item leva junto as ligações dele', async ({ page }) => {
   await page.waitForTimeout(400);
   await expect(page.locator('.cv-node')).toHaveCount(1);
   await expect(page.locator('.cv-edge')).toHaveCount(0);
+});
+
+/** Atalhos de teclado e seleção */
+
+test('teclas criam cada tipo de objeto', async ({ page }) => {
+  await abrir(page);
+  for(const [tecla,cls] of [['n','cv-note'],['r','cv-rect'],['o','cv-ellipse'],['d','cv-diamond'],['t','cv-text']]){
+    await page.locator('body').press(tecla);
+    await page.waitForTimeout(200);
+    await expect(page.locator('.'+cls)).toHaveCount(1);
+    await page.locator('#cvStage').click({position:{x:20,y:20}}); // tira o foco do texto novo
+    await page.waitForTimeout(120);
+  }
+});
+
+test('atalho NÃO dispara enquanto se digita num objeto', async ({ page }) => {
+  await abrir(page,[{id:'n1',board:'ideias',kind:'note',x:60,y:60,w:190,h:112,text:''}]);
+  const txt=page.locator('.cv-node-txt');
+  await txt.click();
+  await txt.pressSequentially('nota rodando');
+  await page.waitForTimeout(300);
+  // continua um só objeto: as letras viraram texto, não novos objetos
+  await expect(page.locator('.cv-node')).toHaveCount(1);
+  await expect(txt).toContainText('nota rodando');
+});
+
+test('Delete apaga o objeto selecionado e Esc desmarca', async ({ page }) => {
+  await abrir(page,[
+    {id:'a',board:'ideias',kind:'note',x:60,y:60,w:190,h:112,text:'A'},
+    {id:'b',board:'ideias',kind:'rect',x:400,y:60,w:180,h:100,text:'B'}
+  ]);
+  await page.locator('[data-cv="a"]').click({position:{x:5,y:5}});
+  await expect(page.locator('[data-cv="a"]')).toHaveClass(/sel/);
+  await page.locator('body').press('Escape');
+  await expect(page.locator('.cv-node.sel')).toHaveCount(0);
+
+  await page.locator('[data-cv="a"]').click({position:{x:5,y:5}});
+  await page.locator('body').press('Delete');
+  await page.waitForTimeout(400);
+  await expect(page.locator('.cv-node')).toHaveCount(1);
+  await expect(page.locator('[data-cv="b"]')).toBeVisible();
+});
+
+test('atalho do quadro não abre o formulário de tarefa', async ({ page }) => {
+  await abrir(page);
+  await page.locator('body').press('n');
+  await page.waitForTimeout(400);
+  await expect(page.locator('#modal')).not.toHaveClass(/\bopen\b/);
+  await expect(page.locator('.cv-note')).toHaveCount(1);
 });
