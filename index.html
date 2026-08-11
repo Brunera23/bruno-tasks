@@ -2057,14 +2057,17 @@ async function refreshPushToken(){
 }
 
 // Send push notification to a user role (bruno/parceira/ambos)
-async function sendPushToRole(targetRole,title,body){
+async function sendPushToRole(targetRole,title,body,tag){
   if(!currentUser)return;
   try{
-    // Save notification request to Firestore — Cloud Function will pick it up
+    // Save notification request to Firestore — Cloud Function will pick it up.
+    // A tag precisa bater com a do aviso local, senão o mesmo evento aparece
+    // duas vezes (o servidor usava 'task' fixo para tudo).
     await db.collection('push_queue').add({
       targetRole:targetRole,
       title:title,
       body:body,
+      tag:tag||'task',
       sentBy:getMyRole()||'bruno',
       createdAt:firebase.firestore.FieldValue.serverTimestamp(),
       processed:false
@@ -2075,8 +2078,37 @@ async function sendPushToRole(targetRole,title,body){
 // ===== NOTIFICAÇÕES DE TAREFA (nova tarefa + vencimento) =====
 function _roleName(r){return r==='bruno'?'Bruno':r==='parceira'?'Clara':'Ambos'}
 function _otherRole(r){return r==='bruno'?'parceira':r==='parceira'?'bruno':'ambos'}
-// Push habilitado neste aparelho? (se sim, a Cloud Function cobre tudo; senão usamos fallback local)
+// Push habilitado neste aparelho? (indica só que este aparelho se inscreveu —
+// NÃO garante que as Cloud Functions estejam publicadas e entregando.)
 function _pushOn(){return localStorage.getItem('btPushEnabled')==='1'}
+
+// ===== NOTIFICAÇÃO LOCAL =====
+// `new Notification()` é ilegal numa página controlada por Service Worker:
+// o Chrome no Android lança "Illegal constructor" e o iOS nem implementa.
+// Como todas as chamadas estavam dentro de try/catch vazio, a notificação
+// simplesmente não aparecia e ninguém via o erro. O caminho que funciona nos
+// dois é registration.showNotification().
+// A `tag` tem que ser a MESMA usada pelas Cloud Functions: notificações de
+// mesma tag se substituem, então push do servidor + aviso local viram um só.
+function showLocalNotification(title,opts){
+  const options=Object.assign({icon:'./manifest-icon.png',badge:'./manifest-icon.png',renotify:true},opts||{});
+  try{
+    if(!('Notification' in window)||Notification.permission!=='granted')return Promise.resolve(false);
+  }catch(e){return Promise.resolve(false)}
+  const viaSW=()=>{
+    if(!('serviceWorker' in navigator))return Promise.resolve(null);
+    return navigator.serviceWorker.getRegistration().catch(()=>null);
+  };
+  return viaSW().then(reg=>{
+    if(reg&&typeof reg.showNotification==='function'){
+      return reg.showNotification(title,options).then(()=>true);
+    }
+    // Desktop sem SW registrado: o construtor ainda é válido
+    const n=new Notification(title,options);
+    n.onclick=()=>{window.focus();n.close()};
+    return true;
+  }).catch(e=>{console.warn('showLocalNotification',e);return false});
+}
 
 // Chamado quando EU crio uma tarefa nova → enfileira push p/ o destinatário (funciona com app fechado via Cloud Function)
 function notifyNewTask(t){
@@ -2090,14 +2122,16 @@ function notifyNewTask(t){
       target=_otherRole(myRole); // tarefa pessoal/projeto → avisa o parceiro
     }
     if(!target||target===myRole)return;
-    sendPushToRole(target,'📋 Nova tarefa de '+_roleName(myRole),t.title);
+    sendPushToRole(target,'📋 Nova tarefa de '+_roleName(myRole),t.title,'task-'+t.id);
   }catch(e){console.warn('notifyNewTask',e)}
 }
 
-// Aviso de vencimento "de manhã" enquanto o app está aberto (fallback; a Cloud Function cobre o app fechado)
+// Aviso de vencimento "de manhã" enquanto o app está aberto.
+// Roda mesmo com push ativo: `btPushEnabled` só diz que este aparelho se
+// inscreveu, não que a Cloud Function está publicada e entregando. As tags
+// batem com as do servidor, então se os dois chegarem vira uma notificação só.
 function checkDueToday(){
   try{
-    if(_pushOn())return;                              // já coberto pela Cloud Function
     if(Notification.permission!=='granted')return;
     if(new Date().getHours()<7)return;               // só de manhã (>=7h)
     const myRole=getMyRole();if(!myRole)return;
@@ -2112,13 +2146,14 @@ function checkDueToday(){
       // No dia do vencimento
       if(t.date===today && notified['dia-'+t.id]!==today){
         notified['dia-'+t.id]=today;touched=true;
-        try{const n=new Notification('📅 Vence hoje',{body:t.title,tag:'due-'+t.id,renotify:true});n.onclick=()=>{window.focus();n.close()}}catch(e){}
+        // tag igual à da dueTodayReminder p/ não duplicar com o push
+        showLocalNotification('📅 Vence hoje',{body:t.title,tag:'due-'+t.id+'-'+t.date});
         toast('É hoje: '+t.title);
       }
       // Na véspera (só se marcado para lembrar no dia anterior)
       if(t.remindDayBefore && t.date===tomorrow && notified['vesp-'+t.id]!==today){
         notified['vesp-'+t.id]=today;touched=true;
-        try{const n=new Notification('📅 Vence amanhã',{body:t.title,tag:'vesp-'+t.id,renotify:true});n.onclick=()=>{window.focus();n.close()}}catch(e){}
+        showLocalNotification('📅 Vence amanhã',{body:t.title,tag:'due-'+t.id+'-'+t.date});
         toast('Amanhã: '+t.title);
       }
     });
@@ -2369,9 +2404,13 @@ function getCatsForProject(projId){
 }
 
 function getVisibleTasks(){
-  const visibleProjs=new Set(projects.filter(p=>p.visible).map(p=>p.id));
+  const vis=projects.filter(p=>p.visible);
+  // Conta que já ficou com todos os projetos ocultos (estado sincronizado do
+  // Firestore) abria em branco sem explicação. Sem nenhum visível, mostra tudo.
+  const visibleProjs=vis.length?new Set(vis.map(p=>p.id)):null;
   return tasks.filter(t=>{
     if(t.type==='note') return false;
+    if(!visibleProjs) return true;
     const proj=t.project||'bruno';
     return visibleProjs.has(proj);
   });
@@ -2693,19 +2732,12 @@ function combineData(){
         const creatorName=t.assignedTo==='bruno'?'Bruno':'Clara';
         const ntitle=creatorName+': '+t.title;
         toast(ntitle);
-        if(Notification.permission==='granted'){
-          try{
-            const n=new Notification('💬 '+creatorName,{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});
-            n.onclick=()=>{window.focus();n.close()};
-          }catch(e){}
-        }
+        showLocalNotification('💬 '+creatorName,{body:t.title,tag:'note-'+t.id,vibrate:[200,100,200]});
       }
-      // Tarefas novas vindas do parceiro — fallback local quando o push ainda nao esta ativo
-      else if(t.type!=='note'&&t.type!=='alert'&&t.createdAt>recentCutoff&&!_pushOn()){
+      // Tarefas novas vindas do parceiro (mesma tag do push: não duplica)
+      else if(t.type!=='note'&&t.type!=='alert'&&t.createdAt>recentCutoff){
         toast('Nova tarefa: '+t.title);
-        if(Notification.permission==='granted'){
-          try{const n=new Notification('📋 Nova tarefa',{body:t.title,tag:t.id,renotify:true,vibrate:[200,100,200]});n.onclick=()=>{window.focus();n.close()};}catch(e){}
-        }
+        showLocalNotification('📋 Nova tarefa',{body:t.title,tag:'task-'+t.id,vibrate:[200,100,200]});
       }
     });
   }
@@ -6039,8 +6071,10 @@ function processAlerts(){
   let changed=false;
   tasks.forEach(t=>{
     if(t.type!=='alert'||!t.nextFireAt||t.status==='done')return;
-    // Only fire on the RECIPIENT's device
-    if(t.assignedTo!==myRole&&t.assignedTo!=='ambos')return;
+    // Only fire on the RECIPIENT's device.
+    // Alerta sem destinatário é pessoal (do dono do documento) — antes ele nunca
+    // tocava aqui, só pela Cloud Function.
+    if(t.assignedTo&&t.assignedTo!==myRole&&t.assignedTo!=='ambos')return;
     if(t.recurrence?.until&&dateStr(new Date())>t.recurrence.until){
       t.status='done';t.updatedAt=Date.now();changed=true;return;
     }
@@ -6050,18 +6084,14 @@ function processAlerts(){
       const targetName=t.assignedTo==='bruno'?'Bruno':t.assignedTo==='parceira'?'Clara':'Alerta';
       const title=targetName+': '+t.title;
       toast(title);
-      // Notificação nativa só se o push NÃO estiver ativo (senão a Cloud Function cobre, inclusive app fechado)
-      if(Notification.permission==='granted' && !_pushOn()){
-        try{
-          const isMed=t.medType==='med';
-          const n=new Notification((isMed?'💊 ':'🔔 ')+t.title,{
-            body:isMed?(t.notes?'Tomar agora · '+t.notes:'Hora de tomar'):(t.notes||''),
-            tag:t.id,
-            renotify:true,
-            vibrate:[200,100,200,100,200]
-          });
-          n.onclick=()=>{window.focus();n.close()};
-        }catch(e){}
+      // tag igual à da alertReminders: se o push também chegar, vira uma só
+      {
+        const isMed=t.medType==='med';
+        showLocalNotification((isMed?'💊 ':'🔔 ')+t.title,{
+          body:isMed?(t.notes?'Tomar agora · '+t.notes:'Hora de tomar'):(t.notes||''),
+          tag:'alert-'+t.id,
+          vibrate:[200,100,200,100,200]
+        });
       }
       t.lastFiredAt=now;
       // Calculate next fire
@@ -6227,6 +6257,12 @@ $('#projNav').addEventListener('click',e=>{
     e.stopPropagation();
     const projId=toggle.dataset.projToggle;
     const proj=projects.find(p=>p.id===projId);
+    // Não deixa desligar o último projeto visível: isso zerava a tela inteira e,
+    // como `projects` é sincronizado, o estado seguia a conta para outro aparelho.
+    if(proj&&proj.visible&&projects.filter(p=>p.visible).length<=1){
+      toast('Pelo menos um projeto precisa ficar visível');
+      return;
+    }
     if(proj){proj.visible=!proj.visible;saveUI();render()}
     return;
   }

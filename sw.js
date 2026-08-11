@@ -55,9 +55,11 @@ self.addEventListener('notificationclick', e => {
   const url = e.notification.data?.url || './index.html';
   e.waitUntil(
     self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(clients => {
-      // Focus existing tab if open
+      // Foca uma aba do app que ja esteja aberta.
+      // Antes exigia 'index.html' na URL — servido na raiz (https://host/) isso
+      // nunca batia e o clique sempre abria uma aba nova.
       for(const c of clients) {
-        if(c.url.includes('index.html') && 'focus' in c) return c.focus();
+        if(c.url.startsWith(self.location.origin) && 'focus' in c) return c.focus();
       }
       // Otherwise open new tab
       return self.clients.openWindow(url);
