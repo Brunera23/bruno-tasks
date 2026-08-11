@@ -104,7 +104,7 @@ test('arrastar a bolinha de um item até outro cria a dependência', async ({ pa
     {id:'a',board:'ideias',kind:'note',x:60,y:60,w:190,h:112,text:'Primeiro'},
     {id:'b',board:'ideias',kind:'note',x:420,y:60,w:190,h:112,text:'Depende do primeiro'}
   ]);
-  const porta=page.locator('[data-cvport="a"]');
+  const porta=page.locator('[data-cvport="a"][data-cvlado="right"]');
   const alvo=page.locator('[data-cv="b"]');
   const p=await porta.boundingBox(), q=await alvo.boundingBox();
   await page.mouse.move(p!.x+p!.width/2,p!.y+p!.height/2);
@@ -117,6 +117,37 @@ test('arrastar a bolinha de um item até outro cria a dependência', async ({ pa
   expect(salvo).toHaveLength(1);
   expect(salvo[0].from).toBe('a');
   expect(salvo[0].to).toBe('b');
+  expect(salvo[0].fromSide).toBe('right');   // saiu pela porta da direita
+  expect(salvo[0].toSide).toBeTruthy();      // e chegou pelo lado mais próximo do ponto solto
+});
+
+test('a ligação sai pelo lado de onde foi puxada', async ({ page }) => {
+  await abrir(page,[
+    {id:'a',board:'ideias',kind:'note',x:200,y:300,w:190,h:112,text:'Base'},
+    {id:'b',board:'ideias',kind:'note',x:200,y:60,w:190,h:112,text:'Acima'}
+  ]);
+  const porta=page.locator('[data-cvport="a"][data-cvlado="top"]');
+  const alvo=page.locator('[data-cv="b"]');
+  const p=await porta.boundingBox(), q=await alvo.boundingBox();
+  await page.mouse.move(p!.x+p!.width/2,p!.y+p!.height/2);
+  await page.mouse.down();
+  await page.mouse.move(q!.x+q!.width/2,q!.y+q!.height-4,{steps:10}); // solta na base do alvo
+  await page.mouse.up();
+  await page.waitForTimeout(500);
+  const salvo=await page.evaluate(()=>JSON.parse(JSON.parse(sessionStorage.getItem('__mockStore')||'{}').users['uid-B'].canvasEdges||'[]'));
+  expect(salvo[0].fromSide).toBe('top');
+  expect(salvo[0].toSide).toBe('bottom');
+});
+
+test('a seta é uma curva, não uma reta', async ({ page }) => {
+  await abrir(page,[
+    {id:'a',board:'ideias',kind:'note',x:60,y:60,w:190,h:112,text:'A'},
+    {id:'b',board:'ideias',kind:'note',x:460,y:300,w:190,h:112,text:'B'}
+  ]);
+  await page.evaluate(()=>{(eval('canvasEdges') as any[]).push({id:'e1',board:'ideias',from:'a',to:'b',fromSide:'right',toSide:'left'});(eval('renderCanvas') as any)()});
+  const d=await page.locator('.cv-edge-line').getAttribute('d');
+  expect(d).toContain('C');       // cúbica de Bézier
+  expect(d).toMatch(/^M /);
 });
 
 test('apagar um item leva junto as ligações dele', async ({ page }) => {
@@ -136,13 +167,21 @@ test('apagar um item leva junto as ligações dele', async ({ page }) => {
 
 test('teclas criam cada tipo de objeto', async ({ page }) => {
   await abrir(page);
-  for(const [tecla,cls] of [['n','cv-note'],['r','cv-rect'],['o','cv-ellipse'],['d','cv-diamond'],['t','cv-text']]){
+  const st=await page.locator('#cvStage').boundingBox();
+  const tipos:[string,string][]=[['n','cv-note'],['r','cv-rect'],['o','cv-ellipse'],['d','cv-diamond'],['t','cv-text']];
+  let i=0;
+  for(const [tecla,cls] of tipos){
+    // cada um num ponto diferente: o objeto nasce sob o cursor e o foco vai
+    // para o texto dele, entao criar tudo no mesmo lugar se atropelaria
+    await page.mouse.move(st!.x+120+i*230, st!.y+120);
+    await page.waitForTimeout(80);
+    await page.evaluate(()=>(document.activeElement as HTMLElement)?.blur());
     await page.locator('body').press(tecla);
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(220);
     await expect(page.locator('.'+cls)).toHaveCount(1);
-    await page.locator('#cvStage').click({position:{x:20,y:20}}); // tira o foco do texto novo
-    await page.waitForTimeout(120);
+    i++;
   }
+  await expect(page.locator('.cv-node')).toHaveCount(5);
 });
 
 test('atalho NÃO dispara enquanto se digita num objeto', async ({ page }) => {
@@ -179,4 +218,28 @@ test('atalho do quadro não abre o formulário de tarefa', async ({ page }) => {
   await page.waitForTimeout(400);
   await expect(page.locator('#modal')).not.toHaveClass(/\bopen\b/);
   await expect(page.locator('.cv-note')).toHaveCount(1);
+});
+
+test('objeto nasce onde o cursor está, não no centro', async ({ page }) => {
+  await abrir(page);
+  const st=await page.locator('#cvStage').boundingBox();
+  // leva o cursor para o canto superior esquerdo do quadro e cria pelo atalho
+  await page.mouse.move(st!.x+140, st!.y+120);
+  await page.waitForTimeout(120);
+  await page.locator('body').press('t');
+  await page.waitForTimeout(300);
+
+  const it=await page.evaluate(()=>(eval('canvasItems') as any[])[0]);
+  const esperado=await page.evaluate(([cx,cy])=>(eval('cvParaMundo') as any)(cx,cy),[st!.x+140,st!.y+120]);
+  // centro do objeto cai sobre o cursor (tolerância de alguns px)
+  expect(Math.abs((it.x+it.w/2)-esperado.x)).toBeLessThan(6);
+  expect(Math.abs((it.y+it.h/2)-esperado.y)).toBeLessThan(6);
+});
+
+test('a paleta anuncia o atalho de cada ferramenta', async ({ page }) => {
+  await abrir(page);
+  const esperado:Record<string,string>={note:'Post-it · N',rect:'Retângulo · R',ellipse:'Elipse · O',diamond:'Losango · D',text:'Texto · T'};
+  for(const [k,dica] of Object.entries(esperado)){
+    await expect(page.locator(`[data-cvk="${k}"]`)).toHaveAttribute('data-dica',dica);
+  }
 });

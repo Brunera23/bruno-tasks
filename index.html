@@ -1311,11 +1311,17 @@
     .cv-palette{display:inline-flex;background:var(--fill);border-radius:10px;padding:3px;gap:2px}
     .cv-palette button{display:inline-flex;align-items:center;gap:6px;border:none;background:transparent;font-family:inherit;font-size:.74rem;font-weight:600;color:var(--label2);padding:6px 10px;border-radius:8px;cursor:pointer}
     .cv-palette button:hover{background:var(--card);color:var(--label)}
-    .cvk{width:14px;height:14px;display:block;background:var(--label3)}
-    .cvk-note{border-radius:2px}
-    .cvk-rect{border-radius:3px}
-    .cvk-ell{border-radius:50%}
-    .cvk-dia{transform:rotate(45deg);border-radius:2px;width:11px;height:11px}
+    /* icone com a cor do proprio objeto: identifica sem precisar ler */
+    .cvk{width:14px;height:14px;display:block}
+    .cvk-note{background:#F5C518;border-radius:2px}
+    .cvk-rect{border-radius:3px;background:#57AEF5}
+    .cvk-ell{border-radius:50%;background:#F58BB0}
+    .cvk-dia{transform:rotate(45deg);border-radius:2px;width:11px;height:11px;background:#F0A05A}
+    .cvk-t{color:#8E67D6;font-weight:800;font-size:.9rem;line-height:1}
+    /* dica com o atalho, acima do botao */
+    .cv-palette button{position:relative}
+    .cv-palette button::after{content:attr(data-dica);position:absolute;bottom:calc(100% + 9px);left:50%;transform:translateX(-50%) translateY(3px);background:var(--label);color:var(--bg);font-size:.64rem;font-weight:600;padding:4px 8px;border-radius:7px;opacity:0;pointer-events:none;white-space:nowrap;transition:opacity var(--dur-fast),transform var(--dur-fast);z-index:20}
+    .cv-palette button:hover::after{opacity:1;transform:translateX(-50%) translateY(0)}
     .cv-zoom{display:inline-flex;background:var(--fill);border-radius:9px;padding:2px;gap:2px}
     .cv-zoom button{border:none;background:transparent;font-family:inherit;font-size:.74rem;font-weight:600;color:var(--label2);padding:6px 11px;border-radius:7px;cursor:pointer;min-width:30px}
     .cv-zoom button:hover{background:var(--card);color:var(--label)}
@@ -1335,13 +1341,13 @@
     .cv-world{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
     .cv-edges{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
     .cv-edge{pointer-events:auto}
-    .cv-edge-hit{stroke:transparent;stroke-width:16}
-    .cv-edge-line{stroke:var(--label3);stroke-width:2}
-    .cv-edge:hover .cv-edge-line{stroke:var(--blue)}
+    .cv-edge-hit{stroke:transparent;stroke-width:18;fill:none}
+    .cv-edge-line{stroke:var(--label2);stroke-width:2;fill:none;stroke-linecap:round;transition:stroke var(--dur-fast),stroke-width var(--dur-fast)}
+    .cv-edge:hover .cv-edge-line{stroke:var(--blue);stroke-width:2.6}
     .cv-edge-x-bg{fill:var(--card);stroke:var(--sep);opacity:0;cursor:pointer}
     .cv-edge-x{font-size:9px;fill:var(--red);text-anchor:middle;opacity:0;cursor:pointer;font-weight:700}
     .cv-edge:hover .cv-edge-x-bg,.cv-edge:hover .cv-edge-x{opacity:1}
-    .cv-link-live{stroke:var(--blue);stroke-width:2;stroke-dasharray:5 4}
+    .cv-link-live{stroke:var(--blue);stroke-width:2.2;stroke-dasharray:6 5;fill:none;stroke-linecap:round}
     /* objetos */
     .cv-node{position:absolute;padding:11px 12px 30px;font-size:.8rem;line-height:1.45;color:#1c1c1e;cursor:grab}
     /* Post-it: papel. Sem borda, canto quase reto, sombra projetada e o canto
@@ -1373,7 +1379,13 @@
     .cv-node:hover .cv-colors{opacity:1}
     .cv-colors i{width:13px;height:13px;border-radius:50%;cursor:pointer;display:block;border:1px solid rgba(0,0,0,.12)}
     /* bolinha de ligacao e alca de redimensionar */
-    .cv-port{position:absolute;right:-7px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;background:var(--blue);border:2px solid var(--card);opacity:0;cursor:crosshair;transition:opacity var(--dur-fast);z-index:3}
+    .cv-port{position:absolute;width:13px;height:13px;border-radius:50%;background:var(--blue);border:2px solid var(--card);opacity:0;cursor:crosshair;transition:opacity var(--dur-fast),transform var(--dur-fast);z-index:3}
+    .cv-port:hover{transform:scale(1.35)}
+    .cv-port-top{left:50%;top:-7px;margin-left:-6.5px}
+    .cv-port-bottom{left:50%;bottom:-7px;margin-left:-6.5px}
+    .cv-port-left{left:-7px;top:50%;margin-top:-6.5px}
+    .cv-port-right{right:-7px;top:50%;margin-top:-6.5px}
+    .cv-port-top:hover,.cv-port-bottom:hover{transform:scale(1.35)}
     .cv-node:hover .cv-port{opacity:1}
     .cv-resize{position:absolute;right:0;bottom:0;width:14px;height:14px;cursor:nwse-resize;opacity:0;z-index:3;background:linear-gradient(135deg,transparent 50%,var(--label3) 50%)}
     .cv-node:hover .cv-resize{opacity:.6}
@@ -1752,11 +1764,11 @@
       <div class="page-head"><div class="page-head-left"><div class="greeting">Espaço livre para pensar</div><h1>Quadros</h1></div>
         <div class="cv-tools">
           <div class="cv-palette" id="cvPalette">
-            <button data-cvk="note" title="Post-it"><i class="cvk cvk-note"></i>Post-it</button>
-            <button data-cvk="rect" title="Retângulo"><i class="cvk cvk-rect"></i></button>
-            <button data-cvk="ellipse" title="Elipse"><i class="cvk cvk-ell"></i></button>
-            <button data-cvk="diamond" title="Losango"><i class="cvk cvk-dia"></i></button>
-            <button data-cvk="text" title="Texto"><b>T</b></button>
+            <button data-cvk="note" data-dica="Post-it · N"><i class="cvk cvk-note"></i>Post-it</button>
+            <button data-cvk="rect" data-dica="Retângulo · R"><i class="cvk cvk-rect"></i></button>
+            <button data-cvk="ellipse" data-dica="Elipse · O"><i class="cvk cvk-ell"></i></button>
+            <button data-cvk="diamond" data-dica="Losango · D"><i class="cvk cvk-dia"></i></button>
+            <button data-cvk="text" data-dica="Texto · T"><b class="cvk-t">T</b></button>
           </div>
           <div class="cv-zoom"><button id="cvOut">−</button><button id="cvFit">Ajustar</button><button id="cvIn">+</button></div>
           <button class="cv-del-board" id="cvBoardDel" title="Excluir este quadro">Excluir quadro</button>
@@ -3816,6 +3828,7 @@ let canvasEdges=ld('bt-cv-edges',[]);
 let cvBoard=ld('bt-cv-cur','ideias');
 let cvCams=ld('bt-cv-cam',{});
 let _cvDrag=null,_cvPan=null,_cvLink=null,_cvResize=null,_cvSel=null;
+let _cvMouse=null; // ultima posicao do ponteiro sobre o quadro, em coordenadas do mundo
 
 // Compatibilidade: os post-its criados antes de existirem quadros e formas
 // nao tinham `board` nem `kind`. Sem isso eles sumiriam da tela.
@@ -3852,14 +3865,37 @@ function cvApplyCam(){
     st.style.backgroundPosition=(c.x%p)+'px '+(c.y%p)+'px';
   }
 }
-// Onde a reta A->B cruza a borda do objeto: sem isso a seta nasce e morre
-// escondida atras dos proprios objetos.
-function cvBorda(n,alvoX,alvoY){
-  const cx=n.x+n.w/2, cy=n.y+n.h/2;
-  const dx=alvoX-cx, dy=alvoY-cy;
-  if(!dx&&!dy)return {x:cx,y:cy};
-  const esc=Math.min(Math.abs((n.w/2)/(dx||1e-6)),Math.abs((n.h/2)/(dy||1e-6)));
-  return {x:cx+dx*esc,y:cy+dy*esc};
+// Ponto de conexao no meio de cada lado. Sao quatro por objeto: a seta sai e
+// chega por onde faz sentido no desenho, nao sempre pela direita.
+const CV_LADOS=['top','right','bottom','left'];
+function cvPonto(n,lado){
+  if(lado==='top')return {x:n.x+n.w/2,y:n.y};
+  if(lado==='bottom')return {x:n.x+n.w/2,y:n.y+n.h};
+  if(lado==='left')return {x:n.x,y:n.y+n.h/2};
+  return {x:n.x+n.w,y:n.y+n.h/2};
+}
+// Lado mais proximo de um ponto — normalizado pelo tamanho, senao um objeto
+// largo e baixo escolheria sempre topo/base.
+function cvLadoMaisProximo(n,px,py){
+  const dx=(px-(n.x+n.w/2))/((n.w/2)||1), dy=(py-(n.y+n.h/2))/((n.h/2)||1);
+  if(Math.abs(dx)>=Math.abs(dy))return dx>0?'right':'left';
+  return dy>0?'bottom':'top';
+}
+function cvVetor(lado){
+  return lado==='left'?[-1,0]:lado==='right'?[1,0]:lado==='top'?[0,-1]:[0,1];
+}
+// Bezier cubica: os controles saem perpendiculares a cada lado, entao a curva
+// nasce e morre alinhada com o objeto em vez de cortar na diagonal.
+function cvCurva(p1,l1,p2,l2){
+  const dist=Math.hypot(p2.x-p1.x,p2.y-p1.y);
+  const d=Math.max(36,Math.min(150,dist*.45));
+  const [ax,ay]=cvVetor(l1),[bx,by]=cvVetor(l2);
+  const c1={x:p1.x+ax*d,y:p1.y+ay*d}, c2={x:p2.x+bx*d,y:p2.y+by*d};
+  return {
+    d:`M ${p1.x} ${p1.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${p2.x} ${p2.y}`,
+    // ponto medio da curva (t=0.5), onde fica o botao de remover
+    mid:{x:(p1.x+3*c1.x+3*c2.x+p2.x)/8, y:(p1.y+3*c1.y+3*c2.y+p2.y)/8}
+  };
 }
 function cvNodeHTML(n){
   const k=n.kind||'note';
@@ -3876,7 +3912,7 @@ function cvNodeHTML(n){
       <button data-cvtask="${n.id}" title="Virar tarefa">↗</button>
       <button data-cvdel="${n.id}" title="Apagar">✕</button>
     </div>
-    <div class="cv-port" data-cvport="${n.id}" title="Arraste para ligar (dependência)"></div>
+    ${CV_LADOS.map(l=>`<div class="cv-port cv-port-${l}" data-cvport="${n.id}" data-cvlado="${l}" title="Arraste para ligar"></div>`).join('')}
     <div class="cv-resize" data-cvrs="${n.id}" title="Redimensionar"></div>
   </div>`;
 }
@@ -3890,21 +3926,24 @@ function renderCanvas(){
   let arestas='';
   cvEdgesDoQuadro().forEach(e=>{
     const a=mapa[e.from],b=mapa[e.to];if(!a||!b)return;
-    const p1=cvBorda(a,b.x+b.w/2,b.y+b.h/2), p2=cvBorda(b,a.x+a.w/2,a.y+a.h/2);
-    const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2;
+    // ligacoes antigas nao guardavam o lado: escolhe automaticamente pela
+    // posicao atual, entao a seta se reacomoda quando os objetos se movem
+    const l1=e.fromSide||cvLadoMaisProximo(a,b.x+b.w/2,b.y+b.h/2);
+    const l2=e.toSide||cvLadoMaisProximo(b,a.x+a.w/2,a.y+a.h/2);
+    const c=cvCurva(cvPonto(a,l1),l1,cvPonto(b,l2),l2);
     arestas+=`<g class="cv-edge" data-cvedge="${e.id}">
-      <line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" class="cv-edge-hit"/>
-      <line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" class="cv-edge-line" marker-end="url(#cvArrow)"/>
-      <circle cx="${mx}" cy="${my}" r="8" class="cv-edge-x-bg"/>
-      <text x="${mx}" y="${my+3.5}" class="cv-edge-x">✕</text>
+      <path d="${c.d}" class="cv-edge-hit"/>
+      <path d="${c.d}" class="cv-edge-line" marker-end="url(#cvArrow)"/>
+      <circle cx="${c.mid.x}" cy="${c.mid.y}" r="8.5" class="cv-edge-x-bg"/>
+      <text x="${c.mid.x}" y="${c.mid.y+3.5}" class="cv-edge-x">✕</text>
     </g>`;
   });
   const svgW=Math.max(2000,...itens.map(n=>n.x+n.w+400));
   const svgH=Math.max(1200,...itens.map(n=>n.y+n.h+400));
   w.innerHTML=`<svg class="cv-edges" width="${svgW}" height="${svgH}">
-      <defs><marker id="cvArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="var(--label3)"/></marker></defs>
-      ${arestas}<line class="cv-link-live" style="display:none"/>
+      <defs><marker id="cvArrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M1,1 L11,6 L1,11 z" fill="var(--label2)"/></marker></defs>
+      ${arestas}<path class="cv-link-live" style="display:none" fill="none"/>
     </svg>`+itens.map(cvNodeHTML).join('');
 
   const st=$('#cvStage');
@@ -3932,8 +3971,9 @@ function cvAdd(kind,x,y){
   const k=CV_KINDS[kind]?kind:'note';
   const dim=CV_KINDS[k];
   let pos;
-  if(x==null){const r=st.getBoundingClientRect();pos=cvParaMundo(r.left+r.width/2-dim.w/2,r.top+r.height/2-dim.h/2)}
-  else pos={x,y};
+  if(x!=null)pos={x,y};
+  else if(_cvMouse)pos={x:_cvMouse.x-dim.w/2,y:_cvMouse.y-dim.h/2}; // nasce sob o cursor
+  else{const r=st.getBoundingClientRect();pos=cvParaMundo(r.left+r.width/2-dim.w/2,r.top+r.height/2-dim.h/2)}
   const n={id:uid(),board:cvBoard,kind:k,x:Math.round(pos.x),y:Math.round(pos.y),w:dim.w,h:dim.h,text:'',
     color:CV_CORES[cvDoQuadro().length%CV_CORES.length],updatedAt:Date.now()};
   canvasItems.push(n);cvSave();renderCanvas();
@@ -4012,7 +4052,8 @@ function cvInit(){
     const porta=e.target.closest('[data-cvport]');
     if(porta){ // comeca a puxar uma seta
       const it=canvasItems.find(x=>x.id===porta.dataset.cvport);if(!it)return;
-      _cvLink={from:it.id};st.setPointerCapture(e.pointerId);e.preventDefault();return;
+      _cvLink={from:it.id,lado:porta.dataset.cvlado||'right'};
+      cvSelecionar(null);st.setPointerCapture(e.pointerId);e.preventDefault();return;
     }
     const rs=e.target.closest('[data-cvrs]');
     if(rs){
@@ -4039,14 +4080,20 @@ function cvInit(){
   });
 
   st.addEventListener('pointermove',e=>{
+    _cvMouse=cvParaMundo(e.clientX,e.clientY);
     if(_cvLink){
       const de=canvasItems.find(x=>x.id===_cvLink.from);if(!de)return;
       const p=cvParaMundo(e.clientX,e.clientY);
-      const b=cvBorda(de,p.x,p.y);
+      const p1=cvPonto(de,_cvLink.lado);
+      const alvoEl=document.elementFromPoint(e.clientX,e.clientY)?.closest('.cv-node');
+      const alvoIt=alvoEl&&alvoEl.dataset.cv!==_cvLink.from?canvasItems.find(x=>x.id===alvoEl.dataset.cv):null;
+      // pousando sobre um objeto, a curva ja encosta no lado que sera usado
+      let p2=p,l2='left';
+      if(alvoIt){l2=cvLadoMaisProximo(alvoIt,p.x,p.y);p2=cvPonto(alvoIt,l2)}
+      else{l2=cvVetor(_cvLink.lado)[0]>0?'left':cvVetor(_cvLink.lado)[0]<0?'right':cvVetor(_cvLink.lado)[1]>0?'top':'bottom'}
       const l=$('#cvWorld').querySelector('.cv-link-live');
-      if(l){l.style.display='';l.setAttribute('x1',b.x);l.setAttribute('y1',b.y);l.setAttribute('x2',p.x);l.setAttribute('y2',p.y)}
-      const alvo=document.elementFromPoint(e.clientX,e.clientY)?.closest('.cv-node');
-      $$('.cv-node').forEach(n=>n.classList.toggle('cv-alvo',n===alvo&&n.dataset.cv!==_cvLink.from));
+      if(l){l.style.display='';l.setAttribute('d',cvCurva(p1,_cvLink.lado,p2,l2).d)}
+      $$('.cv-node').forEach(n=>n.classList.toggle('cv-alvo',n===alvoEl&&n.dataset.cv!==_cvLink.from));
     } else if(_cvDrag){
       const p=cvParaMundo(e.clientX,e.clientY);
       _cvDrag.el.style.left=Math.round(p.x-_cvDrag.dx)+'px';
@@ -4071,7 +4118,15 @@ function cvInit(){
         const to=alvo.dataset.cv, from=_cvLink.from;
         const existe=canvasEdges.some(x=>x.board===cvBoard&&((x.from===from&&x.to===to)||(x.from===to&&x.to===from)));
         if(existe)toast('Esses dois já estão ligados');
-        else{canvasEdges.push({id:uid(),board:cvBoard,from,to});cvSave();renderCanvas();toast('Dependência criada')}
+        else{
+          // o lado de chegada e o mais proximo de onde o usuario soltou:
+          // e isso que permite conectar por qualquer ponto do objeto
+          const alvoIt=canvasItems.find(x=>x.id===to);
+          const pm=cvParaMundo(e.clientX,e.clientY);
+          const toSide=alvoIt?cvLadoMaisProximo(alvoIt,pm.x,pm.y):'left';
+          canvasEdges.push({id:uid(),board:cvBoard,from,to,fromSide:_cvLink.lado,toSide});
+          cvSave();renderCanvas();toast('Dependência criada');
+        }
       }
       _cvLink=null;
       const l=$('#cvWorld')?.querySelector('.cv-link-live');if(l)l.style.display='none';
@@ -4089,6 +4144,7 @@ function cvInit(){
     }
     if(_cvPan){_cvPan=null;st.classList.remove('panning');cvSaveCam()}
   };
+  st.addEventListener('pointerleave',()=>{_cvMouse=null});
   st.addEventListener('pointerup',soltar);
   st.addEventListener('pointercancel',soltar);
 
