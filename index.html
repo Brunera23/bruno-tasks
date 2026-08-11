@@ -1437,7 +1437,6 @@
       <button class="nav-item" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
       <button class="nav-item" data-view="med"><svg><use href="#i-pill"/></svg>Saúde</button>
       <button class="nav-action" id="sideNotes"><svg><use href="#i-edit"/></svg>Quadro de Notas</button>
-      <button class="nav-item" data-view="agents"><svg><use href="#i-zap"/></svg>Agentes IA<span class="nav-badge" id="navBadgeAg">0</span></button>
     </div>
     <div class="sidebar-projects">
       <div class="nav-label">Projetos<button class="nav-label-btn" id="addProjBtn" title="Novo Projeto"><svg><use href="#i-plus"/></svg></button></div>
@@ -1587,7 +1586,6 @@
 <nav class="mob-nav"><div class="mob-nav-inner">
   <button class="mob-tab active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas</button>
   <button class="mob-tab" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
-  <button class="mob-tab" data-view="agents"><svg><use href="#i-zap"/></svg>IA</button>
   <button class="mob-tab" data-view="med"><svg><use href="#i-pill"/></svg>Saúde</button>
   <button class="mob-tab" id="mobNotes"><svg><use href="#i-edit"/></svg>Quadro</button>
   <button class="mob-tab" id="mobCatMgr"><svg><use href="#i-settings"/></svg>Mais</button>
@@ -2415,7 +2413,9 @@ let agents=ld('bt-agents',DEF_AGENTS),mAgent='';
 let cats=ld('bt-cats',DEF_CATS),tasks=ld('bt-v5',DEF_TASKS),log=ld('bt-log',[]);
 let _fbSynced=false; // true after first successful Firestore sync
 const _ui=ld('bt-ui',{});
-let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',aOwner=_ui.aOwner||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=_ui.curView||'tasks',editingCatId=null,dashCat='all',dashProj='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null,taskLayout=_ui.taskLayout||'list',dashWeekOffset=0;
+// 'agents' saiu do menu principal: quem tivesse essa view salva ficaria numa
+// tela sem item de navegação correspondente ao abrir o app.
+let aCat=_ui.aCat||'all',aSt=_ui.aSt||'all',aOwner=_ui.aOwner||'all',qry='',delId=null,mSubs=[],mDeps=[],curView=(_ui.curView&&_ui.curView!=='agents')?_ui.curView:'tasks',editingCatId=null,dashCat='all',dashProj='all',showDone=_ui.showDone||false,fCCat='',groupBy=_ui.groupBy||'none',sortBy=_ui.sortBy||'priority',widgetFilter=null,taskLayout=_ui.taskLayout||'list',dashWeekOffset=0;
 
 // ===== PROJECT SYSTEM =====
 const DEF_PROJECTS=[
