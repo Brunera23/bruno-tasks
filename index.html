@@ -1305,31 +1305,69 @@
     .canvas-view{display:none}
     .canvas-view.active{display:flex;flex-direction:column;height:calc(100dvh - 40px)}
     .cv-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .cv-btn{display:inline-flex;align-items:center;gap:6px;border:none;background:var(--label);color:var(--bg);font-family:inherit;font-size:.76rem;font-weight:600;padding:8px 14px;border-radius:10px;cursor:pointer}
-    .cv-btn:hover{opacity:.88}
+    .cv-palette{display:inline-flex;background:var(--fill);border-radius:10px;padding:3px;gap:2px}
+    .cv-palette button{display:inline-flex;align-items:center;gap:6px;border:none;background:transparent;font-family:inherit;font-size:.74rem;font-weight:600;color:var(--label2);padding:6px 10px;border-radius:8px;cursor:pointer}
+    .cv-palette button:hover{background:var(--card);color:var(--label)}
+    .cvk{width:14px;height:14px;display:block;background:var(--label3)}
+    .cvk-note{border-radius:2px}
+    .cvk-rect{border-radius:3px}
+    .cvk-ell{border-radius:50%}
+    .cvk-dia{transform:rotate(45deg);border-radius:2px;width:11px;height:11px}
     .cv-zoom{display:inline-flex;background:var(--fill);border-radius:9px;padding:2px;gap:2px}
     .cv-zoom button{border:none;background:transparent;font-family:inherit;font-size:.74rem;font-weight:600;color:var(--label2);padding:6px 11px;border-radius:7px;cursor:pointer;min-width:30px}
     .cv-zoom button:hover{background:var(--card);color:var(--label)}
-    .cv-hint{font-size:.66rem;color:var(--label3);font-weight:500}
-    /* tela infinita: o fundo quadriculado acompanha o pan/zoom */
-    .cv-stage{flex:1;min-height:340px;position:relative;overflow:hidden;border:1px solid var(--sep);border-radius:16px;background:var(--card);cursor:grab;touch-action:none}
+    .cv-del-board{border:1px solid var(--sep);background:transparent;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--label3);padding:6px 11px;border-radius:8px;cursor:pointer}
+    .cv-del-board:hover{color:var(--red);border-color:var(--red)}
+    .cv-hint{font-size:.66rem;color:var(--label3);font-weight:500;margin-top:7px;display:block}
+    /* abas de quadros */
+    .cv-tabs{display:flex;gap:5px;flex-wrap:wrap;margin:12px 0 9px}
+    .cv-tab{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--sep);background:var(--card);font-family:inherit;font-size:.76rem;font-weight:600;color:var(--label2);padding:7px 13px;border-radius:9px;cursor:pointer}
+    .cv-tab:hover{color:var(--label)}
+    .cv-tab.active{background:var(--label);color:var(--bg);border-color:var(--label)}
+    .cv-tab span{font-size:.66rem;opacity:.65;font-weight:700}
+    .cv-tab-add{font-size:1rem;line-height:1;padding:6px 12px;color:var(--label3)}
+    /* tela infinita */
+    .cv-stage{flex:1;min-height:320px;position:relative;overflow:hidden;border:1px solid var(--sep);border-radius:16px;background:var(--card);cursor:grab;touch-action:none}
     .cv-stage.panning{cursor:grabbing}
     .cv-world{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
-    .cv-note{position:absolute;width:190px;min-height:112px;border-radius:12px;padding:11px 12px 30px;box-shadow:0 3px 10px rgba(0,0,0,.12);font-size:.8rem;line-height:1.45;color:#1c1c1e;cursor:grab;overflow:hidden;border:1px solid rgba(0,0,0,.07)}
-    .cv-note.dragging{cursor:grabbing;box-shadow:0 12px 30px rgba(0,0,0,.22);z-index:5}
-    .cv-note-txt{outline:none;white-space:pre-wrap;word-break:break-word;min-height:60px;cursor:text}
-    .cv-note-txt:empty::before{content:'Escreva...';opacity:.45}
-    /* acoes so aparecem no hover, para o post-it ficar limpo */
-    .cv-acts{position:absolute;right:6px;bottom:5px;display:flex;gap:3px;opacity:0;transition:opacity var(--dur-fast)}
-    .cv-note:hover .cv-acts{opacity:1}
+    .cv-edges{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
+    .cv-edge{pointer-events:auto}
+    .cv-edge-hit{stroke:transparent;stroke-width:16}
+    .cv-edge-line{stroke:var(--label3);stroke-width:2}
+    .cv-edge:hover .cv-edge-line{stroke:var(--blue)}
+    .cv-edge-x-bg{fill:var(--card);stroke:var(--sep);opacity:0;cursor:pointer}
+    .cv-edge-x{font-size:9px;fill:var(--red);text-anchor:middle;opacity:0;cursor:pointer;font-weight:700}
+    .cv-edge:hover .cv-edge-x-bg,.cv-edge:hover .cv-edge-x{opacity:1}
+    .cv-link-live{stroke:var(--blue);stroke-width:2;stroke-dasharray:5 4}
+    /* objetos */
+    .cv-node{position:absolute;border-radius:12px;padding:11px 12px 30px;box-shadow:0 3px 10px rgba(0,0,0,.12);font-size:.8rem;line-height:1.45;color:#1c1c1e;cursor:grab;border:1px solid rgba(0,0,0,.07)}
+    .cv-node.dragging{cursor:grabbing;box-shadow:0 12px 30px rgba(0,0,0,.22);z-index:5}
+    .cv-node.cv-alvo{outline:2px solid var(--blue);outline-offset:2px}
+    .cv-ellipse,.cv-diamond{background:transparent!important;box-shadow:none;border:none}
+    .cv-shape-bg{position:absolute;inset:0;z-index:0;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+    .cv-ellipse .cv-shape-bg{border-radius:50%}
+    .cv-diamond .cv-shape-bg{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+    .cv-ellipse .cv-node-txt,.cv-diamond .cv-node-txt{position:relative;z-index:1;text-align:center;padding:0 14px}
+    .cv-ellipse,.cv-diamond{display:flex;align-items:center;justify-content:center}
+    .cv-text{background:transparent!important;box-shadow:none;border:none;padding:6px 8px 24px;font-size:1rem;font-weight:600;color:var(--label)}
+    .cv-node-txt{outline:none;white-space:pre-wrap;word-break:break-word;min-height:24px;cursor:text;width:100%;overflow:hidden}
+    .cv-node-txt:empty::before{content:'Escreva...';opacity:.45}
+    .cv-acts{position:absolute;right:6px;bottom:5px;display:flex;gap:3px;opacity:0;transition:opacity var(--dur-fast);z-index:2}
+    .cv-node:hover .cv-acts{opacity:1}
     .cv-acts button{border:none;background:rgba(0,0,0,.07);border-radius:6px;width:23px;height:23px;cursor:pointer;color:#1c1c1e;display:flex;align-items:center;justify-content:center;font-size:.7rem;padding:0}
     .cv-acts button:hover{background:rgba(0,0,0,.16)}
-    .cv-colors{position:absolute;left:7px;bottom:7px;display:flex;gap:4px;opacity:0;transition:opacity var(--dur-fast)}
-    .cv-note:hover .cv-colors{opacity:1}
+    .cv-text .cv-acts button{background:var(--fill);color:var(--label)}
+    .cv-colors{position:absolute;left:7px;bottom:7px;display:flex;gap:4px;opacity:0;transition:opacity var(--dur-fast);z-index:2}
+    .cv-node:hover .cv-colors{opacity:1}
     .cv-colors i{width:13px;height:13px;border-radius:50%;cursor:pointer;display:block;border:1px solid rgba(0,0,0,.12)}
+    /* bolinha de ligacao e alca de redimensionar */
+    .cv-port{position:absolute;right:-7px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;background:var(--blue);border:2px solid var(--card);opacity:0;cursor:crosshair;transition:opacity var(--dur-fast);z-index:3}
+    .cv-node:hover .cv-port{opacity:1}
+    .cv-resize{position:absolute;right:0;bottom:0;width:14px;height:14px;cursor:nwse-resize;opacity:0;z-index:3;background:linear-gradient(135deg,transparent 50%,var(--label3) 50%)}
+    .cv-node:hover .cv-resize{opacity:.6}
     .cv-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--label3);font-size:.82rem;pointer-events:none;text-align:center;padding:20px}
     .cv-empty b{color:var(--label2);font-size:.9rem}
-    @media(max-width:640px){.cv-hint{display:none}.canvas-view.active{height:calc(100dvh - 150px)}}
+    @media(max-width:640px){.cv-hint{display:none}.canvas-view.active{height:calc(100dvh - 190px)}.cv-del-board{display:none}}
 
     /* ===== TIMELINE ===== */
     .task-tl-wrap{display:none}
@@ -1700,12 +1738,20 @@
     <div class="canvas-view" id="canvasView">
       <div class="page-head"><div class="page-head-left"><div class="greeting">Espaço livre</div><h1>Ideias</h1></div>
         <div class="cv-tools">
-          <button class="cv-btn" id="cvAdd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Post-it</button>
+          <div class="cv-palette" id="cvPalette">
+            <button data-cvk="note" title="Post-it"><i class="cvk cvk-note"></i>Post-it</button>
+            <button data-cvk="rect" title="Retângulo"><i class="cvk cvk-rect"></i></button>
+            <button data-cvk="ellipse" title="Elipse"><i class="cvk cvk-ell"></i></button>
+            <button data-cvk="diamond" title="Losango"><i class="cvk cvk-dia"></i></button>
+            <button data-cvk="text" title="Texto"><b>T</b></button>
+          </div>
           <div class="cv-zoom"><button id="cvOut">−</button><button id="cvFit">Ajustar</button><button id="cvIn">+</button></div>
-          <span class="cv-hint">Duplo clique cria · arraste o fundo para navegar · Ctrl+roda amplia</span>
+          <button class="cv-del-board" id="cvBoardDel" title="Excluir este quadro">Excluir quadro</button>
         </div>
       </div>
+      <div class="cv-tabs" id="cvBoards"></div>
       <div class="cv-stage" id="cvStage"><div class="cv-world" id="cvWorld"></div></div>
+      <span class="cv-hint">Duplo clique cria · arraste o fundo para navegar · Ctrl+roda amplia · arraste a bolinha da borda para ligar (A → B = B depende de A)</span>
     </div>
 
     <div class="agents-view" id="agentsView">
@@ -2332,7 +2378,7 @@ let _loggingOut=false;
 // outra entra, o cache da anterior continua lá, aparece na tela da conta nova e
 // pode até ser gravado por cima dos dados dela no Firestore. Estas chaves são
 // dados de conta e precisam morrer junto com a sessão.
-const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel','bt-canvas','bt-cv-cam'];
+const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel','bt-canvas','bt-cv-cam','bt-cv-boards','bt-cv-edges','bt-cv-cur'];
 const LS_ACCOUNT_UID='bt-account-uid'; // uid dono do cache que está no disco agora
 function clearAccountCache(){ACCOUNT_LS_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}
 
@@ -2349,7 +2395,7 @@ function resetInMemoryState(){
   projects=JSON.parse(JSON.stringify(DEF_PROJECTS));
   agents=DEF_AGENTS.slice();
   pTasks=[];pCats=[];pLog=[];
-  pDelServer={};pDelLocal={};pCatDelServer={};pCatDelLocal={};canvasItems=[];pCanvas=null;
+  pDelServer={};pDelLocal={};pCatDelServer={};pCatDelLocal={};canvasItems=[];canvasEdges=[];canvasBoards=[{id:'ideias',name:'Ideias'}];cvBoard='ideias';pCanvas=null;pCvBoards=null;pCvEdges=null;
   [sharedTasksMap,sharedLogMap,sharedDeletedMap,deletedByProj].forEach(m=>Object.keys(m).forEach(k=>delete m[k]));
 }
 
@@ -2747,7 +2793,7 @@ function syncProblem(msg,err){
 function syncProblemClear(){const el=document.getElementById('syncProblem');if(el)el.style.display='none'}
 let _fbTimer=null,_fbInitDone=false,_fbSaveTs=0,_fbSaveCompletedAt=0;
 let _syncedUid=null; // uid que o estado em memória representa — trava gravação cruzada
-let pTasks=[],pCats=[],pLog=[],pCanvas=null;
+let pTasks=[],pCats=[],pLog=[],pCanvas=null,pCvBoards=null,pCvEdges=null;
 let _unsubP=null;
 const _unsubShared={};
 const sharedTasksMap={};
@@ -2822,6 +2868,8 @@ function _fbDirectSave(){
     tasks:JSON.stringify(myPTasks),
     cats:JSON.stringify(myCats),
     canvas:JSON.stringify(canvasItems),
+    canvasBoards:JSON.stringify(canvasBoards),
+    canvasEdges:JSON.stringify(canvasEdges),
     deleted:JSON.stringify(pDel),
     catsDeleted:JSON.stringify(pCatDel),
     log:JSON.stringify(myPLog.slice(0,100)),
@@ -3040,10 +3088,17 @@ function combineData(){
   const pCatDel=mergeDel(pCatDelServer,pCatDelLocal);pCatDelLocal=pCatDel;
   cats=pCats.filter(c=>!pCatDel[c.id]);
   // Canvas: nao troca o estado embaixo de quem esta arrastando ou digitando
-  if(pCanvas&&!_cvDrag&&!_cvPan&&JSON.stringify(pCanvas)!==JSON.stringify(canvasItems)){
-    canvasItems=pCanvas;
-    try{sv('bt-canvas',canvasItems)}catch(e){}
-    if(curView==='canvas')renderCanvas();
+  if(!_cvDrag&&!_cvPan&&!_cvLink&&!_cvResize){
+    const mudou=(pCanvas&&JSON.stringify(pCanvas)!==JSON.stringify(canvasItems))
+      ||(pCvBoards&&JSON.stringify(pCvBoards)!==JSON.stringify(canvasBoards))
+      ||(pCvEdges&&JSON.stringify(pCvEdges)!==JSON.stringify(canvasEdges));
+    if(mudou){
+      if(pCanvas)canvasItems=pCanvas;
+      if(pCvBoards)canvasBoards=pCvBoards;
+      if(pCvEdges)canvasEdges=pCvEdges;
+      try{sv('bt-canvas',canvasItems);sv('bt-cv-boards',canvasBoards);sv('bt-cv-edges',canvasEdges)}catch(e){}
+      if(curView==='canvas')renderCanvas();
+    }
   }
   
   const newLog=[...pLog];
@@ -3079,6 +3134,8 @@ function fbListen(){
       pCats=JSON.parse(d.cats||'[]');
       pLog=JSON.parse(d.log||'[]');
       try{const cv=JSON.parse(d.canvas||'[]');if(Array.isArray(cv))pCanvas=cv}catch(e){}
+      try{const cb=JSON.parse(d.canvasBoards||'null');if(Array.isArray(cb)&&cb.length)pCvBoards=cb}catch(e){}
+      try{const ce=JSON.parse(d.canvasEdges||'null');if(Array.isArray(ce))pCvEdges=ce}catch(e){}
       try{pDelServer=JSON.parse(d.deleted||'{}')||{}}catch(e){pDelServer={}}
       try{pCatDelServer=JSON.parse(d.catsDeleted||'{}')||{}}catch(e){pCatDelServer={}}
       if(d.projects){projects=JSON.parse(d.projects);normalizeProjects()}
@@ -3728,141 +3785,300 @@ function renderTasksKanban(){
 }
 
 // ===== CANVAS DE IDEIAS =====
-// Tela infinita com post-its: o espaco para jogar ideia solta sem o atrito de
-// preencher um formulario de tarefa. O que virar trabalho de verdade vira tarefa
-// pelo botao ↗ do proprio post-it, ja com o texto preenchido.
-// Sincroniza no documento da conta como os demais dados; a posicao da camera
-// (pan/zoom) e por aparelho, nao por conta — cada tela tem seu enquadramento.
+// Quadros independentes, cada um com seus objetos e ligacoes. As setas sao
+// dependencia: A -> B significa "B depende de A". Objetos: post-it, retangulo,
+// elipse, losango e texto puro.
+// Tudo viaja no documento da conta; a camera (pan/zoom) fica so no aparelho.
 const CV_CORES=['#FFE58A','#B6E3FF','#C8F2D4','#FFC9DE','#E3D5FF','#FFD8B0'];
+const CV_KINDS={
+  note:{w:190,h:112,label:'Post-it'},
+  rect:{w:180,h:100,label:'Retângulo'},
+  ellipse:{w:170,h:110,label:'Elipse'},
+  diamond:{w:170,h:120,label:'Losango'},
+  text:{w:200,h:44,label:'Texto'}
+};
+let canvasBoards=ld('bt-cv-boards',[{id:'ideias',name:'Ideias'}]);
 let canvasItems=ld('bt-canvas',[]);
-let cvCam=ld('bt-cv-cam',{x:40,y:40,z:1});
-let _cvDrag=null,_cvPan=null;
-function cvSaveCam(){try{sv('bt-cv-cam',cvCam)}catch(e){}}
+let canvasEdges=ld('bt-cv-edges',[]);
+let cvBoard=ld('bt-cv-cur','ideias');
+let cvCams=ld('bt-cv-cam',{});
+let _cvDrag=null,_cvPan=null,_cvLink=null,_cvResize=null;
+
+// Compatibilidade: os post-its criados antes de existirem quadros e formas
+// nao tinham `board` nem `kind`. Sem isso eles sumiriam da tela.
+function cvMigrar(){
+  if(!Array.isArray(canvasBoards)||!canvasBoards.length)canvasBoards=[{id:'ideias',name:'Ideias'}];
+  const pri=canvasBoards[0].id;
+  let mudou=false;
+  canvasItems.forEach(n=>{
+    if(!n.board){n.board=pri;mudou=true}
+    if(!n.kind){n.kind='note';mudou=true}
+    if(!n.w){n.w=CV_KINDS[n.kind]?.w||190;n.h=CV_KINDS[n.kind]?.h||112;mudou=true}
+  });
+  canvasEdges.forEach(e=>{if(!e.board){e.board=pri;mudou=true}});
+  if(!canvasBoards.some(b=>b.id===cvBoard))cvBoard=pri;
+  return mudou;
+}
+function cvCam(){return cvCams[cvBoard]||(cvCams[cvBoard]={x:40,y:40,z:1})}
+function cvSaveCam(){try{sv('bt-cv-cam',cvCams)}catch(e){}}
+function cvSave(){try{sv('bt-cv-boards',canvasBoards);sv('bt-cv-edges',canvasEdges);sv('bt-cv-cur',cvBoard)}catch(e){}sT()}
+function cvDoQuadro(){return canvasItems.filter(n=>n.board===cvBoard)}
+function cvEdgesDoQuadro(){
+  const ids=new Set(cvDoQuadro().map(n=>n.id));
+  return canvasEdges.filter(e=>e.board===cvBoard&&ids.has(e.from)&&ids.has(e.to));
+}
 function cvApplyCam(){
   const w=$('#cvWorld');if(!w)return;
-  w.style.transform=`translate(${cvCam.x}px,${cvCam.y}px) scale(${cvCam.z})`;
+  const c=cvCam();
+  w.style.transform=`translate(${c.x}px,${c.y}px) scale(${c.z})`;
   const st=$('#cvStage');
   if(st){
-    const p=24*cvCam.z;
+    const p=24*c.z;
     st.style.backgroundImage='radial-gradient(circle, var(--sep) 1px, transparent 1px)';
     st.style.backgroundSize=p+'px '+p+'px';
-    st.style.backgroundPosition=(cvCam.x%p)+'px '+(cvCam.y%p)+'px';
+    st.style.backgroundPosition=(c.x%p)+'px '+(c.y%p)+'px';
   }
 }
-function cvSave(){sT()} // canvas viaja no mesmo documento das tarefas
+// Onde a reta A->B cruza a borda do objeto: sem isso a seta nasce e morre
+// escondida atras dos proprios objetos.
+function cvBorda(n,alvoX,alvoY){
+  const cx=n.x+n.w/2, cy=n.y+n.h/2;
+  const dx=alvoX-cx, dy=alvoY-cy;
+  if(!dx&&!dy)return {x:cx,y:cy};
+  const esc=Math.min(Math.abs((n.w/2)/(dx||1e-6)),Math.abs((n.h/2)/(dy||1e-6)));
+  return {x:cx+dx*esc,y:cy+dy*esc};
+}
+function cvNodeHTML(n){
+  const k=n.kind||'note';
+  const est=`left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px`;
+  const cor=n.color||CV_CORES[0];
+  const fundo=k==='text'?'':`background:${cor}`;
+  const cores=CV_CORES.map(c=>`<i data-cvcolor="${n.id}" data-c="${c}" style="background:${c}"></i>`).join('');
+  return `<div class="cv-node cv-${k}" data-cv="${n.id}" style="${est};${fundo}">
+    ${k==='ellipse'||k==='diamond'?`<div class="cv-shape-bg" style="background:${cor}"></div>`:''}
+    <div class="cv-node-txt" contenteditable="true" data-cvtxt="${n.id}">${escapeHtml(n.text||'')}</div>
+    ${k!=='text'?`<div class="cv-colors">${cores}</div>`:''}
+    <div class="cv-acts">
+      <button data-cvtask="${n.id}" title="Virar tarefa">↗</button>
+      <button data-cvdel="${n.id}" title="Apagar">✕</button>
+    </div>
+    <div class="cv-port" data-cvport="${n.id}" title="Arraste para ligar (dependência)"></div>
+    <div class="cv-resize" data-cvrs="${n.id}" title="Redimensionar"></div>
+  </div>`;
+}
 function renderCanvas(){
   const w=$('#cvWorld');if(!w)return;
-  w.innerHTML=canvasItems.map(n=>`
-    <div class="cv-note" data-cv="${n.id}" style="left:${n.x}px;top:${n.y}px;background:${n.color||CV_CORES[0]}">
-      <div class="cv-note-txt" contenteditable="true" data-cvtxt="${n.id}">${escapeHtml(n.text||'')}</div>
-      <div class="cv-colors">${CV_CORES.map(c=>`<i data-cvcolor="${n.id}" data-c="${c}" style="background:${c}"></i>`).join('')}</div>
-      <div class="cv-acts">
-        <button data-cvtask="${n.id}" title="Virar tarefa">↗</button>
-        <button data-cvdel="${n.id}" title="Apagar">✕</button>
-      </div>
-    </div>`).join('');
+  if(cvMigrar())cvSave();
+  const itens=cvDoQuadro();
+  const mapa={};itens.forEach(n=>mapa[n.id]=n);
+
+  // camada das setas, atras dos objetos
+  let arestas='';
+  cvEdgesDoQuadro().forEach(e=>{
+    const a=mapa[e.from],b=mapa[e.to];if(!a||!b)return;
+    const p1=cvBorda(a,b.x+b.w/2,b.y+b.h/2), p2=cvBorda(b,a.x+a.w/2,a.y+a.h/2);
+    const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2;
+    arestas+=`<g class="cv-edge" data-cvedge="${e.id}">
+      <line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" class="cv-edge-hit"/>
+      <line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" class="cv-edge-line" marker-end="url(#cvArrow)"/>
+      <circle cx="${mx}" cy="${my}" r="8" class="cv-edge-x-bg"/>
+      <text x="${mx}" y="${my+3.5}" class="cv-edge-x">✕</text>
+    </g>`;
+  });
+  const svgW=Math.max(2000,...itens.map(n=>n.x+n.w+400));
+  const svgH=Math.max(1200,...itens.map(n=>n.y+n.h+400));
+  w.innerHTML=`<svg class="cv-edges" width="${svgW}" height="${svgH}">
+      <defs><marker id="cvArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--label3)"/></marker></defs>
+      ${arestas}<line class="cv-link-live" style="display:none"/>
+    </svg>`+itens.map(cvNodeHTML).join('');
+
   const st=$('#cvStage');
   let vazio=st.querySelector('.cv-empty');
-  if(!canvasItems.length){
-    if(!vazio){vazio=document.createElement('div');vazio.className='cv-empty';vazio.innerHTML='<b>Espaço livre para pensar</b>Duplo clique em qualquer lugar para criar um post-it';st.appendChild(vazio)}
+  if(!itens.length){
+    if(!vazio){vazio=document.createElement('div');vazio.className='cv-empty';st.appendChild(vazio)}
+    vazio.innerHTML='<b>Quadro vazio</b>Duplo clique cria um post-it · use a barra acima para formas e texto';
   } else if(vazio) vazio.remove();
+  renderCvBoards();
   cvApplyCam();
 }
-// converte coordenada da tela para coordenada do mundo (leva pan e zoom em conta)
-function cvParaMundo(clientX,clientY){
-  const r=$('#cvStage').getBoundingClientRect();
-  return {x:(clientX-r.left-cvCam.x)/cvCam.z, y:(clientY-r.top-cvCam.y)/cvCam.z};
+function renderCvBoards(){
+  const el=$('#cvBoards');if(!el)return;
+  el.innerHTML=canvasBoards.map(b=>{
+    const n=canvasItems.filter(x=>x.board===b.id).length;
+    return `<button class="cv-tab${b.id===cvBoard?' active':''}" data-cvb="${b.id}">${escapeHtml(b.name)}${n?`<span>${n}</span>`:''}</button>`;
+  }).join('')+`<button class="cv-tab cv-tab-add" id="cvBoardAdd" title="Novo quadro">+</button>`;
 }
-function cvAdd(x,y){
+function cvParaMundo(clientX,clientY){
+  const r=$('#cvStage').getBoundingClientRect(),c=cvCam();
+  return {x:(clientX-r.left-c.x)/c.z, y:(clientY-r.top-c.y)/c.z};
+}
+function cvAdd(kind,x,y){
   const st=$('#cvStage');if(!st)return;
+  const k=CV_KINDS[kind]?kind:'note';
+  const dim=CV_KINDS[k];
   let pos;
-  if(x==null){const r=st.getBoundingClientRect();pos=cvParaMundo(r.left+r.width/2-95,r.top+r.height/2-56)}
+  if(x==null){const r=st.getBoundingClientRect();pos=cvParaMundo(r.left+r.width/2-dim.w/2,r.top+r.height/2-dim.h/2)}
   else pos={x,y};
-  const n={id:uid(),x:Math.round(pos.x),y:Math.round(pos.y),text:'',color:CV_CORES[canvasItems.length%CV_CORES.length],updatedAt:Date.now()};
+  const n={id:uid(),board:cvBoard,kind:k,x:Math.round(pos.x),y:Math.round(pos.y),w:dim.w,h:dim.h,text:'',
+    color:CV_CORES[cvDoQuadro().length%CV_CORES.length],updatedAt:Date.now()};
   canvasItems.push(n);cvSave();renderCanvas();
   setTimeout(()=>{const el=document.querySelector(`[data-cvtxt="${n.id}"]`);if(el)el.focus()},40);
 }
 function cvZoom(fator,cx,cy){
   const st=$('#cvStage');if(!st)return;
-  const r=st.getBoundingClientRect();
+  const r=st.getBoundingClientRect(),c=cvCam();
   const px=(cx==null?r.width/2:cx-r.left), py=(cy==null?r.height/2:cy-r.top);
-  const z=Math.min(2.5,Math.max(.25,cvCam.z*fator));
-  // mantem o ponto sob o cursor parado durante o zoom
-  cvCam.x=px-(px-cvCam.x)*(z/cvCam.z);
-  cvCam.y=py-(py-cvCam.y)*(z/cvCam.z);
-  cvCam.z=z;cvSaveCam();cvApplyCam();
+  const z=Math.min(2.5,Math.max(.25,c.z*fator));
+  c.x=px-(px-c.x)*(z/c.z); c.y=py-(py-c.y)*(z/c.z); c.z=z;
+  cvSaveCam();cvApplyCam();
 }
 function cvFit(){
   const st=$('#cvStage');if(!st)return;
-  if(!canvasItems.length){cvCam={x:40,y:40,z:1};cvSaveCam();cvApplyCam();return}
+  const itens=cvDoQuadro(),c=cvCam();
+  if(!itens.length){c.x=40;c.y=40;c.z=1;cvSaveCam();cvApplyCam();return}
   const r=st.getBoundingClientRect();
-  const minX=Math.min(...canvasItems.map(n=>n.x)), minY=Math.min(...canvasItems.map(n=>n.y));
-  const maxX=Math.max(...canvasItems.map(n=>n.x+200)), maxY=Math.max(...canvasItems.map(n=>n.y+130));
-  const z=Math.min(1.2,Math.max(.3,Math.min((r.width-60)/(maxX-minX),(r.height-60)/(maxY-minY))));
-  cvCam={z,x:(r.width-(maxX-minX)*z)/2-minX*z, y:(r.height-(maxY-minY)*z)/2-minY*z};
+  const minX=Math.min(...itens.map(n=>n.x)), minY=Math.min(...itens.map(n=>n.y));
+  const maxX=Math.max(...itens.map(n=>n.x+n.w)), maxY=Math.max(...itens.map(n=>n.y+n.h));
+  const z=Math.min(1.2,Math.max(.25,Math.min((r.width-60)/(maxX-minX),(r.height-60)/(maxY-minY))));
+  c.z=z; c.x=(r.width-(maxX-minX)*z)/2-minX*z; c.y=(r.height-(maxY-minY)*z)/2-minY*z;
   cvSaveCam();cvApplyCam();
+}
+function cvAddBoard(){
+  const nome=prompt('Nome do quadro:');
+  if(!nome||!nome.trim())return;
+  const b={id:uid(),name:nome.trim().slice(0,40)};
+  canvasBoards.push(b);cvBoard=b.id;cvSave();renderCanvas();
+}
+function cvDelBoard(){
+  if(canvasBoards.length<2){toast('É preciso ter pelo menos um quadro');return}
+  const b=canvasBoards.find(x=>x.id===cvBoard);if(!b)return;
+  const n=canvasItems.filter(x=>x.board===cvBoard).length;
+  if(!confirm(`Excluir o quadro "${b.name}"`+(n?` e seus ${n} itens?`:'?')))return;
+  canvasItems=canvasItems.filter(x=>x.board!==cvBoard);
+  canvasEdges=canvasEdges.filter(e=>e.board!==cvBoard);
+  canvasBoards=canvasBoards.filter(x=>x.id!==cvBoard);
+  cvBoard=canvasBoards[0].id;
+  cvSave();fbSaveNow();renderCanvas();toast('Quadro excluído');
 }
 function cvInit(){
   const st=$('#cvStage');if(!st||st.dataset.ready)return;
   st.dataset.ready='1';
 
   st.addEventListener('dblclick',e=>{
-    if(e.target.closest('.cv-note'))return;
-    const p=cvParaMundo(e.clientX,e.clientY);cvAdd(p.x-95,p.y-56);
+    if(e.target.closest('.cv-node'))return;
+    const p=cvParaMundo(e.clientX,e.clientY);cvAdd('note',p.x-95,p.y-56);
   });
-  // arrastar o fundo = navegar; arrastar o post-it = mover o post-it
+
   st.addEventListener('pointerdown',e=>{
-    const nota=e.target.closest('.cv-note');
-    if(nota&&!e.target.closest('.cv-note-txt')&&!e.target.closest('button')&&!e.target.closest('.cv-colors')){
-      const it=canvasItems.find(x=>x.id===nota.dataset.cv);if(!it)return;
-      _cvDrag={id:it.id,dx:cvParaMundo(e.clientX,e.clientY).x-it.x,dy:cvParaMundo(e.clientX,e.clientY).y-it.y,el:nota};
-      nota.classList.add('dragging');nota.setPointerCapture(e.pointerId);
-    } else if(!nota){
-      _cvPan={sx:e.clientX,sy:e.clientY,ox:cvCam.x,oy:cvCam.y};
+    const porta=e.target.closest('[data-cvport]');
+    if(porta){ // comeca a puxar uma seta
+      const it=canvasItems.find(x=>x.id===porta.dataset.cvport);if(!it)return;
+      _cvLink={from:it.id};st.setPointerCapture(e.pointerId);e.preventDefault();return;
+    }
+    const rs=e.target.closest('[data-cvrs]');
+    if(rs){
+      const it=canvasItems.find(x=>x.id===rs.dataset.cvrs);if(!it)return;
+      const p=cvParaMundo(e.clientX,e.clientY);
+      _cvResize={id:it.id,ox:p.x,oy:p.y,w:it.w,h:it.h,el:rs.closest('.cv-node')};
+      st.setPointerCapture(e.pointerId);e.preventDefault();return;
+    }
+    const no=e.target.closest('.cv-node');
+    if(no&&!e.target.closest('.cv-node-txt')&&!e.target.closest('button')&&!e.target.closest('.cv-colors')){
+      const it=canvasItems.find(x=>x.id===no.dataset.cv);if(!it)return;
+      const p=cvParaMundo(e.clientX,e.clientY);
+      _cvDrag={id:it.id,dx:p.x-it.x,dy:p.y-it.y,el:no};
+      no.classList.add('dragging');st.setPointerCapture(e.pointerId);
+    } else if(!no){
+      const c=cvCam();
+      _cvPan={sx:e.clientX,sy:e.clientY,ox:c.x,oy:c.y};
       st.classList.add('panning');st.setPointerCapture(e.pointerId);
     }
   });
+
   st.addEventListener('pointermove',e=>{
-    if(_cvDrag){
+    if(_cvLink){
+      const de=canvasItems.find(x=>x.id===_cvLink.from);if(!de)return;
+      const p=cvParaMundo(e.clientX,e.clientY);
+      const b=cvBorda(de,p.x,p.y);
+      const l=$('#cvWorld').querySelector('.cv-link-live');
+      if(l){l.style.display='';l.setAttribute('x1',b.x);l.setAttribute('y1',b.y);l.setAttribute('x2',p.x);l.setAttribute('y2',p.y)}
+      const alvo=document.elementFromPoint(e.clientX,e.clientY)?.closest('.cv-node');
+      $$('.cv-node').forEach(n=>n.classList.toggle('cv-alvo',n===alvo&&n.dataset.cv!==_cvLink.from));
+    } else if(_cvDrag){
       const p=cvParaMundo(e.clientX,e.clientY);
       _cvDrag.el.style.left=Math.round(p.x-_cvDrag.dx)+'px';
       _cvDrag.el.style.top=Math.round(p.y-_cvDrag.dy)+'px';
+    } else if(_cvResize){
+      const p=cvParaMundo(e.clientX,e.clientY);
+      const w=Math.max(90,Math.round(_cvResize.w+(p.x-_cvResize.ox)));
+      const h=Math.max(44,Math.round(_cvResize.h+(p.y-_cvResize.oy)));
+      _cvResize.el.style.width=w+'px';_cvResize.el.style.height=h+'px';
     } else if(_cvPan){
-      cvCam.x=_cvPan.ox+(e.clientX-_cvPan.sx);
-      cvCam.y=_cvPan.oy+(e.clientY-_cvPan.sy);
+      const c=cvCam();
+      c.x=_cvPan.ox+(e.clientX-_cvPan.sx); c.y=_cvPan.oy+(e.clientY-_cvPan.sy);
       cvApplyCam();
     }
   });
-  const soltar=()=>{
+
+  const soltar=e=>{
+    if(_cvLink){
+      const alvo=document.elementFromPoint(e.clientX,e.clientY)?.closest('.cv-node');
+      $$('.cv-node').forEach(n=>n.classList.remove('cv-alvo'));
+      if(alvo&&alvo.dataset.cv!==_cvLink.from){
+        const to=alvo.dataset.cv, from=_cvLink.from;
+        const existe=canvasEdges.some(x=>x.board===cvBoard&&((x.from===from&&x.to===to)||(x.from===to&&x.to===from)));
+        if(existe)toast('Esses dois já estão ligados');
+        else{canvasEdges.push({id:uid(),board:cvBoard,from,to});cvSave();renderCanvas();toast('Dependência criada')}
+      }
+      _cvLink=null;
+      const l=$('#cvWorld')?.querySelector('.cv-link-live');if(l)l.style.display='none';
+      if(!_cvLink)renderCanvas();
+    }
     if(_cvDrag){
       const it=canvasItems.find(x=>x.id===_cvDrag.id);
       if(it){it.x=parseInt(_cvDrag.el.style.left);it.y=parseInt(_cvDrag.el.style.top);it.updatedAt=Date.now();cvSave()}
-      _cvDrag.el.classList.remove('dragging');_cvDrag=null;
+      _cvDrag.el.classList.remove('dragging');_cvDrag=null;renderCanvas();
+    }
+    if(_cvResize){
+      const it=canvasItems.find(x=>x.id===_cvResize.id);
+      if(it){it.w=parseInt(_cvResize.el.style.width);it.h=parseInt(_cvResize.el.style.height);it.updatedAt=Date.now();cvSave()}
+      _cvResize=null;renderCanvas();
     }
     if(_cvPan){_cvPan=null;st.classList.remove('panning');cvSaveCam()}
   };
   st.addEventListener('pointerup',soltar);
   st.addEventListener('pointercancel',soltar);
 
-  // Ctrl+roda amplia; roda sozinha navega (igual aos editores de canvas)
   st.addEventListener('wheel',e=>{
     e.preventDefault();
+    const c=cvCam();
     if(e.ctrlKey||e.metaKey)cvZoom(e.deltaY<0?1.12:.89,e.clientX,e.clientY);
-    else{cvCam.x-=e.deltaX;cvCam.y-=e.deltaY;cvApplyCam();cvSaveCam()}
+    else{c.x-=e.deltaX;c.y-=e.deltaY;cvApplyCam();cvSaveCam()}
   },{passive:false});
 
-  // texto, cor, apagar e virar tarefa
   st.addEventListener('input',e=>{
     const el=e.target.closest('[data-cvtxt]');if(!el)return;
     const it=canvasItems.find(x=>x.id===el.dataset.cvtxt);if(!it)return;
     it.text=el.innerText;it.updatedAt=Date.now();
     clearTimeout(st._cvT);st._cvT=setTimeout(cvSave,600);
   });
+
   st.addEventListener('click',e=>{
+    const ar=e.target.closest('[data-cvedge]');
+    if(ar&&e.target.closest('.cv-edge-x-bg,.cv-edge-x')){
+      canvasEdges=canvasEdges.filter(x=>x.id!==ar.dataset.cvedge);
+      cvSave();fbSaveNow();renderCanvas();toast('Dependência removida');return;
+    }
     const cor=e.target.closest('[data-cvcolor]');
     if(cor){const it=canvasItems.find(x=>x.id===cor.dataset.cvcolor);if(it){it.color=cor.dataset.c;it.updatedAt=Date.now();cvSave();renderCanvas()}return}
     const del=e.target.closest('[data-cvdel]');
-    if(del){canvasItems=canvasItems.filter(x=>x.id!==del.dataset.cvdel);cvSave();fbSaveNow();renderCanvas();toast('Post-it apagado');return}
+    if(del){
+      const id=del.dataset.cvdel;
+      canvasItems=canvasItems.filter(x=>x.id!==id);
+      canvasEdges=canvasEdges.filter(x=>x.from!==id&&x.to!==id);
+      cvSave();fbSaveNow();renderCanvas();toast('Item apagado');return;
+    }
     const tsk=e.target.closest('[data-cvtask]');
     if(tsk){
       const it=canvasItems.find(x=>x.id===tsk.dataset.cvtask);if(!it)return;
@@ -3874,10 +4090,18 @@ function cvInit(){
     }
   });
 
-  const add=$('#cvAdd');if(add)add.onclick=()=>cvAdd();
+  const bs=$('#cvBoards');
+  if(bs)bs.addEventListener('click',e=>{
+    if(e.target.closest('#cvBoardAdd')){cvAddBoard();return}
+    const t=e.target.closest('[data-cvb]');
+    if(t){cvBoard=t.dataset.cvb;cvSave();renderCanvas()}
+  });
+  const pal=$('#cvPalette');
+  if(pal)pal.addEventListener('click',e=>{const b=e.target.closest('[data-cvk]');if(b)cvAdd(b.dataset.cvk)});
   const zi=$('#cvIn');if(zi)zi.onclick=()=>cvZoom(1.2);
   const zo=$('#cvOut');if(zo)zo.onclick=()=>cvZoom(.83);
   const zf=$('#cvFit');if(zf)zf.onclick=cvFit;
+  const bd=$('#cvBoardDel');if(bd)bd.onclick=cvDelBoard;
 }
 
 // ===== TIMELINE =====
