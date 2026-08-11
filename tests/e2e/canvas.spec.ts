@@ -295,3 +295,107 @@ test('duplo clique na aba renomeia o quadro', async ({ page }) => {
   const salvo=await page.evaluate(()=>JSON.parse(JSON.parse(sessionStorage.getItem('__mockStore')||'{}').users['uid-B'].canvasBoards||'[]'));
   expect(salvo[0].name).toBe('Planejamento 2026');
 });
+
+/** Desfazer, grade, multi-seleção, duplicar, busca e ponte com tarefas */
+
+test('Ctrl+Z desfaz e Ctrl+Shift+Z refaz', async ({ page }) => {
+  await abrir(page,[{id:'n1',board:'ideias',kind:'note',x:64,y:64,w:190,h:112,text:'Fica'}]);
+  await page.locator('[data-cv="n1"]').click({position:{x:5,y:5}});
+  await page.locator('body').press('Delete');
+  await page.waitForTimeout(400);
+  await expect(page.locator('.cv-node')).toHaveCount(0);
+
+  await page.locator('body').press('Control+z');
+  await page.waitForTimeout(400);
+  await expect(page.locator('.cv-node')).toHaveCount(1);
+  await expect(page.locator('.cv-node-txt')).toContainText('Fica');
+
+  await page.locator('body').press('Control+Shift+z');
+  await page.waitForTimeout(400);
+  await expect(page.locator('.cv-node')).toHaveCount(0);
+});
+
+test('objeto arrastado encaixa na grade de 8px', async ({ page }) => {
+  await abrir(page,[{id:'n1',board:'ideias',kind:'note',x:64,y:64,w:190,h:112,text:'Encaixa'}]);
+  const b=await page.locator('[data-cv="n1"]').boundingBox();
+  await page.mouse.move(b!.x+90,b!.y+40);
+  await page.mouse.down();
+  await page.mouse.move(b!.x+90+53,b!.y+40+37,{steps:6}); // deslocamento propositalmente "quebrado"
+  await page.mouse.up();
+  await page.waitForTimeout(500);
+  const it=await page.evaluate(()=>(eval('canvasItems') as any[])[0]);
+  expect(it.x%8).toBe(0);
+  expect(it.y%8).toBe(0);
+});
+
+test('Shift+arrasto no vazio seleciona em bloco e Del apaga todos', async ({ page }) => {
+  await abrir(page,[
+    {id:'a',board:'ideias',kind:'note',x:40,y:40,w:150,h:90,text:'A'},
+    {id:'b',board:'ideias',kind:'note',x:230,y:40,w:150,h:90,text:'B'},
+    {id:'c',board:'ideias',kind:'note',x:40,y:400,w:150,h:90,text:'Longe'}
+  ]);
+  const st=await page.locator('#cvStage').boundingBox();
+  await page.keyboard.down('Shift');
+  await page.mouse.move(st!.x+20,st!.y+20);
+  await page.mouse.down();
+  await page.mouse.move(st!.x+460,st!.y+190,{steps:10});
+  await page.mouse.up();
+  await page.keyboard.up('Shift');
+  await page.waitForTimeout(300);
+  await expect(page.locator('.cv-node.sel')).toHaveCount(2);
+
+  await page.locator('body').press('Delete');
+  await page.waitForTimeout(400);
+  await expect(page.locator('.cv-node')).toHaveCount(1);
+  await expect(page.locator('.cv-node-txt')).toContainText('Longe');
+});
+
+test('Ctrl+D duplica a seleção junto com as ligações internas', async ({ page }) => {
+  await abrir(page,[
+    {id:'a',board:'ideias',kind:'note',x:40,y:40,w:150,h:90,text:'A'},
+    {id:'b',board:'ideias',kind:'note',x:260,y:40,w:150,h:90,text:'B'}
+  ]);
+  await page.evaluate(()=>{(eval('canvasEdges') as any[]).push({id:'e1',board:'ideias',from:'a',to:'b'});(eval('renderCanvas') as any)()});
+  await page.locator('body').press('Control+a');
+  await expect(page.locator('.cv-node.sel')).toHaveCount(2);
+  await page.locator('body').press('Control+d');
+  await page.waitForTimeout(400);
+  await expect(page.locator('.cv-node')).toHaveCount(4);
+  await expect(page.locator('.cv-edge')).toHaveCount(2);   // a ligação foi junto
+});
+
+test('busca destaca no quadro e aponta os outros', async ({ page }) => {
+  await abrir(page,[
+    {id:'a',board:'ideias',kind:'note',x:40,y:40,w:150,h:90,text:'Contrato do servidor'},
+    {id:'b',board:'ideias',kind:'note',x:230,y:40,w:150,h:90,text:'Outra coisa'},
+    {id:'c',board:'outro',kind:'note',x:40,y:40,w:150,h:90,text:'Contrato de aluguel'}
+  ]);
+  await page.evaluate(()=>{(eval('canvasBoards') as any[]).push({id:'outro',name:'Pessoal'});(eval('renderCanvas') as any)()});
+  await page.locator('#cvBusca').fill('contrato');
+  await page.waitForTimeout(400);
+  await expect(page.locator('[data-cv="a"]')).toHaveClass(/achado/);
+  await expect(page.locator('[data-cv="b"]')).toHaveClass(/apagado/);
+  await expect(page.locator('#cvBuscaFora')).toContainText('Pessoal (1)');
+  await page.locator('[data-cvir="outro"]').click();   // pula para o outro quadro
+  await page.waitForTimeout(400);
+  await expect(page.locator('[data-cv="c"]')).toHaveClass(/achado/);
+});
+
+test('promover post-it liga a dependência real da tarefa', async ({ page }) => {
+  await abrir(page,[
+    {id:'a',board:'ideias',kind:'note',x:40,y:40,w:150,h:90,text:'Primeiro passo',taskId:'t-existente'},
+    {id:'b',board:'ideias',kind:'note',x:280,y:40,w:150,h:90,text:'Segundo passo'}
+  ]);
+  // a tarefa de origem precisa existir de verdade
+  await page.evaluate(()=>{
+    (eval('tasks') as any[]).push({id:'t-existente',title:'Primeiro passo',project:'bruno',status:'todo',subtasks:[],createdAt:1,updatedAt:1});
+    (eval('canvasEdges') as any[]).push({id:'e1',board:'ideias',from:'a',to:'b'});
+    (eval('renderCanvas') as any)();
+  });
+  await page.locator('[data-cvtask="b"]').click();
+  await page.waitForTimeout(500);
+  await expect(page.locator('#modal')).toHaveClass(/\bopen\b/);
+  expect(await page.locator('#fT').inputValue()).toBe('Segundo passo');
+  // nasce bloqueada pela tarefa do objeto que aponta para ela
+  expect(await page.evaluate(()=>eval('mDeps'))).toEqual(['t-existente']);
+});

@@ -1404,6 +1404,16 @@
     .cv-node:hover .cv-port{opacity:1}
     .cv-resize{position:absolute;right:0;bottom:0;width:14px;height:14px;cursor:nwse-resize;opacity:0;z-index:3;background:linear-gradient(135deg,transparent 50%,var(--label3) 50%)}
     .cv-node:hover .cv-resize{opacity:.6}
+    .cv-laco{position:absolute;border:1.5px dashed var(--blue);background:rgba(49,134,255,.09);pointer-events:none;z-index:6;border-radius:4px}
+    .cv-busca{border:1px solid var(--sep);background:var(--card);border-radius:9px;padding:7px 12px;font-family:inherit;font-size:.74rem;color:var(--label);width:190px}
+    .cv-busca:focus{outline:none;border-color:var(--blue)}
+    .cv-node.achado{outline:2px solid #FF9500;outline-offset:3px}
+    .cv-node.apagado{opacity:.28}
+    .cv-busca-fora{position:absolute;left:14px;bottom:14px;z-index:8;background:var(--card);border:1px solid var(--sep);border-radius:10px;padding:7px 10px;font-size:.7rem;color:var(--label3);display:flex;gap:6px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.1)}
+    .cv-busca-fora button{border:none;background:var(--fill);color:var(--label);font-family:inherit;font-size:.7rem;font-weight:600;padding:4px 9px;border-radius:7px;cursor:pointer}
+    .cv-busca-fora button:hover{background:var(--blue);color:#fff}
+    /* objeto que ja virou tarefa */
+    .cv-node.temtarefa .cv-acts button[data-cvtask]{background:rgba(52,199,89,.35)}
     .cv-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--label3);font-size:.82rem;pointer-events:none;text-align:center;padding:20px}
     .cv-empty b{color:var(--label2);font-size:.9rem}
     @media(max-width:640px){.cv-hint{display:none}.canvas-view.active{height:calc(100dvh - 190px)}.cv-del-board{display:none}}
@@ -1786,12 +1796,13 @@
             <button data-cvk="text" data-dica="Texto · T"><b class="cvk-t">T</b></button>
           </div>
           <div class="cv-zoom"><button id="cvOut">−</button><button id="cvFit">Ajustar</button><button id="cvIn">+</button></div>
+          <input class="cv-busca" id="cvBusca" type="search" placeholder="Buscar nos quadros..." autocomplete="off">
           <button class="cv-del-board" id="cvBoardDel" title="Excluir este quadro">Excluir quadro</button>
         </div>
       </div>
       <div class="cv-tabs" id="cvBoards"></div>
       <div class="cv-stage" id="cvStage"><div class="cv-world" id="cvWorld"></div></div>
-      <span class="cv-hint">Atalhos: <b>N</b> post-it · <b>R</b> retângulo · <b>O</b> elipse · <b>D</b> losango · <b>T</b> texto · <b>Del</b> apaga o selecionado · <b>Esc</b> desmarca — arraste a bolinha da borda para ligar (A → B = B depende de A) · Ctrl+roda amplia</span>
+      <span class="cv-hint"><b>N</b> post-it · <b>R</b> retângulo · <b>O</b> elipse · <b>D</b> losango · <b>T</b> texto · <b>Del</b> apaga · <b>Esc</b> desmarca · <b>Ctrl+Z</b> desfaz · <b>Ctrl+D</b> duplica · <b>Ctrl+A</b> tudo — 1 clique seleciona, 2 editam · <b>Shift+arrasto</b> no vazio seleciona em bloco · arraste a bolinha da borda para ligar (A → B = B depende de A)</span>
     </div>
 
     <div class="agents-view" id="agentsView">
@@ -3842,8 +3853,42 @@ let canvasItems=ld('bt-canvas',[]);
 let canvasEdges=ld('bt-cv-edges',[]);
 let cvBoard=ld('bt-cv-cur','ideias');
 let cvCams=ld('bt-cv-cam',{});
-let _cvDrag=null,_cvPan=null,_cvLink=null,_cvResize=null,_cvSel=null;
+let _cvDrag=null,_cvPan=null,_cvLink=null,_cvResize=null,_cvMarquee=null;
+const _cvSel=new Set(); // multipla selecao
 let _cvMouse=null; // ultima posicao do ponteiro sobre o quadro, em coordenadas do mundo
+// Historico por instantaneo: o quadro inteiro cabe em pouca memoria e evita a
+// complexidade de registrar cada tipo de operacao. Um Delete errado deixa de
+// ser definitivo — e e isso que faz a pessoa usar a ferramenta sem medo.
+const CV_GRADE=8; // encaixe: todo objeto pousa em multiplo de 8px
+const cvEnc=v=>Math.round(v/CV_GRADE)*CV_GRADE;
+let _cvHist=[],_cvHistFut=[],_cvHistCong=false;
+function cvEstado(){return JSON.stringify({i:canvasItems,e:canvasEdges,b:canvasBoards})}
+function cvMarcar(){ // chamar ANTES de alterar
+  if(_cvHistCong)return;
+  _cvHist.push(cvEstado());
+  if(_cvHist.length>60)_cvHist.shift();
+  _cvHistFut=[]; // ramo novo descarta o refazer pendente
+}
+function cvAplicar(json){
+  const d=JSON.parse(json);
+  canvasItems=d.i;canvasEdges=d.e;canvasBoards=d.b;
+  if(!canvasBoards.some(x=>x.id===cvBoard))cvBoard=canvasBoards[0]?.id;
+  _cvSel.clear();_cvEditando=null;
+  _cvHistCong=true;cvSave();_cvHistCong=false;
+  renderCanvas();
+}
+function cvDesfazer(){
+  if(!_cvHist.length){toast('Nada para desfazer');return}
+  _cvHistFut.push(cvEstado());
+  cvAplicar(_cvHist.pop());
+  toast('Desfeito');
+}
+function cvRefazer(){
+  if(!_cvHistFut.length){toast('Nada para refazer');return}
+  _cvHist.push(cvEstado());
+  cvAplicar(_cvHistFut.pop());
+  toast('Refeito');
+}
 
 // Compatibilidade: os post-its criados antes de existirem quadros e formas
 // nao tinham `board` nem `kind`. Sem isso eles sumiriam da tela.
@@ -3921,8 +3966,8 @@ function cvNodeHTML(n){
   const cor=n.color||CV_CORES[0];
   const fundo=k==='text'?'':`background:${cor}`;
   const cores=CV_CORES.map(c=>`<i data-cvcolor="${n.id}" data-c="${c}" style="background:${c}"></i>`).join('');
-  const sel=n.id===_cvSel?' sel':'';
-  const bd=n.bordered?' bd':'';
+  const sel=_cvSel.has(n.id)?' sel':'';
+  const bd=(n.bordered?' bd':'')+(n.taskId?' temtarefa':'');
   const reacoes=(n.reacts&&n.reacts.length)?`<div class="cv-reacts">${n.reacts.map(r=>`<span>${r}</span>`).join('')}</div>`:'';
   return `<div class="cv-node cv-${k}${sel}${bd}" data-cv="${n.id}" style="${est};${fundo}">
     ${reacoes}
@@ -3932,7 +3977,7 @@ function cvNodeHTML(n){
     <div class="cv-acts">
       <div class="cv-emos">${CV_EMOS.map(em=>`<button data-cvreact="${n.id}" data-em="${em}" title="Marcar ${em}">${em}</button>`).join('')}</div>
       <button data-cvbd="${n.id}" title="Borda" class="${n.bordered?'on':''}">▢</button>
-      <button data-cvtask="${n.id}" title="Virar tarefa">↗</button>
+      <button data-cvtask="${n.id}" title="${n.taskId?'Já virou tarefa — criar outra':'Virar tarefa'}">↗</button>
       <button data-cvdel="${n.id}" title="Apagar">✕</button>
     </div>
     ${CV_LADOS.map(l=>`<div class="cv-port cv-port-${l}" data-cvport="${n.id}" data-cvlado="${l}" title="Arraste para ligar"></div>`).join('')}
@@ -4009,6 +4054,7 @@ function cvAdd(kind,x,y){
   if(x!=null)pos={x,y};
   else if(_cvMouse)pos={x:_cvMouse.x-dim.w/2,y:_cvMouse.y-dim.h/2}; // nasce sob o cursor
   else{const r=st.getBoundingClientRect();pos=cvParaMundo(r.left+r.width/2-dim.w/2,r.top+r.height/2-dim.h/2)}
+  cvMarcar();
   const n={id:uid(),board:cvBoard,kind:k,x:Math.round(pos.x),y:Math.round(pos.y),w:dim.w,h:dim.h,text:'',
     bordered:k==='rect'||k==='ellipse'||k==='diamond',
     color:CV_CORES[cvDoQuadro().length%CV_CORES.length],updatedAt:Date.now()};
@@ -4058,6 +4104,7 @@ function cvDelBoard(){
 // entra no texto". Fora do modo de edicao o texto nao intercepta o ponteiro,
 // entao o arrasto funciona de qualquer ponto do objeto.
 let _cvEditando=null;
+let _cvPromovendo=null; // objeto do quadro que originou a tarefa em edicao
 function cvEditar(id){
   cvSairEdicao();
   _cvEditando=id;
@@ -4077,17 +4124,47 @@ function cvSairEdicao(){
 }
 
 // Selecao serve aos atalhos: sem ela, Delete nao teria alvo.
-function cvSelecionar(id){
-  if(_cvSel===id)return;
-  _cvSel=id;
-  $$('.cv-node').forEach(n=>n.classList.toggle('sel',n.dataset.cv===_cvSel));
+function cvSelecionar(id,somar){
+  if(!somar)_cvSel.clear();
+  if(id){somar&&_cvSel.has(id)?_cvSel.delete(id):_cvSel.add(id)}
+  cvPintarSel();
+}
+function cvPintarSel(){$$('.cv-node').forEach(n=>n.classList.toggle('sel',_cvSel.has(n.dataset.cv)))}
+function cvPintarLaco(){
+  let el=$('#cvLaco');
+  if(!_cvMarquee){if(el)el.remove();return}
+  if(!el){el=document.createElement('div');el.id='cvLaco';el.className='cv-laco';$('#cvWorld').appendChild(el)}
+  const {x0,y0,x1,y1}=_cvMarquee;
+  el.style.left=Math.min(x0,x1)+'px';el.style.top=Math.min(y0,y1)+'px';
+  el.style.width=Math.abs(x1-x0)+'px';el.style.height=Math.abs(y1-y0)+'px';
 }
 function cvApagarSel(){
-  if(!_cvSel)return false;
-  const id=_cvSel;_cvSel=null;
-  canvasItems=canvasItems.filter(x=>x.id!==id);
-  canvasEdges=canvasEdges.filter(x=>x.from!==id&&x.to!==id);
-  cvSave();fbSaveNow();renderCanvas();toast('Item apagado');
+  if(!_cvSel.size)return false;
+  cvMarcar();
+  const ids=new Set(_cvSel);_cvSel.clear();
+  canvasItems=canvasItems.filter(x=>!ids.has(x.id));
+  canvasEdges=canvasEdges.filter(x=>!ids.has(x.from)&&!ids.has(x.to));
+  cvSave();fbSaveNow();renderCanvas();
+  toast(ids.size>1?ids.size+' itens apagados':'Item apagado');
+  return true;
+}
+function cvDuplicarSel(){
+  if(!_cvSel.size)return false;
+  cvMarcar();
+  const mapa={},novos=[];
+  canvasItems.filter(x=>_cvSel.has(x.id)).forEach(o=>{
+    const n=Object.assign({},o,{id:uid(),x:o.x+24,y:o.y+24,updatedAt:Date.now()});
+    if(o.reacts)n.reacts=o.reacts.slice();
+    mapa[o.id]=n.id;novos.push(n);
+  });
+  // ligacoes internas ao bloco copiado vem junto
+  const arestas=canvasEdges.filter(e=>mapa[e.from]&&mapa[e.to])
+    .map(e=>Object.assign({},e,{id:uid(),from:mapa[e.from],to:mapa[e.to]}));
+  canvasItems=canvasItems.concat(novos);
+  canvasEdges=canvasEdges.concat(arestas);
+  _cvSel.clear();novos.forEach(n=>_cvSel.add(n.id));
+  cvSave();renderCanvas();
+  toast(novos.length>1?novos.length+' itens duplicados':'Item duplicado');
   return true;
 }
 // Atalhos do quadro. So valem nesta view e nunca enquanto se digita num
@@ -4099,6 +4176,44 @@ function cvAtalho(e){
   if(CV_ATALHOS[k]){cvAdd(CV_ATALHOS[k]);return true}
   if(e.key==='Delete'||e.key==='Backspace')return cvApagarSel();
   return false;
+}
+// Combinacoes com Ctrl/Cmd ficam fora do cvAtalho: o handler global corta
+// antes de chegar la. Chamado mais cedo, junto das demais teclas com modificador.
+function cvAtalhoCtrl(e){
+  if(curView!=='canvas')return false;
+  if(document.activeElement&&document.activeElement.isContentEditable)return false;
+  const k=(e.key||'').toLowerCase();
+  if(k==='z'&&!e.shiftKey){cvDesfazer();return true}
+  if((k==='z'&&e.shiftKey)||k==='y'){cvRefazer();return true}
+  if(k==='d')return cvDuplicarSel();
+  if(k==='a'){cvSelecionar(null);cvDoQuadro().forEach(n=>_cvSel.add(n.id));cvPintarSel();return true}
+  return false;
+}
+// Busca: destaca no quadro atual e avisa quantos casam nos outros — com
+// varios quadros, "onde eu anotei aquilo" vira o problema principal.
+function cvBuscar(q){
+  const st=$('#cvStage');if(!st)return;
+  $$('.cv-node').forEach(n=>n.classList.remove('achado','apagado'));
+  let fora=$('#cvBuscaFora');
+  if(!q){if(fora)fora.remove();return}
+  const casa=o=>((o.text||'').toLowerCase().includes(q));
+  cvDoQuadro().forEach(o=>{
+    const el=st.querySelector(`[data-cv="${o.id}"]`);if(!el)return;
+    el.classList.add(casa(o)?'achado':'apagado');
+  });
+  const outros={};
+  canvasItems.filter(o=>o.board!==cvBoard&&casa(o)).forEach(o=>{outros[o.board]=(outros[o.board]||0)+1});
+  const chaves=Object.keys(outros);
+  if(!chaves.length){if(fora)fora.remove();return}
+  if(!fora){fora=document.createElement('div');fora.id='cvBuscaFora';fora.className='cv-busca-fora';st.appendChild(fora)}
+  fora.innerHTML='Também em: '+chaves.map(b=>{
+    const nome=(canvasBoards.find(x=>x.id===b)||{}).name||b;
+    return `<button data-cvir="${b}">${escapeHtml(nome)} (${outros[b]})</button>`;
+  }).join('');
+  fora.onclick=ev=>{
+    const t=ev.target.closest('[data-cvir]');if(!t)return;
+    cvBoard=t.dataset.cvir;cvSave();renderCanvas();cvBuscar(q);
+  };
 }
 function cvInit(){
   const st=$('#cvStage');if(!st||st.dataset.ready)return;
@@ -4116,6 +4231,9 @@ function cvInit(){
   });
 
   st.addEventListener('pointerdown',e=>{
+    // sobreposicoes do palco (ex.: atalhos da busca) nao podem iniciar o pan:
+    // a captura de ponteiro redirecionaria o clique delas para o palco
+    if(e.target.closest('.cv-busca-fora'))return;
     const porta=e.target.closest('[data-cvport]');
     if(porta){ // comeca a puxar uma seta
       const it=canvasItems.find(x=>x.id===porta.dataset.cvport);if(!it)return;
@@ -4133,15 +4251,30 @@ function cvInit(){
     const editando=no&&no.classList.contains('editando');
     if(no&&!editando&&!e.target.closest('button')&&!e.target.closest('.cv-colors')){
       const it=canvasItems.find(x=>x.id===no.dataset.cv);if(!it)return;
-      cvSairEdicao();cvSelecionar(it.id);
+      cvSairEdicao();
+      // Shift soma a selecao; clicar num ja selecionado preserva o bloco
+      if(e.shiftKey)cvSelecionar(it.id,true);
+      else if(!_cvSel.has(it.id))cvSelecionar(it.id);
+      else cvPintarSel();
       const p=cvParaMundo(e.clientX,e.clientY);
-      _cvDrag={id:it.id,dx:p.x-it.x,dy:p.y-it.y,el:no};
-      no.classList.add('dragging');st.setPointerCapture(e.pointerId);
+      const alvos=canvasItems.filter(x=>_cvSel.has(x.id))
+        .map(x=>({id:x.id,dx:p.x-x.x,dy:p.y-x.y,el:$('#cvWorld').querySelector(`[data-cv="${x.id}"]`)}))
+        .filter(x=>x.el);
+      _cvDrag={alvos};
+      alvos.forEach(a=>a.el.classList.add('dragging'));
+      st.setPointerCapture(e.pointerId);
     } else if(!no){
-      cvSairEdicao();cvSelecionar(null);
-      const c=cvCam();
-      _cvPan={sx:e.clientX,sy:e.clientY,ox:c.x,oy:c.y};
-      st.classList.add('panning');st.setPointerCapture(e.pointerId);
+      cvSairEdicao();
+      if(e.shiftKey){ // Shift no vazio = laco de selecao (o arrasto simples navega)
+        const p=cvParaMundo(e.clientX,e.clientY);
+        _cvMarquee={x0:p.x,y0:p.y,x1:p.x,y1:p.y};
+        st.setPointerCapture(e.pointerId);
+      } else {
+        cvSelecionar(null);
+        const c=cvCam();
+        _cvPan={sx:e.clientX,sy:e.clientY,ox:c.x,oy:c.y};
+        st.classList.add('panning');st.setPointerCapture(e.pointerId);
+      }
     }
   });
 
@@ -4162,8 +4295,14 @@ function cvInit(){
       $$('.cv-node').forEach(n=>n.classList.toggle('cv-alvo',n===alvoEl&&n.dataset.cv!==_cvLink.from));
     } else if(_cvDrag){
       const p=cvParaMundo(e.clientX,e.clientY);
-      _cvDrag.el.style.left=Math.round(p.x-_cvDrag.dx)+'px';
-      _cvDrag.el.style.top=Math.round(p.y-_cvDrag.dy)+'px';
+      _cvDrag.alvos.forEach(a=>{
+        a.el.style.left=cvEnc(p.x-a.dx)+'px';
+        a.el.style.top=cvEnc(p.y-a.dy)+'px';
+      });
+    } else if(_cvMarquee){
+      const p=cvParaMundo(e.clientX,e.clientY);
+      _cvMarquee.x1=p.x;_cvMarquee.y1=p.y;
+      cvPintarLaco();
     } else if(_cvResize){
       const p=cvParaMundo(e.clientX,e.clientY);
       const w=Math.max(90,Math.round(_cvResize.w+(p.x-_cvResize.ox)));
@@ -4185,6 +4324,7 @@ function cvInit(){
         const existe=canvasEdges.some(x=>x.board===cvBoard&&((x.from===from&&x.to===to)||(x.from===to&&x.to===from)));
         if(existe)toast('Esses dois já estão ligados');
         else{
+          cvMarcar();
           // o lado de chegada e o mais proximo de onde o usuario soltou:
           // e isso que permite conectar por qualquer ponto do objeto
           const alvoIt=canvasItems.find(x=>x.id===to);
@@ -4199,16 +4339,25 @@ function cvInit(){
       if(!_cvLink)renderCanvas();
     }
     if(_cvDrag){
-      const it=canvasItems.find(x=>x.id===_cvDrag.id);
-      const nx=parseInt(_cvDrag.el.style.left), ny=parseInt(_cvDrag.el.style.top);
-      const moveu=it&&(it.x!==nx||it.y!==ny);
-      if(moveu){it.x=nx;it.y=ny;it.updatedAt=Date.now();cvSave()}
-      _cvDrag.el.classList.remove('dragging');_cvDrag=null;
-      if(moveu)renderCanvas(); // clique parado nao redesenha (atrapalharia o duplo clique)
+      let moveu=false;
+      _cvDrag.alvos.forEach(a=>{
+        const it=canvasItems.find(x=>x.id===a.id);if(!it)return;
+        const nx=parseInt(a.el.style.left), ny=parseInt(a.el.style.top);
+        if(it.x!==nx||it.y!==ny){if(!moveu){cvMarcar();moveu=true}it.x=nx;it.y=ny;it.updatedAt=Date.now()}
+        a.el.classList.remove('dragging');
+      });
+      _cvDrag=null;
+      if(moveu){cvSave();renderCanvas()} // clique parado nao redesenha (atrapalharia o duplo clique)
+    }
+    if(_cvMarquee){
+      const {x0,y0,x1,y1}=_cvMarquee;
+      const a=Math.min(x0,x1),b=Math.max(x0,x1),c=Math.min(y0,y1),d=Math.max(y0,y1);
+      cvDoQuadro().forEach(n=>{if(n.x+n.w>=a&&n.x<=b&&n.y+n.h>=c&&n.y<=d)_cvSel.add(n.id)});
+      _cvMarquee=null;cvPintarLaco();cvPintarSel();
     }
     if(_cvResize){
       const it=canvasItems.find(x=>x.id===_cvResize.id);
-      if(it){it.w=parseInt(_cvResize.el.style.width);it.h=parseInt(_cvResize.el.style.height);it.updatedAt=Date.now();cvSave()}
+      if(it){cvMarcar();it.w=cvEnc(parseInt(_cvResize.el.style.width));it.h=cvEnc(parseInt(_cvResize.el.style.height));it.updatedAt=Date.now();cvSave()}
       _cvResize=null;renderCanvas();
     }
     if(_cvPan){_cvPan=null;st.classList.remove('panning');cvSaveCam()}
@@ -4234,35 +4383,41 @@ function cvInit(){
   st.addEventListener('click',e=>{
     const ar=e.target.closest('[data-cvedge]');
     if(ar&&e.target.closest('.cv-edge-x-bg,.cv-edge-x')){
-      canvasEdges=canvasEdges.filter(x=>x.id!==ar.dataset.cvedge);
+      cvMarcar();canvasEdges=canvasEdges.filter(x=>x.id!==ar.dataset.cvedge);
       cvSave();fbSaveNow();renderCanvas();toast('Dependência removida');return;
     }
     const bd=e.target.closest('[data-cvbd]');
-    if(bd){const it=canvasItems.find(x=>x.id===bd.dataset.cvbd);if(it){it.bordered=!it.bordered;it.updatedAt=Date.now();cvSave();renderCanvas()}return}
+    if(bd){const it=canvasItems.find(x=>x.id===bd.dataset.cvbd);if(it){cvMarcar();it.bordered=!it.bordered;it.updatedAt=Date.now();cvSave();renderCanvas()}return}
     const rea=e.target.closest('[data-cvreact]');
     if(rea){
       const it=canvasItems.find(x=>x.id===rea.dataset.cvreact);if(!it)return;
-      const em=rea.dataset.em;
+      cvMarcar();const em=rea.dataset.em;
       it.reacts=it.reacts||[];
       it.reacts=it.reacts.includes(em)?it.reacts.filter(x=>x!==em):it.reacts.concat(em);
       it.updatedAt=Date.now();cvSave();renderCanvas();return;
     }
     const cor=e.target.closest('[data-cvcolor]');
-    if(cor){const it=canvasItems.find(x=>x.id===cor.dataset.cvcolor);if(it){it.color=cor.dataset.c;it.updatedAt=Date.now();cvSave();renderCanvas()}return}
+    if(cor){const it=canvasItems.find(x=>x.id===cor.dataset.cvcolor);if(it){cvMarcar();it.color=cor.dataset.c;it.updatedAt=Date.now();cvSave();renderCanvas()}return}
     const del=e.target.closest('[data-cvdel]');
-    if(del){
-      const id=del.dataset.cvdel;
-      canvasItems=canvasItems.filter(x=>x.id!==id);
-      canvasEdges=canvasEdges.filter(x=>x.from!==id&&x.to!==id);
-      cvSave();fbSaveNow();renderCanvas();toast('Item apagado');return;
-    }
+    if(del){cvSelecionar(del.dataset.cvdel);cvApagarSel();return}
     const tsk=e.target.closest('[data-cvtask]');
     if(tsk){
       const it=canvasItems.find(x=>x.id===tsk.dataset.cvtask);if(!it)return;
       const txt=(it.text||'').trim();
       if(!txt){toast('Escreva algo antes de virar tarefa');return}
+      // A seta no quadro vira dependencia de verdade: se os objetos que
+      // apontam para este ja viraram tarefa, a nova nasce bloqueada por elas.
+      const antes=canvasEdges.filter(e2=>e2.board===cvBoard&&e2.to===it.id)
+        .map(e2=>canvasItems.find(x=>x.id===e2.from))
+        .filter(o=>o&&o.taskId&&tasks.some(t=>t.id===o.taskId))
+        .map(o=>o.taskId);
+      _cvPromovendo=it.id;
       openM(null);
-      setTimeout(()=>{const f=$('#fT');if(f){f.value=txt.split('\n')[0].slice(0,120);f.focus()}},80);
+      setTimeout(()=>{
+        const f=$('#fT');if(f){f.value=txt.split('\n')[0].slice(0,120);f.focus()}
+        if(antes.length){mDeps=[...new Set(antes)];if(typeof renderDepChips==='function')renderDepChips();
+          toast('Depende de '+antes.length+' tarefa'+(antes.length>1?'s':''))}
+      },80);
       return;
     }
   });
@@ -4286,6 +4441,8 @@ function cvInit(){
   const zo=$('#cvOut');if(zo)zo.onclick=()=>cvZoom(.83);
   const zf=$('#cvFit');if(zf)zf.onclick=cvFit;
   const bd=$('#cvBoardDel');if(bd)bd.onclick=cvDelBoard;
+  const bu=$('#cvBusca');
+  if(bu)bu.addEventListener('input',()=>{cvBuscar(bu.value.trim().toLowerCase())});
 }
 
 // ===== TIMELINE =====
@@ -6849,6 +7006,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
   let doingStartedAtVal=null;
   if(status==='doing')doingStartedAtVal=(existing?.status==='doing'&&existing?.doingStartedAt)?existing.doingStartedAt:Date.now();
   const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,agent:agentVal,agentStatus:agentStatusVal,doingStartedAt:doingStartedAtVal,medType:existing?.medType,examTime:existing?.examTime,examLocal:existing?.examLocal,examDoctor:existing?.examDoctor,remindDayBefore:existing?.remindDayBefore,completionNote:existing?.completionNote||null,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),createdBy:isNew?getMyRole():(existing?.createdBy||null),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');notifyNewTask(data);
+    if(_cvPromovendo){const _o=canvasItems.find(x=>x.id===_cvPromovendo);if(_o){_o.taskId=data.id;_o.updatedAt=Date.now();cvSave();if(curView==='canvas')renderCanvas()}_cvPromovendo=null}
     // Auto-expand parent deps so the new child is visible immediately
     if(mDeps.length) mDeps.forEach(pid=>expandedDeps.add(pid));
   }sT();closeM();render()});
@@ -6942,6 +7100,7 @@ document.addEventListener('keydown',e=>{
   const isModalOpen=modal&&modal.classList.contains('open');
   // Ctrl+Enter saves from anywhere in modal
   if(isModalOpen&&(e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();$('#form').requestSubmit();return}
+  if(!isModalOpen&&(e.ctrlKey||e.metaKey)&&cvAtalhoCtrl(e)){e.preventDefault();return}
   // Escape closes
   if(e.key==='Escape'&&curView==='canvas'){if(document.activeElement.isContentEditable){cvSairEdicao();return}if(_cvSel){cvSelecionar(null);return}}
   if(e.key==='Escape'){closeM();closeCatMgr();$('#cfWrap').classList.remove('open');$('#wdgPanel').classList.remove('open');$('#wkToggle').classList.remove('open');$('.main').classList.remove('wdg-open');return}
