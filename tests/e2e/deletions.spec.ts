@@ -50,3 +50,58 @@ test('exclusão continua valendo depois de recarregar', async ({ page }) => {
   await page.waitForTimeout(1200);
   expect(await page.evaluate(()=>(eval('tasks') as any[]).map(t=>t.id))).not.toContain('t1');
 });
+
+/**
+ * Cenário multi-aparelho: o documento pessoal é gravado inteiro, então outro
+ * computador aberto com a lista antiga em memória regravava o item apagado e a
+ * exclusão "voltava". Os tombstones (campos `deleted`/`catsDeleted` do
+ * documento) fazem todo cliente filtrar o excluído ao carregar e ao gravar.
+ */
+test('tarefa regravada por outro aparelho continua excluída', async ({ page }) => {
+  await bootApp(page,{user,store:{users:{'uid-B':{tasks:JSON.stringify(tarefas),cats:JSON.stringify(cats),log:'[]'}}}});
+  await page.waitForSelector('.shell',{state:'visible'});
+  await page.waitForTimeout(900);
+
+  await page.evaluate(()=>(eval('askDel') as any)('t1'));
+  await page.locator('#cfYes').click();
+  await page.waitForTimeout(300);
+
+  // tombstone chegou ao servidor junto com a exclusão
+  const doc=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('__mockStore')||'{}').users['uid-B']);
+  expect(Object.keys(JSON.parse(doc.deleted||'{}'))).toContain('t1');
+
+  // "outro aparelho" com a lista antiga grava o documento por cima
+  // (só o campo tasks — como faria uma sessão atrasada)
+  await page.evaluate(ts=>{ 
+    return (window as any).firebase.firestore().collection('users').doc('uid-B')
+      .set({tasks:ts},{merge:true});
+  }, JSON.stringify(tarefas));
+  await page.waitForTimeout(1500);
+
+  // o app não pode re-exibir a tarefa...
+  expect(await page.evaluate(()=>(eval('tasks') as any[]).map(t=>t.id))).not.toContain('t1');
+
+  // ...e a próxima gravação limpa o servidor de novo
+  await page.evaluate(()=>{(eval('fbSaveNow') as any)()});
+  await page.waitForTimeout(400);
+  const depois=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('__mockStore')||'{}').users['uid-B']);
+  expect(JSON.parse(depois.tasks).map((t:any)=>t.id)).not.toContain('t1');
+});
+
+test('categoria regravada por outro aparelho continua excluída', async ({ page }) => {
+  await bootApp(page,{user,store:{users:{'uid-B':{tasks:JSON.stringify(tarefas),cats:JSON.stringify(cats),log:'[]'}}}});
+  await page.waitForSelector('.shell',{state:'visible'});
+  await page.waitForTimeout(900);
+
+  await page.evaluate(()=>(eval('delCat') as any)('financeiro'));
+  await page.locator('#cfYes').click();
+  await page.waitForTimeout(300);
+
+  await page.evaluate(cs=>{
+    return (window as any).firebase.firestore().collection('users').doc('uid-B')
+      .set({cats:cs},{merge:true});
+  }, JSON.stringify(cats));
+  await page.waitForTimeout(1500);
+
+  expect(await page.evaluate(()=>(eval('cats') as any[]).map(c=>c.id))).not.toContain('financeiro');
+});

@@ -2245,6 +2245,7 @@ function resetInMemoryState(){
   projects=JSON.parse(JSON.stringify(DEF_PROJECTS));
   agents=DEF_AGENTS.slice();
   pTasks=[];pCats=[];pLog=[];
+  pDelServer={};pDelLocal={};pCatDelServer={};pCatDelLocal={};
   [sharedTasksMap,sharedLogMap,sharedDeletedMap,deletedByProj].forEach(m=>Object.keys(m).forEach(k=>delete m[k]));
 }
 
@@ -2632,6 +2633,19 @@ const sharedTasksMap={};
 const sharedLogMap={};
 const sharedDeletedMap={}; // {pid: {taskId: deletedAt}} vindo do servidor
 const deletedByProj={};    // {pid: {taskId: deletedAt}} tombstones locais de exclusão
+// Tombstones das TAREFAS PESSOAIS e das CATEGORIAS.
+// O documento pessoal é gravado inteiro: qualquer outro aparelho aberto com a
+// lista antiga em memória regravava o item apagado — exclusão "voltava".
+// Com o marcador salvo no próprio documento (campos `deleted`/`catsDeleted`),
+// todo cliente filtra o que foi excluído ao carregar e ao gravar, então mesmo
+// uma regravação atrasada é desfeita no ciclo seguinte.
+let pDelServer={},pDelLocal={};       // {taskId: deletedAt}
+let pCatDelServer={},pCatDelLocal={}; // {catId: deletedAt}
+function markTaskDeleted(t){
+  if(!t)return;
+  if(t.project&&isSharedProj(t.project)){(deletedByProj[t.project]=deletedByProj[t.project]||{})[t.id]=Date.now()}
+  else{pDelLocal[t.id]=Date.now()}
+}
 function isSharedProj(pid){return projects.some(p=>p.id===pid&&p.type==='shared')}
 // União por id; em conflito, vence o updatedAt mais novo (empate: 'local' por vir depois)
 function mergeTasksById(server,local){
@@ -2654,14 +2668,27 @@ function _fbDirectSave(){
   // usuário dentro do documento de outro.
   if(_syncedUid&&_syncedUid!==uid){console.warn('⚠️ fbSave bloqueado: estado é da conta '+_syncedUid);return Promise.resolve()}
   const sharedProjs = projects.filter(p=>p.type==='shared').map(p=>p.id);
-  
-  const myPTasks=tasks.filter(t=>!t.project || !sharedProjs.includes(t.project));
+
+  // Tombstones pessoais: une servidor + local e aplica na gravação, para uma
+  // sessão atrasada nunca regravar um item que outro aparelho excluiu.
+  const pDel=mergeDel(pDelServer,pDelLocal);
+  const pCatDel=mergeDel(pCatDelServer,pCatDelLocal);
+  // poda marcadores com mais de 60 dias — já cumpriram o papel
+  const tombCutoff=Date.now()-60*864e5;
+  for(const k in pDel)if(pDel[k]<tombCutoff)delete pDel[k];
+  for(const k in pCatDel)if(pCatDel[k]<tombCutoff)delete pCatDel[k];
+  pDelLocal=pDel;pCatDelLocal=pCatDel;
+
+  const myPTasks=tasks.filter(t=>(!t.project || !sharedProjs.includes(t.project)) && !(pDel[t.id]&&pDel[t.id]>=(t.updatedAt||0)));
+  const myCats=cats.filter(c=>!pCatDel[c.id]);
   const myPLog=log.filter(l=>!l.project || !sharedProjs.includes(l.project));
 
   const promises = [];
   promises.push(db.collection('users').doc(uid).set({
     tasks:JSON.stringify(myPTasks),
-    cats:JSON.stringify(cats),
+    cats:JSON.stringify(myCats),
+    deleted:JSON.stringify(pDel),
+    catsDeleted:JSON.stringify(pCatDel),
     log:JSON.stringify(myPLog.slice(0,100)),
     updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
     device:navigator.userAgent.includes('Mobile')?'mobile':'desktop',
@@ -2827,7 +2854,10 @@ function combineData(){
   // Guard: ignore snapshots that arrive too close to a save completion
   // (onSnapshot fires twice: local cache echo + server confirmation)
   if(_fbSaveCompletedAt && (Date.now()-_fbSaveCompletedAt)<800)return;
-  const newTasks=[...pTasks];
+  // Tarefas pessoais: aplica os tombstones ao montar o estado a partir do
+  // servidor — um item regravado por uma sessão atrasada morre aqui.
+  const pDel=mergeDel(pDelServer,pDelLocal);pDelLocal=pDel;
+  const newTasks=pTasks.filter(t=> !(pDel[t.id] && pDel[t.id] >= (t.updatedAt||0)));
   for (let pid in sharedTasksMap) {
     if(!Array.isArray(sharedTasksMap[pid])) continue;
     // aplica exclusões (tombstones) ao montar o estado local a partir do servidor
@@ -2872,7 +2902,8 @@ function combineData(){
 
   // === FIRESTORE IS TRUTH: overwrite local state ===
   tasks=newTasks;
-  cats=[...pCats];
+  const pCatDel=mergeDel(pCatDelServer,pCatDelLocal);pCatDelLocal=pCatDel;
+  cats=pCats.filter(c=>!pCatDel[c.id]);
   
   const newLog=[...pLog];
   for (let pid in sharedLogMap) {
@@ -2906,6 +2937,8 @@ function fbListen(){
       pTasks=JSON.parse(d.tasks||'[]');
       pCats=JSON.parse(d.cats||'[]');
       pLog=JSON.parse(d.log||'[]');
+      try{pDelServer=JSON.parse(d.deleted||'{}')||{}}catch(e){pDelServer={}}
+      try{pCatDelServer=JSON.parse(d.catsDeleted||'{}')||{}}catch(e){pCatDelServer={}}
       if(d.projects){projects=JSON.parse(d.projects);normalizeProjects()}
       if(d.agents){try{const a=JSON.parse(d.agents);if(Array.isArray(a)&&a.length)agents=a}catch(e){}}
     } else {
@@ -4713,7 +4746,7 @@ function closeViewTask(){
 
 function edit(id){const t=tasks.find(x=>x.id===id);if(!t)return;if(t.status==='done'){viewTask(id);return}openM(t)}
 function quickChild(parentId){const parent=tasks.find(x=>x.id===parentId);if(!parent)return;openM(null);fCCat=parent.category;renderCatPicker();mDeps=[parentId];renderDepChips();toast('Nova subtarefa de: '+parent.title)}
-function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t){addLog('delete',t);if(t.project&&isSharedProj(t.project)){(deletedByProj[t.project]=deletedByProj[t.project]||{})[t.id]=Date.now()}if(t.recurrence){tasks.forEach(x=>{if(x.title===t.title&&x.recurrence){x.recurrence=null;x.updatedAt=Date.now()}})}}tasks=tasks.filter(x=>x.id!==delId);sT();fbSaveNow();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
+function askDel(id){delId=id;$('#cfTitle').textContent='Excluir Tarefa';$('#cfMsg').textContent='Essa ação não pode ser desfeita.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{if(delId){const t=tasks.find(x=>x.id===delId);if(t){addLog('delete',t);markTaskDeleted(t);if(t.recurrence){tasks.forEach(x=>{if(x.title===t.title&&x.recurrence){x.recurrence=null;x.updatedAt=Date.now()}})}}tasks=tasks.filter(x=>x.id!==delId);sT();fbSaveNow();render();toast('Tarefa excluída')}delId=null;$('#cfWrap').classList.remove('open')}}
 function setStatus(id,newSt){const t=tasks.find(x=>x.id===id);if(!t)return;
   if(isBlocked(t)&&newSt==='done'){toast('Complete a tarefa anterior primeiro');return}
   const wasDone=t.status==='done';
@@ -5178,6 +5211,7 @@ function delProj(id) {
   $('#cfWrap').classList.add('open');
   $('#cfYes').onclick = () => {
     projects = projects.filter(x => x.id !== id);
+    tasks.forEach(t => { if ((t.project || 'bruno') === id) markTaskDeleted(t); });
     tasks = tasks.filter(t => (t.project || 'bruno') !== id);
     log = log.filter(l => (l.project || 'bruno') !== id);
     if (activeProject === id) activeProject = 'all';
@@ -5198,7 +5232,7 @@ function closeCatMgr(){$('#ovCat').classList.remove('open');$('#modalCat').class
 function renderCatMgrList(){$('#catMgrList').innerHTML=cats.map(c=>`<div class="cat-mgr-item"><svg style="color:${c.color}"><use href="#${c.icon}"/></svg><span class="cat-mgr-name">${c.name}</span><div class="cat-mgr-actions"><button class="a-btn" onclick="editCat('${c.id}')"><svg><use href="#i-edit"/></svg></button><button class="a-btn del" onclick="delCat('${c.id}')"><svg><use href="#i-trash"/></svg></button></div></div>`).join('')}
 function openCatEdit(cat){editingCatId=cat?cat.id:null;$('#catMgrView').style.display='none';$('#catEditView').style.display='';$('#catModalTitle').textContent=cat?'Editar':'Nova Categoria';$('#ceN').value=cat?cat.name:'';const si=cat?cat.icon:'i-star';const sc=cat?cat.color:'#007AFF';$('#ceIcons').innerHTML=ICONS.map(ic=>`<button type="button" class="icon-opt ${ic===si?'active':''}" data-icon="${ic}"><svg><use href="#${ic}"/></svg></button>`).join('');$('#ceColors').innerHTML=COLORS.map(co=>`<button type="button" class="color-opt ${co===sc?'active':''}" data-color="${co}" style="background:${co}"></button>`).join('');setTimeout(()=>$('#ceN').focus(),200)}
 function editCat(id){const c=cats.find(x=>x.id===id);if(c)openCatEdit(c)}
-function delCat(id){closeCatMgr();delId=id;$('#cfTitle').textContent='Excluir Categoria';$('#cfMsg').textContent='Tarefas serão mantidas.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{cats=cats.filter(c=>c.id!==id);sC();fbSaveNow();render();toast('Categoria excluída');$('#cfWrap').classList.remove('open');openCatMgr()}}
+function delCat(id){closeCatMgr();delId=id;$('#cfTitle').textContent='Excluir Categoria';$('#cfMsg').textContent='Tarefas serão mantidas.';$('#cfWrap').classList.add('open');$('#cfYes').onclick=()=>{pCatDelLocal[id]=Date.now();cats=cats.filter(c=>c.id!==id);sC();fbSaveNow();render();toast('Categoria excluída');$('#cfWrap').classList.remove('open');openCatMgr()}}
 $('#ceIcons').addEventListener('click',e=>{const o=e.target.closest('.icon-opt');if(!o)return;$$('#ceIcons .icon-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active')});
 $('#ceColors').addEventListener('click',e=>{const o=e.target.closest('.color-opt');if(!o)return;$$('#ceColors .color-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active')});
 $('#ceSave').addEventListener('click',()=>{const name=$('#ceN').value.trim();if(!name)return;const icon=$('#ceIcons .icon-opt.active')?.dataset.icon||'i-star';const color=$('#ceColors .color-opt.active')?.dataset.color||'#007AFF';if(editingCatId){const c=cats.find(x=>x.id===editingCatId);if(c){c.name=name;c.icon=icon;c.color=color}toast('Atualizada')}else{cats.push({id:name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')+'_'+uid().slice(-3),name,icon,color});toast('Criada')}sC();render();$('#catMgrView').style.display='';$('#catEditView').style.display='none';$('#catModalTitle').textContent='Categorias';renderCatMgrList()});
@@ -5653,7 +5687,7 @@ $('#nbInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.
 // Delete note from board
 function nbDeleteNote(id){
   const t=tasks.find(x=>x.id===id);
-  if(t) addLog('delete',t);
+  if(t){addLog('delete',t);markTaskDeleted(t)}
   tasks=tasks.filter(t=>t.id!==id);sT();fbSaveNow();render();nbRender();
 }
 // Render board
