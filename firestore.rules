@@ -2,36 +2,29 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Só as contas da família entram. Troque o e-mail da Clara pelo real.
-    function souDaFamilia() {
+    // Contas liberadas. Para incluir a Clara, acrescente o e-mail dela na lista.
+    function liberado() {
       return request.auth != null &&
         request.auth.token.email in [
-          'brunohsantos00@gmail.com',
-          'EMAIL-DA-CLARA@gmail.com'
+          'brunohsantos00@gmail.com'
         ];
     }
 
-    // Documento pessoal: cada conta só mexe no seu
+    // Documento pessoal: cada conta so mexe no seu
     match /users/{uid} {
-      allow read, write: if souDaFamilia() && request.auth.uid == uid;
+      allow read, write: if liberado() && request.auth.uid == uid;
     }
 
-    // Projetos compartilhados (Nós)
+    // Projeto compartilhado (Nos)
     match /shared/{doc} {
-      allow read, write: if souDaFamilia();
+      allow read, write: if liberado();
     }
 
     // Push
-    match /push_tokens/{doc} {
-      allow read, write: if souDaFamilia();
-    }
-    match /push_queue/{doc} {
-      allow read, write: if souDaFamilia();
-    }
+    match /push_tokens/{doc} { allow read, write: if liberado(); }
+    match /push_queue/{doc}  { allow read, write: if liberado(); }
 
-    // Documento legado (migração)
-    match /data/{doc} {
-      allow read, write: if souDaFamilia();
-    }
+    // Documento legado (migracao)
+    match /data/{doc} { allow read, write: if liberado(); }
   }
 }
