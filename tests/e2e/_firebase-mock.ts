@@ -34,10 +34,13 @@ if(!window.firebase){
   };
   var delDoc=function(c,d){var s=M.store;if(s[c])delete s[c][d];M.store=s};
 
+  // Simula a persistência offline do Firestore: o set() grava local mas a
+  // promise só assentaria quando o servidor confirmasse — offline, nunca.
+  var hangWrites=readJSON('__mockHangWrites',false);
   var docRef=function(c,d){
     return {
       get:function(){return Promise.resolve(snapOf(c,d))},
-      set:function(data,opts){setDoc(c,d,data,opts);return Promise.resolve()},
+      set:function(data,opts){setDoc(c,d,data,opts);return hangWrites?new Promise(function(){}):Promise.resolve()},
       update:function(data){setDoc(c,d,data,{merge:true});return Promise.resolve()},
       delete:function(){delDoc(c,d);return Promise.resolve()},
       onSnapshot:function(cb){
@@ -99,6 +102,7 @@ export type MockOptions = {
   localStorage?: Record<string, string>;
   popupError?: string | null;
   pendingUser?: MockUser;
+  hangWrites?: boolean;
 };
 
 export async function bootApp(page: Page, opts: MockOptions = {}) {
@@ -113,6 +117,7 @@ export async function bootApp(page: Page, opts: MockOptions = {}) {
       if (o.user) s.setItem('__mockUser', JSON.stringify(o.user));
       if (o.pendingUser) s.setItem('__mockPendingUser', JSON.stringify(o.pendingUser));
       if (o.popupError) s.setItem('__mockPopupError', JSON.stringify(o.popupError));
+      if (o.hangWrites) s.setItem('__mockHangWrites', JSON.stringify(true));
       s.setItem('__mockStore', JSON.stringify(o.store || {}));
       Object.entries(o.localStorage || {}).forEach(([k, v]) => window.localStorage.setItem(k, v as string));
     } catch (e) { /* about:blank não tem storage acessível */ }

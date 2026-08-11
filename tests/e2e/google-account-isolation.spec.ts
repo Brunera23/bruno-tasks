@@ -126,3 +126,73 @@ test('documento legado não é sequestrado por uma conta que já tem dados', asy
   expect(store.data['bruno-main']).toBeTruthy();
   expect(store.users['uid-B'].tasks).not.toContain('TAREFA LEGADA');
 });
+
+/**
+ * Achados da revisão de código — cada um destes já quebrou uma vez.
+ */
+
+test('migração do documento legado copia, mas nunca destrói o original', async ({ page }) => {
+  await bootApp(page, {
+    user: userB, // conta vazia: é o caso em que a migração realmente roda
+    store: {
+      data: { 'bruno-main': { tasks: JSON.stringify([{ id: 'l1', title: 'TAREFA LEGADA', updatedAt: 1 }]), cats: '[]', log: '[]' } }
+    }
+  });
+  await expect(page.locator('.shell')).toBeVisible();
+
+  // importou para a conta
+  await expect
+    .poll(() => page.evaluate(() => {
+      const s = JSON.parse(sessionStorage.getItem('__mockStore') || '{}');
+      return (s.users && s.users['uid-B'] && s.users['uid-B'].tasks) || '';
+    }))
+    .toContain('TAREFA LEGADA');
+
+  // e o original continua de pé para quem for o dono de direito
+  const store = await page.evaluate(() => JSON.parse(sessionStorage.getItem('__mockStore') || '{}'));
+  expect(store.data['bruno-main']).toBeTruthy();
+  expect(store.data['bruno-main'].tasks).toContain('TAREFA LEGADA');
+  expect(store.data['bruno-main'].migratedBy).toBe('uid-B');
+});
+
+test('logout conclui mesmo quando a gravação nunca responde (offline)', async ({ page }) => {
+  await bootApp(page, {
+    user: userB,
+    hangWrites: true,
+    store: { users: { 'uid-B': { tasks: JSON.stringify([{ id: 'b1', title: 'Tarefa', project: 'bruno', updatedAt: 1 }]), cats: '[]', log: '[]' } } }
+  });
+  await expect(page.locator('.shell')).toBeVisible();
+  await page.waitForTimeout(500);
+
+  // deixa alterações pendentes e sai
+  await page.evaluate(() => {
+    const t = eval('tasks') as any[];
+    t.push({ id: 'b2', title: 'Pendente', project: 'bruno', subtasks: [], createdAt: Date.now(), updatedAt: Date.now() });
+    (eval('sT') as any)();
+  });
+  await page.evaluate(() => (eval('doLogout') as any)(false));
+
+  // o flush tem prazo: a sessão precisa terminar de qualquer forma
+  await expect
+    .poll(() => page.evaluate(() => sessionStorage.getItem('__mockUser')), { timeout: 15000 })
+    .toBeNull();
+});
+
+test('inscrição de push antiga do outro papel é removida', async ({ page }) => {
+  const clara = { uid: 'uid-C', email: 'clara.silva@gmail.com', displayName: 'Clara' };
+  await bootApp(page, {
+    user: clara,
+    // aparelho antigo: todo mundo ficou gravado como bruno_<uid>
+    store: { push_tokens: { 'bruno_uid-C': { role: 'bruno', uid: 'uid-C', subscription: { endpoint: 'https://push/abc' } } } }
+  });
+  await expect(page.locator('.shell')).toBeVisible();
+
+  await page.evaluate(() => (eval('savePushSub') as any)({ toJSON: () => ({ endpoint: 'https://push/abc' }) }));
+
+  await expect
+    .poll(() => page.evaluate(() => {
+      const s = JSON.parse(sessionStorage.getItem('__mockStore') || '{}');
+      return Object.keys(s.push_tokens || {});
+    }))
+    .toEqual(['parceira_uid-C']);
+});

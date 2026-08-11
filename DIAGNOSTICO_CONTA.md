@@ -48,6 +48,10 @@ logasse migrava ele para si e **apagava a origem**. Se uma conta aleatória entr
 antes de você (que é justamente o bug do seletor de contas), os dados foram para
 `users/<uid-daquela-conta>`.
 
+> No branch corrigido a migração **copia e nunca apaga**: o documento legado
+> continua no lugar, só ganha um campo `migratedBy` com o uid de quem importou.
+> No pior caso alguém leva uma cópia; o original permanece para o dono.
+
 **Como confirmar:** Firebase Console → Firestore →
 
 - a coleção `data` ainda tem o doc `bruno-main`? Se **sim**, os dados estão lá e o
@@ -91,7 +95,23 @@ firebase deploy --only functions      # push (exige plano Blaze + secret VAPID_P
 > Se as Cloud Functions nunca foram publicadas, o push com o app fechado nunca
 > funcionou. Agora isso não deixa mais você sem aviso nenhum: os avisos locais
 > voltaram a rodar mesmo com o push marcado como ativo, usando as mesmas tags do
-> servidor — se os dois chegarem, aparece uma notificação só.
+> servidor — se os dois chegarem juntos, aparece uma notificação só.
+>
+> Ressalva honesta: a tag só funde notificações que ainda estão **na tela**. O
+> aviso local sai na hora e o push do servidor pode chegar até 15 min depois
+> (o cron do `alertReminders` roda a cada 15 min); se você já tiver dispensado o
+> primeiro, o segundo aparece de novo. Preferi correr o risco de um aviso
+> repetido a manter o cenário atual, em que você não recebe nada. Publicando as
+> functions o intervalo some na prática.
+
+### Um aparelho antigo pode estar inscrito no papel errado
+
+Todo aparelho já registrado gravou a inscrição de push como `bruno_<uid>`, porque
+o `btUserRole` nunca era escrito e caía no default. Se o celular da Clara estiver
+assim, ela recebia os push destinados a você. O código corrigido apaga a inscrição
+do papel anterior ao registrar a nova — basta cada aparelho abrir o app uma vez
+depois do deploy. Dá para conferir na coleção `push_tokens`: deve existir **um**
+documento por aparelho, com o papel certo.
 
 ## Um ponto que precisa da sua decisão
 

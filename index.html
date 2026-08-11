@@ -2035,6 +2035,14 @@ async function savePushSub(sub){
       updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
       platform:navigator.userAgent.includes('iPhone')?'ios':'other'
     },{merge:true});
+    // O id do doc é `papel_uid`. Todo aparelho antigo ficou gravado como
+    // `bruno_<uid>` (o btUserRole nunca era escrito, então caía no default).
+    // Sem apagar o doc do papel anterior, o MESMO endpoint continuaria
+    // inscrito nos dois papéis e receberia os push do outro usuário.
+    for(const r of ['bruno','parceira']){
+      if(r===userRole)continue;
+      try{await db.collection('push_tokens').doc(r+'_'+currentUser.uid).delete()}catch(_){}
+    }
     localStorage.setItem('btPushEnabled','1');
   }catch(e){console.error('Sub save failed:',e)}
 }
@@ -2080,7 +2088,8 @@ function _roleName(r){return r==='bruno'?'Bruno':r==='parceira'?'Clara':'Ambos'}
 function _otherRole(r){return r==='bruno'?'parceira':r==='parceira'?'bruno':'ambos'}
 // Push habilitado neste aparelho? (indica só que este aparelho se inscreveu —
 // NÃO garante que as Cloud Functions estejam publicadas e entregando.)
-function _pushOn(){return localStorage.getItem('btPushEnabled')==='1'}
+// (o antigo _pushOn() saiu junto com os guards que suprimiam o aviso local;
+//  quem sobrou é o isPushEnabled(), usado pelo refreshPushToken)
 
 // ===== NOTIFICAÇÃO LOCAL =====
 // `new Notification()` é ilegal numa página controlada por Service Worker:
@@ -2091,7 +2100,10 @@ function _pushOn(){return localStorage.getItem('btPushEnabled')==='1'}
 // A `tag` tem que ser a MESMA usada pelas Cloud Functions: notificações de
 // mesma tag se substituem, então push do servidor + aviso local viram um só.
 function showLocalNotification(title,opts){
-  const options=Object.assign({icon:'./manifest-icon.png',badge:'./manifest-icon.png',renotify:true},opts||{});
+  const options=Object.assign({icon:'./manifest-icon.png',badge:'./manifest-icon.png'},opts||{});
+  // renotify sem tag é TypeError pela spec — e a rejeição cairia no catch lá
+  // embaixo, voltando ao silêncio que esta função existe para eliminar.
+  if(options.tag)options.renotify=true; else delete options.renotify;
   try{
     if(!('Notification' in window)||Notification.permission!=='granted')return Promise.resolve(false);
   }catch(e){return Promise.resolve(false)}
@@ -2303,19 +2315,38 @@ auth.onAuthStateChanged(user=>{
   currentUser=user;
   if(user){
     console.log('Auth OK:',user.uid,user.email);
-    // Conta diferente da dona do cache local? Nada da conta anterior pode
-    // sobreviver — nem no disco, nem em memória, nem nos listeners.
-    const prevUid=localStorage.getItem(LS_ACCOUNT_UID);
-    if(prevUid&&prevUid!==user.uid){
+    // Conta diferente da dona do estado atual? Nada da anterior pode sobreviver
+    // — nem no disco, nem em memória, nem nos listeners.
+    // Compara com as DUAS fontes: o cache em disco e o uid que o estado em
+    // memória representa. Só o disco não basta: com duas abas abertas, uma
+    // delas pode já ter reescrito a chave, e a outra continuaria exibindo (e
+    // tentando gravar) os dados da conta antiga.
+    let prevUid=null;
+    try{prevUid=localStorage.getItem(LS_ACCOUNT_UID)}catch(e){}
+    const staleState=_syncedUid&&_syncedUid!==user.uid;
+    if((prevUid&&prevUid!==user.uid)||staleState){
       detachFbListeners();
       clearAccountCache();
-      try{localStorage.setItem(LS_ACCOUNT_UID,user.uid)}catch(e){}
-      // Se o app já tinha bootado com a outra conta, só um reload garante
-      // que nenhum estado em memória atravesse a troca.
-      if(_authBooted){location.reload();return}
+      // Se o app já tinha bootado com a outra conta, só um reload garante que
+      // nenhum estado em memória atravesse a troca. O marcador evita repetir o
+      // reload caso a gravação no localStorage falhe (modo privado, cota),
+      // que senão viraria um loop de recarga e tela em branco.
+      if(_authBooted){
+        let jaRecarregou=false;
+        try{jaRecarregou=sessionStorage.getItem('bt-reload-conta')===user.uid}catch(e){}
+        try{localStorage.setItem(LS_ACCOUNT_UID,user.uid)}catch(e){}
+        if(!jaRecarregou){
+          try{sessionStorage.setItem('bt-reload-conta',user.uid)}catch(e){}
+          location.reload();
+          return;
+        }
+        // localStorage indisponível: segue sem reload, com o estado zerado
+      }
       resetInMemoryState();
+      _syncedUid=null;
     }
     try{localStorage.setItem(LS_ACCOUNT_UID,user.uid)}catch(e){}
+    try{sessionStorage.removeItem('bt-reload-conta')}catch(e){}
     const params=new URLSearchParams(location.search);
     const inv=params.get('invite');
     if(inv){
@@ -2352,16 +2383,27 @@ function doLogout(switchAccount){
   if(_loggingOut)return;
   _loggingOut=true;
   clearTimeout(_fbTimer);
-  if(switchAccount){try{sessionStorage.setItem('bt-switch-account','1')}catch(e){}}
   const finish=()=>{
     detachFbListeners();
     clearAccountCache();
     try{localStorage.removeItem(LS_ACCOUNT_UID)}catch(e){}
-    auth.signOut().catch(e=>console.warn('signOut',e)).then(()=>location.reload());
+    auth.signOut().catch(e=>console.warn('signOut',e)).then(()=>{
+      // Só agora: o signOut dispara onAuthStateChanged(null) ANTES do reload, e
+      // aquele callback consome a flag. Marcando depois, ela sobrevive para a
+      // tela de login que aparece pós-reload.
+      if(switchAccount){try{sessionStorage.setItem('bt-switch-account','1')}catch(e){}}
+      location.reload();
+    });
   };
-  // Não perde alterações que ainda não subiram
+  // Sobe o que ainda não subiu, mas sem ficar refém da rede: com a persistência
+  // offline ligada, o set() só resolve quando o servidor confirma — offline, a
+  // promise nunca assenta e o logout travaria de vez (o _loggingOut bloqueia
+  // qualquer nova tentativa). Por isso o flush tem prazo.
   if(_fbDirty&&_fbSynced&&_fbReady&&currentUser){
-    _fbDirectSave().catch(e=>console.warn('flush no logout',e)).then(finish);
+    let done=false;
+    const once=()=>{if(done)return;done=true;finish()};
+    _fbDirectSave().catch(e=>console.warn('flush no logout',e)).then(once);
+    setTimeout(once,2500);
   } else finish();
 }
 function doSwitchAccount(){doLogout(true)}
@@ -2381,6 +2423,7 @@ const DEF_PROJECTS=[
   {id:'nos',name:'Nós',icon:'i-heart',color:'#FF2D55',gradient:'linear-gradient(135deg,#FF2D55,#FF6482)',type:'shared',visible:true,order:1}
 ];
 let projects=ld('bt-projects',DEF_PROJECTS);
+normalizeProjects();
 let activeProject='all'; // 'all', 'bruno', 'nos'
 let fFormProj='bruno'; // project selected in the form
 let editProjId = null; // Currently editing project
@@ -2403,14 +2446,22 @@ function getCatsForProject(projId){
   return projId==='nos'?NOS_CATS:cats;
 }
 
+// Nenhum projeto visível = tela em branco, sem explicação, em qualquer aparelho
+// (a lista é salva no documento da conta, então o estado viajava junto com ela).
+// A invariante é garantida aqui, num lugar só, sempre que `projects` é carregado
+// — assim a lista de tarefas e a navegação de categorias nunca discordam.
+function normalizeProjects(){
+  if(Array.isArray(projects)&&projects.length&&!projects.some(p=>p.visible)){
+    projects.forEach(p=>{p.visible=true});
+    return true;
+  }
+  return false;
+}
+
 function getVisibleTasks(){
-  const vis=projects.filter(p=>p.visible);
-  // Conta que já ficou com todos os projetos ocultos (estado sincronizado do
-  // Firestore) abria em branco sem explicação. Sem nenhum visível, mostra tudo.
-  const visibleProjs=vis.length?new Set(vis.map(p=>p.id)):null;
+  const visibleProjs=new Set(projects.filter(p=>p.visible).map(p=>p.id));
   return tasks.filter(t=>{
     if(t.type==='note') return false;
-    if(!visibleProjs) return true;
     const proj=t.project||'bruno';
     return visibleProjs.has(proj);
   });
@@ -2659,38 +2710,55 @@ function fbInit(){
   showSync('Conectando...');
 
   // Migração do documento legado (`data/bruno-main`), que é ÚNICO para todo mundo.
-  // Só migra se ESTA conta ainda não tem dados próprios: antes, qualquer conta
-  // que logasse puxava o banco antigo para si e apagava a origem — o dono
-  // legítimo entrava depois e encontrava a conta vazia.
-  Promise.all([
-    db.collection('data').doc(FB_DOC).get(),
-    db.collection('users').doc(uid).get()
-  ]).then(([snap,mine])=>{
-    let mineHasData=false;
-    if(mine.exists){
-      try{mineHasData=JSON.parse(mine.data().tasks||'[]').length>0}catch(e){mineHasData=true}
-    }
-    if(snap.exists&&!mineHasData){
-      console.log('Migrating legacy data to new collaborative architecture...');
-      const d=snap.data();
-      tasks=JSON.parse(d.tasks||'[]');
-      cats=JSON.parse(d.cats||'[]');
-      log=JSON.parse(d.log||'[]');
-      if(d.agents){try{const a=JSON.parse(d.agents);if(Array.isArray(a)&&a.length)agents=a}catch(e){}}
-
-      _fbReady=true; _fbInitDone=true;
-      showSync('Migrando banco de dados...');
-      _fbDirectSave().then(()=>{
-        db.collection('data').doc(FB_DOC).delete().catch(console.warn);
-        showSync('Sincronizado ✓',true);
-        fbListen();
-      }).catch(e=>{console.warn('Migration save error',e);fbListen()});
-    } else {
-      if(snap.exists)console.log('Documento legado ignorado: esta conta já tem dados próprios.');
+  // Regras: só migra se ESTA conta ainda não tem dados próprios, e NUNCA apaga a
+  // origem — antes qualquer conta que logasse puxava o banco antigo para si e o
+  // deletava, então o dono legítimo entrava depois e encontrava tudo vazio.
+  // Copiar em vez de mover: no pior caso alguém leva uma cópia, mas o original
+  // continua lá para quem é de direito. (A leitura do doc da conta só acontece
+  // quando o legado existe — depois disso o boot faz uma consulta a menos.)
+  db.collection('data').doc(FB_DOC).get().then(snap=>{
+    if(!snap.exists){
       _fbReady=true; _fbInitDone=true;
       showSync('Pronto',true);
       fbListen();
+      return;
     }
+    return db.collection('users').doc(uid).get().then(mine=>{
+      let mineHasData=false;
+      if(mine.exists){
+        try{
+          const d=mine.data();
+          mineHasData=JSON.parse(d.tasks||'[]').length>0||JSON.parse(d.cats||'[]').length>0;
+        }catch(e){mineHasData=true}
+      }
+      if(!mineHasData){
+        console.log('Migrating legacy data to new collaborative architecture...');
+        const d=snap.data();
+        const lTasks=JSON.parse(d.tasks||'[]');
+        const lCats=JSON.parse(d.cats||'[]');
+        const lLog=JSON.parse(d.log||'[]');
+        // Só sobrescreve o que o legado realmente tem: uma conta sem tarefas mas
+        // com categorias/projetos próprios não pode perdê-los na migração.
+        if(lTasks.length)tasks=lTasks;
+        if(lCats.length)cats=lCats;
+        if(lLog.length)log=lLog;
+        if(d.agents){try{const a=JSON.parse(d.agents);if(Array.isArray(a)&&a.length)agents=a}catch(e){}}
+
+        _fbReady=true; _fbInitDone=true;
+        showSync('Migrando banco de dados...');
+        return _fbDirectSave().then(()=>{
+          // Marca quem importou, sem destruir o documento
+          db.collection('data').doc(FB_DOC)
+              .set({migratedBy:uid,migratedAt:Date.now()},{merge:true}).catch(console.warn);
+          showSync('Sincronizado ✓',true);
+          fbListen();
+        }).catch(e=>{console.warn('Migration save error',e);fbListen()});
+      }
+      console.log('Documento legado ignorado: esta conta já tem dados próprios.');
+      _fbReady=true; _fbInitDone=true;
+      showSync('Pronto',true);
+      fbListen();
+    });
   }).catch(e=>{
     showSync('Offline',true);
     console.warn('FB init error',e);
@@ -2734,8 +2802,12 @@ function combineData(){
         toast(ntitle);
         showLocalNotification('💬 '+creatorName,{body:t.title,tag:'note-'+t.id,vibrate:[200,100,200]});
       }
-      // Tarefas novas vindas do parceiro (mesma tag do push: não duplica)
+      // Tarefas novas vindas do PARCEIRO (mesma tag do push: não duplica).
+      // Sem o `createdBy` o app avisaria o próprio autor: uma tarefa criada no
+      // notebook chega por sync no celular e apitaria lá. Tarefa antiga (sem o
+      // campo) não notifica — melhor calar do que apitar sozinho.
       else if(t.type!=='note'&&t.type!=='alert'&&t.createdAt>recentCutoff){
+        if(!t.createdBy||t.createdBy===myRole) return;
         toast('Nova tarefa: '+t.title);
         showLocalNotification('📋 Nova tarefa',{body:t.title,tag:'task-'+t.id,vibrate:[200,100,200]});
       }
@@ -2781,7 +2853,7 @@ function fbListen(){
       pTasks=JSON.parse(d.tasks||'[]');
       pCats=JSON.parse(d.cats||'[]');
       pLog=JSON.parse(d.log||'[]');
-      if(d.projects) projects=JSON.parse(d.projects);
+      if(d.projects){projects=JSON.parse(d.projects);normalizeProjects()}
       if(d.agents){try{const a=JSON.parse(d.agents);if(Array.isArray(a)&&a.length)agents=a}catch(e){}}
     } else {
       // Conta sem documento ainda: começa vazia em vez de herdar o que sobrou
@@ -5809,7 +5881,7 @@ $('#form').addEventListener('submit',e=>{e.preventDefault();const id=$('#fId').v
   // Cronômetro do Modo Foco: preserva o início se já estava 'fazendo', carimba ao entrar, limpa ao sair
   let doingStartedAtVal=null;
   if(status==='doing')doingStartedAtVal=(existing?.status==='doing'&&existing?.doingStartedAt)?existing.doingStartedAt:Date.now();
-  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,agent:agentVal,agentStatus:agentStatusVal,doingStartedAt:doingStartedAtVal,medType:existing?.medType,examTime:existing?.examTime,examLocal:existing?.examLocal,examDoctor:existing?.examDoctor,remindDayBefore:existing?.remindDayBefore,completionNote:existing?.completionNote||null,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');notifyNewTask(data);
+  const data={id:id||uid(),title,category:cat,priority:prio,date:$('#fD').value,status:status,notes:$('#fN').value.trim(),subtasks:mSubs.filter(s=>s.text.trim()),estimatedTime:etVal>0?etVal:null,blockedBy:mDeps.length?[...mDeps]:null,recurrence:recurrence,project:projVal,assignedTo:assignVal,agent:agentVal,agentStatus:agentStatusVal,doingStartedAt:doingStartedAtVal,medType:existing?.medType,examTime:existing?.examTime,examLocal:existing?.examLocal,examDoctor:existing?.examDoctor,remindDayBefore:existing?.remindDayBefore,completionNote:existing?.completionNote||null,createdAt:isNew?Date.now():(existing?.createdAt||Date.now()),createdBy:isNew?getMyRole():(existing?.createdBy||null),completedAt:status==='done'?(existing?.completedAt||Date.now()):null,updatedAt:Date.now()};if(id){const idx=tasks.findIndex(t=>t.id===id);if(idx>=0)tasks[idx]=data;addLog('edit',data);toast('Atualizada')}else{tasks.unshift(data);addLog('create',data);toast('Criada');notifyNewTask(data);
     // Auto-expand parent deps so the new child is visible immediately
     if(mDeps.length) mDeps.forEach(pid=>expandedDeps.add(pid));
   }sT();closeM();render()});
@@ -6072,9 +6144,13 @@ function processAlerts(){
   tasks.forEach(t=>{
     if(t.type!=='alert'||!t.nextFireAt||t.status==='done')return;
     // Only fire on the RECIPIENT's device.
-    // Alerta sem destinatário é pessoal (do dono do documento) — antes ele nunca
-    // tocava aqui, só pela Cloud Function.
-    if(t.assignedTo&&t.assignedTo!==myRole&&t.assignedTo!=='ambos')return;
+    // Alerta sem destinatário num projeto PESSOAL é do próprio dono — antes ele
+    // nunca tocava aqui, só pela Cloud Function. Já num projeto compartilhado,
+    // sem destinatário explícito, tocaria nos dois aparelhos e ambos gravariam
+    // nextFireAt no mesmo documento, competindo entre si.
+    if(t.assignedTo){
+      if(t.assignedTo!==myRole&&t.assignedTo!=='ambos')return;
+    } else if(isSharedProj(t.project)) return;
     if(t.recurrence?.until&&dateStr(new Date())>t.recurrence.until){
       t.status='done';t.updatedAt=Date.now();changed=true;return;
     }

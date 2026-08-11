@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bruno-tasks-v125';
+const CACHE_NAME = 'bruno-tasks-v126';
 const ASSETS = ['./index.html', './manifest.json', './apple-touch-icon.png', './manifest-icon.png'];
 
 self.addEventListener('install', e => {
@@ -53,16 +53,24 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = e.notification.data?.url || './index.html';
+  const target = new URL(url, self.location.href).href;
   e.waitUntil(
     self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(clients => {
-      // Foca uma aba do app que ja esteja aberta.
+      // Foca uma aba do app que ja esteja aberta e leva ela ate o destino.
       // Antes exigia 'index.html' na URL — servido na raiz (https://host/) isso
-      // nunca batia e o clique sempre abria uma aba nova.
+      // nunca batia e o clique sempre abria uma aba nova. E so focar tambem nao
+      // basta: a aba podia estar noutra pagina do mesmo dominio.
+      const scope = self.registration.scope;
       for(const c of clients) {
-        if(c.url.startsWith(self.location.origin) && 'focus' in c) return c.focus();
+        if(!c.url.startsWith(scope)) continue;
+        if('focus' in c) {
+          return ('navigate' in c && c.url !== target)
+            ? c.navigate(target).then(cl => (cl || c).focus()).catch(() => c.focus())
+            : c.focus();
+        }
       }
       // Otherwise open new tab
-      return self.clients.openWindow(url);
+      return self.clients.openWindow(target);
     })
   );
 });
