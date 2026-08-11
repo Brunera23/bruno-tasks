@@ -1301,6 +1301,36 @@
     .layout-toggle button.active{background:var(--card);color:var(--label);box-shadow:0 1px 4px rgba(0,0,0,.1)}
     .layout-toggle button svg{width:14px;height:14px}
     .task-kanban-wrap{display:none}
+    /* ===== CANVAS DE IDEIAS ===== */
+    .canvas-view{display:none}
+    .canvas-view.active{display:flex;flex-direction:column;height:calc(100dvh - 40px)}
+    .cv-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .cv-btn{display:inline-flex;align-items:center;gap:6px;border:none;background:var(--label);color:var(--bg);font-family:inherit;font-size:.76rem;font-weight:600;padding:8px 14px;border-radius:10px;cursor:pointer}
+    .cv-btn:hover{opacity:.88}
+    .cv-zoom{display:inline-flex;background:var(--fill);border-radius:9px;padding:2px;gap:2px}
+    .cv-zoom button{border:none;background:transparent;font-family:inherit;font-size:.74rem;font-weight:600;color:var(--label2);padding:6px 11px;border-radius:7px;cursor:pointer;min-width:30px}
+    .cv-zoom button:hover{background:var(--card);color:var(--label)}
+    .cv-hint{font-size:.66rem;color:var(--label3);font-weight:500}
+    /* tela infinita: o fundo quadriculado acompanha o pan/zoom */
+    .cv-stage{flex:1;min-height:340px;position:relative;overflow:hidden;border:1px solid var(--sep);border-radius:16px;background:var(--card);cursor:grab;touch-action:none}
+    .cv-stage.panning{cursor:grabbing}
+    .cv-world{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+    .cv-note{position:absolute;width:190px;min-height:112px;border-radius:12px;padding:11px 12px 30px;box-shadow:0 3px 10px rgba(0,0,0,.12);font-size:.8rem;line-height:1.45;color:#1c1c1e;cursor:grab;overflow:hidden;border:1px solid rgba(0,0,0,.07)}
+    .cv-note.dragging{cursor:grabbing;box-shadow:0 12px 30px rgba(0,0,0,.22);z-index:5}
+    .cv-note-txt{outline:none;white-space:pre-wrap;word-break:break-word;min-height:60px;cursor:text}
+    .cv-note-txt:empty::before{content:'Escreva...';opacity:.45}
+    /* acoes so aparecem no hover, para o post-it ficar limpo */
+    .cv-acts{position:absolute;right:6px;bottom:5px;display:flex;gap:3px;opacity:0;transition:opacity var(--dur-fast)}
+    .cv-note:hover .cv-acts{opacity:1}
+    .cv-acts button{border:none;background:rgba(0,0,0,.07);border-radius:6px;width:23px;height:23px;cursor:pointer;color:#1c1c1e;display:flex;align-items:center;justify-content:center;font-size:.7rem;padding:0}
+    .cv-acts button:hover{background:rgba(0,0,0,.16)}
+    .cv-colors{position:absolute;left:7px;bottom:7px;display:flex;gap:4px;opacity:0;transition:opacity var(--dur-fast)}
+    .cv-note:hover .cv-colors{opacity:1}
+    .cv-colors i{width:13px;height:13px;border-radius:50%;cursor:pointer;display:block;border:1px solid rgba(0,0,0,.12)}
+    .cv-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--label3);font-size:.82rem;pointer-events:none;text-align:center;padding:20px}
+    .cv-empty b{color:var(--label2);font-size:.9rem}
+    @media(max-width:640px){.cv-hint{display:none}.canvas-view.active{height:calc(100dvh - 150px)}}
+
     /* ===== TIMELINE ===== */
     .task-tl-wrap{display:none}
     .task-tl-wrap.active{display:block}
@@ -1515,6 +1545,7 @@
       <button class="nav-item active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas<span class="nav-badge" id="navBadge">0</span></button>
       <button class="nav-item" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
       <button class="nav-item" data-view="med"><svg><use href="#i-pill"/></svg>Saúde</button>
+      <button class="nav-item" data-view="canvas"><svg><use href="#i-bulb"/></svg>Ideias</button>
       <button class="nav-action" id="sideNotes"><svg><use href="#i-edit"/></svg>Quadro de Notas</button>
     </div>
     <div class="sidebar-projects">
@@ -1666,6 +1697,17 @@
         </div>
       </div>
     </div>
+    <div class="canvas-view" id="canvasView">
+      <div class="page-head"><div class="page-head-left"><div class="greeting">Espaço livre</div><h1>Ideias</h1></div>
+        <div class="cv-tools">
+          <button class="cv-btn" id="cvAdd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Post-it</button>
+          <div class="cv-zoom"><button id="cvOut">−</button><button id="cvFit">Ajustar</button><button id="cvIn">+</button></div>
+          <span class="cv-hint">Duplo clique cria · arraste o fundo para navegar · Ctrl+roda amplia</span>
+        </div>
+      </div>
+      <div class="cv-stage" id="cvStage"><div class="cv-world" id="cvWorld"></div></div>
+    </div>
+
     <div class="agents-view" id="agentsView">
       <div class="page-head"><div class="page-head-left"><div class="greeting">Coordenação por IA</div><h1>Quadro de Agentes</h1></div><button class="btn-add" id="agAddBtn"><svg><use href="#i-plus"/></svg>Nova tarefa IA</button></div>
       <div class="kanban" id="kanban"></div>
@@ -2290,7 +2332,7 @@ let _loggingOut=false;
 // outra entra, o cache da anterior continua lá, aparece na tela da conta nova e
 // pode até ser gravado por cima dos dados dela no Firestore. Estas chaves são
 // dados de conta e precisam morrer junto com a sessão.
-const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel'];
+const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel','bt-canvas','bt-cv-cam'];
 const LS_ACCOUNT_UID='bt-account-uid'; // uid dono do cache que está no disco agora
 function clearAccountCache(){ACCOUNT_LS_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}
 
@@ -2307,7 +2349,7 @@ function resetInMemoryState(){
   projects=JSON.parse(JSON.stringify(DEF_PROJECTS));
   agents=DEF_AGENTS.slice();
   pTasks=[];pCats=[];pLog=[];
-  pDelServer={};pDelLocal={};pCatDelServer={};pCatDelLocal={};
+  pDelServer={};pDelLocal={};pCatDelServer={};pCatDelLocal={};canvasItems=[];pCanvas=null;
   [sharedTasksMap,sharedLogMap,sharedDeletedMap,deletedByProj].forEach(m=>Object.keys(m).forEach(k=>delete m[k]));
 }
 
@@ -2705,7 +2747,7 @@ function syncProblem(msg,err){
 function syncProblemClear(){const el=document.getElementById('syncProblem');if(el)el.style.display='none'}
 let _fbTimer=null,_fbInitDone=false,_fbSaveTs=0,_fbSaveCompletedAt=0;
 let _syncedUid=null; // uid que o estado em memória representa — trava gravação cruzada
-let pTasks=[],pCats=[],pLog=[];
+let pTasks=[],pCats=[],pLog=[],pCanvas=null;
 let _unsubP=null;
 const _unsubShared={};
 const sharedTasksMap={};
@@ -2779,6 +2821,7 @@ function _fbDirectSave(){
   promises.push(db.collection('users').doc(uid).set({
     tasks:JSON.stringify(myPTasks),
     cats:JSON.stringify(myCats),
+    canvas:JSON.stringify(canvasItems),
     deleted:JSON.stringify(pDel),
     catsDeleted:JSON.stringify(pCatDel),
     log:JSON.stringify(myPLog.slice(0,100)),
@@ -2826,7 +2869,7 @@ function fbSave(){
   _fbTimer=setTimeout(()=>{
     showSync('Salvando...');
     // Snapshot current state to localStorage as offline cache
-    try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents)}catch(e){}
+    try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents);sv('bt-canvas',canvasItems)}catch(e){}
     _fbDirectSave().then(()=>{
       showSync('Sincronizado ✓',true);syncProblemClear();
       _fbSaveCompletedAt=Date.now();
@@ -2851,7 +2894,7 @@ function fbSaveNow(){
   _fbSaveTs=Date.now();
   _fbDirty=true;
   showSync('Salvando...');
-  try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents)}catch(e){}
+  try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents);sv('bt-canvas',canvasItems)}catch(e){}
   return _fbDirectSave().then(()=>{
     showSync('Sincronizado ✓',true);syncProblemClear();
     _fbSaveCompletedAt=Date.now();
@@ -2867,7 +2910,7 @@ function _fbFlushBeforeUnload(){
   if(!currentUser||(_syncedUid&&_syncedUid!==currentUser.uid))return;
   clearTimeout(_fbTimer); // cancel the debounce
   // Save to localStorage SYNCHRONOUSLY (always works)
-  try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents)}catch(e){}
+  try{sv('bt-v5',tasks);sv('bt-cats',cats);sv('bt-log',log.slice(0,50));sv('bt-agents',agents);sv('bt-canvas',canvasItems)}catch(e){}
   // Fire-and-forget Firebase write (best-effort on unload)
   try{_fbDirectSave()}catch(e){}
   _fbDirty=false;
@@ -2996,6 +3039,12 @@ function combineData(){
   tasks=newTasks;
   const pCatDel=mergeDel(pCatDelServer,pCatDelLocal);pCatDelLocal=pCatDel;
   cats=pCats.filter(c=>!pCatDel[c.id]);
+  // Canvas: nao troca o estado embaixo de quem esta arrastando ou digitando
+  if(pCanvas&&!_cvDrag&&!_cvPan&&JSON.stringify(pCanvas)!==JSON.stringify(canvasItems)){
+    canvasItems=pCanvas;
+    try{sv('bt-canvas',canvasItems)}catch(e){}
+    if(curView==='canvas')renderCanvas();
+  }
   
   const newLog=[...pLog];
   for (let pid in sharedLogMap) {
@@ -3029,6 +3078,7 @@ function fbListen(){
       pTasks=JSON.parse(d.tasks||'[]');
       pCats=JSON.parse(d.cats||'[]');
       pLog=JSON.parse(d.log||'[]');
+      try{const cv=JSON.parse(d.canvas||'[]');if(Array.isArray(cv))pCanvas=cv}catch(e){}
       try{pDelServer=JSON.parse(d.deleted||'{}')||{}}catch(e){pDelServer={}}
       try{pCatDelServer=JSON.parse(d.catsDeleted||'{}')||{}}catch(e){pCatDelServer={}}
       if(d.projects){projects=JSON.parse(d.projects);normalizeProjects()}
@@ -3141,6 +3191,7 @@ function switchView(v){
     $('#dashView').classList.toggle('active',v==='dash');
     $('#medView').classList.toggle('active',v==='med');
     $('#agentsView').classList.toggle('active',v==='agents');
+    $('#canvasView').classList.toggle('active',v==='canvas');
     $$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
     $$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
     // Render isolado: se quebrar, a view ja trocou e o erro fica visivel no console
@@ -3149,6 +3200,7 @@ function switchView(v){
       else if(v==='dash')renderDash();
       else if(v==='med')renderMedView();
       else if(v==='agents')renderAgentsView();
+      else if(v==='canvas'){cvInit();renderCanvas()}
     }catch(err){console.error('[switchView] render("'+v+'") quebrou — view trocada mesmo assim:',err)}
   };
   // Guarda do modal isolada: se closeM falhar, aplica direto em vez de travar a navegacao
@@ -3673,6 +3725,159 @@ function renderTasksKanban(){
       <div class="kanban-col-body">${body}</div>
     </div>`;
   }).join('');
+}
+
+// ===== CANVAS DE IDEIAS =====
+// Tela infinita com post-its: o espaco para jogar ideia solta sem o atrito de
+// preencher um formulario de tarefa. O que virar trabalho de verdade vira tarefa
+// pelo botao ↗ do proprio post-it, ja com o texto preenchido.
+// Sincroniza no documento da conta como os demais dados; a posicao da camera
+// (pan/zoom) e por aparelho, nao por conta — cada tela tem seu enquadramento.
+const CV_CORES=['#FFE58A','#B6E3FF','#C8F2D4','#FFC9DE','#E3D5FF','#FFD8B0'];
+let canvasItems=ld('bt-canvas',[]);
+let cvCam=ld('bt-cv-cam',{x:40,y:40,z:1});
+let _cvDrag=null,_cvPan=null;
+function cvSaveCam(){try{sv('bt-cv-cam',cvCam)}catch(e){}}
+function cvApplyCam(){
+  const w=$('#cvWorld');if(!w)return;
+  w.style.transform=`translate(${cvCam.x}px,${cvCam.y}px) scale(${cvCam.z})`;
+  const st=$('#cvStage');
+  if(st){
+    const p=24*cvCam.z;
+    st.style.backgroundImage='radial-gradient(circle, var(--sep) 1px, transparent 1px)';
+    st.style.backgroundSize=p+'px '+p+'px';
+    st.style.backgroundPosition=(cvCam.x%p)+'px '+(cvCam.y%p)+'px';
+  }
+}
+function cvSave(){sT()} // canvas viaja no mesmo documento das tarefas
+function renderCanvas(){
+  const w=$('#cvWorld');if(!w)return;
+  w.innerHTML=canvasItems.map(n=>`
+    <div class="cv-note" data-cv="${n.id}" style="left:${n.x}px;top:${n.y}px;background:${n.color||CV_CORES[0]}">
+      <div class="cv-note-txt" contenteditable="true" data-cvtxt="${n.id}">${escapeHtml(n.text||'')}</div>
+      <div class="cv-colors">${CV_CORES.map(c=>`<i data-cvcolor="${n.id}" data-c="${c}" style="background:${c}"></i>`).join('')}</div>
+      <div class="cv-acts">
+        <button data-cvtask="${n.id}" title="Virar tarefa">↗</button>
+        <button data-cvdel="${n.id}" title="Apagar">✕</button>
+      </div>
+    </div>`).join('');
+  const st=$('#cvStage');
+  let vazio=st.querySelector('.cv-empty');
+  if(!canvasItems.length){
+    if(!vazio){vazio=document.createElement('div');vazio.className='cv-empty';vazio.innerHTML='<b>Espaço livre para pensar</b>Duplo clique em qualquer lugar para criar um post-it';st.appendChild(vazio)}
+  } else if(vazio) vazio.remove();
+  cvApplyCam();
+}
+// converte coordenada da tela para coordenada do mundo (leva pan e zoom em conta)
+function cvParaMundo(clientX,clientY){
+  const r=$('#cvStage').getBoundingClientRect();
+  return {x:(clientX-r.left-cvCam.x)/cvCam.z, y:(clientY-r.top-cvCam.y)/cvCam.z};
+}
+function cvAdd(x,y){
+  const st=$('#cvStage');if(!st)return;
+  let pos;
+  if(x==null){const r=st.getBoundingClientRect();pos=cvParaMundo(r.left+r.width/2-95,r.top+r.height/2-56)}
+  else pos={x,y};
+  const n={id:uid(),x:Math.round(pos.x),y:Math.round(pos.y),text:'',color:CV_CORES[canvasItems.length%CV_CORES.length],updatedAt:Date.now()};
+  canvasItems.push(n);cvSave();renderCanvas();
+  setTimeout(()=>{const el=document.querySelector(`[data-cvtxt="${n.id}"]`);if(el)el.focus()},40);
+}
+function cvZoom(fator,cx,cy){
+  const st=$('#cvStage');if(!st)return;
+  const r=st.getBoundingClientRect();
+  const px=(cx==null?r.width/2:cx-r.left), py=(cy==null?r.height/2:cy-r.top);
+  const z=Math.min(2.5,Math.max(.25,cvCam.z*fator));
+  // mantem o ponto sob o cursor parado durante o zoom
+  cvCam.x=px-(px-cvCam.x)*(z/cvCam.z);
+  cvCam.y=py-(py-cvCam.y)*(z/cvCam.z);
+  cvCam.z=z;cvSaveCam();cvApplyCam();
+}
+function cvFit(){
+  const st=$('#cvStage');if(!st)return;
+  if(!canvasItems.length){cvCam={x:40,y:40,z:1};cvSaveCam();cvApplyCam();return}
+  const r=st.getBoundingClientRect();
+  const minX=Math.min(...canvasItems.map(n=>n.x)), minY=Math.min(...canvasItems.map(n=>n.y));
+  const maxX=Math.max(...canvasItems.map(n=>n.x+200)), maxY=Math.max(...canvasItems.map(n=>n.y+130));
+  const z=Math.min(1.2,Math.max(.3,Math.min((r.width-60)/(maxX-minX),(r.height-60)/(maxY-minY))));
+  cvCam={z,x:(r.width-(maxX-minX)*z)/2-minX*z, y:(r.height-(maxY-minY)*z)/2-minY*z};
+  cvSaveCam();cvApplyCam();
+}
+function cvInit(){
+  const st=$('#cvStage');if(!st||st.dataset.ready)return;
+  st.dataset.ready='1';
+
+  st.addEventListener('dblclick',e=>{
+    if(e.target.closest('.cv-note'))return;
+    const p=cvParaMundo(e.clientX,e.clientY);cvAdd(p.x-95,p.y-56);
+  });
+  // arrastar o fundo = navegar; arrastar o post-it = mover o post-it
+  st.addEventListener('pointerdown',e=>{
+    const nota=e.target.closest('.cv-note');
+    if(nota&&!e.target.closest('.cv-note-txt')&&!e.target.closest('button')&&!e.target.closest('.cv-colors')){
+      const it=canvasItems.find(x=>x.id===nota.dataset.cv);if(!it)return;
+      _cvDrag={id:it.id,dx:cvParaMundo(e.clientX,e.clientY).x-it.x,dy:cvParaMundo(e.clientX,e.clientY).y-it.y,el:nota};
+      nota.classList.add('dragging');nota.setPointerCapture(e.pointerId);
+    } else if(!nota){
+      _cvPan={sx:e.clientX,sy:e.clientY,ox:cvCam.x,oy:cvCam.y};
+      st.classList.add('panning');st.setPointerCapture(e.pointerId);
+    }
+  });
+  st.addEventListener('pointermove',e=>{
+    if(_cvDrag){
+      const p=cvParaMundo(e.clientX,e.clientY);
+      _cvDrag.el.style.left=Math.round(p.x-_cvDrag.dx)+'px';
+      _cvDrag.el.style.top=Math.round(p.y-_cvDrag.dy)+'px';
+    } else if(_cvPan){
+      cvCam.x=_cvPan.ox+(e.clientX-_cvPan.sx);
+      cvCam.y=_cvPan.oy+(e.clientY-_cvPan.sy);
+      cvApplyCam();
+    }
+  });
+  const soltar=()=>{
+    if(_cvDrag){
+      const it=canvasItems.find(x=>x.id===_cvDrag.id);
+      if(it){it.x=parseInt(_cvDrag.el.style.left);it.y=parseInt(_cvDrag.el.style.top);it.updatedAt=Date.now();cvSave()}
+      _cvDrag.el.classList.remove('dragging');_cvDrag=null;
+    }
+    if(_cvPan){_cvPan=null;st.classList.remove('panning');cvSaveCam()}
+  };
+  st.addEventListener('pointerup',soltar);
+  st.addEventListener('pointercancel',soltar);
+
+  // Ctrl+roda amplia; roda sozinha navega (igual aos editores de canvas)
+  st.addEventListener('wheel',e=>{
+    e.preventDefault();
+    if(e.ctrlKey||e.metaKey)cvZoom(e.deltaY<0?1.12:.89,e.clientX,e.clientY);
+    else{cvCam.x-=e.deltaX;cvCam.y-=e.deltaY;cvApplyCam();cvSaveCam()}
+  },{passive:false});
+
+  // texto, cor, apagar e virar tarefa
+  st.addEventListener('input',e=>{
+    const el=e.target.closest('[data-cvtxt]');if(!el)return;
+    const it=canvasItems.find(x=>x.id===el.dataset.cvtxt);if(!it)return;
+    it.text=el.innerText;it.updatedAt=Date.now();
+    clearTimeout(st._cvT);st._cvT=setTimeout(cvSave,600);
+  });
+  st.addEventListener('click',e=>{
+    const cor=e.target.closest('[data-cvcolor]');
+    if(cor){const it=canvasItems.find(x=>x.id===cor.dataset.cvcolor);if(it){it.color=cor.dataset.c;it.updatedAt=Date.now();cvSave();renderCanvas()}return}
+    const del=e.target.closest('[data-cvdel]');
+    if(del){canvasItems=canvasItems.filter(x=>x.id!==del.dataset.cvdel);cvSave();fbSaveNow();renderCanvas();toast('Post-it apagado');return}
+    const tsk=e.target.closest('[data-cvtask]');
+    if(tsk){
+      const it=canvasItems.find(x=>x.id===tsk.dataset.cvtask);if(!it)return;
+      const txt=(it.text||'').trim();
+      if(!txt){toast('Escreva algo antes de virar tarefa');return}
+      openM(null);
+      setTimeout(()=>{const f=$('#fT');if(f){f.value=txt.split('\n')[0].slice(0,120);f.focus()}},80);
+      return;
+    }
+  });
+
+  const add=$('#cvAdd');if(add)add.onclick=()=>cvAdd();
+  const zi=$('#cvIn');if(zi)zi.onclick=()=>cvZoom(1.2);
+  const zo=$('#cvOut');if(zo)zo.onclick=()=>cvZoom(.83);
+  const zf=$('#cvFit');if(zf)zf.onclick=cvFit;
 }
 
 // ===== TIMELINE =====
