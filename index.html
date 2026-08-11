@@ -1393,6 +1393,7 @@
     .cv-node.editando .cv-bar{display:flex}
     .cv-bar button{border:none;background:transparent;border-radius:7px;width:26px;height:26px;cursor:pointer;color:var(--label2);display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;padding:0;line-height:1}
     .cv-bar button:hover{background:var(--fill);color:var(--label)}
+    .cv-bar button svg{width:15px;height:15px;display:block}
     .cv-bar button.on{background:var(--label);color:var(--bg)}
     .cv-bar-cor{width:14px;height:14px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.15)}
     /* gavetas de cor e reacao */
@@ -3938,6 +3939,15 @@ const CV_LADOS=['top','right','bottom','left'];
 // Marcadores rapidos: servem para triagem no quadro (o que e prioridade, o que
 // travou, o que ja foi decidido) sem precisar escrever.
 const CV_EMOS=['⭐','🔥','❗','✅','❓'];
+// SVG tracado em vez de caracteres unicode: ☺ ▢ ✕ eram desenhados pelo sistema
+// como emoji — glifos pretos e pesados, destoando do resto da interface.
+const _svg=(d,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const CV_ICO={
+  emo:_svg('<circle cx="12" cy="12" r="9"/><path d="M8.4 14.2a4.6 4.6 0 0 0 7.2 0"/><line x1="9" y1="9.6" x2="9.01" y2="9.6"/><line x1="15" y1="9.6" x2="15.01" y2="9.6"/>',1.9),
+  bd:_svg('<rect x="4.5" y="4.5" width="15" height="15" rx="2.5"/>',1.9),
+  task:_svg('<path d="M7.5 16.5 16.5 7.5"/><path d="M9.5 7.5h7v7"/>',2),
+  del:_svg('<line x1="6.5" y1="6.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="6.5" x2="6.5" y2="17.5"/>',2.1)
+};
 function cvPonto(n,lado){
   if(lado==='top')return {x:n.x+n.w/2,y:n.y};
   if(lado==='bottom')return {x:n.x+n.w/2,y:n.y+n.h};
@@ -3982,10 +3992,10 @@ function cvNodeHTML(n){
     <div class="cv-node-txt" contenteditable="false" data-cvtxt="${n.id}">${escapeHtml(n.text||'')}</div>
     <div class="cv-bar" data-cvbar="${n.id}">
       ${k!=='text'?`<button data-cvpal="${n.id}" title="Cor"><i class="cv-bar-cor" style="background:${cor}"></i></button>`:''}
-      <button data-cvemo="${n.id}" title="Reações">☺</button>
-      <button data-cvbd="${n.id}" title="Borda" class="${n.bordered?'on':''}">▢</button>
-      <button data-cvtask="${n.id}" title="${n.taskId?'Já virou tarefa — criar outra':'Virar tarefa'}">↗</button>
-      <button data-cvdel="${n.id}" title="Apagar">✕</button>
+      <button data-cvemo="${n.id}" title="Reações">${CV_ICO.emo}</button>
+      <button data-cvbd="${n.id}" title="Borda" class="${n.bordered?'on':''}">${CV_ICO.bd}</button>
+      <button data-cvtask="${n.id}" title="${n.taskId?'Já virou tarefa — criar outra':'Virar tarefa'}">${CV_ICO.task}</button>
+      <button data-cvdel="${n.id}" title="Apagar">${CV_ICO.del}</button>
       <div class="cv-pop cv-pop-cores">${cores}</div>
       <div class="cv-pop cv-pop-emos">${CV_EMOS.map(em=>`<button data-cvreact="${n.id}" data-em="${em}" title="Marcar ${em}">${em}</button>`).join('')}</div>
     </div>
