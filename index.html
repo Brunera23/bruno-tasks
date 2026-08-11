@@ -1380,21 +1380,28 @@
     /* marcadores de triagem */
     .cv-reacts{position:absolute;top:-9px;left:9px;display:flex;gap:2px;z-index:4}
     .cv-reacts span{background:var(--card);border:1px solid var(--sep);border-radius:20px;font-size:.72rem;line-height:1;padding:3px 5px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
-    .cv-emos{display:flex;gap:1px;margin-right:3px}
-    .cv-emos button{font-size:.72rem;width:21px;height:23px;background:transparent}
-    .cv-emos button:hover{background:rgba(0,0,0,.12)}
-    .cv-acts button.on{background:rgba(0,0,0,.24)}
     .cv-node-txt:empty::before{content:'Escreva...';opacity:.45}
-    .cv-acts{position:absolute;right:6px;bottom:5px;display:flex;gap:3px;opacity:0;transition:opacity var(--dur-fast);z-index:2}
-    .cv-node:hover .cv-acts{opacity:1}
-    .cv-acts button{border:none;background:rgba(0,0,0,.07);border-radius:6px;width:23px;height:23px;cursor:pointer;color:#1c1c1e;display:flex;align-items:center;justify-content:center;font-size:.7rem;padding:0}
-    .cv-acts button:hover{background:rgba(0,0,0,.16)}
-    .cv-text .cv-acts button{background:var(--fill);color:var(--label)}
-    .cv-colors{position:absolute;left:7px;bottom:7px;display:flex;gap:4px;opacity:0;transition:opacity var(--dur-fast);z-index:2}
-    .cv-node:hover .cv-colors{opacity:1}
-    .cv-colors i{width:13px;height:13px;border-radius:50%;cursor:pointer;display:block;border:1px solid rgba(0,0,0,.12)}
-    /* bolinha de ligacao e alca de redimensionar */
-    .cv-port{position:absolute;width:13px;height:13px;border-radius:50%;background:var(--blue);border:2px solid var(--card);opacity:0;cursor:crosshair;transition:opacity var(--dur-fast),transform var(--dur-fast);z-index:3}
+    /* Barra do objeto: flutua ACIMA dele. Dentro do post-it os oito botoes
+       estouravam a largura de 190px e ainda colidiam com a fileira de cores.
+       Reacoes e cores ficam atras de um icone, abrindo so quando pedidas. */
+    .cv-bar{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);display:none;align-items:center;gap:2px;background:var(--card);border:1px solid var(--sep);border-radius:10px;padding:3px;box-shadow:0 4px 16px rgba(0,0,0,.16);z-index:8;white-space:nowrap}
+    .cv-node:hover .cv-bar,.cv-node.sel .cv-bar{display:flex}
+    /* ponte invisivel sobre o vao ate o objeto: sem ela, ao subir o mouse em
+       direcao a barra o cursor passa por um espaco vazio, o hover cai e a
+       barra some antes de ser alcancada */
+    .cv-bar::after{content:'';position:absolute;top:100%;left:-6px;right:-6px;height:12px}
+    .cv-node.editando .cv-bar{display:flex}
+    .cv-bar button{border:none;background:transparent;border-radius:7px;width:26px;height:26px;cursor:pointer;color:var(--label2);display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;padding:0;line-height:1}
+    .cv-bar button:hover{background:var(--fill);color:var(--label)}
+    .cv-bar button.on{background:var(--label);color:var(--bg)}
+    .cv-bar-cor{width:14px;height:14px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.15)}
+    /* gavetas de cor e reacao */
+    .cv-pop{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--sep);border-radius:10px;padding:5px;gap:3px;box-shadow:0 4px 16px rgba(0,0,0,.16)}
+    .cv-bar.cores .cv-pop-cores{display:flex}
+    .cv-bar.emos .cv-pop-emos{display:flex}
+    .cv-pop i{width:18px;height:18px;border-radius:50%;cursor:pointer;display:block;border:1px solid rgba(0,0,0,.12)}
+    .cv-pop button{width:26px;height:26px;font-size:.86rem}
+    .cv-port{position:absolute;width:13px;height:13px;border-radius:50%;background:var(--blue);border:2px solid var(--card);opacity:0;cursor:crosshair;transition:opacity var(--dur-fast),transform var(--dur-fast);z-index:9}
     .cv-port:hover{transform:scale(1.35)}
     .cv-port-top{left:50%;top:-7px;margin-left:-6.5px}
     .cv-port-bottom{left:50%;bottom:-7px;margin-left:-6.5px}
@@ -1413,7 +1420,7 @@
     .cv-busca-fora button{border:none;background:var(--fill);color:var(--label);font-family:inherit;font-size:.7rem;font-weight:600;padding:4px 9px;border-radius:7px;cursor:pointer}
     .cv-busca-fora button:hover{background:var(--blue);color:#fff}
     /* objeto que ja virou tarefa */
-    .cv-node.temtarefa .cv-acts button[data-cvtask]{background:rgba(52,199,89,.35)}
+    .cv-node.temtarefa .cv-bar button[data-cvtask]{color:#34C759}
     .cv-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--label3);font-size:.82rem;pointer-events:none;text-align:center;padding:20px}
     .cv-empty b{color:var(--label2);font-size:.9rem}
     @media(max-width:640px){.cv-hint{display:none}.canvas-view.active{height:calc(100dvh - 190px)}.cv-del-board{display:none}}
@@ -3973,12 +3980,14 @@ function cvNodeHTML(n){
     ${reacoes}
     ${k==='ellipse'||k==='diamond'?`<div class="cv-shape-bg" style="background:${cor}"></div>`:''}
     <div class="cv-node-txt" contenteditable="false" data-cvtxt="${n.id}">${escapeHtml(n.text||'')}</div>
-    ${k!=='text'?`<div class="cv-colors">${cores}</div>`:''}
-    <div class="cv-acts">
-      <div class="cv-emos">${CV_EMOS.map(em=>`<button data-cvreact="${n.id}" data-em="${em}" title="Marcar ${em}">${em}</button>`).join('')}</div>
+    <div class="cv-bar" data-cvbar="${n.id}">
+      ${k!=='text'?`<button data-cvpal="${n.id}" title="Cor"><i class="cv-bar-cor" style="background:${cor}"></i></button>`:''}
+      <button data-cvemo="${n.id}" title="Reações">☺</button>
       <button data-cvbd="${n.id}" title="Borda" class="${n.bordered?'on':''}">▢</button>
       <button data-cvtask="${n.id}" title="${n.taskId?'Já virou tarefa — criar outra':'Virar tarefa'}">↗</button>
       <button data-cvdel="${n.id}" title="Apagar">✕</button>
+      <div class="cv-pop cv-pop-cores">${cores}</div>
+      <div class="cv-pop cv-pop-emos">${CV_EMOS.map(em=>`<button data-cvreact="${n.id}" data-em="${em}" title="Marcar ${em}">${em}</button>`).join('')}</div>
     </div>
     ${CV_LADOS.map(l=>`<div class="cv-port cv-port-${l}" data-cvport="${n.id}" data-cvlado="${l}" title="Arraste para ligar"></div>`).join('')}
     <div class="cv-resize" data-cvrs="${n.id}" title="Redimensionar"></div>
@@ -4249,7 +4258,7 @@ function cvInit(){
     }
     const no=e.target.closest('.cv-node');
     const editando=no&&no.classList.contains('editando');
-    if(no&&!editando&&!e.target.closest('button')&&!e.target.closest('.cv-colors')){
+    if(no&&!editando&&!e.target.closest('button')&&!e.target.closest('.cv-bar')){
       const it=canvasItems.find(x=>x.id===no.dataset.cv);if(!it)return;
       cvSairEdicao();
       // Shift soma a selecao; clicar num ja selecionado preserva o bloco
@@ -4381,10 +4390,22 @@ function cvInit(){
   });
 
   st.addEventListener('click',e=>{
+    const naBarra=e.target.closest('.cv-bar');
+    if(naBarra&&naBarra.dataset.cvbar)cvSelecionar(naBarra.dataset.cvbar);
+    if(!e.target.closest('.cv-bar'))$$('.cv-bar').forEach(x=>x.classList.remove('cores','emos'));
     const ar=e.target.closest('[data-cvedge]');
     if(ar&&e.target.closest('.cv-edge-x-bg,.cv-edge-x')){
       cvMarcar();canvasEdges=canvasEdges.filter(x=>x.id!==ar.dataset.cvedge);
       cvSave();fbSaveNow();renderCanvas();toast('Dependência removida');return;
+    }
+    const pal=e.target.closest('[data-cvpal]'), emo=e.target.closest('[data-cvemo]');
+    if(pal||emo){
+      const bar=(pal||emo).closest('.cv-bar');
+      const alvo=pal?'cores':'emos';
+      const abrindo=!bar.classList.contains(alvo);
+      $$('.cv-bar').forEach(x=>x.classList.remove('cores','emos'));
+      if(abrindo)bar.classList.add(alvo);
+      return;
     }
     const bd=e.target.closest('[data-cvbd]');
     if(bd){const it=canvasItems.find(x=>x.id===bd.dataset.cvbd);if(it){cvMarcar();it.bordered=!it.bordered;it.updatedAt=Date.now();cvSave();renderCanvas()}return}

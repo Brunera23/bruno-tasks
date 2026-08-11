@@ -30,6 +30,7 @@ test('post-it existente carrega do servidor e some ao apagar', async ({ page }) 
   await abrir(page,[{id:'n1',x:60,y:40,text:'Anotação antiga',color:'#FFE58A'}]);
   await expect(page.locator('.cv-note')).toHaveCount(1);
   await expect(page.locator('.cv-node-txt')).toContainText('Anotação antiga');
+  await page.locator('[data-cv="n1"]').hover();
   await page.locator('[data-cvdel="n1"]').click();
   await expect(page.locator('.cv-note')).toHaveCount(0);
   await page.waitForTimeout(600);
@@ -39,6 +40,7 @@ test('post-it existente carrega do servidor e some ao apagar', async ({ page }) 
 
 test('post-it vira tarefa com o texto preenchido', async ({ page }) => {
   await abrir(page,[{id:'n1',x:60,y:40,text:'Renegociar contrato do servidor',color:'#B6E3FF'}]);
+  await page.locator('[data-cv="n1"]').hover();
   await page.locator('[data-cvtask="n1"]').click();
   await page.waitForTimeout(400);
   await expect(page.locator('#modal')).toHaveClass(/\bopen\b/);
@@ -157,6 +159,7 @@ test('apagar um item leva junto as ligações dele', async ({ page }) => {
   ]);
   await page.evaluate(()=>{(eval('canvasEdges') as any[]).push({id:'e1',board:'ideias',from:'a',to:'b'});(eval('renderCanvas') as any)()});
   await expect(page.locator('.cv-edge')).toHaveCount(1);
+  await page.locator('[data-cv="a"]').hover();
   await page.locator('[data-cvdel="a"]').click();
   await page.waitForTimeout(400);
   await expect(page.locator('.cv-node')).toHaveCount(1);
@@ -272,16 +275,21 @@ test('borda liga e desliga no shape e no texto', async ({ page }) => {
     {id:'t1',board:'ideias',kind:'text',x:60,y:220,w:200,h:44,text:'T'}
   ]);
   await expect(page.locator('[data-cv="r1"]')).toHaveClass(/\bbd\b/);
+  await page.locator('[data-cv="r1"]').hover();
   await page.locator('[data-cvbd="r1"]').click();
   await expect(page.locator('[data-cv="r1"]')).not.toHaveClass(/\bbd\b/);
+  await page.locator('[data-cv="t1"]').hover();
   await page.locator('[data-cvbd="t1"]').click();
   await expect(page.locator('[data-cv="t1"]')).toHaveClass(/\bbd\b/);
 });
 
 test('reação marca e desmarca o objeto', async ({ page }) => {
   await abrir(page,[{id:'n1',board:'ideias',kind:'note',x:60,y:60,w:190,h:112,text:'Prioridade'}]);
+  await page.locator('[data-cv="n1"]').hover();
+  await page.locator('[data-cvemo="n1"]').click();            // abre a gaveta
   await page.locator('[data-cvreact="n1"][data-em="🔥"]').click();
   await expect(page.locator('.cv-reacts')).toContainText('🔥');
+  await page.locator('[data-cvemo="n1"]').click();
   await page.locator('[data-cvreact="n1"][data-em="🔥"]').click();
   await expect(page.locator('.cv-reacts')).toHaveCount(0);
 });
@@ -392,10 +400,38 @@ test('promover post-it liga a dependência real da tarefa', async ({ page }) => 
     (eval('canvasEdges') as any[]).push({id:'e1',board:'ideias',from:'a',to:'b'});
     (eval('renderCanvas') as any)();
   });
+  await page.locator('[data-cv="b"]').hover();
   await page.locator('[data-cvtask="b"]').click();
   await page.waitForTimeout(500);
   await expect(page.locator('#modal')).toHaveClass(/\bopen\b/);
   expect(await page.locator('#fT').inputValue()).toBe('Segundo passo');
   // nasce bloqueada pela tarefa do objeto que aponta para ela
   expect(await page.evaluate(()=>eval('mDeps'))).toEqual(['t-existente']);
+});
+
+test('a barra do objeto cabe e as gavetas só abrem quando pedidas', async ({ page }) => {
+  await abrir(page,[{id:'n1',board:'ideias',kind:'note',x:200,y:200,w:190,h:112,text:'Nota'}]);
+  const no=page.locator('[data-cv="n1"]');
+  await no.hover();
+  const bar=page.locator('.cv-bar');
+  await expect(bar).toBeVisible();
+
+  // a barra não pode estourar a largura do objeto (era o bug: 8 botões em 190px)
+  const cb=await bar.boundingBox(), cn=await no.boundingBox();
+  expect(cb!.width).toBeLessThanOrEqual(cn!.width);
+
+  // gavetas fechadas por padrão
+  await expect(page.locator('.cv-pop-emos')).not.toBeVisible();
+  await expect(page.locator('.cv-pop-cores')).not.toBeVisible();
+
+  await page.locator('[data-cvemo="n1"]').click();
+  await expect(page.locator('.cv-pop-emos')).toBeVisible();
+  await expect(page.locator('.cv-pop-cores')).not.toBeVisible();   // uma de cada vez
+
+  await page.locator('[data-cvpal="n1"]').click();
+  await expect(page.locator('.cv-pop-cores')).toBeVisible();
+  await expect(page.locator('.cv-pop-emos')).not.toBeVisible();
+
+  await page.locator('#cvStage').click({position:{x:20,y:20}});     // clique fora fecha
+  await expect(page.locator('.cv-pop-cores')).not.toBeVisible();
 });
