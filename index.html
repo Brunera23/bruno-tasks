@@ -47,7 +47,17 @@
     }
 
     html{height:100%;scroll-behavior:smooth}
-    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--label);min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;line-height:1.47;transition:background var(--dur-smooth) var(--ease-std),color var(--dur-smooth) var(--ease-std)}
+    /* A pilha so tinha fontes da Apple: no Windows caia no sans-serif generico,
+       que no Chrome e Arial — dura de ler nos 10-13px que a interface usa.
+       Agora cada sistema pega sua fonte de interface: Segoe UI Variable/Segoe UI
+       no Windows, SF no macOS/iOS, Roboto no Android. */
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI Variable Text','Segoe UI',Inter,Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--label);min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.5;transition:background var(--dur-smooth) var(--ease-std),color var(--dur-smooth) var(--ease-std)}
+    /* Escala base: a interface inteira e em rem, entao o tamanho do texto sai
+       daqui. 'bt-fs' e por aparelho (nao por conta) — cada tela tem sua distancia. */
+    html{font-size:17px}
+    /* No celular a distancia de leitura e menor e a largura e o recurso escasso:
+       17px empurrava os titulos para 3 linhas. */
+    @media(max-width:768px){html{font-size:16px}}
     .svg-defs{position:absolute;width:0;height:0;overflow:hidden}
 
     /* ===== LOGIN SCREEN ===== */
@@ -4795,7 +4805,7 @@ const FOC_CARD_CSS=`
 @container (max-width:120px){.foc-ring-label{display:none}.focus-summary{display:none}}
 @media(prefers-reduced-motion:reduce){.foc-item,.foc-bar-fill::after,.live-dot,.foc-ring-fg,.foc-switch-anim svg,.foc-ring{animation:none!important}}`;
 const PIP_CSS=`*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:#0d0d10;color:#fff;padding:clamp(6px,2.5vw,14px);min-height:100vh;-webkit-font-smoothing:antialiased;container-type:inline-size;overflow:visible}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI Variable Text','Segoe UI',Inter,Roboto,Arial,sans-serif;background:#0d0d10;color:#fff;padding:clamp(6px,2.5vw,14px);min-height:100vh;-webkit-font-smoothing:antialiased;container-type:inline-size;overflow:visible}
 .focus-head{display:flex;align-items:center;gap:clamp(4px,2vw,9px);margin-bottom:clamp(6px,2.5vw,14px);flex-wrap:wrap}
 .focus-head-title{font-size:clamp(.7rem,4vw,1rem);font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:clamp(4px,2vw,9px);white-space:nowrap}
 `+FOC_CARD_CSS;
