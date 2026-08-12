@@ -1979,6 +1979,34 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-res-et b{font-size:11.5px;color:var(--label)}
 .fab-res-et p{margin:1px 0 0 13px;color:var(--label2);line-height:1.4}
 
+/* painel de montagem passo a passo */
+.fab-passo-cab{padding-bottom:11px;margin-bottom:11px;border-bottom:1px solid var(--sep)}
+.fab-passo-n{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
+  color:#fff;background:#0078d4;padding:2px 8px;border-radius:10px;margin-bottom:6px}
+.fab-passo-cab b{display:block;font-size:14.5px;color:var(--label);line-height:1.3}
+.fab-passo-cab i{display:block;margin-top:5px;font-style:normal;font-size:11.5px;color:var(--label2);line-height:1.45}
+.fab-passo-ops{display:flex;flex-direction:column;gap:8px}
+.fab-passo-op{display:flex;gap:9px;width:100%;text-align:left;padding:10px 12px;border:1.5px solid var(--sep);
+  background:var(--bg);border-radius:10px;cursor:pointer}
+.fab-passo-op:hover{border-color:var(--et,#0078d4);background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.fab-passo-op>b{display:block;font-size:12.5px;font-weight:650;color:var(--label);line-height:1.3}
+.fab-passo-op>p{margin:3px 0 0;font-size:11.5px;color:var(--label2);line-height:1.4}
+.fab-passo-ico{width:24px;height:24px;flex-shrink:0;color:var(--et)}
+.fab-passo-ico svg{width:100%;height:100%;display:block}
+.fab-passo-txt{min-width:0;flex:1}
+.fab-passo-txt b{display:block;font-size:12.5px;font-weight:650;color:var(--label);line-height:1.3}
+.fab-passo-txt b i{font-style:normal;font-size:10px;font-weight:600;color:var(--et);margin-left:6px;
+  text-transform:uppercase;letter-spacing:.4px}
+.fab-passo-txt p{margin:4px 0 0;font-size:11.5px;color:var(--label);line-height:1.45}
+.fab-passo-risco{display:block;margin-top:5px;font-size:10.5px;color:#a3312c;line-height:1.35}
+.fab-passo-sair{width:100%;margin-top:11px;padding:9px;border:1px dashed var(--sep);background:none;
+  color:var(--label2);border-radius:9px;font-size:11.5px;cursor:pointer}
+.fab-passo-sair:hover{border-color:var(--label2);color:var(--label)}
+.fab-wiz-ou{margin:14px 0 9px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--label2);text-align:center;font-weight:600}
+.fab-wiz-ref b span.alt{background:var(--hover);color:var(--label2)}
+.fab-wiz-zero-passo{width:100%}
+
 /* paleta e wizard */
 .fab-modal{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.45);display:none;
   align-items:center;justify-content:center;padding:20px}
@@ -6069,7 +6097,7 @@ let fabItems=ld('bt-fab-items',[]);        // nos: {id,arq,comp,x,y,nota}
 let fabEdges=ld('bt-fab-edges',[]);        // ligacoes: {id,arq,from,to}
 let fabCur=ld('bt-fab-cur','');            // arquitetura aberta
 let fabCams=ld('bt-fab-cam',{});
-let _fabSel=null,_fabDrag=null,_fabPan=null,_fabHover=null,_fabVerTudo=false,_fabPainel=ld('bt-fab-painel','valid');
+let _fabSel=null,_fabDrag=null,_fabPan=null,_fabHover=null,_fabVerTudo=false,_fabPainel=ld('bt-fab-painel','passo');
 let _fabHist=[],_fabHistFut=[],_fabHistCong=false;
 const FAB_W=176,FAB_H=58;                  // tamanho do no, no estilo das atividades de pipeline
 
@@ -6185,6 +6213,12 @@ function fabSugestoes(no){
     const c=FAB_COMP[p.id];
     let peso=p.nivel==='rec'?100:p.nivel==='ok'?50:0;
     if(p.doProp)peso+=60;                           // veio do proposito declarado
+    // Respeita a ordem do fluxo: saindo de uma Origem, a Ingestao vem antes da
+    // Transformacao. Sem isso o passo a passo pula etapas e o desenho fica
+    // dificil de ler. Orquestracao e Governanca sao transversais: nao contam.
+    const _lin=['origem','ingestao','armazenamento','transformacao','curadoria','consumo'];
+    const _de=_lin.indexOf(def.etapa),_para=_lin.indexOf(c.etapa);
+    if(_de>=0&&_para>=0&&_para-_de>1)peso-=(_para-_de-1)*18;
     if(jaLigado.has(p.id))peso-=70;                 // ja conectado a partir daqui
     else if(g.tem([p.id]))peso-=25;                 // existe no quadro, mas nao ligado aqui
     if(faltando.has(p.id))peso+=40;
@@ -6404,6 +6438,176 @@ function fabRenomear(){
 }
 
 
+
+// ---------- modo passo a passo ----------
+// Montar do zero, uma decisao por vez: o app propoe as opcoes da etapa atual
+// com a justificativa de cada uma, voce escolhe, e ele propoe a proxima. Nada
+// de despejar uma arquitetura pronta na tela.
+//
+// A cadeia reaproveita o que ja existe: pendencia (proposito/config) e
+// fabSugestoes(no). O que muda e a conducao — em vez de esperar voce clicar num
+// no, o painel sempre mostra a decisao da vez.
+const FAB_INICIO={
+  ia:{t:'Por onde começar?',
+    dica:'Plataforma para IA se sustenta no dado que alimenta o modelo. A natureza dessa origem define praticamente tudo o que vem depois — inclusive se o caminho é lote ou fluxo contínuo.',
+    op:[
+      {id:'src_pi',porque:'Manutenção preditiva e OEE nascem do historiador de planta. É a origem mais comum quando o objetivo é IA sobre processo industrial.'},
+      {id:'src_stream',porque:'Se o modelo precisa reagir a evento (detecção de anomalia em tempo real), o dado tem que chegar em fluxo, não em lote.'},
+      {id:'src_sqlserver',porque:'Modelos de negócio (churn, demanda, crédito) partem do histórico transacional — que quase sempre vive num relacional.'},
+      {id:'src_files',porque:'Muito projeto de IA começa com extração em arquivo enquanto o acesso definitivo à origem não sai.'},
+      {id:'src_api',porque:'Dado de sistema terceiro (clima, mercado, ERP em nuvem) costuma ser variável externa importante para o modelo.'}
+    ]},
+  rt:{t:'Por onde começar?',
+    dica:'Em tempo real, a origem precisa ser capaz de empurrar evento. Se ela só permite consulta periódica, o que você tem é lote rápido — e vale rever o objetivo.',
+    op:[
+      {id:'src_stream',porque:'Event Hub, IoT Hub ou Kafka são as origens nativas de streaming: elas empurram o evento assim que ele acontece.'},
+      {id:'src_pi',porque:'Historiador industrial entrega telemetria contínua de sensor — o caso clássico de tempo real em planta.'},
+      {id:'src_sqlserver',porque:'Dá para chegar perto do tempo real com Mirroring, sem escrever pipeline. Mas a latência é de minutos, não de segundos.'}
+    ]},
+  dw:{t:'Por onde começar?',
+    dica:'Um Data Warehouse começa pelas origens que alimentam as dimensões e os fatos. Vale mapear a origem do dado mestre antes da transacional.',
+    op:[
+      {id:'src_sqlserver',porque:'Origem mais comum de dado transacional para modelo dimensional.'},
+      {id:'src_sap',porque:'Quando o core do negócio está no SAP, dimensões e fatos saem de lá — e a extração precisa ser planejada com cuidado.'},
+      {id:'src_oracle',porque:'ERPs e sistemas legados de grande porte costumam viver em Oracle.'},
+      {id:'src_files',porque:'Cadastros, metas e de-para frequentemente chegam por arquivo e viram dimensão.'}
+    ]},
+  lakehouse:{t:'Por onde começar?',
+    dica:'O Lakehouse é o destino, não o começo. O primeiro passo é decidir de onde o dado vem — é isso que define como ele entra.',
+    op:[
+      {id:'src_sqlserver',porque:'Origem relacional é o caso mais comum e tem os caminhos de ingestão mais maduros.'},
+      {id:'src_files',porque:'Arquivo em lake externo pode virar Shortcut e aparecer no Lakehouse sem cópia nenhuma.'},
+      {id:'src_api',porque:'Dado de SaaS que só existe via API.'},
+      {id:'src_sap',porque:'Extrato do ERP aterrissando cru antes de qualquer regra.'},
+      {id:'src_stream',porque:'Fluxo contínuo persistido em Delta para análise histórica.'}
+    ]},
+  ingestao:{t:'Por onde começar?',
+    dica:'Ingestão começa pela origem: é ela que determina a técnica, o custo e os cuidados de toda a carga.',
+    op:[
+      {id:'src_sqlserver',porque:'Relacional on-premises ou em VM — o caso mais frequente.'},
+      {id:'src_sap',porque:'SAP exige mais planejamento: modelo complexo e extração cara.'},
+      {id:'src_api',porque:'API pede paginação, retry e controle incremental desde o primeiro dia.'},
+      {id:'src_files',porque:'Integração por arquivo com parceiro ou processo manual.'},
+      {id:'src_oracle',porque:'Origem corporativa de grande porte.'},
+      {id:'src_sharepoint',porque:'Cadastro mantido à mão pela área de negócio.'}
+    ]},
+  governanca:{t:'Por onde começar?',
+    dica:'Governança é a única frente que não começa pelo dado, e sim pela estrutura. Reorganizar workspace depois quebra referência e custa caro.',
+    op:[
+      {id:'workspace',porque:'Estrutura antes de conteúdo: workspaces por ambiente e domínio, sobre a capacidade certa. É a decisão mais cara de desfazer.'},
+      {id:'logtable',porque:'Se as cargas já existem e ninguém sabe o que rodou, o log de execução é o que dá visibilidade imediata.'},
+      {id:'ctrltable',porque:'Se já há muitos pipelines parecidos, a tabela de controle é o que transforma N pipelines em um só.'},
+      {id:'dq',porque:'Se o problema é confiança no número, comece pela validação explícita.'},
+      {id:'rls',porque:'Se a dor é acesso indevido, comece definindo quem vê o quê.'}
+    ]},
+  selfservice:{t:'Por onde começar?',
+    dica:'Self-service depende de uma base curada e confiável. Comece pela origem que alimenta o domínio que a área vai explorar.',
+    op:[
+      {id:'src_sqlserver',porque:'Origem transacional do domínio.'},
+      {id:'src_sharepoint',porque:'Cadastro e parâmetro mantidos pela própria área.'},
+      {id:'src_files',porque:'Planilhas e extrações que a área já usa hoje.'},
+      {id:'src_api',porque:'Sistema em nuvem usado pela área.'}
+    ]}
+};
+
+let _fabGuia=ld('bt-fab-guia',{ativo:false,atual:null,passo:1});
+function fabSalvarGuia(){try{sv('bt-fab-guia',_fabGuia)}catch(e){}}
+
+// A etapa atual da montagem. Tudo se resolve em quatro situacoes.
+function fabPasso(){
+  const arq=fabArq();if(!arq)return null;
+  const nos=fabNos();
+  if(!nos.length||!_fabGuia.atual){
+    const ini=FAB_INICIO[fabCtx().objetivo]||FAB_INICIO.ingestao;
+    // a origem escolhida no questionario sobe para o topo, mas as outras
+    // continuam visiveis — a ideia e mostrar o leque, nao decidir por voce
+    const mapa={relacional:'src_sqlserver',sap:'src_sap',pi:'src_pi',api:'src_api',arquivos:'src_files',streaming:'src_stream'};
+    const pref=mapa[fabCtx().origem];
+    const op=ini.op.filter(o=>FAB_COMP[o.id]).slice();
+    if(pref&&!op.some(o=>o.id===pref)&&FAB_COMP[pref])
+      op.unshift({id:pref,porque:'Você indicou esta origem no início. É por ela que o fluxo deve começar.'});
+    op.sort((a,b)=>(b.id===pref?1:0)-(a.id===pref?1:0));
+    return {tipo:'inicio',t:ini.t,dica:ini.dica,op:op.map(o=>({...o,comp:FAB_COMP[o.id]}))};
+  }
+  const no=nos.find(n=>n.id===_fabGuia.atual);
+  if(!no){_fabGuia.atual=null;return fabPasso()}
+  const pend=fabPendencia(no);
+  if(pend)return {tipo:'pendencia',no,t:pend.t,dica:pend.dica,pend,
+    op:pend.op.map(o=>({...o,comp:null}))};
+  const sugs=fabSugestoes(no).filter(s=>s.peso>0);
+  const d=FAB_COMP[no.comp];
+  if(!sugs.length)return {tipo:'completo',no,
+    t:'Fim deste ramo',
+    dica:'A partir de '+d.nome+' não há mais passo recomendado. Veja a aba Validação para o que ainda falta na arquitetura, ou selecione outro componente do diagrama para seguir por outro caminho.'};
+  return {tipo:'proximo',no,
+    t:'Depois de '+d.nome+', o que vem?',
+    dica:fabPropNome(no)?'Considerando que o objetivo dele é: '+fabPropNome(no).toLowerCase()+'.':'',
+    op:sugs.map(s=>({...s,comp:FAB_COMP[s.id]}))};
+}
+
+function fabPainelPasso(){
+  const p=fabPasso();
+  if(!p)return '<div class="fab-vaziop">Crie uma arquitetura para começar a montagem.</div>';
+  const cab=`<div class="fab-passo-cab">
+    <span class="fab-passo-n">Passo ${_fabGuia.passo}</span>
+    <b>${escapeHtml(p.t)}</b>
+    ${p.dica?`<i>${escapeHtml(p.dica)}</i>`:''}
+  </div>`;
+  if(p.tipo==='completo'){
+    return cab+`<button class="fab-passo-sair" data-fabguia="reiniciar">Escolher outro ponto do diagrama</button>`;
+  }
+  const cards=p.op.map(o=>{
+    if(p.tipo==='pendencia'){
+      return `<button class="fab-passo-op" data-fabpasso="pend" data-campo="${p.pend.campo||''}"
+        data-tipo="${p.pend.tipo}" data-v="${o.v}">
+        <b>${escapeHtml(o.nome)}</b>${o.desc?`<p>${escapeHtml(o.desc)}</p>`:''}</button>`;
+    }
+    const c=o.comp;if(!c)return '';
+    const et=FAB_ETAPA[c.etapa]||{cor:'#888',nome:''};
+    const risco=(c.riscos&&c.riscos[0])?`<span class="fab-passo-risco">Atenção: ${escapeHtml(c.riscos[0])}</span>`:'';
+    return `<button class="fab-passo-op comp" data-fabpasso="add" data-v="${o.id}" style="--et:${et.cor}">
+      <span class="fab-passo-ico">${FAB_ICO[c.ico]||FAB_ICO.base}</span>
+      <span class="fab-passo-txt">
+        <b>${escapeHtml(c.nome)}<i>${escapeHtml(et.nome)}</i></b>
+        <p>${escapeHtml(o.porque||c.oque)}</p>
+        ${risco}
+      </span></button>`;
+  }).join('');
+  return cab+`<div class="fab-passo-ops">${cards}</div>`+
+    (p.tipo!=='inicio'?`<button class="fab-passo-sair" data-fabguia="livre">Nenhuma dessas — abrir o catálogo completo</button>`:'');
+}
+
+// Escolher uma opcao avanca a montagem: cria o no, liga ao anterior e passa a
+// conduzir a partir dele.
+function fabPassoEscolher(tipo,valor,campo,subtipo){
+  const p=fabPasso();if(!p)return;
+  if(tipo==='pend'){
+    if(subtipo==='proposito')fabDefinirProp(_fabGuia.atual,valor);
+    else fabDefinirCfg(_fabGuia.atual,campo,valor);
+    fabRenderPainel();
+    return;
+  }
+  fabMarcar();
+  if(p.tipo==='inicio'){
+    const no=fabNovoNo(valor,140,180);
+    if(no){_fabGuia.atual=no.id;_fabSel=no.id}
+  }else{
+    const orig=fabNos().find(n=>n.id===_fabGuia.atual);
+    const v=fabVaga(orig);
+    const no=fabNovoNo(valor,v.x,v.y);
+    if(no&&orig){
+      fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+        arq:fabCur,from:orig.id,to:no.id});
+      _fabGuia.atual=no.id;_fabSel=no.id;
+    }
+  }
+  _fabGuia.passo++;_fabGuia.ativo=true;fabSalvarGuia();
+  fabSave();fabRender();
+  const c=FAB_COMP[valor];
+  if(c)toast(c.nome+' adicionado');
+  setTimeout(()=>{try{fabAjustar()}catch(e){}},40);
+}
+
 // ---------- render ----------
 function fabNoHTML(n){
   const d=FAB_COMP[n.comp];if(!d)return '';
@@ -6575,11 +6779,12 @@ function fabRenderPainel(){
   const el=$('#fabPainel');if(!el)return;
   const arq=fabArq();
   if(!arq){el.innerHTML='';return}
-  const abas=[['valid','Validação'],['road','Roadmap'],['res','Resumo']];
+  const abas=[['passo','Próximo passo'],['valid','Validação'],['road','Roadmap'],['res','Resumo']];
   const av=fabValidar();
   const nAvisos=av.filter(v=>v.nivel==='aviso').length;
   let corpo='';
-  if(_fabPainel==='valid')corpo=fabPainelValid(av);
+  if(_fabPainel==='passo')corpo=fabPainelPasso();
+  else if(_fabPainel==='valid')corpo=fabPainelValid(av);
   else if(_fabPainel==='road')corpo=fabPainelRoad();
   else corpo=fabPainelResumo();
   el.innerHTML=`
@@ -6667,13 +6872,19 @@ function fabRenderWizard(){
       <div class="fab-wiz-passo">
         <span class="fab-wiz-n">Sugestão</span>
         <h3>Arquitetura recomendada para o seu cenário</h3>
+        <button class="fab-wiz-ref destaque fab-wiz-zero-passo" data-fabref="__passo">
+          <b>Montar do zero, passo a passo <span>recomendado</span></b>
+          <p>O app propõe as opções de cada etapa, uma decisão por vez, explicando o porquê de cada uma. Você escolhe o caminho.</p>
+          <i>É assim que se enxerga o leque de possibilidades — em vez de receber uma arquitetura pronta.</i>
+        </button>
+        <div class="fab-wiz-ou">ou parta de um padrão conhecido</div>
         <div class="fab-wiz-refs">${sug.map((r,ix)=>`
-          <button class="fab-wiz-ref${ix===0?' destaque':''}" data-fabref="${r.id}">
-            <b>${escapeHtml(r.nome)}${ix===0?' <span>melhor encaixe</span>':''}</b>
+          <button class="fab-wiz-ref" data-fabref="${r.id}">
+            <b>${escapeHtml(r.nome)}${ix===0?' <span class="alt">melhor encaixe</span>':''}</b>
             <p>${escapeHtml(r.desc)}</p>
             <i>${escapeHtml(r.quando)}</i>
           </button>`).join('')}</div>
-        <button class="fab-wiz-zero" data-fabref="__vazio">Prefiro começar em branco</button>
+        <button class="fab-wiz-zero" data-fabref="__vazio">Tela em branco, sem condução</button>
       </div>`;
     return;
   }
@@ -6710,6 +6921,17 @@ function fabSugerirRef(r){
 }
 function fabCriarDoWizard(refId){
   const r=_fabWiz.resp;
+  if(refId==='__passo'){
+    // zero absoluto: nenhum componente na tela. O painel conduz a partir da
+    // pergunta "por onde comecar?"
+    fabMarcar();
+    _fabGuia={ativo:true,atual:null,passo:1};fabSalvarGuia();
+    _fabPainel='passo';try{sv('bt-fab-painel','passo')}catch(e){}
+    fabNovaArq(FAB_ROT[r.objetivo]||'Nova arquitetura',{...r},[]);
+    fabFecharWizard();
+    toast('Escolha por onde começar no painel à direita');
+    return;
+  }
   const nome=refId==='__vazio'?'Nova arquitetura':FAB_REF[refId].nome;
   const nos=refId==='__vazio'?[]:FAB_REF[refId].nos.slice();
   const props=refId==='__vazio'?{}:{...(FAB_REF[refId].props||{})};
@@ -6726,6 +6948,7 @@ function fabCriarDoWizard(refId){
     if(r.origem==='api'&&nos.includes('copy')){props.copy='incremental'}
   }
   fabMarcar();
+  _fabGuia={ativo:refId!=='__vazio',atual:null,passo:1};fabSalvarGuia();
   fabNovaArq(nome,{...r},nos,props,cfgs);
   fabFecharWizard();
   setTimeout(fabAjustar,60);
@@ -6810,7 +7033,11 @@ function fabInit(){
     const no=e.target.closest('[data-fab]');
     if(no){
       const id=no.dataset.fab;
-      if(_fabSel!==id){_fabSel=id;_fabVerTudo=false;fabRender()}
+      if(_fabSel!==id){
+        // clicar num no assume a conducao a partir dele: o painel passa a
+        // propor o passo seguinte daquele ponto
+        _fabSel=id;_fabVerTudo=false;_fabGuia.atual=id;fabSalvarGuia();fabRender();
+      }
       const it=fabItems.find(x=>x.id===id);
       const p=fabParaMundo(e.clientX,e.clientY);
       _fabDrag={id,dx:p.x-it.x,dy:p.y-it.y,moveu:false};
@@ -6912,7 +7139,14 @@ function fabInit(){
   const pn=$('#fabPainel');
   if(pn)pn.addEventListener('click',e=>{
     const b=e.target.closest('[data-fabpainel]');
-    if(b){_fabPainel=b.dataset.fabpainel;try{sv('bt-fab-painel',_fabPainel)}catch(_){}fabRenderPainel()}
+    if(b){_fabPainel=b.dataset.fabpainel;try{sv('bt-fab-painel',_fabPainel)}catch(_){}fabRenderPainel();return}
+    const op=e.target.closest('[data-fabpasso]');
+    if(op){fabPassoEscolher(op.dataset.fabpasso,op.dataset.v,op.dataset.campo,op.dataset.tipo);return}
+    const g=e.target.closest('[data-fabguia]');
+    if(g){
+      if(g.dataset.fabguia==='livre')fabAbrirPaleta();
+      else{_fabGuia.atual=null;_fabGuia.passo=1;fabSalvarGuia();fabRenderPainel()}
+    }
   });
 
   // ---- barra superior ----
