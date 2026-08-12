@@ -1984,6 +1984,17 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 #fabCtxConteudo{overflow-y:auto;padding:0 0 18px}
 #fabCtxConteudo .fab-ini-cab{border-bottom:1px solid var(--sep)}
 
+.fab-pal-aviso{margin-bottom:14px;padding:12px 14px;border:1px solid var(--sep);border-radius:10px;background:var(--hover)}
+.fab-pal-aviso b{display:block;font-size:13.5px;color:var(--label);margin-bottom:4px}
+.fab-pal-aviso p{margin:0;font-size:12.5px;color:var(--label2);line-height:1.5}
+.fab-pal-aviso i{font-style:italic}
+.fab-pal-aviso button{margin-top:8px;border:0;background:none;padding:0;color:#0078d4;
+  font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline}
+.fab-pal-bloq{margin-bottom:14px;display:flex;flex-direction:column;gap:6px}
+.fab-pal-bloq div{padding:8px 11px;border-left:3px solid var(--sep);background:var(--hover);border-radius:0 7px 7px 0}
+.fab-pal-bloq b{display:block;font-size:12.5px;color:var(--label2)}
+.fab-pal-bloq span{font-size:11.5px;color:var(--label2);line-height:1.45}
+
 /* cartao de explicacao */
 .fab-card{position:fixed;z-index:9000;width:376px;max-height:76vh;overflow-y:auto;padding:14px 16px;
   background:var(--card);border:1px solid var(--sep);border-radius:13px;box-shadow:0 10px 34px rgba(0,0,0,.2);
@@ -7375,23 +7386,75 @@ const FAB_PEDE={
   'equipe-x-ferramenta':['dataflow'],'sql-sem-warehouse':['warehouse']
 };
 
+// ---------- o que pode abrir uma arquitetura ----------
+// Com o quadro vazio, so faz sentido oferecer o que nao pressupoe alguem antes.
+// Um Semantic Model nao abre engenharia nenhuma: ele e o fim de um fluxo que
+// ainda nao existe. Oferecer tudo seria deixar o usuario montar um desenho que
+// nasce invalido — e o validador so reclamaria depois.
+const FAB_INICIAVEL=new Set([
+  // origens: o comeco natural de qualquer fluxo de dados
+  'src_sqlserver','src_oracle','src_sap','src_saphana','src_pi','src_api',
+  'src_sharepoint','src_files','src_stream',
+  // armazenamento que ja existe: quando o desenho parte do que ja esta no ar
+  'lakehouse','warehouse','eventhouse','sqldb','onelake','shortcut','mirroring',
+  // fundacao e governanca: nao dependem de fluxo anterior
+  'workspace','deploy','rls','lineage','ctrltable','logtable','dq','monitorhub',
+  // orquestracao: quando se comeca desenhando o controle
+  'pipeline'
+]);
+// por que os demais nao abrem uma arquitetura — explicar e melhor que so esconder
+const FAB_NAO_INICIA={
+  ingestao:'Precisa de uma origem antes: é ela que define como o dado entra e a que custo.',
+  transformacao:'Precisa de dado armazenado antes — sem isso não há o que transformar.',
+  armazenamento:'Camada pressupõe ingestão. Comece pela origem ou pelo armazenamento que já existe.',
+  curadoria:'Curadoria é etapa intermediária: exige dado limpo antes dela.',
+  consumo:'Consumo é o fim do fluxo. Precisa de dado curado antes para existir.',
+  orquestracao:'É uma atividade que vive dentro de um pipeline. Crie o pipeline primeiro.',
+  governanca:'Depende de haver algo a governar.'
+};
+function fabPorqueNaoInicia(id){
+  const d=FAB_COMP[id];if(!d)return '';
+  if(id==='bronze'||id==='silver'||id==='gold')
+    return 'Camada pressupõe ingestão: só existe depois que o dado entra.';
+  return FAB_NAO_INICIA[d.etapa]||'Depende de um componente anterior.';
+}
+function fabPodeIniciar(id){return FAB_INICIAVEL.has(id)}
+
 // ---------- paleta de componentes ----------
 function fabAbrirPaleta(){
   const el=$('#fabPaleta');if(!el)return;
+  _fabPalTudo=false;
   el.style.display='flex';
   const busca=$('#fabPalBusca');
   if(busca){busca.value='';busca.focus()}
   fabRenderPaleta('');
 }
 function fabFecharPaleta(){const el=$('#fabPaleta');if(el)el.style.display='none'}
+let _fabPalTudo=false;
 function fabRenderPaleta(q){
   const el=$('#fabPalLista');if(!el)return;
   q=(q||'').toLowerCase().trim();
+  const vazio=!fabNos().length;
   let html='';
+  if(vazio){
+    // ordem: primeiro o que o objetivo declarado recomenda
+    const rec=new Set(((FAB_INICIO[fabCtx().objetivo]||FAB_INICIO.ingestao).op||[]).map(o=>o.id));
+    const bloqueados=Object.keys(FAB_COMP).filter(k=>!fabPodeIniciar(k));
+    html+=`<div class="fab-pal-aviso">
+      <b>O quadro está vazio</b>
+      <p>Só aparecem os componentes que podem <i>abrir</i> uma arquitetura. Os demais pressupõem algo antes deles.</p>
+      <button data-fabpaltudo="1">${_fabPalTudo?'ocultar':'ver'} os ${bloqueados.length} que não iniciam${_fabPalTudo?'':' e por quê'}</button>
+    </div>`;
+    if(_fabPalTudo){
+      html+=`<div class="fab-pal-bloq">${bloqueados.map(k=>
+        `<div><b>${escapeHtml(FAB_COMP[k].nome)}</b><span>${escapeHtml(fabPorqueNaoInicia(k))}</span></div>`).join('')}</div>`;
+    }
+  }
   FAB_ETAPAS.forEach(et=>{
     const itens=Object.keys(FAB_COMP).filter(k=>{
       const d=FAB_COMP[k];
       if(d.etapa!==et.id)return false;
+      if(vazio&&!fabPodeIniciar(k))return false;
       if(!q)return true;
       return (d.nome+' '+d.oque+' '+d.quando).toLowerCase().includes(q);
     });
@@ -7407,6 +7470,10 @@ function fabRenderPaleta(q){
 }
 function fabAddManual(comp){
   if(!fabArq()){toast('Crie uma arquitetura primeiro');return}
+  if(!fabNos().length&&!fabPodeIniciar(comp)){
+    toast(FAB_COMP[comp].nome+' não abre uma arquitetura: '+fabPorqueNaoInicia(comp));
+    return;
+  }
   fabMarcar();
   const orig=fabNos().find(n=>n.id===_fabSel);
   const v=fabVaga(orig);
@@ -7572,6 +7639,7 @@ function fabInit(){
   const pal=$('#fabPaleta');
   if(pal)pal.addEventListener('click',e=>{
     if(e.target===pal){fabFecharPaleta();return}
+    if(e.target.closest('[data-fabpaltudo]')){_fabPalTudo=!_fabPalTudo;fabRenderPaleta($('#fabPalBusca')?.value);return}
     const b=e.target.closest('[data-fabadd]');
     if(b)fabAddManual(b.dataset.fabadd);
   });
