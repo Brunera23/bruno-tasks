@@ -1870,18 +1870,18 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-edge:hover .fab-edge-xbg,.fab-edge:hover .fab-edge-x{opacity:1}
 
 /* no no estilo das atividades de pipeline do Fabric */
-.fab-no{position:absolute;width:176px;height:58px;display:flex;align-items:center;gap:9px;padding:0 10px;
+.fab-no{position:absolute;width:200px;height:66px;display:flex;align-items:center;gap:10px;padding:0 12px;
   background:var(--bg);border:1.5px solid var(--sep);border-left:4px solid var(--et);border-radius:10px;
   box-shadow:0 1px 3px rgba(0,0,0,.07);cursor:grab;user-select:none;box-sizing:border-box}
 .fab-no:hover{border-color:var(--et);box-shadow:0 3px 10px rgba(0,0,0,.12)}
 .fab-no.sel{border-color:var(--et);box-shadow:0 0 0 3px color-mix(in srgb,var(--et) 28%,transparent),0 3px 10px rgba(0,0,0,.12)}
 .fab-no.pend{border-style:dashed}
-.fab-no-ico{width:26px;height:26px;flex-shrink:0;color:var(--et)}
+.fab-no-ico{width:30px;height:30px;flex-shrink:0;color:var(--et)}
 .fab-no-ico svg{width:100%;height:100%;display:block}
 .fab-no-txt{min-width:0;flex:1;display:flex;flex-direction:column;gap:1px}
-.fab-no-txt b{font-size:12.5px;font-weight:650;color:var(--label);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fab-no-txt i{font-size:10.5px;font-style:normal;color:var(--label2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fab-no-cfg{font-size:9.5px;color:var(--et);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fab-no-txt b{font-size:13.5px;font-weight:650;color:var(--label);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fab-no-txt i{font-size:11.5px;font-style:normal;color:var(--label2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fab-no-cfg{font-size:10.5px;color:var(--et);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fab-no-pend{position:absolute;top:-7px;left:-7px;width:18px;height:18px;border-radius:50%;background:#e8a33d;color:#fff;
   font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.2)}
 .fab-no-del{position:absolute;top:-8px;right:-8px;width:19px;height:19px;border-radius:50%;border:0;background:#d9534f;
@@ -1891,13 +1891,13 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 /* sugestoes flutuantes e perguntas da arvore */
 .fab-sugs{position:absolute;top:0;left:0;width:0;height:0}
 .fab-sug-linha{position:absolute;height:1.5px;background:var(--sep);pointer-events:none}
-.fab-sug{position:absolute;transform:translateY(-50%);display:flex;align-items:center;gap:7px;height:34px;padding:0 12px 0 8px;
+.fab-sug{position:absolute;transform:translateY(-50%);display:flex;align-items:center;gap:8px;height:38px;padding:0 14px 0 10px;
   border:1.5px dashed var(--sep);background:var(--bg);border-radius:18px;cursor:pointer;white-space:nowrap;
-  font-size:12px;font-weight:600;color:var(--label2);animation:fabIn .18s ease-out}
+  font-size:13px;font-weight:600;color:var(--label2);animation:fabIn .18s ease-out}
 @keyframes fabIn{from{opacity:0;transform:translate(-8px,-50%)}to{opacity:1;transform:translate(0,-50%)}}
 .fab-sug:hover{border-style:solid;border-color:var(--et);color:var(--label);background:var(--card);
   box-shadow:0 2px 10px rgba(0,0,0,.12)}
-.fab-sug-ico{width:19px;height:19px;color:var(--et);flex-shrink:0}
+.fab-sug-ico{width:21px;height:21px;color:var(--et);flex-shrink:0}
 .fab-sug-ico svg{width:100%;height:100%;display:block}
 .fab-sug.rec{border-color:color-mix(in srgb,var(--et) 55%,transparent);color:var(--label)}
 .fab-sug.ok{opacity:.72}
@@ -1907,34 +1907,99 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-vertudo:hover{color:var(--label)}
 .fab-perg{position:absolute;width:260px;padding:8px 10px;background:var(--card);border:1px solid var(--sep);
   border-radius:9px;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.fab-perg b{display:block;color:var(--label);font-size:12.5px;line-height:1.3}
+.fab-perg b{display:block;color:var(--label);font-size:13.5px;line-height:1.3}
 .fab-perg i{display:block;margin-top:3px;font-style:normal;color:var(--label2);font-size:11px;line-height:1.35}
 .fab-op{position:absolute;transform:translateY(-50%);width:260px;text-align:left;padding:7px 11px;
   border:1.5px solid var(--sep);background:var(--bg);border-radius:9px;cursor:pointer;animation:fabIn .18s ease-out}
 .fab-op:hover{border-color:#0078d4;background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.12)}
-.fab-op b{display:block;font-size:12px;font-weight:650;color:var(--label);line-height:1.25}
-.fab-op i{display:block;margin-top:2px;font-style:normal;font-size:10.5px;color:var(--label2);line-height:1.3}
+.fab-op b{display:block;font-size:13px;font-weight:650;color:var(--label);line-height:1.25}
+.fab-op i{display:block;margin-top:3px;font-style:normal;font-size:11.5px;color:var(--label2);line-height:1.3}
 
 .fab-dica-vazio{position:absolute;left:120px;top:110px;width:330px;padding:16px 18px;border:1.5px dashed var(--sep);
   border-radius:12px;color:var(--label2);font-size:12.5px;line-height:1.55}
 .fab-dica-vazio b{display:block;color:var(--label);font-size:14px;margin-bottom:5px}
 
+/* ponto de partida: o "?" que abre as perguntas da primeira atividade */
+.fab-start{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;padding:24px;overflow-y:auto}
+.fab-start>*{pointer-events:auto}
+.fab-ini-q{display:flex;flex-direction:column;align-items:center;gap:7px;padding:30px 40px;
+  border:2px dashed var(--sep);background:var(--bg);border-radius:18px;cursor:pointer;text-align:center}
+.fab-ini-q:hover{border-color:#0078d4;box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.fab-ini-mark{width:56px;height:56px;border-radius:50%;background:#0078d4;color:#fff;font-size:30px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.fab-ini-q b{font-size:19px;color:var(--label)}
+.fab-ini-q i{font-style:normal;font-size:13.5px;color:var(--label2)}
+.fab-ini-cx{width:min(560px,100%);max-height:100%;display:flex;flex-direction:column;
+  background:var(--bg);border:1px solid var(--sep);border-radius:16px;
+  box-shadow:0 12px 40px rgba(0,0,0,.18);overflow:hidden}
+.fab-ini-cab{padding:18px 20px 14px;border-bottom:1px solid var(--sep);flex-shrink:0}
+.fab-ini-cab b{display:block;font-size:18px;color:var(--label);line-height:1.3}
+.fab-ini-cab i{display:block;margin-top:6px;font-style:normal;font-size:13px;color:var(--label2);line-height:1.5}
+.fab-ini-ops{padding:14px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.fab-ini-op{display:flex;gap:11px;text-align:left;padding:13px 15px;border:1.5px solid var(--sep);
+  background:var(--card);border-radius:11px;cursor:pointer}
+.fab-ini-op:hover{border-color:var(--et,#0078d4);box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.fab-ini-op>b{font-size:14.5px;font-weight:600;color:var(--label)}
+.fab-ini-ico{width:28px;height:28px;flex-shrink:0;color:var(--et)}
+.fab-ini-ico svg{width:100%;height:100%;display:block}
+.fab-ini-txt{min-width:0;flex:1}
+.fab-ini-txt b{display:block;font-size:14.5px;font-weight:650;color:var(--label);line-height:1.3}
+.fab-ini-txt p{margin:5px 0 0;font-size:12.5px;color:var(--label2);line-height:1.5}
+.fab-ini-rodape{display:flex;gap:8px;margin:0 20px 16px}
+.fab-ini-rodape .fab-ini-fechar{flex:1;margin:0}
+.fab-wiz-sub{margin:-8px 0 16px;font-size:13px;color:var(--label2);line-height:1.55}
+.fab-ini-fechar{margin:0 20px 16px;padding:10px;border:1px dashed var(--sep);background:none;
+  color:var(--label2);border-radius:9px;font-size:12.5px;cursor:pointer;flex-shrink:0}
+.fab-ini-fechar:hover{border-color:var(--label2);color:var(--label)}
+
+/* faixa de contexto: sempre visivel, porque e ela que sustenta as recomendacoes */
+.fab-ctxbar{padding:11px 14px;border-bottom:1px solid var(--sep);cursor:pointer;background:var(--hover)}
+.fab-ctxbar:hover{background:var(--card)}
+.fab-ctxbar-t{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  padding:2px 8px;border-radius:10px;color:#fff}
+.fab-ctxbar.firme .fab-ctxbar-t{background:#1e6b34}
+.fab-ctxbar.media .fab-ctxbar-t{background:#c07d1a}
+.fab-ctxbar.fraca .fab-ctxbar-t{background:#a3312c}
+.fab-ctxbar-d{display:block;margin-top:5px;font-size:12px;color:var(--label2);line-height:1.45}
+.fab-ctxbar-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.fab-ctxbar-chips i{font-style:normal;font-size:10.5px;padding:2px 7px;border-radius:9px;
+  background:var(--bg);border:1px solid var(--sep);color:var(--label2)}
+.fab-passo-ctx{display:block;margin-top:6px;padding:6px 9px;border-left:3px solid #0078d4;
+  background:#eef5ff;border-radius:0 6px 6px 0;font-size:11.5px;color:#1c4f80;line-height:1.45}
+.fab-card-sec.contexto{background:#eef5ff;border-left:3px solid #0078d4;padding:8px 10px;border-radius:0 7px 7px 0}
+.fab-card-sec.ctxaviso{background:#fff8e8;border-left:3px solid #c07d1a;padding:8px 10px;border-radius:0 7px 7px 0}
+.fab-passo-ctx.aviso{border-left-color:#c07d1a;background:#fff8e8;color:#7a4e08}
+.fab-ini-prog{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  color:#fff;background:#0078d4;padding:2px 9px;border-radius:10px;margin-bottom:7px}
+.fab-ini-prog.ok{background:#1e6b34}
+.fab-ini-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}
+.fab-ini-chip{font-size:11px;padding:3px 9px;border-radius:10px;background:var(--hover);
+  border:1px solid var(--sep);color:var(--label2);cursor:pointer}
+.fab-ini-chip:hover{border-color:#0078d4;color:var(--label)}
+.fab-ini-op.top{border-color:#0078d4;background:#eef5ff}
+.fab-ini-txt b em{display:inline-block;font-style:normal;font-size:9.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;background:#0078d4;color:#fff;padding:2px 7px;border-radius:9px;margin-left:7px;vertical-align:middle}
+.fab-ini-anc{display:block;margin-top:5px;font-size:11.5px;color:#1c4f80}
+#fabCtxConteudo{overflow-y:auto;padding:0 0 18px}
+#fabCtxConteudo .fab-ini-cab{border-bottom:1px solid var(--sep)}
+
 /* cartao de explicacao */
-.fab-card{position:fixed;z-index:9000;width:340px;max-height:76vh;overflow-y:auto;padding:14px 16px;
+.fab-card{position:fixed;z-index:9000;width:376px;max-height:76vh;overflow-y:auto;padding:14px 16px;
   background:var(--card);border:1px solid var(--sep);border-radius:13px;box-shadow:0 10px 34px rgba(0,0,0,.2);
-  font-size:12.5px;line-height:1.5;display:none;pointer-events:none}
+  font-size:13.5px;line-height:1.6;display:none;pointer-events:none}
 .fab-card-top{display:flex;align-items:center;gap:9px;padding-bottom:9px;border-bottom:1px solid var(--sep);flex-wrap:wrap}
 .fab-card-ico{width:26px;height:26px;color:var(--et);flex-shrink:0}
 .fab-card-ico svg{width:100%;height:100%;display:block}
-.fab-card-top b{display:block;font-size:14px;color:var(--label)}
-.fab-card-top i{display:block;font-style:normal;font-size:11px;color:var(--label2)}
+.fab-card-top b{display:block;font-size:15.5px;color:var(--label)}
+.fab-card-top i{display:block;font-style:normal;font-size:12px;color:var(--label2)}
 .fab-selo{margin-left:auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:11px;white-space:nowrap}
 .fab-selo.rec{background:#dff2e1;color:#1e6b34}
 .fab-selo.ok{background:var(--hover);color:var(--label2)}
 .fab-selo.ruim{background:#fbe0de;color:#a3312c}
 .fab-card-oque{margin:9px 0 0;color:var(--label)}
 .fab-card-sec{margin-top:11px}
-.fab-card-sec>b{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--label2);margin-bottom:3px}
+.fab-card-sec>b{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--label2);margin-bottom:3px}
 .fab-card-sec p{margin:0;color:var(--label)}
 .fab-card-sec ul{margin:0;padding-left:16px;color:var(--label)}
 .fab-card-sec li{margin-bottom:2px}
@@ -1944,63 +2009,63 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-card-sec.risco li{color:#a3312c}
 
 /* painel lateral */
-.fab-painel{width:310px;flex-shrink:0;display:flex;flex-direction:column;border:1px solid var(--sep);
+.fab-painel{width:348px;flex-shrink:0;display:flex;flex-direction:column;border:1px solid var(--sep);
   border-radius:14px;background:var(--card);overflow:hidden}
 .fab-painel-abas{display:flex;border-bottom:1px solid var(--sep);flex-shrink:0}
-.fab-painel-abas button{flex:1;padding:10px 4px;border:0;background:none;color:var(--label2);font-size:12px;
+.fab-painel-abas button{flex:1;padding:12px 4px;border:0;background:none;color:var(--label2);font-size:13px;
   font-weight:650;cursor:pointer;position:relative}
 .fab-painel-abas button:hover{background:var(--hover)}
 .fab-painel-abas button.on{color:var(--label);box-shadow:inset 0 -2px 0 var(--label)}
 .fab-badge{display:inline-block;margin-left:5px;min-width:16px;padding:1px 4px;border-radius:8px;
   background:#e8a33d;color:#fff;font-size:10px;font-weight:700}
-.fab-painel-corpo{flex:1;overflow-y:auto;padding:12px}
-.fab-vaziop,.fab-ok{color:var(--label2);font-size:12.5px;line-height:1.5;padding:8px 2px}
+.fab-painel-corpo{flex:1;overflow-y:auto;padding:15px}
+.fab-vaziop,.fab-ok{color:var(--label2);font-size:13.5px;line-height:1.6;padding:10px 2px}
 .fab-ok{color:#1e6b34}
-.fab-alerta{padding:10px 11px;border-radius:9px;margin-bottom:9px;font-size:12px;line-height:1.45;border-left:3px solid}
+.fab-alerta{padding:12px 13px;border-radius:9px;margin-bottom:10px;font-size:13px;line-height:1.55;border-left:3px solid}
 .fab-alerta.aviso{background:#fdf1ef;border-color:#d9534f}
 .fab-alerta.sugestao{background:#fff8e8;border-color:#e8a33d}
-.fab-alerta b{display:block;font-size:12.5px;color:var(--label);margin-bottom:3px}
+.fab-alerta b{display:block;font-size:13.5px;color:var(--label);margin-bottom:3px}
 .fab-alerta p{margin:0 0 5px;color:var(--label)}
 .fab-alerta-det{font-style:italic;opacity:.85}
-.fab-alerta-fix{display:block;font-size:11.5px;font-weight:600;color:var(--label2);
+.fab-alerta-fix{display:block;font-size:12.5px;font-weight:600;color:var(--label2);
   padding-top:5px;border-top:1px dashed var(--sep)}
 .fab-fase{margin-bottom:13px;padding-bottom:12px;border-bottom:1px solid var(--sep)}
 .fab-fase:last-child{border:0}
-.fab-fase>b{display:block;font-size:12.5px;color:var(--label);margin-bottom:3px}
-.fab-fase-desc{margin:0 0 6px;font-size:11.5px;color:var(--label2);line-height:1.4}
-.fab-fase ul{margin:0;padding-left:16px;font-size:12px;color:var(--label)}
-.fab-resumo>b{display:block;font-size:14px;color:var(--label);margin-bottom:7px}
-.fab-ctx{margin:0 0 9px;padding:0;list-style:none;font-size:11.5px}
+.fab-fase>b{display:block;font-size:14px;color:var(--label);margin-bottom:3px}
+.fab-fase-desc{margin:0 0 7px;font-size:12.5px;color:var(--label2);line-height:1.5}
+.fab-fase ul{margin:0;padding-left:17px;font-size:13px;color:var(--label)}
+.fab-resumo>b{display:block;font-size:15.5px;color:var(--label);margin-bottom:7px}
+.fab-ctx{margin:0 0 10px;padding:0;list-style:none;font-size:12.5px}
 .fab-ctx li{display:flex;gap:6px;padding:2px 0;color:var(--label)}
 .fab-ctx i{font-style:normal;color:var(--label2);min-width:72px}
 .fab-resumo-n{margin:0 0 11px;font-size:11.5px;color:var(--label2)}
-.fab-res-et{margin-bottom:9px;font-size:12px}
+.fab-res-et{margin-bottom:10px;font-size:13px}
 .fab-res-et span{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
-.fab-res-et b{font-size:11.5px;color:var(--label)}
+.fab-res-et b{font-size:12.5px;color:var(--label)}
 .fab-res-et p{margin:1px 0 0 13px;color:var(--label2);line-height:1.4}
 
 /* painel de montagem passo a passo */
 .fab-passo-cab{padding-bottom:11px;margin-bottom:11px;border-bottom:1px solid var(--sep)}
-.fab-passo-n{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
+.fab-passo-n{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
   color:#fff;background:#0078d4;padding:2px 8px;border-radius:10px;margin-bottom:6px}
-.fab-passo-cab b{display:block;font-size:14.5px;color:var(--label);line-height:1.3}
-.fab-passo-cab i{display:block;margin-top:5px;font-style:normal;font-size:11.5px;color:var(--label2);line-height:1.45}
+.fab-passo-cab b{display:block;font-size:16.5px;color:var(--label);line-height:1.3}
+.fab-passo-cab i{display:block;margin-top:6px;font-style:normal;font-size:12.5px;color:var(--label2);line-height:1.55}
 .fab-passo-ops{display:flex;flex-direction:column;gap:8px}
-.fab-passo-op{display:flex;gap:9px;width:100%;text-align:left;padding:10px 12px;border:1.5px solid var(--sep);
+.fab-passo-op{display:flex;gap:11px;width:100%;text-align:left;padding:13px 14px;border:1.5px solid var(--sep);
   background:var(--bg);border-radius:10px;cursor:pointer}
 .fab-passo-op:hover{border-color:var(--et,#0078d4);background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.1)}
-.fab-passo-op>b{display:block;font-size:12.5px;font-weight:650;color:var(--label);line-height:1.3}
-.fab-passo-op>p{margin:3px 0 0;font-size:11.5px;color:var(--label2);line-height:1.4}
-.fab-passo-ico{width:24px;height:24px;flex-shrink:0;color:var(--et)}
+.fab-passo-op>b{display:block;font-size:14px;font-weight:650;color:var(--label);line-height:1.3}
+.fab-passo-op>p{margin:4px 0 0;font-size:12.5px;color:var(--label2);line-height:1.5}
+.fab-passo-ico{width:27px;height:27px;flex-shrink:0;color:var(--et)}
 .fab-passo-ico svg{width:100%;height:100%;display:block}
 .fab-passo-txt{min-width:0;flex:1}
-.fab-passo-txt b{display:block;font-size:12.5px;font-weight:650;color:var(--label);line-height:1.3}
-.fab-passo-txt b i{font-style:normal;font-size:10px;font-weight:600;color:var(--et);margin-left:6px;
+.fab-passo-txt b{display:block;font-size:14px;font-weight:650;color:var(--label);line-height:1.3}
+.fab-passo-txt b i{font-style:normal;font-size:10.5px;font-weight:600;color:var(--et);margin-left:6px;
   text-transform:uppercase;letter-spacing:.4px}
-.fab-passo-txt p{margin:4px 0 0;font-size:11.5px;color:var(--label);line-height:1.45}
-.fab-passo-risco{display:block;margin-top:5px;font-size:10.5px;color:#a3312c;line-height:1.35}
-.fab-passo-sair{width:100%;margin-top:11px;padding:9px;border:1px dashed var(--sep);background:none;
-  color:var(--label2);border-radius:9px;font-size:11.5px;cursor:pointer}
+.fab-passo-txt p{margin:5px 0 0;font-size:12.5px;color:var(--label);line-height:1.55}
+.fab-passo-risco{display:block;margin-top:6px;font-size:11.5px;color:#a3312c;line-height:1.35}
+.fab-passo-sair{width:100%;margin-top:13px;padding:11px;border:1px dashed var(--sep);background:none;
+  color:var(--label2);border-radius:9px;font-size:12.5px;cursor:pointer}
 .fab-passo-sair:hover{border-color:var(--label2);color:var(--label)}
 .fab-wiz-ou{margin:14px 0 9px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
   color:var(--label2);text-align:center;font-weight:600}
@@ -2055,7 +2120,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
   text-align:center;gap:13px;padding:30px}
 .fab-vazio b{font-size:20px;color:var(--label)}
 .fab-vazio p{margin:0;max-width:430px;font-size:13.5px;color:var(--label2);line-height:1.6}
-.fab-hint{display:block;padding:7px 2px 0;font-size:11px;color:var(--label2);line-height:1.5;flex-shrink:0}
+.fab-hint{display:block;padding:8px 2px 0;font-size:12px;color:var(--label2);line-height:1.5;flex-shrink:0}
 
 @media(max-width:900px){
   .fabric-view.active{height:calc(100dvh - 190px)}
@@ -2082,7 +2147,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
       </div>
       <div class="fab-abas" id="fabAbas"></div>
       <div class="fab-corpo">
-        <div class="fab-stage" id="fabStage"><div class="fab-world" id="fabWorld"></div></div>
+        <div class="fab-stage" id="fabStage"><div class="fab-world" id="fabWorld"></div><div class="fab-start" id="fabStart"></div></div>
         <div class="fab-painel" id="fabPainel"></div>
       </div>
       <div class="fab-vazio" id="fabVazio">
@@ -2100,6 +2165,14 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
           <button class="fab-modal-x" onclick="fabFecharPaleta()">×</button></div>
         <input class="fab-pal-busca" id="fabPalBusca" type="search" placeholder="Buscar componente..." autocomplete="off">
         <div id="fabPalLista"></div>
+      </div>
+    </div>
+
+    <div class="fab-modal" id="fabCtxModal">
+      <div class="fab-modal-cx">
+        <div class="fab-modal-top"><b>Contexto da arquitetura</b>
+          <button class="fab-modal-x" id="fabCtxFechar">×</button></div>
+        <div id="fabCtxConteudo"></div>
       </div>
     </div>
 
@@ -5560,7 +5633,7 @@ const FAB_REF={
 // nivel: 'aviso' (risco real) | 'sugestao' (oportunidade)
 const FAB_VALID=[
   {id:'sem-log',nivel:'aviso',titulo:'Carga automatizada sem log de execução',
-    quando:g=>g.tem(['pipeline','copy','notebook','dataflow','copyjob'])&&!g.tem(['logtable']),
+    quando:(g,ctx)=>g.tem(['pipeline','copy','notebook','dataflow','copyjob'])&&!g.tem(['logtable'])&&ctx.criticidade!=='exploratoria',
     texto:'Existe carga automatizada, mas nenhuma tabela de log. Sem isso você descobre a falha pelo usuário reclamando, e não tem histórico para provar que a carga rodou.',
     resolver:'Adicione um Log de Execução e alimente-o com procedures de início e fim.'},
   {id:'sem-monitor',nivel:'sugestao',titulo:'Log existe, mas ninguém olha',
@@ -5572,7 +5645,7 @@ const FAB_VALID=[
     texto:'Com mais de uma origem e sem Bronze, qualquer erro na regra de limpeza exige reextrair tudo da origem — que nem sempre é possível e quase nunca é barato.',
     resolver:'Insira uma camada Bronze guardando o dado como veio, antes de qualquer tratamento.'},
   {id:'sem-erro',nivel:'aviso',titulo:'Nenhum tratamento de erro',
-    quando:g=>g.tem(['pipeline','copy'])&&!g.tem(['notify','fail','ifcond']),
+    quando:(g,ctx)=>g.tem(['pipeline','copy'])&&!g.tem(['notify','fail','ifcond'])&&ctx.criticidade!=='exploratoria',
     texto:'O fluxo não tem caminho de falha. Uma carga que quebra às 2h da manhã só será descoberta quando alguém notar o número errado.',
     resolver:'Adicione uma Notificação no caminho de falha do pipeline.'},
   {id:'api-sem-watermark',nivel:'aviso',titulo:'API sem controle incremental',
@@ -5645,6 +5718,18 @@ const FAB_VALID=[
     quando:g=>g.tem(['mlmodel'])&&!g.tem(['dq']),
     texto:'Modelo sobre dado não validado degrada em silêncio: a previsão continua saindo, só que errada — com aparência de ciência.',
     resolver:'Valide a entrada do modelo e registre a métrica de cada execução.'},
+  {id:'critico-sem-alerta',nivel:'aviso',titulo:'Carga crítica sem alerta',
+    quando:(g,ctx)=>ctx.criticidade==='alta'&&g.contar()>=3&&!g.tem(['notify','activator']),
+    texto:'Você marcou esta carga como crítica para o negócio, com SLA. Sem alerta, a falha só aparece quando alguém cobra o número.',
+    resolver:'Adicione Notificação no caminho de falha, ou Activator sobre o log.'},
+  {id:'equipe-x-ferramenta',nivel:'aviso',titulo:'Ferramenta fora do alcance do time',
+    quando:(g,ctx)=>ctx.equipe==='lowcode'&&g.tem(['notebook','sparkjob']),
+    texto:'O contexto diz que quem mantém prefere interface visual, mas a arquitetura depende de Notebook/Spark. Solução boa no papel que o time não mantém vira dívida no primeiro incidente.',
+    resolver:'Troque por Dataflow Gen2 onde o volume permitir, ou planeje capacitação antes de colocar em produção.'},
+  {id:'sql-sem-warehouse',nivel:'sugestao',titulo:'Time de T-SQL sem Warehouse',
+    quando:(g,ctx)=>ctx.equipe==='sql'&&g.contar()>=4&&!g.tem(['warehouse','sqldb']),
+    texto:'Seu time é forte em T-SQL, mas a arquitetura não tem Warehouse. No Lakehouse a escrita por SQL é limitada — o time ficaria dependente de Spark.',
+    resolver:'Considere um Warehouse para a camada onde o time precisa escrever.'},
   {id:'orfao',nivel:'sugestao',titulo:'Componente solto no diagrama',
     quando:g=>g.orfaos().length>0,
     texto:'Há componentes sem nenhuma ligação. Ou falta conectá-los, ou eles não pertencem a esta arquitetura.',
@@ -6099,14 +6184,16 @@ let fabCur=ld('bt-fab-cur','');            // arquitetura aberta
 let fabCams=ld('bt-fab-cam',{});
 let _fabSel=null,_fabDrag=null,_fabPan=null,_fabHover=null,_fabVerTudo=false,_fabPainel=ld('bt-fab-painel','passo');
 let _fabHist=[],_fabHistFut=[],_fabHistCong=false;
-const FAB_W=176,FAB_H=58;                  // tamanho do no, no estilo das atividades de pipeline
+const FAB_W=200,FAB_H=66;                  // tamanho do no, no estilo das atividades de pipeline
 
 function fabSave(){
   try{sv('bt-fab-arqs',fabArqs);sv('bt-fab-items',fabItems);sv('bt-fab-edges',fabEdges);sv('bt-fab-cur',fabCur)}catch(e){}
   sT();
 }
 function fabSaveCam(){try{sv('bt-fab-cam',fabCams)}catch(e){}}
-function fabEstado(){return JSON.stringify({i:fabItems,e:fabEdges,a:fabArqs})}
+function fabEstado(){
+  return JSON.stringify({i:fabItems,e:fabEdges,a:fabArqs.map(a=>({id:a.id,nome:a.nome}))});
+}
 function fabMarcar(){
   if(_fabHistCong)return;
   _fabHist.push(fabEstado());
@@ -6115,7 +6202,10 @@ function fabMarcar(){
 }
 function fabAplicar(json){
   const d=JSON.parse(json);
-  fabItems=d.i;fabEdges=d.e;fabArqs=d.a;
+  // preserva o contexto: ele nao entra no instantaneo e nao deve ser revertido
+  const ctxs=Object.fromEntries(fabArqs.map(a=>[a.id,a.ctx||{}]));
+  fabItems=d.i;fabEdges=d.e;
+  fabArqs=d.a.map(a=>({...a,ctx:ctxs[a.id]||{}}));
   if(!fabArqs.some(a=>a.id===fabCur))fabCur=fabArqs[0]?.id||'';
   _fabSel=null;
   _fabHistCong=true;fabSave();_fabHistCong=false;
@@ -6223,17 +6313,42 @@ function fabSugestoes(no){
     else if(g.tem([p.id]))peso-=25;                 // existe no quadro, mas nao ligado aqui
     if(faltando.has(p.id))peso+=40;
     // contexto: o que o usuario respondeu no inicio empurra ou segura a sugestao
+    // O contexto declarado pesa aqui, e cada empurrao guarda o motivo: uma
+    // recomendacao so e confiavel se der para auditar de onde ela veio.
+    // Pros e contras ficam separados de proposito: um empurrao positivo nao pode
+    // esconder a ressalva. Recomendar Notebook por causa do volume enquanto o
+    // time nao sabe manter Spark e o pior erro que esta ferramenta pode cometer.
+    const ctxPros=[],ctxContras=[];
+    const emp=(d,nota)=>{peso+=d;if(nota)(d>0?ctxPros:ctxContras).push(nota)};
     if(ctx.volume==='grande'||ctx.volume==='muitogrande'){
-      if(p.id==='notebook'||p.id==='sparkjob')peso+=25;
-      if(p.id==='dataflow')peso-=45;
+      if(p.id==='notebook'||p.id==='sparkjob')emp(25,'Volume '+(ctx.volume==='muitogrande'?'muito alto':'alto')+': processamento distribuído deixa de ser opcional.');
+      if(p.id==='dataflow')emp(-45,'Volume alto: Dataflow Gen2 fica caro e lento nessa faixa.');
     }
-    if(ctx.freq==='realtime'){
-      if(p.id==='eventstream'||p.id==='eventhouse'||p.id==='activator')peso+=30;
+    if(ctx.freq==='realtime'&&(p.id==='eventstream'||p.id==='eventhouse'||p.id==='activator'))
+      emp(30,'Você indicou tempo real: este é o caminho nativo para isso.');
+    if(ctx.freq==='batch'&&(p.id==='eventstream'||p.id==='eventhouse'))
+      emp(-30,'Seu cenário é batch: streaming adiciona custo e complexidade sem ganho.');
+    if(ctx.consumo==='ml'&&(p.id==='mlmodel'||p.id==='dq'))emp(25,'Consumo por ML: entrada validada é pré-requisito, não refinamento.');
+    if(ctx.consumo==='dashboard'&&(p.id==='semantic'||p.id==='pbi'))emp(20,'Consumo em dashboard: a camada semântica centraliza a métrica.');
+    // quem mantem — o contexto mais ignorado e o que mais derruba arquitetura
+    if(ctx.equipe==='sql'){
+      if(p.id==='sproc'||p.id==='warehouse')emp(30,'Seu time é forte em T-SQL: esta peça ele mantém sem treinamento novo.');
+      if(p.id==='notebook'||p.id==='sparkjob')emp(-20,'Seu time é de T-SQL: Spark exigiria capacitação antes de virar rotina.');
     }
-    if(ctx.freq==='batch'&&(p.id==='eventstream'||p.id==='eventhouse'))peso-=30;
-    if(ctx.consumo==='ml'&&(p.id==='mlmodel'||p.id==='dq'))peso+=25;
-    if(ctx.consumo==='dashboard'&&(p.id==='semantic'||p.id==='pbi'))peso+=20;
-    return {...p,comp:c,peso};
+    if(ctx.equipe==='lowcode'){
+      if(p.id==='dataflow')emp(30,'Preferência por interface visual: Dataflow Gen2 é o que seu time mantém.');
+      if(p.id==='notebook'||p.id==='sparkjob')emp(-25,'Sem gente de código, um Notebook vira caixa-preta que ninguém revisa.');
+    }
+    if(ctx.equipe==='codigo'){
+      if(p.id==='notebook'||p.id==='sparkjob')emp(25,'Time confortável com código: Notebook dá controle e entra no Git.');
+      if(p.id==='dataflow')emp(-15,'Com time de código, lógica versionada tende a valer mais que interface visual.');
+    }
+    // criticidade define o rigor que se paga desde o inicio
+    if(ctx.criticidade==='alta'&&['logtable','notify','dq','deploy','pbimonitor','activator'].includes(p.id))
+      emp(35,'Criticidade alta: com SLA e alguém cobrando, controle e alerta não são refinamento.');
+    if(ctx.criticidade==='exploratoria'&&['deploy','rls','lineage','workspace'].includes(p.id))
+      emp(-20,'Cenário exploratório: governança pesada pode esperar a solução se provar.');
+    return {...p,comp:c,peso,ctxNota:ctxPros[0]||'',ctxAviso:ctxContras[0]||''};
   });
   out.sort((a,b)=>b.peso-a.peso);
   return out;
@@ -6530,7 +6645,7 @@ function fabPasso(){
     return {tipo:'inicio',t:ini.t,dica:ini.dica,op:op.map(o=>({...o,comp:FAB_COMP[o.id]}))};
   }
   const no=nos.find(n=>n.id===_fabGuia.atual);
-  if(!no){_fabGuia.atual=null;return fabPasso()}
+  if(!no){_fabGuia.atual=null;fabSalvarGuia();return fabPasso()}
   const pend=fabPendencia(no);
   if(pend)return {tipo:'pendencia',no,t:pend.t,dica:pend.dica,pend,
     op:pend.op.map(o=>({...o,comp:null}))};
@@ -6548,6 +6663,9 @@ function fabPasso(){
 function fabPainelPasso(){
   const p=fabPasso();
   if(!p)return '<div class="fab-vaziop">Crie uma arquitetura para começar a montagem.</div>';
+  // o cartao no centro do palco ja esta conduzindo: repetir as mesmas opcoes
+  // aqui so divide a atencao
+  if(p.tipo==='inicio')return '<div class="fab-vaziop">A definição do ponto de partida está no cartão ao centro. Assim que a primeira atividade existir, o próximo passo aparece aqui.</div>';
   const cab=`<div class="fab-passo-cab">
     <span class="fab-passo-n">Passo ${_fabGuia.passo}</span>
     <b>${escapeHtml(p.t)}</b>
@@ -6565,11 +6683,14 @@ function fabPainelPasso(){
     const c=o.comp;if(!c)return '';
     const et=FAB_ETAPA[c.etapa]||{cor:'#888',nome:''};
     const risco=(c.riscos&&c.riscos[0])?`<span class="fab-passo-risco">Atenção: ${escapeHtml(c.riscos[0])}</span>`:'';
+    const nota=(o.ctxNota?`<span class="fab-passo-ctx">${escapeHtml(o.ctxNota)}</span>`:'')
+      +(o.ctxAviso?`<span class="fab-passo-ctx aviso">${escapeHtml(o.ctxAviso)}</span>`:'');
     return `<button class="fab-passo-op comp" data-fabpasso="add" data-v="${o.id}" style="--et:${et.cor}">
       <span class="fab-passo-ico">${FAB_ICO[c.ico]||FAB_ICO.base}</span>
       <span class="fab-passo-txt">
         <b>${escapeHtml(c.nome)}<i>${escapeHtml(et.nome)}</i></b>
         <p>${escapeHtml(o.porque||c.oque)}</p>
+        ${nota}
         ${risco}
       </span></button>`;
   }).join('');
@@ -6606,6 +6727,266 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
   const c=FAB_COMP[valor];
   if(c)toast(c.nome+' adicionado');
   setTimeout(()=>{try{fabAjustar()}catch(e){}},40);
+}
+
+
+// ---------- contexto base e ponto de partida ----------
+// Recomendacao sem contexto e chute com cara de conselho. Entao antes de
+// sugerir a primeira atividade o app levanta o contexto base — e cada resposta
+// passa a pesar nas recomendacoes seguintes, nao so na primeira.
+//
+// As perguntas vivem AQUI, no palco, e nao num assistente separado: ter dois
+// questionarios competindo era o que tornava o fluxo confuso.
+const FAB_CTXQ=[
+  {k:'objetivo',t:'Qual é o objetivo desta arquitetura?',
+   dica:'É o objetivo que determina por onde faz sentido começar e quais componentes entram em jogo.',
+   op:[
+     {v:'ingestao',nome:'Trazer dados para o Fabric',desc:'O foco é a ingestão em si: origens, carga e controle.'},
+     {v:'lakehouse',nome:'Montar um Lakehouse',desc:'Camadas em Delta, com Spark e SQL sobre o mesmo dado.'},
+     {v:'dw',nome:'Montar um Data Warehouse',desc:'Modelo dimensional em T-SQL, com dimensões e fatos.'},
+     {v:'rt',nome:'Analytics em tempo real',desc:'Latência de segundos, com reação automática a evento.'},
+     {v:'ia',nome:'Servir uma plataforma de IA / ML',desc:'Dado preparado para treinar e aplicar modelo.'},
+     {v:'governanca',nome:'Governança e qualidade',desc:'Controle, log, linhagem, segurança e padronização.'},
+     {v:'selfservice',nome:'Self-service analytics',desc:'Base curada para a área de negócio explorar sozinha.'}
+   ]},
+  {k:'origem',t:'De onde vem o dado principal?',
+   dica:'A origem determina a técnica de ingestão, o custo e os cuidados de toda a carga.',
+   op:[
+     {v:'relacional',nome:'Banco relacional',desc:'SQL Server, Oracle, PostgreSQL.'},
+     {v:'sap',nome:'SAP / SAP HANA',desc:'Modelo complexo e extração cara — exige planejamento.'},
+     {v:'pi',nome:'PI System / sensores',desc:'Série temporal industrial, volume altíssimo.'},
+     {v:'api',nome:'REST API',desc:'Exige paginação, retry e controle incremental.'},
+     {v:'arquivos',nome:'Arquivos e planilhas',desc:'CSV, Excel, JSON — de parceiro ou processo manual.'},
+     {v:'streaming',nome:'Streaming / eventos',desc:'Event Hub, IoT Hub, Kafka.'}
+   ]},
+  {k:'volume',t:'Qual o volume esperado?',
+   dica:'Volume decide entre processamento distribuído e ferramenta visual — e é onde mais se erra por otimismo.',
+   op:[
+     {v:'pequeno',nome:'Pequeno',desc:'Até algumas dezenas de milhares de linhas.'},
+     {v:'medio',nome:'Médio',desc:'Alguns milhões de linhas.'},
+     {v:'grande',nome:'Grande',desc:'Dezenas de milhões — Dataflow Gen2 começa a doer aqui.'},
+     {v:'muitogrande',nome:'Muito grande',desc:'Bilhões de linhas: Spark e particionamento deixam de ser opcionais.'}
+   ]},
+  {k:'freq',t:'Com que frequência o dado precisa chegar?',
+   dica:'Tempo real custa muito mais para construir e operar. Se ninguém age em minutos, lote é mais barato e mais simples.',
+   op:[
+     {v:'batch',nome:'Batch',desc:'Diário, algumas vezes ao dia. Cobre a maioria dos casos.'},
+     {v:'nrt',nome:'Near real time',desc:'Minutos. Mirroring e micro-batch resolvem.'},
+     {v:'realtime',nome:'Real time',desc:'Segundos. Só se alguém ou algo age imediatamente sobre o dado.'}
+   ]},
+  {k:'consumo',t:'Como o dado será consumido?',
+   dica:'O consumo define a camada final e o quanto de curadoria é necessário antes dela.',
+   op:[
+     {v:'dashboard',nome:'Dashboard e relatórios',desc:'Power BI sobre modelo semântico.'},
+     {v:'operacional',nome:'Relatórios operacionais',desc:'Consulta detalhada, próxima do transacional.'},
+     {v:'ml',nome:'Machine Learning',desc:'Treino e inferência — exige dado consistente e histórico.'},
+     {v:'apis',nome:'APIs / data product',desc:'Outros times ou sistemas consomem o dado.'}
+   ]},
+  {k:'equipe',t:'Quem vai manter isso no dia a dia?',
+   dica:'É o contexto mais ignorado e o que mais derruba arquitetura: a melhor solução no papel não sobrevive a quem não consegue mantê-la.',
+   op:[
+     {v:'codigo',nome:'Time confortável com código',desc:'Python/Spark, versionamento em Git. Abre caminho para Notebook.'},
+     {v:'sql',nome:'Time forte em T-SQL',desc:'Vindo de SQL Server. Favorece Warehouse e Stored Procedure.'},
+     {v:'lowcode',nome:'Preferência por interface visual',desc:'Vindo de Power BI. Favorece Dataflow Gen2 — com limite de volume.'},
+     {v:'misto',nome:'Misto',desc:'Há gente de código e de interface visual.'}
+   ]},
+  {k:'criticidade',t:'Qual a criticidade dessa carga?',
+   dica:'Define o rigor de controle, log e tratamento de erro que vale a pena investir desde o início.',
+   op:[
+     {v:'alta',nome:'Alta — o negócio depende disso',desc:'Tem SLA, alguém cobra quando atrasa. Exige log, alerta e validação.'},
+     {v:'media',nome:'Média',desc:'Importante, mas um atraso não para a operação.'},
+     {v:'exploratoria',nome:'Exploratória',desc:'Prova de conceito ou análise pontual.'}
+   ]}
+];
+const FAB_CTXQ_MAP=Object.fromEntries(FAB_CTXQ.map(q=>[q.k,q]));
+
+let _fabIni={aberto:false,passo:0};
+
+// perguntas ainda sem resposta, na ordem
+function fabCtxFaltando(){
+  const ctx=fabCtx();
+  return FAB_CTXQ.filter(q=>!ctx[q.k]);
+}
+function fabCtxRotulo(k,v){
+  const q=FAB_CTXQ_MAP[k];if(!q)return v;
+  return (q.op.find(o=>o.v===v)||{}).nome||v;
+}
+
+// Opcoes de partida, ordenadas pelo contexto. O `porque` de cada uma cita o que
+// foi respondido — e o que sustenta a recomendacao.
+function fabIniOpcoes(){
+  const ctx=fabCtx();
+  const ini=FAB_INICIO[ctx.objetivo]||FAB_INICIO.ingestao;
+  const mapa={relacional:'src_sqlserver',sap:'src_sap',pi:'src_pi',api:'src_api',arquivos:'src_files',streaming:'src_stream'};
+  const pref=mapa[ctx.origem];
+  const op=ini.op.filter(o=>FAB_COMP[o.id]).map(o=>({...o,comp:FAB_COMP[o.id],peso:0}));
+  if(pref&&FAB_COMP[pref]&&!op.some(o=>o.id===pref))
+    op.push({id:pref,comp:FAB_COMP[pref],porque:FAB_COMP[pref].oque,peso:0});
+  op.forEach(o=>{
+    if(o.id===pref){o.peso+=100;o.ancora='Você indicou esta origem no contexto.'}
+    if(ctx.freq==='realtime'&&(o.id==='src_stream'||o.id==='src_pi'))o.peso+=25;
+    if(ctx.freq==='batch'&&o.id==='src_stream')o.peso-=25;
+    if(ctx.consumo==='ml'&&o.id==='src_pi')o.peso+=10;
+  });
+  op.sort((a,b)=>b.peso-a.peso);
+  return op;
+}
+
+// Porta unica: antes existiam dois questionarios competindo (o assistente em
+// modal e o "?" do palco). Agora a arquitetura nasce vazia e o "?" conduz.
+// O contexto pode ser revisto a qualquer momento: ele alimenta as recomendacoes
+// do projeto inteiro, nao so a primeira atividade.
+function fabAbrirContexto(){
+  const a=fabArq();if(!a)return;
+  if(fabNos().length){fabAbrirCtxModal();return}
+  _fabIni={aberto:true,passo:0};
+  fabRender();
+}
+// com o diagrama montado nao ha palco vazio para o cartao: usa o modal
+function fabAbrirCtxModal(){
+  const m=$('#fabCtxModal');if(!m)return;
+  m.style.display='flex';fabRenderCtxModal();
+}
+function fabFecharCtxModal(){
+  const m=$('#fabCtxModal');if(m)m.style.display='none';
+  _fabIni={aberto:false,passo:0};
+  fabRender();
+}
+function fabRenderCtxModal(){
+  const el=$('#fabCtxConteudo');if(!el)return;
+  const falta=fabCtxFaltando();
+  const ctx=fabCtx();
+  if(!falta.length){
+    el.innerHTML=`<div class="fab-ini-cab"><span class="fab-ini-prog ok">Contexto completo</span>
+        <b>Contexto desta arquitetura</b>
+        <i>Estas respostas pesam em todas as recomendações. Clique numa delas para alterar.</i></div>
+      <div class="fab-ini-ops">${FAB_CTXQ.map(q=>
+        `<button class="fab-ini-op" data-fabctxq="${q.k}">
+          <span class="fab-ini-txt"><b>${escapeHtml(q.t)}</b>
+          <p>${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</p></span></button>`).join('')}</div>`;
+    return;
+  }
+  const q=falta[0];
+  el.innerHTML=`<div class="fab-ini-cab">
+      <span class="fab-ini-prog">Contexto ${FAB_CTXQ.length-falta.length+1} de ${FAB_CTXQ.length}</span>
+      <b>${escapeHtml(q.t)}</b><i>${escapeHtml(q.dica)}</i></div>
+    <div class="fab-ini-ops">${q.op.map(o=>
+      `<button class="fab-ini-op" data-fabctxr="${q.k}" data-v="${o.v}">
+        <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}</b>
+        <p>${escapeHtml(o.desc)}</p></span></button>`).join('')}</div>`;
+}
+// As arquiteturas de referencia continuam disponiveis, mas so DEPOIS do
+// contexto — e ordenadas por ele. Antes disso seria o mesmo chute de sempre.
+function fabAbrirRefs(){
+  const el=$('#fabWizConteudo');if(!el)return;
+  const sug=fabSugerirRef(fabCtx());
+  el.innerHTML=`<div class="fab-wiz-passo">
+    <span class="fab-wiz-n">Padrões conhecidos</span>
+    <h3>Qual padrão se encaixa no seu cenário?</h3>
+    <p class="fab-wiz-sub">Ordenados pelo contexto que você respondeu. O padrão entra montado, e a partir dele você continua decidindo passo a passo.</p>
+    <div class="fab-wiz-refs">${sug.map((r,ix)=>`
+      <button class="fab-wiz-ref${ix===0?' destaque':''}" data-fabref="${r.id}">
+        <b>${escapeHtml(r.nome)}${ix===0?' <span>melhor encaixe</span>':''}</b>
+        <p>${escapeHtml(r.desc)}</p><i>${escapeHtml(r.quando)}</i>
+      </button>`).join('')}</div></div>`;
+  $('#fabWizard').style.display='flex';
+}
+function fabNovaVazia(){
+  fabMarcar();
+  _fabGuia={ativo:true,atual:null,passo:1};fabSalvarGuia();
+  _fabIni={aberto:true,passo:0};
+  _fabPainel='passo';try{sv('bt-fab-painel','passo')}catch(e){}
+  fabNovaArq('Nova arquitetura',{},[]);
+}
+function fabRenderIni(){
+  const el=$('#fabStart');if(!el)return;
+  if(!fabArq()||fabNos().length){el.style.display='none';el.innerHTML='';return}
+  el.style.display='';
+  const falta=fabCtxFaltando();
+  if(!_fabIni.aberto){
+    el.innerHTML=`<button class="fab-ini-q" data-fabini="abrir">
+        <span class="fab-ini-mark">?</span>
+        <b>Por onde começar?</b>
+        <i>${falta.length?`${FAB_CTXQ.length-falta.length} de ${FAB_CTXQ.length} respostas de contexto — quanto mais eu souber, mais firme é a recomendação`
+          :'Contexto completo. Vamos escolher a primeira atividade.'}</i>
+      </button>`;
+    return;
+  }
+  // ainda coletando contexto
+  if(falta.length){
+    const q=falta[0];
+    const resp=FAB_CTXQ.length-falta.length;
+    el.innerHTML=`<div class="fab-ini-cx">
+      <div class="fab-ini-cab">
+        <span class="fab-ini-prog">Contexto ${resp+1} de ${FAB_CTXQ.length}</span>
+        <b>${escapeHtml(q.t)}</b>
+        <i>${escapeHtml(q.dica)}</i>
+      </div>
+      <div class="fab-ini-ops">${q.op.map(o=>
+        `<button class="fab-ini-op" data-fabini="resp" data-k="${q.k}" data-v="${o.v}">
+          <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}</b>
+          <p>${escapeHtml(o.desc)}</p></span></button>`).join('')}</div>
+      <button class="fab-ini-fechar" data-fabini="voltar">${resp>0?'← voltar':'cancelar'}</button>
+    </div>`;
+    return;
+  }
+  // contexto completo: recomendar a PRIMEIRA atividade, so ela
+  const ctx=fabCtx();
+  const chips=FAB_CTXQ.filter(q=>ctx[q.k]).map(q=>
+    `<span class="fab-ini-chip" data-fabini="refazer" data-k="${q.k}" title="Alterar">${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</span>`).join('');
+  const ops=fabIniOpcoes();
+  el.innerHTML=`<div class="fab-ini-cx">
+    <div class="fab-ini-cab">
+      <span class="fab-ini-prog ok">Contexto completo</span>
+      <b>Qual será a primeira atividade?</b>
+      <i>Apenas o ponto de partida. A partir dele o painel propõe o passo seguinte, um de cada vez.</i>
+      <div class="fab-ini-chips">${chips}</div>
+    </div>
+    <div class="fab-ini-ops">${ops.map((o,i)=>{
+      const et=FAB_ETAPA[o.comp.etapa]||{cor:'#888'};
+      return `<button class="fab-ini-op comp${i===0?' top':''}" data-fabini="criar" data-v="${o.id}" style="--et:${et.cor}">
+        <span class="fab-ini-ico">${FAB_ICO[o.comp.ico]||FAB_ICO.base}</span>
+        <span class="fab-ini-txt">
+          <b>${escapeHtml(o.comp.nome)}${i===0?'<em>recomendado para o seu contexto</em>':''}</b>
+          <p>${escapeHtml(o.porque||o.comp.oque)}</p>
+          ${o.ancora?`<span class="fab-ini-anc">${escapeHtml(o.ancora)}</span>`:''}
+        </span></button>`;
+    }).join('')}</div>
+    <div class="fab-ini-rodape">
+      <button class="fab-ini-fechar" data-fabini="voltar">← rever contexto</button>
+      <button class="fab-ini-fechar" data-fabini="refs">Partir de um padrão pronto</button>
+    </div>
+  </div>`;
+}
+
+function fabIniAcao(acao,k,v){
+  const a=fabArq();
+  if(acao==='abrir'){_fabIni={aberto:true,passo:0};fabRenderIni();return}
+  if(acao==='voltar'){
+    // voltar = desfazer a ultima resposta, que reabre aquela pergunta
+    const dadas=a?FAB_CTXQ.filter(q=>a.ctx&&a.ctx[q.k]):[];
+    if(dadas.length){delete a.ctx[dadas[dadas.length-1].k];fabSave();fabRenderPainel()}
+    else _fabIni.aberto=false;
+    fabRenderIni();return;
+  }
+  if(acao==='refazer'&&a){delete a.ctx[k];fabSave();fabRenderIni();fabRenderPainel();return}
+  if(acao==='resp'&&a){
+    a.ctx=a.ctx||{};a.ctx[k]=v;
+    if(k==='objetivo'&&/^(Nova arquitetura|Do zero)$/.test(a.nome))a.nome=fabCtxRotulo('objetivo',v);
+    fabSave();fabRenderIni();fabRenderPainel();return;
+  }
+  if(acao==='refs'){fabAbrirRefs();return}
+  if(acao==='criar'){
+    fabMarcar();
+    const no=fabNovoNo(v,140,180);
+    if(no){
+      _fabSel=no.id;_fabGuia={ativo:true,atual:no.id,passo:2};fabSalvarGuia();
+      _fabPainel='passo';try{sv('bt-fab-painel','passo')}catch(e){}
+    }
+    _fabIni={aberto:false,passo:0};
+    fabSave();fabRender();
+    toast(FAB_COMP[v].nome+' criado — o próximo passo está à direita');
+  }
 }
 
 // ---------- render ----------
@@ -6660,14 +7041,9 @@ function fabRender(){
       <path d="M1,1 L11,6 L1,11 z" fill="var(--label2)"/></marker></defs>
     ${arestas}</svg>`+nos.map(fabNoHTML).join('')+`<div id="fabSugs" class="fab-sugs"></div>`;
 
-  if(!nos.length){
-    w.insertAdjacentHTML('beforeend',
-      `<div class="fab-dica-vazio"><b>Arquitetura em branco</b>
-       Comece por uma origem ou por um componente na barra acima.<br>
-       Ao selecionar um componente, o que faz sentido vir depois aparece ao lado dele.</div>`);
-  }
   fabApplyCam();
   fabRenderSugs();
+  fabRenderIni();
   fabRenderPainel();
 }
 
@@ -6733,7 +7109,7 @@ function fabRenderSugs(){
 function fabPosSug(){fabRenderSugs()}
 
 // ---------- cartao de explicacao ----------
-function fabCartao(compId,alvo,motivo,nivel){
+function fabCartao(compId,alvo,motivo,nivel,ctxNota,ctxAviso){
   const d=FAB_COMP[compId];if(!d)return;
   let el=$('#fabCard');
   if(!el){el=document.createElement('div');el.id='fabCard';el.className='fab-card';document.body.appendChild(el)}
@@ -6750,6 +7126,8 @@ function fabCartao(compId,alvo,motivo,nivel){
     </div>
     <p class="fab-card-oque">${escapeHtml(d.oque)}</p>
     ${motivo?`<div class="fab-card-sec porque"><b>Por que aqui</b><p>${escapeHtml(motivo)}</p></div>`:''}
+    ${ctxNota?`<div class="fab-card-sec contexto"><b>Pelo seu contexto</b><p>${escapeHtml(ctxNota)}</p></div>`:''}
+    ${ctxAviso?`<div class="fab-card-sec ctxaviso"><b>Ressalva no seu contexto</b><p>${escapeHtml(ctxAviso)}</p></div>`:''}
     <div class="fab-card-sec"><b>Quando usar</b><p>${escapeHtml(d.quando)}</p></div>
     ${d.evitar?`<div class="fab-card-sec evitar"><b>Quando evitar</b><p>${escapeHtml(d.evitar)}</p></div>`:''}
     ${lista('Benefícios',d.beneficios,'bom')}
@@ -6787,7 +7165,18 @@ function fabRenderPainel(){
   else if(_fabPainel==='valid')corpo=fabPainelValid(av);
   else if(_fabPainel==='road')corpo=fabPainelRoad();
   else corpo=fabPainelResumo();
-  el.innerHTML=`
+  const ctx=fabCtx();
+  const resp=FAB_CTXQ.filter(q=>ctx[q.k]).length;
+  const firmeza=resp===FAB_CTXQ.length?'firme':resp>=4?'media':'fraca';
+  const faixa=`<div class="fab-ctxbar ${firmeza}" data-fabctx="abrir" title="Clique para revisar o contexto">
+    <span class="fab-ctxbar-t">Contexto ${resp}/${FAB_CTXQ.length}</span>
+    <span class="fab-ctxbar-d">${resp===FAB_CTXQ.length?'recomendações com base completa'
+      :resp===0?'sem contexto — as sugestões são genéricas'
+      :'faltam '+(FAB_CTXQ.length-resp)+' respostas para as recomendações ficarem firmes'}</span>
+    ${resp?`<span class="fab-ctxbar-chips">${FAB_CTXQ.filter(q=>ctx[q.k]).map(q=>
+      `<i>${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</i>`).join('')}</span>`:''}
+  </div>`;
+  el.innerHTML=faixa+`
     <div class="fab-painel-abas">${abas.map(([k,t])=>
       `<button class="${_fabPainel===k?'on':''}" data-fabpainel="${k}">${t}${k==='valid'&&nAvisos?`<span class="fab-badge">${nAvisos}</span>`:''}</button>`
     ).join('')}</div>
@@ -6920,6 +7309,20 @@ function fabSugerirRef(r){
     .sort((a,b)=>b.p-a.p).slice(0,3);
 }
 function fabCriarDoWizard(refId){
+  const a=fabArq();
+  // veio do "?" com contexto ja coletado: semeia na arquitetura atual
+  if(a&&!fabNos().length&&FAB_REF[refId]){
+    const ref=FAB_REF[refId];
+    fabMarcar();
+    fabSemear(ref.nos.slice(),{...(ref.props||{})},{...(ref.cfg||{})});
+    if(/^Nova arquitetura$/.test(a.nome))a.nome=ref.nome;
+    _fabIni={aberto:false,passo:0};
+    _fabGuia={ativo:true,atual:null,passo:1};fabSalvarGuia();
+    fabFecharWizard();fabSave();fabRender();
+    setTimeout(()=>{try{fabAjustar()}catch(e){}},50);
+    toast(ref.nome+' montado — continue pelo painel à direita');
+    return;
+  }
   const r=_fabWiz.resp;
   if(refId==='__passo'){
     // zero absoluto: nenhum componente na tela. O painel conduz a partir da
@@ -6968,7 +7371,8 @@ const FAB_PEDE={
   'stream-sem-eventhouse':['eventhouse'],'muitas-tabelas':['ctrltable','lookup'],
   'ml-sem-dq':['dq'],'wh-como-bronze':['lakehouse','bronze'],'pbi-sobre-cru':['silver','gold'],
   'sproc-lakehouse':['warehouse'],'incremental-sem-controle':['ctrltable','sproc'],
-  'controle-sem-log':['logtable']
+  'controle-sem-log':['logtable'],'critico-sem-alerta':['notify','activator'],
+  'equipe-x-ferramenta':['dataflow'],'sql-sem-warehouse':['warehouse']
 };
 
 // ---------- paleta de componentes ----------
@@ -7010,7 +7414,7 @@ function fabAddManual(comp){
   if(no&&orig){
     fabEdges.push({id:'e'+Math.random().toString(36).slice(2,9),arq:fabCur,from:orig.id,to:no.id});
   }
-  if(no)_fabSel=no.id;
+  if(no){_fabSel=no.id;_fabGuia.atual=no.id;fabSalvarGuia()}
   fabFecharPaleta();fabSave();fabRender();
 }
 
@@ -7021,7 +7425,7 @@ function fabInit(){
 
   // ---- selecionar / arrastar / navegar ----
   st.addEventListener('pointerdown',e=>{
-    if(e.target.closest('[data-fabsug]')||e.target.closest('[data-fabvertudo]')||e.target.closest('[data-fabop]'))return;
+    if(e.target.closest('[data-fabsug]')||e.target.closest('[data-fabvertudo]')||e.target.closest('[data-fabop]')||e.target.closest('[data-fabini]'))return;
     const del=e.target.closest('[data-fabdel]');
     if(del){fabApagar(del.dataset.fabdel);return}
     const eg=e.target.closest('[data-fabedge]');
@@ -7086,6 +7490,8 @@ function fabInit(){
 
   // ---- sugestoes: clicar aceita, passar o mouse explica ----
   st.addEventListener('click',e=>{
+    const ini=e.target.closest('[data-fabini]');
+    if(ini){fabIniAcao(ini.dataset.fabini,ini.dataset.k,ini.dataset.v);return}
     // resposta a uma pergunta da arvore: define proposito ou config obrigatoria
     const op=e.target.closest('[data-fabop]');
     if(op){
@@ -7109,7 +7515,7 @@ function fabInit(){
     if(s){
       const no=fabNos().find(n=>n.id===_fabSel);if(!no)return;
       const sug=fabSugestoes(no).find(x=>x.id===s.dataset.fabsug);
-      if(sug)fabCartao(sug.id,s,sug.porque,sug.peso<=0?'evitar':sug.nivel);
+      if(sug)fabCartao(sug.id,s,sug.porque,sug.peso<=0?'evitar':sug.nivel,sug.ctxNota,sug.ctxAviso);
       return;
     }
     const n=e.target.closest('[data-fab]');
@@ -7127,7 +7533,7 @@ function fabInit(){
   // ---- abas de arquitetura ----
   const abas=$('#fabAbas');
   if(abas)abas.addEventListener('click',e=>{
-    if(e.target.closest('#fabNova')){fabAbrirWizard();return}
+    if(e.target.closest('#fabNova')){fabNovaVazia();return}
     const a=e.target.closest('[data-fabarq]');
     if(a&&a.dataset.fabarq!==fabCur){
       fabCur=a.dataset.fabarq;_fabSel=null;_fabVerTudo=false;
@@ -7142,6 +7548,8 @@ function fabInit(){
     if(b){_fabPainel=b.dataset.fabpainel;try{sv('bt-fab-painel',_fabPainel)}catch(_){}fabRenderPainel();return}
     const op=e.target.closest('[data-fabpasso]');
     if(op){fabPassoEscolher(op.dataset.fabpasso,op.dataset.v,op.dataset.campo,op.dataset.tipo);return}
+    const cb=e.target.closest('[data-fabctx]');
+    if(cb){fabAbrirContexto();return}
     const g=e.target.closest('[data-fabguia]');
     if(g){
       if(g.dataset.fabguia==='livre')fabAbrirPaleta();
@@ -7151,14 +7559,14 @@ function fabInit(){
 
   // ---- barra superior ----
   const liga=(id,fn)=>{const el=$(id);if(el)el.onclick=fn};
-  liga('#fabNovaBtn',fabAbrirWizard);
+  liga('#fabNovaBtn',fabNovaVazia);
   liga('#fabAddBtn',fabAbrirPaleta);
   liga('#fabZoomIn',()=>fabZoom(1.2));
   liga('#fabZoomOut',()=>fabZoom(.83));
   liga('#fabFit',fabAjustar);
   liga('#fabRenomear',fabRenomear);
   liga('#fabExcluir',fabExcluirArq);
-  liga('#fabVazioBtn',fabAbrirWizard);
+  liga('#fabVazioBtn',fabNovaVazia);
 
   // ---- paleta ----
   const pal=$('#fabPaleta');
@@ -7169,6 +7577,20 @@ function fabInit(){
   });
   const pb=$('#fabPalBusca');
   if(pb)pb.addEventListener('input',()=>fabRenderPaleta(pb.value));
+
+  // ---- modal de contexto ----
+  const cm=$('#fabCtxModal');
+  if(cm)cm.addEventListener('click',e=>{
+    if(e.target===cm||e.target.closest('#fabCtxFechar')){fabFecharCtxModal();return}
+    const r=e.target.closest('[data-fabctxr]');
+    if(r){
+      const a=fabArq();if(!a)return;
+      a.ctx=a.ctx||{};a.ctx[r.dataset.fabctxr]=r.dataset.v;fabSave();
+      fabRenderCtxModal();fabRenderPainel();return;
+    }
+    const q=e.target.closest('[data-fabctxq]');
+    if(q){const a=fabArq();if(a){delete a.ctx[q.dataset.fabctxq];fabSave();fabRenderCtxModal()}}
+  });
 
   // ---- wizard ----
   const wz=$('#fabWizard');
