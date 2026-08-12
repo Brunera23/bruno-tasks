@@ -1301,6 +1301,22 @@
     .layout-toggle button.active{background:var(--card);color:var(--label);box-shadow:0 1px 4px rgba(0,0,0,.1)}
     .layout-toggle button svg{width:14px;height:14px}
     .task-kanban-wrap{display:none}
+    /* ===== MENU CONFIGURAVEL ===== */
+    .menu-cfg{display:none;background:var(--fill);border-radius:12px;padding:6px;margin-top:6px}
+    .menu-cfg.open{display:block}
+    .menu-cfg-row{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:8px;font-size:.78rem;color:var(--label2)}
+    .menu-cfg-row:hover{background:var(--card)}
+    .menu-cfg-row svg{width:15px;height:15px;flex-shrink:0}
+    .menu-cfg-row .mc-nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .menu-cfg-row button{border:none;background:transparent;color:var(--label3);cursor:pointer;padding:2px 4px;border-radius:5px;font-size:.72rem;line-height:1}
+    .menu-cfg-row button:hover{background:var(--fill);color:var(--label)}
+    .menu-cfg-row button[disabled]{opacity:.25;cursor:default}
+    .mc-tg{width:30px;height:17px;border-radius:9px;background:var(--sep);position:relative;cursor:pointer;flex-shrink:0;border:none;padding:0;transition:background var(--dur-norm)}
+    .mc-tg::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform var(--dur-norm)}
+    .mc-tg.on{background:#34C759}
+    .mc-tg.on::after{transform:translateX(13px)}
+    .menu-cfg-dica{font-size:.64rem;color:var(--label3);padding:5px 7px 2px;line-height:1.4}
+
     /* ===== CANVAS DE IDEIAS ===== */
     .canvas-view{display:none}
     .canvas-view.active{display:flex;flex-direction:column;height:calc(100dvh - 40px)}
@@ -1637,13 +1653,9 @@
       </div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Menu</div>
-      <button class="nav-item active" data-view="tasks"><svg><use href="#i-inbox"/></svg>Tarefas<span class="nav-badge" id="navBadge">0</span></button>
-      <button class="nav-item" data-view="dash"><svg><use href="#i-chart"/></svg>Dashboard</button>
-      <button class="nav-item" data-view="med"><svg><use href="#i-pill"/></svg>Saúde</button>
-      <button class="nav-item" data-view="canvas"><svg><use href="#i-bulb"/></svg>Quadros</button>
-      <button class="nav-item" data-view="fabric"><svg><use href="#i-layers"/></svg>Fabric Advisor</button>
-      <button class="nav-action" id="sideNotes"><svg><use href="#i-edit"/></svg>Quadro de Notas</button>
+      <div class="nav-label">Menu<button class="nav-label-btn" id="menuCfgBtn" title="Escolher o que aparece no menu"><svg><use href="#i-settings"/></svg></button></div>
+      <div id="navItems"></div>
+      <div class="menu-cfg" id="menuCfg"></div>
     </div>
     <div class="sidebar-projects">
       <div class="nav-label">Projetos<button class="nav-label-btn" id="addProjBtn" title="Novo Projeto"><svg><use href="#i-plus"/></svg></button></div>
@@ -2696,7 +2708,7 @@ let _loggingOut=false;
 // outra entra, o cache da anterior continua lá, aparece na tela da conta nova e
 // pode até ser gravado por cima dos dados dela no Firestore. Estas chaves são
 // dados de conta e precisam morrer junto com a sessão.
-const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel','bt-canvas','bt-cv-cam','bt-cv-boards','bt-cv-edges','bt-cv-cur','bt-fab-arqs','bt-fab-items','bt-fab-edges','bt-fab-cur','bt-fab-cam','bt-fab-painel'];
+const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel','bt-canvas','bt-cv-cam','bt-cv-boards','bt-cv-edges','bt-cv-cur','bt-fab-arqs','bt-fab-items','bt-fab-edges','bt-fab-cur','bt-fab-cam','bt-fab-painel','bt-menu'];
 const LS_ACCOUNT_UID='bt-account-uid'; // uid dono do cache que está no disco agora
 function clearAccountCache(){ACCOUNT_LS_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}
 
@@ -2714,6 +2726,7 @@ function resetInMemoryState(){
   agents=DEF_AGENTS.slice();
   pTasks=[];pCats=[];pLog=[];
   pDelServer={};pDelLocal={};pCatDelServer={};pCatDelLocal={};canvasItems=[];canvasEdges=[];canvasBoards=[{id:'ideias',name:'Ideias'}];cvBoard='ideias';pCanvas=null;pCvBoards=null;pCvEdges=null;fabArqs=[];fabItems=[];fabEdges=[];fabCur='';pFabArqs=null;pFabItems=null;pFabEdges=null;
+  pDelServer={};pDelLocal={};pCatDelServer={};pCatDelLocal={};menuCfg=null;pMenu=null;canvasItems=[];canvasEdges=[];canvasBoards=[{id:'ideias',name:'Ideias'}];cvBoard='ideias';pCanvas=null;pCvBoards=null;pCvEdges=null;
   [sharedTasksMap,sharedLogMap,sharedDeletedMap,deletedByProj].forEach(m=>Object.keys(m).forEach(k=>delete m[k]));
 }
 
@@ -3111,7 +3124,7 @@ function syncProblem(msg,err){
 function syncProblemClear(){const el=document.getElementById('syncProblem');if(el)el.style.display='none'}
 let _fbTimer=null,_fbInitDone=false,_fbSaveTs=0,_fbSaveCompletedAt=0;
 let _syncedUid=null; // uid que o estado em memória representa — trava gravação cruzada
-let pTasks=[],pCats=[],pLog=[],pCanvas=null,pCvBoards=null,pCvEdges=null;
+let pTasks=[],pCats=[],pLog=[],pCanvas=null,pCvBoards=null,pCvEdges=null,pMenu=null;
 let pFabArqs=null,pFabItems=null,pFabEdges=null;
 let _unsubP=null;
 const _unsubShared={};
@@ -3188,6 +3201,7 @@ function _fbDirectSave(){
     cats:JSON.stringify(myCats),
     canvas:JSON.stringify(canvasItems),
     canvasBoards:JSON.stringify(canvasBoards),
+    menu:JSON.stringify(menuCfg),
     canvasEdges:JSON.stringify(canvasEdges),
     fabArqs:JSON.stringify(fabArqs),
     fabItems:JSON.stringify(fabItems),
@@ -3410,6 +3424,10 @@ function combineData(){
   const pCatDel=mergeDel(pCatDelServer,pCatDelLocal);pCatDelLocal=pCatDel;
   cats=pCats.filter(c=>!pCatDel[c.id]);
   // Canvas: nao troca o estado embaixo de quem esta arrastando ou digitando
+  if(pMenu&&JSON.stringify(pMenu)!==JSON.stringify(menuCfg)){
+    menuCfg=pMenu;try{sv('bt-menu',menuCfg)}catch(e){}
+    if(typeof renderNav==='function')renderNav();
+  }
   if(!_cvDrag&&!_cvPan&&!_cvLink&&!_cvResize&&!_cvEditando){
     const mudou=(pCanvas&&JSON.stringify(pCanvas)!==JSON.stringify(canvasItems))
       ||(pCvBoards&&JSON.stringify(pCvBoards)!==JSON.stringify(canvasBoards))
@@ -3472,6 +3490,7 @@ function fbListen(){
       pLog=JSON.parse(d.log||'[]');
       try{const cv=JSON.parse(d.canvas||'[]');if(Array.isArray(cv))pCanvas=cv}catch(e){}
       try{const cb=JSON.parse(d.canvasBoards||'null');if(Array.isArray(cb)&&cb.length)pCvBoards=cb}catch(e){}
+      try{const mn=JSON.parse(d.menu||'null');if(Array.isArray(mn)&&mn.length)pMenu=mn}catch(e){}
       try{const ce=JSON.parse(d.canvasEdges||'null');if(Array.isArray(ce))pCvEdges=ce}catch(e){}
       try{const fa=JSON.parse(d.fabArqs||'null');if(Array.isArray(fa))pFabArqs=fa}catch(e){}
       try{const fi=JSON.parse(d.fabItems||'null');if(Array.isArray(fi))pFabItems=fi}catch(e){}
@@ -3591,6 +3610,7 @@ function switchView(v){
     $('#canvasView').classList.toggle('active',v==='canvas');
     $('#fabricView').classList.toggle('active',v==='fabric');
     $$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
+    $$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
     $$('.mob-tab[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
     // Render isolado: se quebrar, a view ja trocou e o erro fica visivel no console
     try{
@@ -4124,6 +4144,73 @@ function renderTasksKanban(){
       <div class="kanban-col-body">${body}</div>
     </div>`;
   }).join('');
+}
+
+// ===== MENU CONFIGURAVEL =====
+// Cada item guarda so id, visibilidade e posicao; rotulo e icone continuam no
+// codigo. Assim um item novo entra na lista automaticamente, sem migracao, e a
+// configuracao antiga nao fica presa a nomes velhos.
+const MENU_DEF=[
+  {id:'tasks',  nome:'Tarefas',        icone:'i-inbox',    view:'tasks'},
+  {id:'dash',   nome:'Dashboard',      icone:'i-chart',    view:'dash'},
+  {id:'med',    nome:'Saúde',          icone:'i-pill',     view:'med'},
+  {id:'canvas', nome:'Quadros',        icone:'i-bulb',     view:'canvas'},
+  {id:'fabric', nome:'Fabric Advisor',  icone:'i-layers',   view:'fabric'},
+  {id:'notes',  nome:'Quadro de Notas',icone:'i-edit',     acao:'notas'}
+];
+let menuCfg=ld('bt-menu',null);
+function menuNormalizar(){
+  if(!Array.isArray(menuCfg))menuCfg=[];
+  // remove itens que nao existem mais no app
+  menuCfg=menuCfg.filter(c=>MENU_DEF.some(d=>d.id===c.id));
+  // e acrescenta os que surgiram depois, visiveis, no fim
+  MENU_DEF.forEach(d=>{if(!menuCfg.some(c=>c.id===d.id))menuCfg.push({id:d.id,visivel:true})});
+  if(!menuCfg.some(c=>c.visivel))menuCfg[0].visivel=true; // nunca deixa o menu vazio
+}
+function menuDef(id){return MENU_DEF.find(d=>d.id===id)}
+function renderNav(){
+  menuNormalizar();
+  const el=$('#navItems');if(!el)return;
+  el.innerHTML=menuCfg.filter(c=>c.visivel).map(c=>{
+    const d=menuDef(c.id);if(!d)return '';
+    const ativo=d.view&&d.view===curView?' active':'';
+    const badge=d.id==='tasks'?'<span class="nav-badge" id="navBadge">0</span>':'';
+    return d.view
+      ? `<button class="nav-item${ativo}" data-view="${d.view}"><svg><use href="#${d.icone}"/></svg>${escapeHtml(d.nome)}${badge}</button>`
+      : `<button class="nav-action" data-menuacao="${d.id}"><svg><use href="#${d.icone}"/></svg>${escapeHtml(d.nome)}</button>`;
+  }).join('');
+  // a view aberta pode ter acabado de ser escondida
+  const visiveis=menuCfg.filter(c=>c.visivel).map(c=>menuDef(c.id)?.view).filter(Boolean);
+  if(visiveis.length&&!visiveis.includes(curView))switchView(visiveis[0]);
+  renderMenuCfg();
+}
+function renderMenuCfg(){
+  const el=$('#menuCfg');if(!el)return;
+  const n=menuCfg.length;
+  el.innerHTML='<div class="menu-cfg-dica">Escolha o que aparece e em que ordem.</div>'+menuCfg.map((c,i)=>{
+    const d=menuDef(c.id);if(!d)return '';
+    const so=menuCfg.filter(x=>x.visivel).length===1&&c.visivel;
+    return `<div class="menu-cfg-row">
+      <svg><use href="#${d.icone}"/></svg>
+      <span class="mc-nome">${escapeHtml(d.nome)}</span>
+      <button data-mcup="${c.id}" ${i===0?'disabled':''} title="Subir">▲</button>
+      <button data-mcdown="${c.id}" ${i===n-1?'disabled':''} title="Descer">▼</button>
+      <button class="mc-tg${c.visivel?' on':''}" data-mctg="${c.id}" ${so?'disabled':''} title="${so?'É o último item visível':'Mostrar no menu'}"></button>
+    </div>`;
+  }).join('');
+}
+function menuSalvar(){try{sv('bt-menu',menuCfg)}catch(e){}sT()}
+function menuMover(id,passo){
+  const i=menuCfg.findIndex(c=>c.id===id);
+  const j=i+passo;
+  if(i<0||j<0||j>=menuCfg.length)return;
+  const [x]=menuCfg.splice(i,1);menuCfg.splice(j,0,x);
+  menuSalvar();renderNav();
+}
+function menuAlternar(id){
+  const c=menuCfg.find(x=>x.id===id);if(!c)return;
+  if(c.visivel&&menuCfg.filter(x=>x.visivel).length===1)return; // o ultimo fica
+  c.visivel=!c.visivel;menuSalvar();renderNav();
 }
 
 // ===== CANVAS DE IDEIAS =====
@@ -7467,7 +7554,7 @@ function toggleAlertBar(){
   if(bar) bar.classList.toggle('open',_alertBarOpen);
 }
 
-function render(){renderProjNav();renderCatNav();renderTasks();if(taskLayout==='timeline')renderTasksTimeline();renderWidgets();updateFocusBtn();if(curView==='dash')renderDash();if(curView==='med')renderMedView();if(curView==='agents')renderAgentsView();else{const b=$('#navBadgeAg');if(b)b.textContent=agentTasks().filter(t=>t.status!=='done').length}
+function render(){renderNav();renderProjNav();renderCatNav();renderTasks();if(taskLayout==='timeline')renderTasksTimeline();renderWidgets();updateFocusBtn();if(curView==='dash')renderDash();if(curView==='med')renderMedView();if(curView==='agents')renderAgentsView();else{const b=$('#navBadgeAg');if(b)b.textContent=agentTasks().filter(t=>t.status!=='done').length}
   const ap=getActiveContextProject();
   if(ap==='nos'){
     $('#ownerSeg').style.display='';
@@ -9210,7 +9297,7 @@ function nbRender(){
 }
 // Nav handlers for Notes Board
 const _mobNotes=$('#mobNotes');if(_mobNotes)_mobNotes.addEventListener('click',openNotesBoard);
-const _sideNotes=$('#sideNotes');if(_sideNotes)_sideNotes.addEventListener('click',openNotesBoard);
+// (o item 'Quadro de Notas' agora vem de MENU_DEF e e tratado na delegacao acima)
 // Guard removed fmNote reference
 const _fmNote=$('#fmNote');if(_fmNote)_fmNote.addEventListener('click',()=>{closeFabMenu();openNotesBoard()});
 // Also open board from settings sheet
@@ -9467,7 +9554,24 @@ $('#grpMenu').addEventListener('mousedown',e=>{const o=e.target.closest('.grp-dd
   $$('#grpMenu .grp-dd-opt').forEach(x=>x.classList.remove('active'));o.classList.add('active');
   groupBy=o.dataset.g;saveUI();$('#grpVal span').textContent=o.textContent;$('#grpDd').classList.remove('open');renderTasks();
 });
-$$('.nav-item').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
+// nav e recriado a cada mudanca de configuracao: delegacao em vez de
+// listener preso a cada botao
+const _navBox=$('#navItems');
+if(_navBox)_navBox.addEventListener('click',e=>{
+  const v=e.target.closest('[data-view]');
+  if(v){switchView(v.dataset.view);return}
+  const a=e.target.closest('[data-menuacao]');
+  if(a&&a.dataset.menuacao==='notes')openNotesBoard();
+});
+const _mcBtn=$('#menuCfgBtn');
+if(_mcBtn)_mcBtn.addEventListener('click',()=>{$('#menuCfg').classList.toggle('open')});
+const _mcBox=$('#menuCfg');
+if(_mcBox)_mcBox.addEventListener('click',e=>{
+  const up=e.target.closest('[data-mcup]');if(up){menuMover(up.dataset.mcup,-1);$('#menuCfg').classList.add('open');return}
+  const dn=e.target.closest('[data-mcdown]');if(dn){menuMover(dn.dataset.mcdown,1);$('#menuCfg').classList.add('open');return}
+  const tg=e.target.closest('[data-mctg]');if(tg&&!tg.disabled){menuAlternar(tg.dataset.mctg);$('#menuCfg').classList.add('open')}
+});
+renderNav();
 $$('.mob-tab[data-view]').forEach(n=>{n.addEventListener('click',()=>switchView(n.dataset.view))});
 $('#q').addEventListener('input',e=>{qry=e.target.value;showSmartSuggest(qry);renderTasks();if(taskLayout==='board')renderTasksKanban()});
 $('#q').addEventListener('blur',()=>hideSmartSuggest());
