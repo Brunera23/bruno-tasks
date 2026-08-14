@@ -1876,6 +1876,15 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
   background:var(--bg);border:1px solid var(--sep);padding:2px 8px;border-radius:9px;white-space:nowrap}
 .fab-cont-vazio{position:absolute;left:18px;top:60px;font-size:12px;color:var(--label2);font-style:italic}
 .fab-no.noescopo{box-shadow:0 1px 3px rgba(0,0,0,.07)}
+/* artefato nao executa: e escrito ou lido. Forma diferente para nao ser lido
+   como mais um passo da sequencia. */
+.fab-no.art{border-radius:10px 10px 4px 4px;border-style:solid;border-top-width:3px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--et) 7%,var(--bg)) 0%,var(--bg) 38%)}
+.fab-no.art .fab-no-txt b::after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--et);margin-left:6px;vertical-align:middle;opacity:.6}
+.fab-edge-rot{font-size:9.5px;font-weight:600;fill:var(--label2);text-anchor:middle;
+  font-family:system-ui,sans-serif;opacity:0;transition:opacity .12s}
+.fab-edge.rel:hover .fab-edge-rot,.fab-edge.rel .fab-edge-rot{opacity:.75}
 .fab-edge.dentro .fab-edge-line{stroke-dasharray:5 4}
 .fab-edge-hit{stroke:transparent;stroke-width:16;fill:none;cursor:pointer}
 .fab-edge-line{stroke:var(--label2);stroke-width:1.9;fill:none;opacity:.55}
@@ -2075,6 +2084,12 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-alerta b{display:block;font-size:13.5px;color:var(--label);margin-bottom:3px}
 .fab-alerta p{margin:0 0 5px;color:var(--label)}
 .fab-alerta-det{font-style:italic;opacity:.85}
+.fab-alerta.clicavel{cursor:pointer}
+.fab-alerta.clicavel:hover{filter:brightness(.985)}
+.fab-alerta-acoes{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.fab-alerta-acoes button{border:1px solid var(--sep);background:var(--bg);color:var(--label);
+  font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer}
+.fab-alerta-acoes button:hover{border-color:var(--label2);background:var(--card)}
 .fab-alerta-fix{display:block;font-size:12.5px;font-weight:600;color:var(--label2);
   padding-top:5px;border-top:1px dashed var(--sep)}
 .fab-fase{margin-bottom:13px;padding-bottom:12px;border-bottom:1px solid var(--sep)}
@@ -5101,6 +5116,36 @@ const FAB_CONTEM={
   ifcond:{rotulo:'no ramo escolhido',cor:'#e0653a'}
 };
 function fabEhContainer(comp){return !!FAB_CONTEM[comp]}
+// Artefatos existem e sao escritos ou lidos; atividades executam. A relacao
+// entre eles nao e "depois", e "grava em" / "le de".
+const FAB_ARTEFATO=new Set([
+  'lakehouse','warehouse','eventhouse','sqldb','onelake','bronze','silver','gold',
+  'ctrltable','logtable','semantic','pbi','rtdash','pbimonitor','mlmodel','sqlendpoint',
+  'workspace','rls','lineage','deploy','monitorhub'
+]);
+function fabEhArtefato(c){return FAB_ARTEFATO.has(c)}
+// Artefato que nao faz sentido existir sem alguem escrevendo nele. Uma tabela
+// de log sem escritor e inerte — e e o erro mais comum de quem monta isso.
+const FAB_ESCRITOR={
+  logtable:{t:'Quem escreve neste Log de Execução?',
+    dica:'O log é uma tabela, não uma atividade: ele não roda. Alguém precisa gravar nele o resultado de cada execução.',
+    op:[
+      ['sproc','Stored Procedure','O caminho mais limpo: uma procedure de início e outra de fim, chamadas pelo pipeline. Grava status, duração, volume e erro de forma transacional.'],
+      ['notebook','Notebook','Quando a carga já é código, registrar de dentro dele evita uma ida e volta ao Warehouse.']]},
+  ctrltable:{t:'Quem mantém esta Tabela de Controle atualizada?',
+    dica:'Ela define o que processar e até onde já foi. Sem alguém gravando o watermark ao final da carga, a próxima execução relê tudo.',
+    op:[
+      ['sproc','Stored Procedure','Atualiza o watermark ao final da carga, na mesma transação que fecha a execução.'],
+      ['notebook','Notebook','Quando a carga é code-first e o controle vive junto dela.']]}
+};
+// ja existe quem escreva neste artefato?
+function fabTemEscritor(no){
+  return fabLigs().some(e=>{
+    if(e.to!==no.id)return false;
+    const a=fabNos().find(n=>n.id===e.from);
+    return a&&!fabEhArtefato(a.comp);
+  });
+}
 // Artefatos proprios: um pipeline chamado por Invoke e outro pipeline, nao uma
 // atividade dentro do laco. Ele encerra a heranca de escopo.
 const FAB_QUEBRA_ESCOPO=new Set(['pipeline']);
@@ -5108,6 +5153,10 @@ const FAB_QUEBRA_ESCOPO=new Set(['pipeline']);
 function fabEscopoDe(orig,comp){
   if(!orig)return undefined;
   if(FAB_QUEBRA_ESCOPO.has(comp))return undefined;
+  // Artefato e global ao pipeline: a tabela de log e uma so, escrita a cada
+  // iteracao. Uma copia dela dentro do laco diria que existe uma por item — e
+  // um modelo semantico ali dentro nao faz sentido nenhum.
+  if(fabEhArtefato(comp))return undefined;
   return fabEhContainer(orig.comp)?orig.id:orig.escopo;
 }
 // membros de um escopo, na ordem em que o fluxo os encadeia
@@ -5839,8 +5888,7 @@ const FAB_COMP={
     beneficios:['Responde "a carga de ontem rodou?" sem abrir o Fabric','Histórico de duração revela degradação antes de virar incidente','Permite dashboard de monitoramento em Power BI','Base para SLA e para conversa com o negócio sobre atraso','Erro registrado com contexto acelera a investigação'],
     riscos:['Precisa de política de retenção para não crescer sem controle','Log gravado só no sucesso não serve para nada — o caso de erro é o importante'],
     proximos:[
-      {id:'sproc',nivel:'rec',porque:'Procedures de início e fim de execução são a forma mais limpa de alimentar o log a partir do pipeline.'},
-      {id:'semantic',nivel:'rec',porque:'Modelo semântico sobre o log é o que transforma a tabela em painel de monitoramento consumível.'},
+      {id:'semantic',nivel:'rec',porque:'O log é uma tabela: o próximo passo é lê-la. Um modelo semântico sobre ela é o que a transforma em informação consumível.'},
       {id:'pbimonitor',nivel:'rec',porque:'O destino que dá sentido ao log: um painel com status das cargas, duração e falhas.'},
       {id:'activator',nivel:'ok',porque:'Alertar automaticamente quando uma carga falha ou demora além do normal.'},
       {id:'warehouse',nivel:'rec',porque:'O log precisa de escrita transacional e consulta SQL — Warehouse é o lugar dele.'}
@@ -6149,6 +6197,11 @@ const FAB_VALID=[
     quando:g=>g.cfg('rls','modo','dinamico')&&!g.tem(['ctrltable','dq']),
     texto:'RLS dinâmico depende de uma tabela que liga usuário a permissão. Se ela ficar desatualizada, alguém vê o que não devia — e nenhum erro aparece.',
     resolver:'Trate essa tabela como dado governado: com dono, validação e carga controlada.'},
+  {id:'artefato-no-laco',nivel:'aviso',titulo:'Tabela ou modelo dentro de um laço',
+    quando:g=>g.nos.some(n=>n.escopo&&fabEhArtefato(n.comp)),
+    texto:'Há artefato — tabela, camada ou modelo — dentro do escopo de um laço. Artefato não roda por iteração: a tabela de log é uma só, escrita a cada item, e um modelo semântico não se atualiza item a item.',
+    resolver:'Mova o artefato para fora do laço. Dentro dele fica só o que executa a cada item.',
+    detalhe:g=>g.nos.filter(n=>n.escopo&&fabEhArtefato(n.comp)).map(n=>FAB_COMP[n.comp].nome).join(', ')},
   {id:'orfao',nivel:'sugestao',titulo:'Componente solto no diagrama',
     quando:g=>g.orfaos().length>0,
     texto:'Há componentes sem nenhuma ligação. Ou falta conectá-los, ou eles não pertencem a esta arquitetura.',
@@ -6748,6 +6801,11 @@ function fabPendencia(no){
     return {tipo:'proposito',t:'Por que você adicionou '+def.nome+'?',
       dica:'A recomendação seguinte depende da intenção, não do componente.',
       op:def.propositos.map(p=>({v:p.id,nome:p.nome,desc:p.desc}))};
+  // artefato sem escritor e tao incompleto quanto Copy Data sem destino
+  const esc=FAB_ESCRITOR[no.comp];
+  if(esc&&!fabTemEscritor(no))
+    return {tipo:'escritor',t:esc.t,dica:esc.dica,
+      op:esc.op.map(([v,nome,desc])=>({v,nome,desc,alerta:''}))};
   for(const ex of (def.exige||[])){
     if(!no.cfg||!no.cfg[ex.k])
       return {tipo:'exige',campo:ex.k,t:ex.t,dica:ex.dica||'',
@@ -7028,6 +7086,25 @@ function fabDefinirProp(id,prop){
   const no=fabItems.find(n=>n.id===id);if(!no)return;
   fabMarcar();no.prop=prop;fabSave();fabRender();
 }
+// Cria a atividade que escreve no artefato, posicionada ANTES dele e ligada a
+// ele — que e a direcao real: a procedure grava na tabela, nao o contrario.
+function fabCriarEscritor(artId,comp){
+  const art=fabItems.find(n=>n.id===artId);if(!art)return;
+  fabMarcar();
+  const prop=comp==='sproc'?(art.comp==='logtable'?'controle_exec':'watermark'):null;
+  const esc=fabNovoNo(comp,art.x-(FAB_W+96),art.y,prop,art.escopo);
+  if(esc){
+    if(comp==='sproc')esc.cfg={onde:'warehouse'};
+    // quem ja apontava para o artefato passa a apontar para o escritor
+    fabEdges.filter(e=>e.to===artId).forEach(e=>{e.to=esc.id});
+    fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+      arq:fabCur,from:esc.id,to:artId});
+    _fabSel=esc.id;_fabGuia.atual=esc.id;fabSalvarGuia();
+  }
+  fabSave();fabRender();
+  setTimeout(()=>{try{fabAjustar()}catch(e){}},40);
+  toast(FAB_COMP[comp].nome+' criado — é ele que grava no '+FAB_COMP[art.comp].nome);
+}
 function fabDefinirCfg(id,campo,valor){
   const no=fabItems.find(n=>n.id===id);if(!no)return;
   fabMarcar();no.cfg=no.cfg||{};no.cfg[campo]=valor;fabSave();fabRender();
@@ -7038,13 +7115,21 @@ function fabPropNome(no){
   return d.propositos.find(p=>p.id===no.prop)?.nome||'';
 }
 // posicao livre a direita da origem, descendo se ja houver alguem ali
-function fabVaga(orig){
+let _fabVagaGlobal=false;
+function fabVaga(orig,global){
+  _fabVagaGlobal=!!global;
   const nos=fabNos();
   // filho de container nasce recuado e abaixo, para caber dentro da moldura
   const _d=orig&&fabEhContainer(orig.comp);
   const _c=orig?fabCaixa(orig):null;
   let x=orig?(_d?orig.x+FAB_PAD:_c.x+_c.w+96):120,
       y=orig?(_d?orig.y+FAB_HEAD+FAB_PAD:orig.y):120;
+  // saindo de dentro de um laco para um no global, o destino fica DEPOIS da
+  // caixa inteira — senao nasce sobreposto ao conteudo do laco
+  if(orig&&orig.escopo&&_fabVagaGlobal){
+    const cont=fabNos().find(n=>n.id===orig.escopo);
+    if(cont){const cb=fabCaixa(cont);x=cb.x+cb.w+96;y=cb.y+FAB_HEAD}
+  }
   const bate=(px,py)=>nos.some(n=>Math.abs(n.x-px)<FAB_W+24&&Math.abs(n.y-py)<FAB_H+22);
   let guarda=0;
   while(bate(x,y)&&guarda++<40){
@@ -7056,7 +7141,7 @@ function fabVaga(orig){
 function fabAceitar(sug){
   const orig=fabNos().find(n=>n.id===_fabSel);if(!orig)return;
   fabMarcar();
-  const v=fabVaga(orig);
+  const v=fabVaga(orig,fabEhArtefato(sug.id));
   const novo=fabNovoNo(sug.id,v.x,v.y,null,fabEscopoDe(orig,sug.id));
   if(novo){
     fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
@@ -7313,7 +7398,7 @@ const FAB_PERG_PROX={
   'ifcond':'O que roda dentro de cada ramo da decisão?',
   'getmeta':'O que é decidido a partir do metadado lido?',
   'ctrltable':'Quem lê essa tabela, e quem a mantém atualizada?',
-  'logtable':'Quem escreve no log, e quem lê o que está nele?',
+  'logtable':'A tabela já tem quem escreva. Quem vai lê-la?',
   'dq':'A validação rodou. O que acontece com o resultado?',
   'workspace':'A estrutura está definida. O que a mantém sob controle?',
   'sqlendpoint':'Quem consome por SQL?',
@@ -7339,12 +7424,12 @@ const FAB_PERG_PROX={
 // so tem as pecas certas. "Invocar pipeline com ou sem log antes?" e exatamente
 // esse tipo de duvida, e ela nao se responde escolhendo um item de menu.
 const FAB_PRATICA={
-  'foreach':{passos:['logtable','invoke'],
-    porque:'Registre por ITEM, não por lote. Sem isso você descobre que a carga falhou, mas não qual dos 40 objetos falhou — e reprocessa todos.'},
+  'foreach':{passos:['invoke','sproc','logtable'],
+    porque:'Dentro do laço: chame o filho, e registre o resultado DE CADA ITEM. O log é uma tabela — quem grava nela é a procedure. Sem isso você descobre que a carga falhou, mas não qual dos 40 objetos.'},
   'invoke':{passos:['logtable'],
     porque:'Com pipeline aninhado, o log precisa guardar id de execução pai e filho. É o que permite achar em qual nível quebrou sem abrir cada monitor.'},
-  'copy:bruto':{passos:['bronze','logtable','notify'],
-    porque:'Aterrissa cru, registra o que veio, avisa se falhar. Os três juntos: sem Bronze você não reprocessa, sem log não sabe o volume, sem aviso descobre pelo usuário.'},
+  'copy:bruto':{passos:['bronze','sproc','logtable','notify'],
+    porque:'Aterrissa cru, a procedure registra o que veio na tabela de log, e o caminho de falha avisa. Sem Bronze você não reprocessa, sem log não sabe o volume, sem aviso descobre pelo usuário.'},
   'copy:incremental':{passos:['ctrltable','sproc','logtable'],
     porque:'O watermark é lido ANTES da carga e gravado DEPOIS que ela conclui. Gravar antes de terminar faz a próxima execução pular a janela que falhou.'},
   'copy:historica':{passos:['bronze','logtable','ctrltable'],
@@ -7356,7 +7441,7 @@ const FAB_PRATICA={
   'pipeline:mestre':{passos:['invoke','logtable','notify'],
     porque:'Notifique no mestre, não em cada filho — senão uma falha vira vinte mensagens e o time para de ler.'},
   'sproc:controle_exec':{passos:['logtable','semantic','pbimonitor'],
-    porque:'A procedure grava, o modelo semântico lê, o painel mostra. Log sem painel é dado que ninguém olha.'},
+    porque:'A procedure grava na tabela, o modelo semântico lê dela, o painel mostra. Log sem painel é dado que ninguém olha.'},
   'sproc:merge':{passos:['gold','logtable'],
     porque:'Registre linhas inseridas e atualizadas. É o número que revela carga que rodou mas não trouxe nada.'},
   'lookup:lista':{passos:['foreach'],
@@ -7382,7 +7467,13 @@ function fabPratica(no){
   // so vale como sugestao o que ainda nao existe ligado a este no
   const jaTem=new Set(fabLigs().filter(e=>e.from===no.id).map(e=>{
     const a=fabNos().find(n=>n.id===e.to);return a?a.comp:null;}).filter(Boolean));
-  const faltam=k.passos.filter(c=>FAB_COMP[c]&&!jaTem.has(c));
+  const g=fabGrafo();
+  const faltam=k.passos.filter(c=>{
+    if(!FAB_COMP[c])return false;
+    // artefato e unico na arquitetura: se ja existe em qualquer lugar, nao se
+    // cria outro. Atividade pode legitimamente repetir em pontos diferentes.
+    return fabEhArtefato(c)? !g.tem([c]) : !jaTem.has(c);
+  });
   return faltam.length?{...k,faltam}:null;
 }
 // aplica a sequencia inteira, na ordem, encadeando um no outro
@@ -7396,8 +7487,9 @@ function fabAplicarPratica(){
   const esc=fabEhContainer(no.comp)?no.id:no.escopo;
   let orig=no, criados=0;
   pr.faltam.forEach((c,i)=>{
-    const v=fabVaga(orig);
-    const novo=fabNovoNo(c,v.x,v.y,null,FAB_QUEBRA_ESCOPO.has(c)?undefined:esc);
+    const v=fabVaga(orig,fabEhArtefato(c));
+    const novo=fabNovoNo(c,v.x,v.y,null,
+      (FAB_QUEBRA_ESCOPO.has(c)||fabEhArtefato(c))?undefined:esc);
     if(!novo)return;
     fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)+i,
       arq:fabCur,from:orig.id,to:novo.id,dentro:fabEhContainer(orig.comp)||undefined});
@@ -7543,6 +7635,7 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
   const p=fabPasso();if(!p)return;
   if(tipo==='pend'){
     if(subtipo==='proposito')fabDefinirProp(_fabGuia.atual,valor);
+    else if(subtipo==='escritor')fabCriarEscritor(_fabGuia.atual,valor);
     else fabDefinirCfg(_fabGuia.atual,campo,valor);
     fabRenderPainel();
     return;
@@ -7553,7 +7646,7 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
     if(no){_fabGuia.atual=no.id;_fabSel=no.id}
   }else{
     const orig=fabNos().find(n=>n.id===_fabGuia.atual);
-    const v=fabVaga(orig);
+    const v=fabVaga(orig,fabEhArtefato(valor));
     const no=fabNovoNo(valor,v.x,v.y,null,fabEscopoDe(orig,valor));
     if(no&&orig){
       fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
@@ -7966,6 +8059,7 @@ function fabNoHTML(n){
   const sel=_fabSel===n.id?' sel':'';
   const pend=fabTemPendencia(n);
   const emEscopo=n.escopo?' noescopo':'';
+  const art=fabEhArtefato(n.comp)?' art':'';
   // o rotulo de baixo carrega o proposito, nao a etapa: e o proposito que
   // explica o no para quem le o diagrama depois
   const sub=fabPropNome(n)||et.nome||'';
@@ -7974,7 +8068,7 @@ function fabNoHTML(n){
       n.filho?'abrir pipeline ↗':'montar pipeline ↗'}</button>`:'';
   const cfgTxt=Object.values(n.cfg||{}).length?
     `<span class="fab-no-cfg">${escapeHtml(Object.values(n.cfg).map(v=>FAB_ROT[v]||v).join(' · '))}</span>`:'';
-  return `<div class="fab-no${sel}${pend?' pend':''}${emEscopo}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}">
+  return `<div class="fab-no${sel}${pend?' pend':''}${emEscopo}${art}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}">
     <div class="fab-no-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</div>
     <div class="fab-no-txt"><b>${escapeHtml(d.nome)}</b><i>${escapeHtml(sub)}</i>${cfgTxt}</div>
     ${filho}
@@ -8044,7 +8138,12 @@ function fabRender(){
     // entrada no escopo nao vira seta: quem diz "esta dentro" e a moldura
     if(e.dentro&&b.escopo===a.id)return;
     const c=fabCurva(a,b);
-    arestas+=`<g class="fab-edge${e.dentro?' dentro':''}" data-fabedge="${e.id}">
+    // a relacao entre os dois diz o rotulo: atividade grava em artefato,
+    // artefato e lido por atividade, atividade precede atividade
+    const aA=fabEhArtefato(a.comp),bA=fabEhArtefato(b.comp);
+    const rel=(!aA&&bA)?'grava em':(aA&&!bA)?'lido por':'';
+    arestas+=`<g class="fab-edge${e.dentro?' dentro':''}${rel?' rel':''}" data-fabedge="${e.id}">
+      ${rel?`<text x="${c.mx}" y="${c.my-9}" class="fab-edge-rot">${rel}</text>`:''}
       <path d="${c.d}" class="fab-edge-hit"/>
       <path d="${c.d}" class="fab-edge-line" marker-end="url(#fabSeta)"/>
       <circle cx="${c.mx}" cy="${c.my}" r="8" class="fab-edge-xbg"/>
@@ -8205,15 +8304,47 @@ function fabRenderPainel(){
     ).join('')}</div>
     <div class="fab-painel-corpo">${corpo}</div>`;
 }
+// O no que o alerta esta acusando, quando da para identificar. Sem isso o
+// usuario le "ForEach em paralelo com log grosso" e precisa cacar qual ForEach.
+function fabAlvoDoAlerta(v){
+  const nos=fabNos();
+  const acha=(f)=>{const n=nos.find(f);return n?n.id:null};
+  switch(v.id){
+    case 'paralelo-sem-log-item': return acha(n=>n.comp==='foreach');
+    case 'invoke-sem-espera-com-log': return acha(n=>n.comp==='invoke');
+    case 'import-sem-refresh':
+    case 'directlake-sem-delta': return acha(n=>n.comp==='semantic');
+    case 'evento-sem-observador': return acha(n=>n.comp==='pipeline');
+    case 'copyjob-full-recorrente': return acha(n=>n.comp==='copyjob');
+    case 'dinamico-sem-tabela': return acha(n=>n.comp==='rls');
+    case 'foreach-aninhado': return acha(n=>n.comp==='foreach'&&n.escopo);
+    case 'container-vazio': return acha(n=>fabEhContainer(n.comp)&&!nos.some(k=>k.escopo===n.id));
+    case 'wh-como-bronze': return acha(n=>n.comp==='copy');
+    case 'incremental-sem-fonte': return acha(n=>n.comp==='copy');
+    case 'sproc-lakehouse': return acha(n=>n.comp==='sproc');
+    case 'controle-sem-log': return acha(n=>n.comp==='sproc');
+    case 'orfao': {const o=fabGrafo().orfaos();return o.length?o[0].id:null}
+    case 'pendencias': {const pd=fabGrafo().pendentes();return pd.length?pd[0].id:null}
+    default: return null;
+  }
+}
 function fabPainelValid(av){
   if(!fabNos().length)return '<div class="fab-vaziop">Adicione componentes para ver a validação.</div>';
   if(!av.length)return '<div class="fab-ok">Nenhum alerta. A arquitetura cobre os pontos que este validador conhece.</div>';
-  return av.map(v=>`<div class="fab-alerta ${v.nivel}">
-    <b>${v.nivel==='aviso'?'⚠':'💡'} ${escapeHtml(v.titulo)}</b>
-    <p>${escapeHtml(v.texto)}</p>
-    ${v.detalheTxt?`<p class="fab-alerta-det">${escapeHtml(v.detalheTxt)}</p>`:''}
-    <span class="fab-alerta-fix">${escapeHtml(v.resolver)}</span>
-  </div>`).join('');
+  return av.map(v=>{
+    const falta=(FAB_PEDE[v.id]||[]).filter(c=>FAB_COMP[c]&&!fabGrafo().tem([c]));
+    const alvo=fabAlvoDoAlerta(v);
+    return `<div class="fab-alerta ${v.nivel}${alvo?' clicavel':''}" ${alvo?`data-fabalerta="${alvo}"`:''}>
+      <b>${v.nivel==='aviso'?'⚠':'💡'} ${escapeHtml(v.titulo)}</b>
+      <p>${escapeHtml(v.texto)}</p>
+      ${v.detalheTxt?`<p class="fab-alerta-det">${escapeHtml(v.detalheTxt)}</p>`:''}
+      <span class="fab-alerta-fix">${escapeHtml(v.resolver)}</span>
+      ${(alvo||falta.length)?`<div class="fab-alerta-acoes">
+        ${alvo?`<button data-fabalerta="${alvo}">Ver no diagrama</button>`:''}
+        ${falta.length?`<button data-fabalertaadd="${falta[0]}">Adicionar ${escapeHtml(FAB_COMP[falta[0]].nome)}</button>`:''}
+      </div>`:''}
+    </div>`;
+  }).join('');
 }
 function fabPainelRoad(){
   const f=fabRoadmap();
@@ -8506,7 +8637,7 @@ function fabAddManual(comp){
   }
   fabMarcar();
   const orig=fabNos().find(n=>n.id===_fabSel);
-  const v=fabVaga(orig);
+  const v=fabVaga(orig,fabEhArtefato(comp));
   const no=fabNovoNo(comp,v.x,v.y,null,fabEscopoDe(orig,comp));
   if(no&&orig){
     fabEdges.push({id:'e'+Math.random().toString(36).slice(2,9),arq:fabCur,from:orig.id,to:no.id,
@@ -8609,6 +8740,7 @@ function fabInit(){
       if(!_fabSel)return;
       fabFecharCartao();
       if(op.dataset.fabop==='proposito')fabDefinirProp(_fabSel,op.dataset.v);
+      else if(op.dataset.fabop==='escritor')fabCriarEscritor(_fabSel,op.dataset.v);
       else fabDefinirCfg(_fabSel,op.dataset.campo,op.dataset.v);
       return;
     }
@@ -8655,6 +8787,29 @@ function fabInit(){
     if(b){_fabPainel=b.dataset.fabpainel;try{sv('bt-fab-painel',_fabPainel)}catch(_){}fabRenderPainel();return}
     const op=e.target.closest('[data-fabpasso]');
     if(op){fabPassoEscolher(op.dataset.fabpasso,op.dataset.v,op.dataset.campo,op.dataset.tipo);return}
+    const al=e.target.closest('[data-fabalerta]');
+    if(al){
+      const id=al.dataset.fabalerta;
+      const no=fabNos().find(n=>n.id===id);
+      if(no){
+        _fabSel=id;_fabGuia.atual=id;fabSalvarGuia();
+        _fabPainel='passo';try{sv('bt-fab-painel','passo')}catch(_){}
+        fabRender();
+        // centraliza o no acusado, senao "ver no diagrama" nao mostra nada
+        const st=$('#fabStage'),c=fabCam(),b=fabCaixa(no);
+        if(st){c.x=st.clientWidth/2-(b.x+b.w/2)*c.z;c.y=st.clientHeight/2-(b.y+b.h/2)*c.z;
+          fabSaveCam();fabApplyCam();fabRenderSugs()}
+      }
+      return;
+    }
+    const aa=e.target.closest('[data-fabalertaadd]');
+    if(aa){
+      const comp=aa.dataset.fabalertaadd;
+      if(!_fabGuia.atual&&fabNos().length)_fabGuia.atual=fabNos()[fabNos().length-1].id;
+      _fabSel=_fabGuia.atual;
+      fabAddManual(comp);
+      return;
+    }
     const cb=e.target.closest('[data-fabctx]');
     if(cb){fabAbrirContexto();return}
     const g=e.target.closest('[data-fabguia]');
