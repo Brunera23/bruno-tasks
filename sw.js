@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bruno-tasks-v137';
+const CACHE_NAME = 'bruno-tasks-v138';
 const ASSETS = ['./index.html', './manifest.json', './apple-touch-icon.png', './manifest-icon.png'];
 
 self.addEventListener('install', e => {
