@@ -5365,6 +5365,17 @@ const FAB_COMP={
     ]},
   copyjob:{nome:'Copy Job',etapa:'ingestao',ico:'copy',
     curto:'Ingestão recorrente, sem orquestração ao redor',
+    exige:[{k:'destino',t:'Para onde o Copy Job grava?',
+    op:[
+      ['lakehouse','Lakehouse','Destino padrão para dado cru, em Delta.'],
+      ['warehouse','Warehouse','Quando o dado já vem modelado e o time escreve por T-SQL.'],
+      ['sqldb','SQL database','Quando alimenta uma aplicação operacional.']]},
+     {k:'modo',t:'Cópia completa ou incremental?',
+    dica:'É a escolha central do Copy Job — ele foi feito para resolver incremental sem você escrever lógica de watermark.',
+    op:[
+      ['full','Completa','Recarrega tudo a cada execução. Simples, e insustentável quando o volume cresce.'],
+      ['incremental','Incremental','O Copy Job guarda sozinho até onde leu. Exige coluna de data ou versão na origem.']],
+    alerta:{full:'Cópia completa recorrente é o modo mais caro de operar: cresce sem parar e fica mais lenta a cada dia.'}}],
     oque:'Experiência de cópia gerenciada: define origem, destino e modo (full ou incremental) sem montar pipeline.',
     quando:'Ingestão recorrente e direta, quando você não precisa de orquestração ao redor.',
     evitar:'Quando a carga faz parte de um fluxo maior com dependências — aí você quer um pipeline de verdade.',
@@ -5402,6 +5413,14 @@ const FAB_COMP={
     ]},
   mirroring:{nome:'Mirroring',etapa:'ingestao',ico:'mirror',
     curto:'Réplica contínua, sem manter pipeline',
+    exige:[{k:'origem_mir',t:'Qual banco será espelhado?',
+    dica:'O Mirroring só existe para origens suportadas — é a primeira coisa a confirmar antes de desenhar em cima dele.',
+    op:[
+      ['sqldb','Azure SQL Database','Suporte maduro, o caso mais comum.'],
+      ['sqlmi','SQL Managed Instance','Suportado, com atenção à configuração de rede.'],
+      ['cosmos','Cosmos DB','Espelha documento; o achatamento continua sendo trabalho seu.'],
+      ['snowflake','Snowflake','Espelha sem pipeline, mas consome compute do lado do Snowflake.'],
+      ['postgres','PostgreSQL','Suporte mais recente — confirme disponibilidade na sua região antes de assumir.']]}],
     oque:'Replicação contínua e gerenciada de um banco (SQL, Cosmos, Snowflake) para o OneLake.',
     quando:'Você quer o dado transacional quase em tempo real no Fabric sem manter pipeline.',
     evitar:'Quando você precisa filtrar ou transformar na entrada — Mirroring replica o que existe.',
@@ -5429,6 +5448,13 @@ const FAB_COMP={
   // ===== ORQUESTRAÇÃO =====
   pipeline:{nome:'Data Pipeline',etapa:'orquestracao',ico:'pipe',
     curto:'Encadear passos com ordem e dependência',
+    exige:[{k:'gatilho',t:'O que dispara este pipeline?',
+    dica:'Define a cadeia de dependência e o que mais a arquitetura precisa ter.',
+    op:[
+      ['agendado','Agendamento','Roda em horário fixo. O mais comum e o mais simples de raciocinar.'],
+      ['evento','Evento','Dispara com a chegada de arquivo ou um evento no OneLake. Reduz espera ociosa, e exige Activator ou gatilho de evento configurado.'],
+      ['chamado','Chamado por outro pipeline','Não tem gatilho próprio: é orquestrado por um pai via Invoke Pipeline.'],
+      ['manual','Manual','Executado sob demanda. Aceitável em carga histórica e prova de conceito, não em produção recorrente.']]}],
     oque:'Orquestrador do Fabric: encadeia atividades com dependência, condição e tratamento de erro.',
     quando:'Sempre que houver mais de um passo com ordem e dependência entre eles.',
     evitar:'Um pipeline gigante com trinta atividades. Quebre em pipelines menores chamados por Invoke Pipeline.',
@@ -5459,6 +5485,12 @@ const FAB_COMP={
     ]},
   foreach:{nome:'ForEach (atividade)',etapa:'orquestracao',ico:'loop',
     curto:'Repetir a mesma lógica para N objetos',
+    exige:[{k:'execucao',t:'As iterações rodam em série ou em paralelo?',
+    dica:'Muda a janela de carga, a carga na origem e o isolamento de erro. É configuração obrigatória do ForEach, não detalhe de ajuste.',
+    op:[
+      ['serie','Em série','Uma iteração por vez. Previsível, fácil de depurar e gentil com a origem — e o caminho mais lento.'],
+      ['paralelo','Em paralelo','Várias iterações simultâneas. Encurta a janela, mas multiplica a carga na origem e embaralha o log se ele não for por item.']],
+    alerta:{paralelo:'Paralelismo alto derruba a origem antes de acelerar a carga: 20 cópias simultâneas contra um SQL Server em produção é incidente, não otimização. Combine com log por item.'}}],
     oque:'Itera sobre uma lista executando as atividades que ficam DENTRO dele, uma vez para cada item — em série ou em paralelo.',
     quando:'Processar N tabelas, N arquivos ou N partições com a mesma lógica. As atividades ficam dentro do escopo do laço, não em sequência depois dele.',
     evitar:'Paralelismo alto sem pensar na origem: 20 cópias simultâneas podem derrubar o banco de onde você está lendo.',
@@ -5472,6 +5504,12 @@ const FAB_COMP={
     ]},
   invoke:{nome:'Invoke Pipeline (atividade)',etapa:'orquestracao',ico:'branch',
     curto:'Quebrar em pipelines menores e reutilizáveis',
+    exige:[{k:'espera',t:'O pipeline pai aguarda a conclusão do filho?',
+    dica:'Define se o resultado do filho volta para o pai. É a configuração que mais gera log mentiroso quando é ignorada.',
+    op:[
+      ['sim','Sim, aguarda concluir','O pai só segue quando o filho termina, e recebe sucesso ou falha. É o que permite log e tratamento de erro reais.'],
+      ['nao','Não, dispara e segue','O pai continua sem esperar. Encurta a execução, mas o pai registra sucesso sem saber o que aconteceu com o filho.']],
+    alerta:{nao:'Sem aguardar, o log do pai grava sucesso mesmo quando o filho falhou. O histórico fica bonito e mentiroso — e ninguém descobre a falha.'}}],
     oque:'Chama outro pipeline a partir do atual, passando parâmetros e podendo aguardar a conclusão.',
     quando:'Modularizar. Um pipeline mestre orquestra filhos especializados (ingestão, transformação, publicação). Também para reusar um pipeline parametrizado em vários contextos.',
     evitar:'Encadear muitos níveis de profundidade — o monitoramento fica confuso e a causa raiz de uma falha vira caça ao tesouro.',
@@ -5523,6 +5561,13 @@ const FAB_COMP={
     ]},
   notify:{nome:'Notificação (Teams / Outlook)',etapa:'orquestracao',ico:'notify',
     curto:'Avisar no caminho de falha',
+    exige:[{k:'quando',t:'Em que situação a notificação dispara?',
+    dica:'Notificar demais é o mesmo que não notificar: o time filtra a caixa e para de ler justamente quando importa.',
+    op:[
+      ['falha','Só em falha','O padrão recomendado. Silêncio significa que está tudo bem.'],
+      ['falha_sla','Falha e atraso de SLA','Também avisa quando demorou além do combinado, mesmo tendo concluído.'],
+      ['sempre','Sempre','Avisa em toda execução. Só se justifica em carga crítica com poucas execuções por dia.']],
+    alerta:{sempre:'Notificar todo sucesso gera cegueira a alerta: em duas semanas ninguém lê mais, e a falha real passa junto com o ruído.'}}],
     oque:'Envia mensagem no caminho de sucesso ou de falha do pipeline.',
     quando:'Sempre no caminho de falha. Opcionalmente no sucesso de cargas críticas.',
     evitar:'Notificar todo sucesso de toda carga — a equipe filtra a caixa e para de ler justamente quando importa.',
@@ -5652,6 +5697,12 @@ const FAB_COMP={
   // ===== TRANSFORMAÇÃO =====
   notebook:{nome:'Notebook (Spark)',etapa:'transformacao',ico:'nb',
     curto:'Transformação complexa ou volume alto, em código',
+    exige:[{k:'linguagem',t:'Em que linguagem?',
+    dica:'Define quem no time consegue manter, revisar e corrigir isto às duas da manhã.',
+    op:[
+      ['pyspark','PySpark','Mais expressivo e o padrão do ecossistema Spark. Exige Python no time.'],
+      ['sparksql','Spark SQL','Aproveita quem já sabe SQL, com boa parte do poder do Spark. Curva de entrada bem menor.'],
+      ['python','Python puro','Sem Spark. Bom para volume pequeno e chamadas de API; não escala para volume alto.']]}],
     oque:'Código PySpark/SQL executado sobre o Lakehouse, versionável em Git.',
     quando:'Transformação complexa, volume alto, lógica que precisa de teste e revisão, ingestão de API com paginação e retry.',
     evitar:'Usar Spark para processar poucos milhares de linhas — o tempo de subir a sessão custa mais que o trabalho.',
@@ -5692,6 +5743,13 @@ const FAB_COMP={
   // ===== CONSUMO =====
   semantic:{nome:'Semantic Model',etapa:'consumo',ico:'semantic',
     curto:'Centralizar medida e segurança do consumo',
+    exige:[{k:'modo',t:'Qual o modo de armazenamento do modelo?',
+    dica:'É a decisão mais determinante do consumo no Fabric: muda performance, atualização e o que a arquitetura precisa ter embaixo.',
+    op:[
+      ['directlake','Direct Lake','Lê o Delta do OneLake diretamente, sem importar nem consultar a origem. Performance de Import sem cópia nem janela de refresh. Exige que a camada de consumo esteja em Delta e respeita limites por SKU de capacidade.'],
+      ['import','Import','Copia o dado para dentro do modelo. Mais rápido e previsível, mas exige orquestrar atualização — e o dado fica tão velho quanto o último refresh.'],
+      ['directquery','DirectQuery','Consulta a origem a cada interação. Dado sempre atual, ao custo de jogar a carga do BI na origem e de performance dependente dela.']],
+    alerta:{directquery:'DirectQuery devolve a carga do BI para a origem. Em Warehouse compartilhado isso compete com as cargas; em origem transacional, é o anti-pattern que a arquitetura veio evitar.'}}],
     oque:'Camada semântica: relacionamentos, medidas DAX, hierarquias e regras de segurança.',
     quando:'Sempre que houver mais de um relatório sobre o mesmo assunto, ou métrica que precisa ter uma definição só.',
     evitar:'Um modelo semântico por relatório. É assim que "faturamento" passa a ter cinco valores diferentes na empresa.',
@@ -5700,7 +5758,8 @@ const FAB_COMP={
     proximos:[
       {id:'pbi',nivel:'rec',porque:'Consumo natural do modelo semântico.'},
       {id:'rls',nivel:'rec',porque:'É no modelo que a segurança por linha deve morar — não no relatório.'},
-      {id:'pbimonitor',nivel:'ok',porque:'Se o modelo é sobre a tabela de log, ele vira o painel de monitoramento das suas cargas.'}
+      {id:'pbimonitor',nivel:'ok',porque:'Se o modelo é sobre a tabela de log, ele vira o painel de monitoramento das suas cargas.'},
+      {id:'pipeline',nivel:'ok',porque:'Modelo em Import precisa de alguém que dispare a atualização ao final da carga — senão o relatório mostra o estado do último refresh sem avisar que está velho.'}
     ]},
   pbi:{nome:'Power BI (relatório)',etapa:'consumo',ico:'pbi',
     curto:'Relatório para pessoas',
@@ -5749,6 +5808,11 @@ const FAB_COMP={
   // ===== GOVERNANÇA E CONTROLE =====
   ctrltable:{nome:'Tabela de Controle',etapa:'governanca',ico:'ctrl',
     curto:'O que processar e até onde já foi',
+    exige:[{k:'onde',t:'Onde a tabela de controle vive?',
+    dica:'Ela precisa de escrita transacional: o pipeline lê e a procedure atualiza na mesma execução.',
+    op:[
+      ['warehouse','Warehouse','O lugar natural: T-SQL completo e escrita transacional junto das procedures.'],
+      ['sqldb','SQL database','Quando a configuração é mantida por uma aplicação, não pelo time de dados.']]}],
     oque:'Tabela de metadados que define o que processar e como: lista de objetos, watermark, flags, parâmetros.',
     quando:'Assim que houver mais de três objetos com a mesma lógica de carga.',
     evitar:'Deixar a tabela de controle sem dono e sem validação — ela passa a decidir o comportamento do fluxo inteiro.',
@@ -5762,6 +5826,13 @@ const FAB_COMP={
     ]},
   logtable:{nome:'Log de Execução',etapa:'governanca',ico:'log',
     curto:'O que rodou, quanto, e com qual erro',
+    exige:[{k:'granularidade',t:'Qual a granularidade do log?',
+    dica:'Decide o que você consegue responder quando algo falhar. É aqui que se define se você reprocessa uma tabela ou quarenta.',
+    op:[
+      ['execucao','Por execução','Uma linha por rodada do pipeline. Responde "rodou ou não", e só isso.'],
+      ['objeto','Por objeto','Uma linha por tabela ou arquivo processado. Responde "quais dos 40 falharam" — e permite reprocessar só esses.'],
+      ['item','Por item, com volume','Além do objeto, registra linhas lidas e gravadas por iteração. É o que revela carga que rodou mas não trouxe nada.']],
+    alerta:{execucao:'Log por execução não diz qual objeto falhou. Em carga com ForEach, isso obriga reprocessar o lote inteiro por causa de um item.'}}],
     oque:'Tabela que registra cada execução: id, objeto, início, fim, status, volume lido/gravado e mensagem de erro.',
     quando:'Em qualquer arquitetura com carga automatizada. É a peça que mais falta e a que mais dói quando falta.',
     evitar:'Confiar apenas no Monitoring Hub. Ele mostra execução recente, mas não guarda histórico longo nem permite cruzar com dado de negócio.',
@@ -5808,6 +5879,13 @@ const FAB_COMP={
     ]},
   workspace:{nome:'Workspace / Domínio',etapa:'governanca',ico:'ws',
     curto:'Separar ambientes e domínios',
+    exige:[{k:'organizacao',t:'Como os workspaces são organizados?',
+    dica:'É a decisão mais cara de desfazer: mudar depois quebra referência em relatório, pipeline e shortcut.',
+    op:[
+      ['ambiente','Por ambiente','Dev, teste e produção separados. O mínimo para não desenvolver em produção.'],
+      ['dominio','Por domínio','Vendas, financeiro, operações — cada área com o seu, sobre domínios do Fabric.'],
+      ['camada','Por camada','Bronze, Silver e Gold em workspaces distintos, com permissão por camada.'],
+      ['dominio_ambiente','Por domínio e ambiente','A combinação usada em organização grande. Mais workspaces para governar, e o isolamento que elas precisam.']]}],
     oque:'Organização lógica: workspaces por camada ou por domínio, agrupados em domínios, sobre capacidades.',
     quando:'Antes de criar o primeiro item. Reorganizar depois é caro e quebra referência.',
     evitar:'Um workspace único para tudo. Vira impossível separar quem acessa o quê e isolar produção de desenvolvimento.',
@@ -5829,6 +5907,12 @@ const FAB_COMP={
     ]},
   rls:{nome:'Segurança e Acesso (RLS/OLS)',etapa:'governanca',ico:'shield',
     curto:'Definir quem vê o quê',
+    exige:[{k:'modo',t:'O filtro é fixo ou depende de quem acessa?',
+    dica:'Muda a manutenção e a performance do modelo.',
+    op:[
+      ['estatico','Estático por papel','Um papel por recorte (região, unidade). Simples, e cresce em número de papéis.'],
+      ['dinamico','Dinâmico por usuário','O filtro sai de uma tabela que liga usuário a permissão. Um papel só, com manutenção em dado — mas exige manter essa tabela correta.']],
+    alerta:{dinamico:'RLS dinâmico depende de uma tabela de permissão sempre atualizada. Se ela ficar velha, alguém vê o que não devia — e sem erro nenhum aparecer.'}}],
     oque:'Controle de quem vê o quê: por workspace, por item, por linha (RLS) e por coluna (OLS).',
     quando:'Sempre que houver dado sensível ou segmentação por área, região ou cliente.',
     evitar:'Resolver segurança criando um relatório por área. Multiplica manutenção e uma hora alguém vê o que não devia.',
@@ -6037,6 +6121,34 @@ const FAB_VALID=[
     quando:(g,ctx)=>fabCtxTem(ctx,'objetos','centenas')&&g.contar()>=4&&!g.tem(['ctrltable']),
     texto:'Com centenas de objetos e sem tabela de controle, cada inclusão vira desenvolvimento e cada correção precisa ser replicada em todos os pipelines.',
     resolver:'Adote pipeline dirigido por metadados: Tabela de Controle + Lookup + ForEach.'},
+  {id:'import-sem-refresh',nivel:'aviso',titulo:'Modelo Import sem orquestração de atualização',
+    quando:g=>g.cfg('semantic','modo','import')&&!g.tem(['pipeline','sproc']),
+    texto:'O modelo está em Import, então o dado só muda quando alguém atualiza. Sem orquestração de refresh, o relatório mostra o estado do último carregamento — sem avisar que está velho.',
+    resolver:'Adicione a atualização do modelo ao final do pipeline de carga.'},
+  {id:'directlake-sem-delta',nivel:'aviso',titulo:'Direct Lake sem camada em Delta',
+    quando:g=>g.cfg('semantic','modo','directlake')&&!g.tem(['gold','lakehouse','warehouse']),
+    texto:'Direct Lake lê tabelas Delta do OneLake. Sem uma camada de consumo materializada lá, o modelo não tem de onde ler.',
+    resolver:'Materialize a camada Gold em Lakehouse ou Warehouse.'},
+  {id:'paralelo-sem-log-item',nivel:'aviso',titulo:'ForEach em paralelo com log grosso',
+    quando:g=>g.cfg('foreach','execucao','paralelo')&&g.tem(['logtable'])&&!g.cfg('logtable','granularidade','item')&&!g.cfg('logtable','granularidade','objeto'),
+    texto:'As iterações rodam simultaneamente, mas o log é por execução. Quando uma falhar, você saberá que o lote quebrou — não qual item.',
+    resolver:'Mude a granularidade do log para por objeto ou por item.'},
+  {id:'invoke-sem-espera-com-log',nivel:'aviso',titulo:'Log registra sucesso que não aconteceu',
+    quando:g=>g.cfg('invoke','espera','nao')&&g.tem(['logtable']),
+    texto:'O pai não aguarda o filho, mas grava log. Ele vai registrar sucesso mesmo quando o filho falhar — histórico bonito e mentiroso, que é pior que não ter log.',
+    resolver:'Aguarde a conclusão no Invoke Pipeline, ou registre o resultado dentro do próprio filho.'},
+  {id:'evento-sem-observador',nivel:'sugestao',titulo:'Gatilho por evento sem quem observe',
+    quando:g=>g.cfg('pipeline','gatilho','evento')&&!g.tem(['activator','eventstream']),
+    texto:'O pipeline é disparado por evento, mas a arquitetura não mostra quem detecta esse evento.',
+    resolver:'Adicione Activator (ou Eventstream) como o observador que dispara a execução.'},
+  {id:'copyjob-full-recorrente',nivel:'sugestao',titulo:'Copy Job em cópia completa recorrente',
+    quando:(g,ctx)=>g.cfg('copyjob','modo','full')&&!fabCtxTem(ctx,'freq','batch'),
+    texto:'Cópia completa a cada execução cresce sem parar e fica mais lenta a cada dia — e o Copy Job existe justamente para resolver incremental sem código.',
+    resolver:'Mude para incremental, se a origem tiver coluna de data ou versão.'},
+  {id:'dinamico-sem-tabela',nivel:'sugestao',titulo:'RLS dinâmico sem tabela de permissão governada',
+    quando:g=>g.cfg('rls','modo','dinamico')&&!g.tem(['ctrltable','dq']),
+    texto:'RLS dinâmico depende de uma tabela que liga usuário a permissão. Se ela ficar desatualizada, alguém vê o que não devia — e nenhum erro aparece.',
+    resolver:'Trate essa tabela como dado governado: com dono, validação e carga controlada.'},
   {id:'orfao',nivel:'sugestao',titulo:'Componente solto no diagrama',
     quando:g=>g.orfaos().length>0,
     texto:'Há componentes sem nenhuma ligação. Ou falta conectá-los, ou eles não pertencem a esta arquitetura.',
@@ -6749,6 +6861,35 @@ function fabSugestoes(no){
       if(['eventstream','eventhouse','activator','rtdash'].includes(p.id))emp(50,'Estratégia streaming-first: caminho nativo de fluxo contínuo.');
       if(['copy','copyjob'].includes(p.id))emp(-35,'Estratégia streaming-first: cópia em lote é o caminho oposto ao escolhido.');
     }
+    // Configuracao obrigatoria ja declarada NESTE no. Nao e preferencia de
+    // contexto: e o que a peca vai ser, e por isso muda o que vem depois dela.
+    const _cfg=no.cfg||{};
+    if(no.comp==='semantic'){
+      if(_cfg.modo==='import'){
+        if(['pipeline','sproc'].includes(p.id))emp(45,'Modo Import: alguém precisa orquestrar a atualização — o dado fica tão velho quanto o último refresh.');
+        if(p.id==='logtable')emp(30,'Com Import, falha de refresh é falha invisível se não for registrada.');
+      }
+      if(_cfg.modo==='directlake'){
+        if(['gold','lakehouse'].includes(p.id))emp(40,'Direct Lake lê Delta do OneLake: a camada de consumo precisa estar lá, em Delta.');
+        if(p.id==='pipeline')emp(-25,'Direct Lake dispensa orquestração de refresh — não há importação para atualizar.');
+      }
+      if(_cfg.modo==='directquery'&&p.id==='warehouse')
+        emp(20,'DirectQuery joga a carga do BI na origem: ela precisa aguentar consulta interativa.');
+    }
+    if(no.comp==='foreach'&&_cfg.execucao==='paralelo'){
+      if(p.id==='logtable')emp(50,'Em paralelo o log por item deixa de ser refinamento: sem ele não dá para saber qual iteração falhou.');
+      if(p.id==='notify')emp(25,'Falha em uma de N iterações simultâneas passa despercebida sem aviso.');
+    }
+    if(no.comp==='invoke'&&_cfg.espera==='nao'){
+      if(['activator','monitorhub'].includes(p.id))emp(35,'Sem aguardar o filho, o pai não sabe o resultado: o acompanhamento tem de vir de fora.');
+      if(p.id==='logtable')emp(-20,'Sem aguardar a conclusão, o log do pai não tem o resultado do filho para registrar.');
+    }
+    if(no.comp==='pipeline'&&_cfg.gatilho==='evento'&&['activator','eventstream'].includes(p.id))
+      emp(40,'Gatilho por evento precisa de quem observe o evento e dispare a execução.');
+    if(no.comp==='copyjob'&&_cfg.modo==='incremental'&&p.id==='ctrltable')
+      emp(-30,'O Copy Job já guarda sozinho até onde leu: uma tabela de controle aqui duplica esse papel.');
+    if(no.comp==='logtable'&&_cfg.granularidade==='item'&&['semantic','pbimonitor'].includes(p.id))
+      emp(30,'Log por item com volume dá base para painel de duração e de linhas por objeto.');
     // Quantidade de objetos: e ela, nao o volume, que decide metadados
     if(fabCtxTem(ctx,'objetos','centenas')&&['ctrltable','lookup','foreach','invoke'].includes(p.id))
       emp(50,'Centenas de objetos: manter um pipeline por objeto é inviável — metadados deixam de ser opção.');
@@ -8263,6 +8404,9 @@ const FAB_PEDE={
   'incremental-sem-fonte':['bronze','notebook'],'sensivel-sem-acesso':['rls'],
   'auditoria-sem-bronze':['bronze'],'scd-sem-merge':['sproc'],
   'janela-sem-paralelismo':['notebook'],'muitos-objetos-explicito':['ctrltable','lookup','foreach'],
+  'import-sem-refresh':['pipeline','sproc'],'directlake-sem-delta':['gold','lakehouse'],
+  'paralelo-sem-log-item':['logtable'],'evento-sem-observador':['activator'],
+  'dinamico-sem-tabela':['ctrltable','dq'],
   'equipe-x-ferramenta':['dataflow'],'sql-sem-warehouse':['warehouse']
 };
 
