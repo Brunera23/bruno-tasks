@@ -1898,6 +1898,12 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-no-txt b{font-size:13.5px;font-weight:650;color:var(--label);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fab-no-txt i{font-size:11.5px;font-style:normal;color:var(--label2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fab-no-cfg{font-size:10.5px;color:var(--et);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fab-no-filho{position:absolute;left:0;right:0;bottom:-11px;margin:0 auto;width:max-content;
+  border:1px solid var(--et);background:var(--bg);color:var(--et);font-size:10.5px;font-weight:650;
+  padding:2px 9px;border-radius:9px;cursor:pointer;opacity:0;transition:opacity .12s}
+.fab-no:hover .fab-no-filho,.fab-no.sel .fab-no-filho{opacity:1}
+.fab-volta{background:var(--hover)!important;color:var(--label)!important}
+.fab-trilha{color:var(--label2);font-size:14px;align-self:center}
 .fab-no-pend{position:absolute;top:-7px;left:-7px;width:18px;height:18px;border-radius:50%;background:#e8a33d;color:#fff;
   font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.2)}
 .fab-no-del{position:absolute;top:-8px;right:-8px;width:19px;height:19px;border-radius:50%;border:0;background:#d9534f;
@@ -1908,7 +1914,8 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-sugs{position:absolute;top:0;left:0;width:0;height:0}
 .fab-sug-linha{position:absolute;height:1.5px;background:var(--sep);pointer-events:none}
 .fab-fluxo{position:absolute;transform:translateY(-50%);width:290px;display:flex;
-  flex-direction:column;align-items:flex-start;gap:7px}
+  flex-direction:column;align-items:flex-start;gap:7px;max-height:78vh;overflow-y:auto;
+  overscroll-behavior:contain;padding-right:2px}
 .fab-fluxo.esq{align-items:flex-end}
 .fab-fluxo.esq .fab-op,.fab-fluxo.esq .fab-perg{text-align:right}
 .fab-sug{display:flex;align-items:center;gap:9px;padding:7px 14px 7px 10px;max-width:100%;
@@ -1933,6 +1940,8 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
   border:1.5px solid var(--sep);background:var(--bg);border-radius:9px;cursor:pointer;animation:fabIn .18s ease-out}
 .fab-op:hover{border-color:#0078d4;background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.12)}
 .fab-op b{display:block;font-size:13px;font-weight:650;color:var(--label);line-height:1.25}
+.fab-op-alerta{display:block;margin-top:5px;padding:5px 8px;border-left:3px solid #c07d1a;background:#fff8e8;
+  border-radius:0 5px 5px 0;font-size:11px;color:#7a4e08;line-height:1.4}
 .fab-op i{display:block;margin-top:3px;font-style:normal;font-size:11.5px;color:var(--label2);line-height:1.3}
 
 .fab-dica-vazio{position:absolute;left:120px;top:110px;width:330px;padding:16px 18px;border:1.5px dashed var(--sep);
@@ -1950,13 +1959,14 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
   font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
 .fab-ini-q b{font-size:19px;color:var(--label)}
 .fab-ini-q i{font-style:normal;font-size:13.5px;color:var(--label2)}
-.fab-ini-cx{width:min(560px,100%);max-height:100%;display:flex;flex-direction:column;
+.fab-ini-cx{width:min(560px,100%);max-height:min(100%,660px);display:flex;flex-direction:column;
   background:var(--bg);border:1px solid var(--sep);border-radius:16px;
   box-shadow:0 12px 40px rgba(0,0,0,.18);overflow:hidden}
 .fab-ini-cab{padding:18px 20px 14px;border-bottom:1px solid var(--sep);flex-shrink:0}
 .fab-ini-cab b{display:block;font-size:18px;color:var(--label);line-height:1.3}
 .fab-ini-cab i{display:block;margin-top:6px;font-style:normal;font-size:13px;color:var(--label2);line-height:1.5}
-.fab-ini-ops{padding:14px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.fab-ini-ops{padding:14px 20px;overflow-y:auto;overscroll-behavior:contain;display:flex;
+  flex-direction:column;gap:8px;min-height:0;flex:1}
 .fab-ini-op{display:flex;gap:11px;text-align:left;padding:13px 15px;border:1.5px solid var(--sep);
   background:var(--card);border-radius:11px;cursor:pointer}
 .fab-ini-op:hover{border-color:var(--et,#0078d4);box-shadow:0 2px 10px rgba(0,0,0,.1)}
@@ -5212,6 +5222,109 @@ const FAB_COMP={
       {id:'copy',nivel:'rec',porque:'Para arquivos que chegam via FTP/SFTP ou pasta de rede, Copy Data traz para o OneLake.'},
       {id:'bronze',nivel:'rec',porque:'Guarde o arquivo exatamente como chegou. É a sua única defesa quando alguém questionar o número daqui a seis meses.'}
     ]},
+  src_bigquery:{nome:'Google BigQuery',etapa:'origem',ico:'db',
+    curto:'Data warehouse na GCP, cobrado por volume escaneado',
+    oque:'Data warehouse serverless da Google Cloud, cobrado por volume de dados escaneado em cada consulta.',
+    quando:'A empresa tem analytics na GCP e o Fabric precisa desse dado — cenário multi-cloud, comum após fusão ou quando marketing e produto vivem em outra nuvem.',
+    evitar:'Extrair tabela inteira a cada carga. No BigQuery você paga pelo que a consulta varre: full load diário vira fatura mensal inesperada.',
+    beneficios:['Dado já modelado e tratado do lado da GCP','Consulta filtrada reduz o volume trafegado e o custo'],
+    riscos:['Custo por consulta cresce silenciosamente com full load','Egresso entre nuvens é cobrado pela Google','Latência maior que origem na mesma nuvem','Exige conta de serviço e chave gerenciadas fora do Fabric'],
+    alternativas:['src_snowflake','src_objeto'],
+    proximos:[
+      {id:'copy',nivel:'rec',porque:'Copy Data com consulta filtrada por data: você traz só a partição nova e paga só por ela.'},
+      {id:'ctrltable',nivel:'rec',porque:'Em BigQuery, watermark não é só performance — é controle de custo. Sem incremental, cada carga varre a tabela inteira e é cobrada.'},
+      {id:'bronze',nivel:'rec',porque:'Guarde o extrato: reextrair da GCP custa dinheiro, diferente de reler um lake interno.'},
+      {id:'notebook',nivel:'ok',porque:'Quando a extração exige paginação por partição ou controle fino de custo.'}
+    ]},
+  src_snowflake:{nome:'Snowflake',etapa:'origem',ico:'db',
+    curto:'Cloud DW com Mirroring nativo no Fabric',
+    oque:'Data warehouse em nuvem, frequentemente a plataforma analítica principal da empresa antes do Fabric.',
+    quando:'Coexistência: o Snowflake continua servindo parte do negócio e o Fabric precisa do mesmo dado.',
+    evitar:'Duplicar a modelagem que já está pronta e confiável no Snowflake — reaproveite as views.',
+    beneficios:['O Fabric tem Mirroring para Snowflake: replicação sem pipeline','Dado normalmente já curado'],
+    riscos:['Dois warehouses convivendo geram divergência de número se ninguém definir a fonte da verdade','Custo de compute na origem durante a extração'],
+    alternativas:['src_bigquery','src_databricks'],
+    proximos:[
+      {id:'mirroring',nivel:'rec',porque:'Mirroring de Snowflake é nativo no Fabric: replica continuamente sem você manter ingestão.'},
+      {id:'copy',nivel:'ok',porque:'Quando você precisa filtrar ou transformar na entrada, em vez de replicar tudo.'},
+      {id:'silver',nivel:'rec',porque:'Defina qual plataforma é a fonte da verdade de cada métrica — senão o mesmo indicador terá dois valores.'}
+    ]},
+  src_databricks:{nome:'Databricks / Unity Catalog',etapa:'origem',ico:'spark',
+    curto:'Lakehouse externo em Delta, legível por Shortcut',
+    oque:'Plataforma de lakehouse sobre Delta, com governança no Unity Catalog.',
+    quando:'A engenharia já roda em Databricks e o Fabric entra pelo consumo e pelo Power BI.',
+    evitar:'Copiar tabela Delta que já está acessível: o formato é o mesmo, dá para apontar.',
+    beneficios:['Mesmo formato Delta: Shortcut lê sem copiar nem converter','Evita reprocessar o que já foi processado'],
+    riscos:['Governança em dois catálogos exige acordo explícito','Permissão do Unity Catalog não se propaga para o Fabric'],
+    proximos:[
+      {id:'shortcut',nivel:'rec',porque:'Delta de um lado, Delta do outro: Shortcut lê no lugar, sem cópia nem duplicação de custo.'},
+      {id:'lakehouse',nivel:'rec',porque:'O shortcut aparece como tabela no Lakehouse e já fica consultável.'},
+      {id:'lineage',nivel:'ok',porque:'Com dois catálogos, rastrear de onde veio o número deixa de ser trivial.'}
+    ]},
+  src_saas:{nome:'SaaS / CRM (Salesforce, Dynamics)',etapa:'origem',ico:'api',
+    curto:'Sistema de negócio em nuvem, acessado por API',
+    oque:'Aplicação de negócio em nuvem — CRM, ITSM, RH — acessível por API ou conector dedicado.',
+    quando:'Dado comercial, de atendimento ou de pessoas que só existe no SaaS.',
+    evitar:'Extrair tudo a cada carga: quase todo SaaS impõe limite de chamadas por dia, e estourá-lo derruba a integração para todo mundo.',
+    beneficios:['Conectores dedicados no Fabric para os principais','Dado já com regra de negócio aplicada'],
+    riscos:['Limite de API é rígido e compartilhado com outras integrações','Campos customizados mudam sem aviso do time de negócio','Volume histórico grande costuma exigir extração em janelas'],
+    alternativas:['src_api'],
+    proximos:[
+      {id:'dataflow',nivel:'rec',porque:'Os conectores de SaaS no Dataflow Gen2 já resolvem autenticação e paginação.'},
+      {id:'ctrltable',nivel:'rec',porque:'Limite de API torna o incremental obrigatório, não uma otimização.'},
+      {id:'bronze',nivel:'rec',porque:'Campo customizado some sem aviso. O extrato bruto é o que permite reconstruir.'},
+      {id:'notify',nivel:'rec',porque:'Quando o limite de chamadas estoura, alguém precisa saber no mesmo dia.'}
+    ]},
+  src_nosql:{nome:'NoSQL (MongoDB, Cosmos DB)',etapa:'origem',ico:'db',
+    curto:'Documento sem esquema fixo',
+    oque:'Banco de documentos, onde cada registro pode ter estrutura própria.',
+    quando:'Aplicação moderna que guarda evento, catálogo ou perfil em documento.',
+    evitar:'Assumir esquema fixo. Em documento, o campo que existe em 90% dos registros pode não existir nos outros 10%.',
+    beneficios:['Cosmos DB tem Mirroring nativo no Fabric','Flexibilidade da origem preservada no Bronze'],
+    riscos:['Esquema varia entre documentos e quebra carga que assume colunas','Aninhamento profundo exige achatamento antes do consumo'],
+    proximos:[
+      {id:'mirroring',nivel:'rec',porque:'Para Cosmos DB, Mirroring replica continuamente sem pipeline.'},
+      {id:'notebook',nivel:'rec',porque:'Achatar documento aninhado e lidar com esquema variável é trabalho de código, não de atividade visual.'},
+      {id:'bronze',nivel:'rec',porque:'Guarde o JSON como veio: é a única defesa contra variação de esquema.'},
+      {id:'dq',nivel:'rec',porque:'Campo ausente em parte dos documentos é a falha mais comum aqui.'}
+    ]},
+  src_dataverse:{nome:'Dataverse / Power Platform',etapa:'origem',ico:'db',
+    curto:'Dado de apps low-code, com link nativo para o Fabric',
+    oque:'Banco por trás de Power Apps, Dynamics 365 e fluxos do Power Automate.',
+    quando:'Processo de negócio construído em low-code cujo dado precisa entrar no analítico.',
+    evitar:'Montar pipeline de extração: o Dataverse tem link direto para o OneLake, sem ETL.',
+    beneficios:['Link nativo para OneLake: sem pipeline, sem cópia','Metadados e rótulos já vêm descritos'],
+    riscos:['Tabelas do sistema poluem se você trouxer tudo','Nome lógico difere do rótulo exibido e confunde quem modela'],
+    proximos:[
+      {id:'shortcut',nivel:'rec',porque:'O link do Dataverse com o OneLake dispensa ingestão: o dado aparece pronto para consultar.'},
+      {id:'lakehouse',nivel:'rec',porque:'É onde as tabelas ficam acessíveis para o restante da arquitetura.'},
+      {id:'silver',nivel:'ok',porque:'Traduzir nome lógico para nome de negócio evita que o modelo fique ilegível.'}
+    ]},
+  src_objeto:{nome:'Object storage (S3, ADLS, GCS)',etapa:'origem',ico:'onelake',
+    curto:'Lago externo — leia sem copiar',
+    oque:'Armazenamento de objetos onde a empresa já mantém arquivos e tabelas.',
+    quando:'O dado já está num lake e só precisa ser alcançado pelo Fabric.',
+    evitar:'Copiar para o OneLake por reflexo. Se dá para apontar, copiar só cria custo e uma segunda verdade.',
+    beneficios:['Shortcut lê no lugar, sem duplicar armazenamento','Disponível imediatamente, sem pipeline'],
+    riscos:['Você não controla a disponibilidade da origem','S3 e GCS cobram egresso','Sem snapshot próprio, seu histórico muda quando a origem muda'],
+    proximos:[
+      {id:'shortcut',nivel:'rec',porque:'É exatamente o caso de uso do Shortcut: ler onde o dado já está.'},
+      {id:'lakehouse',nivel:'rec',porque:'O shortcut aparece como tabela e já fica consultável.'},
+      {id:'copy',nivel:'ok',porque:'Só quando você precisa congelar um snapshot que a origem não garante.'}
+    ]},
+  src_mainframe:{nome:'Mainframe / AS400 / DB2',etapa:'origem',ico:'db',
+    curto:'Legado crítico, janela de acesso restrita',
+    oque:'Sistema legado que ainda roda o núcleo da operação — comum em banco, seguro e indústria.',
+    quando:'O dado transacional mais importante da empresa está lá e não vai sair tão cedo.',
+    evitar:'Consultar em horário de operação. Mainframe costuma ter janela negociada, e estourá-la é incidente.',
+    beneficios:['Fonte da verdade do negócio','Alta consistência transacional'],
+    riscos:['Janela de acesso curta e negociada com outra equipe','EBCDIC, COMP-3 e campos empacotados exigem conversão','Extração normalmente sai por arquivo, não por conexão direta','Mudança na origem depende de time e orçamento próprios'],
+    proximos:[
+      {id:'src_files',nivel:'rec',porque:'Na prática o mainframe entrega arquivo. Trate a integração como recepção de arquivo, com verificação de chegada.'},
+      {id:'getmeta',nivel:'rec',porque:'Confirme que o arquivo do dia chegou antes de processar — janela perdida é dado perdido.'},
+      {id:'bronze',nivel:'rec',porque:'Guarde o arquivo original: reextrair do mainframe raramente é uma opção rápida.'},
+      {id:'notify',nivel:'rec',porque:'Arquivo que não chegou precisa virar alerta antes do próximo fechamento.'}
+    ]},
   src_stream:{nome:'Streaming (Event Hub / IoT / Kafka)',etapa:'origem',ico:'stream',
     curto:'Evento que perde valor com o tempo',
     oque:'Fluxo contínuo de eventos — telemetria, cliques, transações, sensores.',
@@ -5881,6 +5994,42 @@ const FAB_VALID=[
     quando:g=>g.nos.some(n=>fabEhContainer(n.comp)&&!g.nos.some(k=>k.escopo===n.id)),
     texto:'Existe um ForEach ou If sem nenhuma atividade dentro. Ele não faz nada assim.',
     resolver:'Selecione o laço e escolha o que roda dentro dele.'},
+  {id:'metadata-sem-controle',nivel:'aviso',titulo:'Estratégia por metadados sem tabela de controle',
+    quando:(g,ctx)=>ctx.estrategia==='metadata'&&g.contar()>=3&&!g.tem(['ctrltable']),
+    texto:'A estratégia declarada é dirigida por metadados, mas não há tabela de controle. Sem ela o pipeline não tem de onde ler o escopo — e você volta a manter um pipeline por objeto.',
+    resolver:'Adicione uma Tabela de Controle e leia dela com Lookup + ForEach.'},
+  {id:'zeroetl-com-pipeline',nivel:'sugestao',titulo:'Zero-ETL com pipeline montado',
+    quando:(g,ctx)=>ctx.estrategia==='zeroetl'&&g.tem(['copy','dataflow'])&&!g.tem(['mirroring','shortcut']),
+    texto:'A estratégia escolhida foi não manter ingestão, mas a arquitetura tem carga por pipeline e nenhum Mirroring ou Shortcut. Uma das duas decisões precisa mudar.',
+    resolver:'Troque a ingestão por Mirroring/Shortcut, ou reveja a estratégia no contexto.'},
+  {id:'explicito-em-escala',nivel:'sugestao',titulo:'Pipeline por objeto com muitas origens',
+    quando:(g,ctx)=>ctx.estrategia==='explicito'&&g.contarEtapa('origem')>=3,
+    texto:'Com três ou mais origens, manter um pipeline por objeto cresce linearmente: cada correção precisa ser aplicada em todos.',
+    resolver:'Considere migrar para a estratégia dirigida por metadados — revise no contexto.'},
+  {id:'incremental-sem-fonte',nivel:'aviso',titulo:'Carga incremental sem como detectar mudança',
+    quando:(g,ctx)=>ctx.mudanca==='nao'&&(g.prop('copy','incremental')||g.tem(['ctrltable'])),
+    texto:'O contexto diz que a origem não permite saber o que mudou, mas a arquitetura assume carga incremental. Sem coluna de controle nem CDC, o watermark não tem de onde sair.',
+    resolver:'Use carga full com snapshot em Bronze, ou negocie com o dono da origem a inclusão de uma coluna de data de atualização.'},
+  {id:'sensivel-sem-acesso',nivel:'aviso',titulo:'Dado pessoal sem controle de acesso',
+    quando:(g,ctx)=>(ctx.sensivel==='pessoal'||ctx.sensivel==='restrito')&&g.tem(['semantic','pbi'])&&!g.tem(['rls']),
+    texto:'Você indicou dado pessoal ou restrito, e há consumo publicado sem definição de quem vê o quê. É exposição indevida esperando acontecer, e problema de auditoria.',
+    resolver:'Defina RLS no modelo semântico antes de publicar.'},
+  {id:'auditoria-sem-bronze',nivel:'aviso',titulo:'Auditoria exigida sem camada Bronze',
+    quando:(g,ctx)=>ctx.historico==='auditoria'&&g.contar()>=3&&!g.tem(['bronze']),
+    texto:'O contexto pede auditoria completa, mas não há Bronze guardando o que a origem entregou. Sem isso não há o que auditar.',
+    resolver:'Adicione uma camada Bronze com snapshot datado de cada carga.'},
+  {id:'scd-sem-merge',nivel:'sugestao',titulo:'Histórico de mudanças sem MERGE',
+    quando:(g,ctx)=>ctx.historico==='scd'&&g.tem(['gold'])&&!g.tem(['sproc','notebook']),
+    texto:'SCD2 exige comparar o registro novo com o vigente e fechar a versão anterior. Isso não acontece sozinho.',
+    resolver:'Adicione uma Stored Procedure (ou Notebook) responsável pelo MERGE com data de início e fim.'},
+  {id:'janela-sem-paralelismo',nivel:'sugestao',titulo:'Janela apertada sem processamento paralelo',
+    quando:(g,ctx)=>ctx.janela==='apertada'&&g.contar()>=4&&!g.tem(['notebook','sparkjob']),
+    texto:'Com janela de minutos e sem processamento distribuído, a carga tende a estourar o tempo disponível.',
+    resolver:'Considere Notebook com particionamento e paralelismo nas etapas mais pesadas.'},
+  {id:'muitos-objetos-explicito',nivel:'aviso',titulo:'Centenas de objetos sem metadados',
+    quando:(g,ctx)=>ctx.objetos==='centenas'&&g.contar()>=4&&!g.tem(['ctrltable']),
+    texto:'Com centenas de objetos e sem tabela de controle, cada inclusão vira desenvolvimento e cada correção precisa ser replicada em todos os pipelines.',
+    resolver:'Adote pipeline dirigido por metadados: Tabela de Controle + Lookup + ForEach.'},
   {id:'orfao',nivel:'sugestao',titulo:'Componente solto no diagrama',
     quando:g=>g.orfaos().length>0,
     texto:'Há componentes sem nenhuma ligação. Ou falta conectá-los, ou eles não pertencem a esta arquitetura.',
@@ -5928,8 +6077,12 @@ const FAB_PROP={
   copy:{
     exige:[{k:'destino',t:'Para onde este Copy Data grava?',
       dica:'Todo Copy Data tem destino obrigatório no Fabric. É ele que define o que faz sentido depois.',
-      op:[['lakehouse','Lakehouse'],['warehouse','Warehouse'],['files','Arquivos (OneLake)'],['eventhouse','Eventhouse']],
-      alerta:{warehouse:'Gravar dado cru direto no Warehouse é anti-pattern: ele é mais caro que o Lakehouse e não foi feito para dado bruto. Use Warehouse só se este Copy já traz dado modelado.'}}],
+      op:[
+        ['lakehouse','Lakehouse','Destino padrão para dado cru e semi-estruturado. Grava em Delta, custa menos que o Warehouse e aceita Spark e SQL de leitura. É onde a camada Bronze deve viver.'],
+        ['warehouse','Warehouse','Só quando este Copy já traz dado modelado — staging de dimensões e fatos, por exemplo. Escolha certa se o time é de T-SQL e vai escrever por SQL.'],
+        ['files','Arquivos (OneLake)','Mantém o arquivo no formato original (Parquet, CSV, JSON) sem virar tabela. Útil quando o schema ainda não está definido ou o consumo é por código.'],
+        ['eventhouse','Eventhouse','Apenas para série temporal e telemetria em alto volume. Para dado de negócio é a escolha errada: não foi feito para junção entre entidades.']],
+      alerta:{warehouse:'Se este Copy traz dado CRU, isso é anti-pattern: o Warehouse é mais caro que o Lakehouse e não foi feito para dado bruto.'}}],
     propositos:[
       {id:'bruto',nome:'Ingestão de dados brutos',
        desc:'Trazer o dado como está na origem, sem aplicar regra. É o caso mais comum.',
@@ -6015,7 +6168,9 @@ const FAB_PROP={
   sproc:{
     exige:[{k:'onde',t:'Onde esta procedure vive?',
       dica:'Procedure exige um motor T-SQL com escrita. Lakehouse não serve — o endpoint dele é de leitura.',
-      op:[['warehouse','Warehouse'],['sqldb','SQL database (Fabric)']]}],
+      op:[
+        ['warehouse','Warehouse','Onde procedures normalmente vivem: T-SQL completo, escrita transacional e MERGE. É o lar natural do controle de execução e do log.'],
+        ['sqldb','SQL database (Fabric)','Quando a procedure serve uma aplicação operacional, não o analítico. Replica para o OneLake automaticamente, sem ETL.']]}],
     propositos:[
       {id:'controle_exec',nome:'Controlar a execução (início / fim / status)',
        desc:'Marcar que a carga começou, gravar o resultado ao final e registrar erro. É o padrão de controle de execução.',
@@ -6149,7 +6304,10 @@ const FAB_PROP={
 
   dataflow:{
     exige:[{k:'destino',t:'Para onde este Dataflow grava?',
-      op:[['lakehouse','Lakehouse'],['warehouse','Warehouse'],['sqldb','SQL database']]}],
+      op:[
+        ['lakehouse','Lakehouse','Resultado em Delta, acessível por Spark e por SQL. Escolha padrão quando o dado ainda vai passar por outras transformações.'],
+        ['warehouse','Warehouse','Quando o destino é modelo dimensional e quem consome fala T-SQL. Cuidado com volume: Dataflow + Warehouse encarece rápido.'],
+        ['sqldb','SQL database','Quando o resultado alimenta uma aplicação, não análise.']]}],
     propositos:[
       {id:'self',nome:'Transformação self-service da área de negócio',
        desc:'Quem mantém é o time de negócio, com interface visual em vez de código.',
@@ -6260,7 +6418,11 @@ const FAB_PROP={
 
   eventstream:{
     exige:[{k:'destino',t:'Para onde o Eventstream roteia?',
-      op:[['eventhouse','Eventhouse (KQL)'],['lakehouse','Lakehouse (Delta)'],['activator','Activator'],['varios','Mais de um destino']]}],
+      op:[
+        ['eventhouse','Eventhouse (KQL)','Destino nativo de streaming: ingestão contínua e consulta por janela de tempo em alto volume. É o que sustenta painel em tempo real.'],
+        ['lakehouse','Lakehouse (Delta)','Persiste o fluxo para histórico longo e treino de modelo, a custo menor. Latência maior que o Eventhouse.'],
+        ['activator','Activator','Quando o objetivo é reagir, não armazenar. Sozinho não guarda histórico — e sem histórico você não calibra o limite depois.'],
+        ['varios','Mais de um destino','O arranjo mais comum e o mais recomendado: Eventhouse para consultar, Lakehouse para o histórico, Activator para agir.']]}],
     propositos:[
       {id:'rt_dash',nome:'Alimentar painel em tempo real',
        desc:'Monitoramento operacional com latência de segundos.',
@@ -6286,7 +6448,11 @@ const FAB_PROP={
 
   shortcut:{
     exige:[{k:'origem_sc',t:'O dado apontado está onde?',
-      op:[['adls','ADLS Gen2'],['s3','Amazon S3'],['ws','Outro workspace do Fabric'],['onelake','Outro Lakehouse']]}],
+      op:[
+        ['adls','ADLS Gen2','Caso mais comum: o dado já está no Data Lake da empresa e não precisa ser copiado nem sincronizado.'],
+        ['s3','Amazon S3','Lago em outra nuvem. Atenção à latência de rede e ao custo de egresso cobrado na origem.'],
+        ['ws','Outro workspace do Fabric','Compartilhar entre times sem duplicar. Exige acordo de domínio, dono definido e permissão.'],
+        ['onelake','Outro Lakehouse','Reaproveitar uma tabela que já existe em outro Lakehouse do mesmo tenant.']]}],
     propositos:[
       {id:'externo',nome:'Ler dado de lake externo sem copiar',
        desc:'O dado já existe em outro lake e você só precisa consultá-lo.',
@@ -6377,6 +6543,38 @@ function fabDesfazer(){if(!_fabHist.length){toast('Nada para desfazer');return}_
 function fabRefazer(){if(!_fabHistFut.length){toast('Nada para refazer');return}_fabHist.push(fabEstado());fabAplicar(_fabHistFut.pop());toast('Refeito')}
 
 function fabArq(){return fabArqs.find(a=>a.id===fabCur)||null}
+// Abre (criando se preciso) o quadro do pipeline chamado por um Invoke.
+function fabAbrirFilho(noId){
+  const no=fabItems.find(n=>n.id===noId);if(!no)return;
+  let filho=no.filho?fabArqs.find(a=>a.id===no.filho):null;
+  if(!filho){
+    fabMarcar();
+    const pai=fabArq();
+    filho={id:'a'+Date.now().toString(36),nome:'Pipeline chamado',ctx:{...(pai?.ctx||{})},
+      pai:fabCur,paiNo:noId};
+    fabArqs.push(filho);
+    no.filho=filho.id;
+    // o filho ja nasce com o pipeline que sera montado
+    const antes=fabCur;fabCur=filho.id;
+    const raiz=fabNovoNo('pipeline',140,180);
+    fabCur=antes;
+    if(raiz)filho.raiz=raiz.id;
+    fabSave();
+  }
+  fabCur=filho.id;_fabSel=filho.raiz||null;
+  _fabGuia={ativo:true,atual:filho.raiz||null,passo:1};fabSalvarGuia();
+  _fabIni={aberto:false,passo:0};
+  fabSave();fabRender();
+  setTimeout(()=>{try{fabAjustar()}catch(e){}},40);
+}
+function fabVoltarPai(){
+  const a=fabArq();if(!a||!a.pai)return;
+  const noPai=a.paiNo;
+  fabCur=a.pai;_fabSel=noPai||null;
+  _fabGuia={ativo:true,atual:noPai||null,passo:1};fabSalvarGuia();
+  fabSave();fabRender();
+  setTimeout(()=>{try{fabAjustar()}catch(e){}},40);
+}
 function fabCtx(){return fabArq()?.ctx||{}}
 function fabNos(){return fabItems.filter(n=>n.arq===fabCur)}
 function fabLigs(){
@@ -6434,7 +6632,7 @@ function fabPendencia(no){
   for(const ex of (def.exige||[])){
     if(!no.cfg||!no.cfg[ex.k])
       return {tipo:'exige',campo:ex.k,t:ex.t,dica:ex.dica||'',
-        op:ex.op.map(([v,nome])=>({v,nome,desc:(ex.alerta&&ex.alerta[v])||''}))};
+        op:ex.op.map(([v,nome,desc])=>({v,nome,desc:desc||'',alerta:(ex.alerta&&ex.alerta[v])||''}))};
   }
   return null;
 }
@@ -6472,6 +6670,9 @@ function fabSugestoes(no){
     let peso=p.nivel==='rec'?100:p.nivel==='ok'?50:0;
     if(p.doProp)peso+=60;                           // veio do proposito declarado
     // limite do produto, nao preferencia: laco dentro de laco nao existe no Fabric
+    // o pipeline chamado vive em quadro proprio, nao neste
+    if(no.comp==='invoke'&&p.id==='pipeline'){peso=-999;p={...p,nivel:'evitar',
+      porque:'O pipeline chamado é outro artefato, com canvas próprio. Use "montar pipeline" no card do Invoke para desenhá-lo em um quadro separado.'}}
     if(fabNivelProibido(no,p.id)){peso=-999;p={...p,nivel:'evitar',
       porque:'O Fabric aceita um único nível de ForEach. Para repetir dentro de um laço, chame outro pipeline por Invoke Pipeline — é a saída oficial.'}}
     // Respeita a ordem do fluxo: saindo de uma Origem, a Ingestao vem antes da
@@ -6513,6 +6714,67 @@ function fabSugestoes(no){
     if(ctx.equipe==='codigo'){
       if(p.id==='notebook'||p.id==='sparkjob')emp(25,'Time confortável com código: Notebook dá controle e entra no Git.');
       if(p.id==='dataflow')emp(-15,'Com time de código, lógica versionada tende a valer mais que interface visual.');
+    }
+    // Estrategia declarada: e a decisao que redefine o escopo do que faz
+    // sentido sugerir, entao pesa mais que as demais dimensoes de contexto.
+    if(ctx.estrategia==='metadata'){
+      if(['ctrltable','lookup','foreach','invoke'].includes(p.id))
+        emp(55,'Estratégia dirigida por metadados: esta peça é o que faz um pipeline atender N objetos.');
+    }
+    if(ctx.estrategia==='explicito'){
+      if(['ctrltable','lookup','foreach'].includes(p.id))
+        emp(-50,'Você optou por um pipeline por objeto: metadados adicionam complexidade sem o ganho de escala aqui.');
+      if(p.id==='copy')emp(20,'Carga explícita: a atividade direta é o caminho mais legível.');
+    }
+    if(ctx.estrategia==='codigo'){
+      if(['notebook','sparkjob'].includes(p.id))emp(45,'Estratégia code-first: lógica versionada e testável em PR.');
+      if(p.id==='dataflow')emp(-50,'Estratégia code-first: Dataflow tira a lógica do Git e da revisão.');
+    }
+    if(ctx.estrategia==='lowcode'){
+      if(p.id==='dataflow')emp(45,'Estratégia low-code: é a peça que a área de negócio mantém sozinha.');
+      if(['notebook','sparkjob'].includes(p.id))emp(-45,'Estratégia low-code: código foge de quem vai manter isso.');
+    }
+    if(ctx.estrategia==='zeroetl'){
+      if(['mirroring','shortcut'].includes(p.id))emp(55,'Estratégia zero-ETL: sem pipeline para manter, é o menor custo de operação.');
+      if(['copy','dataflow','pipeline'].includes(p.id))emp(-40,'Estratégia zero-ETL: montar pipeline contraria a escolha de não manter ingestão.');
+    }
+    if(ctx.estrategia==='streaming'){
+      if(['eventstream','eventhouse','activator','rtdash'].includes(p.id))emp(50,'Estratégia streaming-first: caminho nativo de fluxo contínuo.');
+      if(['copy','copyjob'].includes(p.id))emp(-35,'Estratégia streaming-first: cópia em lote é o caminho oposto ao escolhido.');
+    }
+    // Quantidade de objetos: e ela, nao o volume, que decide metadados
+    if(ctx.objetos==='centenas'&&['ctrltable','lookup','foreach','invoke'].includes(p.id))
+      emp(50,'Centenas de objetos: manter um pipeline por objeto é inviável — metadados deixam de ser opção.');
+    if(ctx.objetos==='poucos'&&['ctrltable','lookup','foreach'].includes(p.id))
+      emp(-40,'Com até 3 objetos, metadados adicionam peças sem entregar escala. Um pipeline explícito é mais legível.');
+    // Como a origem identifica mudanca: define se incremental e viavel
+    if(ctx.mudanca==='nao'){
+      if(['ctrltable'].includes(p.id))emp(-35,'A origem não permite saber o que mudou: watermark não tem de onde sair. Aqui a carga é full.');
+      if(p.id==='bronze')emp(30,'Sem forma de detectar mudança, o snapshot em Bronze é o que te dá histórico e permite comparar entre cargas.');
+      if(p.id==='notebook')emp(20,'Comparar snapshots para detectar o que mudou é trabalho de código.');
+    }
+    if(ctx.mudanca==='cdc'&&['mirroring'].includes(p.id))
+      emp(50,'A origem tem CDC: Mirroring entrega as mudanças sem você manter pipeline algum.');
+    if(ctx.mudanca==='coluna'&&['ctrltable','lookup'].includes(p.id))
+      emp(35,'Há coluna de data na origem: dá para guardar watermark e fazer incremental de verdade.');
+    // Historico exigido: muda a modelagem
+    if(ctx.historico==='auditoria'&&p.id==='bronze')
+      emp(45,'Auditoria completa exige guardar todo estado recebido — é exatamente o papel do Bronze.');
+    if(ctx.historico==='scd'){
+      if(['sproc','warehouse','gold'].includes(p.id))emp(30,'Histórico de mudanças (SCD2) pede MERGE com data de início e fim, em modelo dimensional.');
+    }
+    if(ctx.historico==='atual'&&p.id==='bronze')
+      emp(-15,'Só o estado atual é necessário: o Bronze continua útil para reprocessar, mas pesa menos na decisão.');
+    // Dado sensivel: governanca deixa de ser refinamento
+    if(ctx.sensivel==='pessoal'&&['rls','lineage','dq'].includes(p.id))
+      emp(40,'Há dado pessoal (LGPD): controle de acesso e rastreabilidade são exigência, não melhoria.');
+    if(ctx.sensivel==='restrito'&&['rls','lineage','workspace','deploy'].includes(p.id))
+      emp(50,'Dado altamente restrito: acesso, linhagem e trilha de auditoria são pré-requisito para publicar.');
+    // Janela de carga: decide particionamento e paralelismo
+    if(ctx.janela==='apertada'){
+      if(['notebook','sparkjob'].includes(p.id))emp(35,'Janela apertada: paralelismo e particionamento deixam de ser refinamento.');
+      if(p.id==='dataflow')emp(-40,'Janela apertada: Dataflow Gen2 é o caminho mais lento das opções.');
+      if(['ctrltable','lookup'].includes(p.id))emp(25,'Com janela curta, carga full não cabe — incremental vira obrigatório.');
     }
     // criticidade define o rigor que se paga desde o inicio
     if(ctx.criticidade==='alta'&&['logtable','notify','dq','deploy','pbimonitor','activator'].includes(p.id))
@@ -6659,6 +6921,11 @@ function fabAceitar(sug){
 function fabApagar(id){
   const n=fabItems.find(x=>x.id===id);if(!n)return;
   fabMarcar();
+  if(n.filho){
+    fabItems=fabItems.filter(x=>x.arq!==n.filho);
+    fabEdges=fabEdges.filter(e=>e.arq!==n.filho);
+    fabArqs=fabArqs.filter(a=>a.id!==n.filho);
+  }
   fabItems=fabItems.filter(x=>x.id!==id);
   fabEdges=fabEdges.filter(e=>e.from!==id&&e.to!==id);
   if(_fabSel===id)_fabSel=null;
@@ -6749,7 +7016,8 @@ const FAB_INICIO={
       {id:'src_stream',porque:'Se o modelo precisa reagir a evento (detecção de anomalia em tempo real), o dado tem que chegar em fluxo, não em lote.'},
       {id:'src_sqlserver',porque:'Modelos de negócio (churn, demanda, crédito) partem do histórico transacional — que quase sempre vive num relacional.'},
       {id:'src_files',porque:'Muito projeto de IA começa com extração em arquivo enquanto o acesso definitivo à origem não sai.'},
-      {id:'src_api',porque:'Dado de sistema terceiro (clima, mercado, ERP em nuvem) costuma ser variável externa importante para o modelo.'}
+      {id:'src_api',porque:'Dado de sistema terceiro (clima, mercado, ERP em nuvem) costuma ser variável externa importante para o modelo.'},
+      {id:'src_objeto',porque:'Se o histórico de treino já está num lake, apontar é mais rápido e mais barato que copiar.'}
     ]},
   rt:{t:'Por onde começar?',
     dica:'Em tempo real, a origem precisa ser capaz de empurrar evento. Se ela só permite consulta periódica, o que você tem é lote rápido — e vale rever o objetivo.',
@@ -6764,7 +7032,8 @@ const FAB_INICIO={
       {id:'src_sqlserver',porque:'Origem mais comum de dado transacional para modelo dimensional.'},
       {id:'src_sap',porque:'Quando o core do negócio está no SAP, dimensões e fatos saem de lá — e a extração precisa ser planejada com cuidado.'},
       {id:'src_oracle',porque:'ERPs e sistemas legados de grande porte costumam viver em Oracle.'},
-      {id:'src_files',porque:'Cadastros, metas e de-para frequentemente chegam por arquivo e viram dimensão.'}
+      {id:'src_files',porque:'Cadastros, metas e de-para frequentemente chegam por arquivo e viram dimensão.'},
+      {id:'src_saas',porque:'CRM costuma ser a origem das dimensões de cliente e de oportunidade.'}
     ]},
   lakehouse:{t:'Por onde começar?',
     dica:'O Lakehouse é o destino, não o começo. O primeiro passo é decidir de onde o dado vem — é isso que define como ele entra.',
@@ -6773,7 +7042,9 @@ const FAB_INICIO={
       {id:'src_files',porque:'Arquivo em lake externo pode virar Shortcut e aparecer no Lakehouse sem cópia nenhuma.'},
       {id:'src_api',porque:'Dado de SaaS que só existe via API.'},
       {id:'src_sap',porque:'Extrato do ERP aterrissando cru antes de qualquer regra.'},
-      {id:'src_stream',porque:'Fluxo contínuo persistido em Delta para análise histórica.'}
+      {id:'src_stream',porque:'Fluxo contínuo persistido em Delta para análise histórica.'},
+      {id:'src_objeto',porque:'Se já existe um lake, o Lakehouse pode apontar para ele em vez de copiar tudo.'},
+      {id:'src_databricks',porque:'Delta dos dois lados: dá para ler sem converter nem duplicar.'}
     ]},
   ingestao:{t:'Por onde começar?',
     dica:'Ingestão começa pela origem: é ela que determina a técnica, o custo e os cuidados de toda a carga.',
@@ -6783,7 +7054,10 @@ const FAB_INICIO={
       {id:'src_api',porque:'API pede paginação, retry e controle incremental desde o primeiro dia.'},
       {id:'src_files',porque:'Integração por arquivo com parceiro ou processo manual.'},
       {id:'src_oracle',porque:'Origem corporativa de grande porte.'},
-      {id:'src_sharepoint',porque:'Cadastro mantido à mão pela área de negócio.'}
+      {id:'src_sharepoint',porque:'Cadastro mantido à mão pela área de negócio.'},
+      {id:'src_saas',porque:'CRM e ITSM concentram dado de cliente e atendimento que não existe em nenhum banco interno.'},
+      {id:'src_bigquery',porque:'Cenário multi-cloud: o analytics vive na GCP e o Fabric precisa desse dado.'},
+      {id:'src_mainframe',porque:'Quando o núcleo da operação ainda roda em legado, é dele que sai o dado que importa.'}
     ]},
   governanca:{t:'Por onde começar?',
     dica:'Governança é a única frente que não começa pelo dado, e sim pela estrutura. Reorganizar workspace depois quebra referência e custa caro.',
@@ -6876,6 +7150,14 @@ const FAB_PERG_PROX={
   'src_sharepoint':'Cadastro manual muda sem aviso. Como trazer isso?',
   'src_files':'Como esses arquivos entram no Fabric?',
   'src_stream':'Como o fluxo contínuo entra no Fabric?',
+  'src_bigquery':'Consulta no BigQuery é cobrada por volume varrido. Como trazer sem pagar caro?',
+  'src_snowflake':'O Snowflake continua servindo o negócio. Como o Fabric acessa esse dado?',
+  'src_databricks':'Já é Delta dos dois lados. Precisa mesmo copiar?',
+  'src_saas':'O SaaS limita chamadas de API. Como trazer sem estourar o limite?',
+  'src_nosql':'Documento não tem esquema fixo. Como isso entra?',
+  'src_dataverse':'O Dataverse tem link direto com o OneLake. Como aproveitar?',
+  'src_objeto':'O dado já está num lake. Copiar ou apontar?',
+  'src_mainframe':'Mainframe entrega por arquivo, em janela negociada. Como receber?',
   'bronze':'O dado cru está preservado. O que o torna confiável?',
   'silver':'O dado está limpo. O que falta para o negócio consumir?',
   'gold':'A curadoria está pronta. Como ela chega ao usuário?',
@@ -7005,7 +7287,7 @@ function fabPasso(){
     const ini=FAB_INICIO[fabCtx().objetivo]||FAB_INICIO.ingestao;
     // a origem escolhida no questionario sobe para o topo, mas as outras
     // continuam visiveis — a ideia e mostrar o leque, nao decidir por voce
-    const mapa={relacional:'src_sqlserver',sap:'src_sap',pi:'src_pi',api:'src_api',arquivos:'src_files',streaming:'src_stream'};
+    const mapa={relacional:'src_sqlserver',sap:'src_sap',pi:'src_pi',api:'src_api',arquivos:'src_files',streaming:'src_stream',clouddw:'src_bigquery',saas:'src_saas',nosql:'src_nosql',dataverse:'src_dataverse',objeto:'src_objeto',mainframe:'src_mainframe'};
     const pref=mapa[fabCtx().origem];
     const op=ini.op.filter(o=>FAB_COMP[o.id]).slice();
     if(pref&&!op.some(o=>o.id===pref)&&FAB_COMP[pref])
@@ -7085,7 +7367,8 @@ function fabPainelPasso(){
     if(p.tipo==='pendencia'){
       return `<button class="fab-passo-op" data-fabpasso="pend" data-campo="${p.pend.campo||''}"
         data-tipo="${p.pend.tipo}" data-v="${o.v}">
-        <b>${escapeHtml(o.nome)}</b>${o.desc?`<p>${escapeHtml(o.desc)}</p>`:''}</button>`;
+        <b>${escapeHtml(o.nome)}</b>${o.desc?`<p>${escapeHtml(o.desc)}</p>`:''}${
+          o.alerta?`<span class="fab-passo-risco">Atenção: ${escapeHtml(o.alerta)}</span>`:''}</button>`;
     }
     const c=o.comp;if(!c)return '';
     const et=FAB_ETAPA[c.etapa]||{cor:'#888',nome:''};
@@ -7165,7 +7448,20 @@ const FAB_CTXQ=[
      {v:'pi',nome:'PI System / sensores',desc:'Série temporal industrial, volume altíssimo.'},
      {v:'api',nome:'REST API',desc:'Exige paginação, retry e controle incremental.'},
      {v:'arquivos',nome:'Arquivos e planilhas',desc:'CSV, Excel, JSON — de parceiro ou processo manual.'},
-     {v:'streaming',nome:'Streaming / eventos',desc:'Event Hub, IoT Hub, Kafka.'}
+     {v:'streaming',nome:'Streaming / eventos',desc:'Event Hub, IoT Hub, Kafka.'},
+     {v:'clouddw',nome:'Data warehouse em outra nuvem',desc:'BigQuery, Snowflake, Redshift, Databricks. Cenário multi-cloud: o dado já está modelado, mas trazer custa — e alguns cobram por volume escaneado.'},
+     {v:'saas',nome:'SaaS / CRM',desc:'Salesforce, Dynamics, ServiceNow, RH. Conector dedicado, e limite de chamadas de API que torna o incremental obrigatório.'},
+     {v:'nosql',nome:'NoSQL / documento',desc:'MongoDB, Cosmos DB. Esquema varia entre registros: o que funciona em 90% quebra nos outros 10%.'},
+     {v:'dataverse',nome:'Dataverse / Power Platform',desc:'Power Apps, Dynamics, Power Automate. Tem link direto para o OneLake — normalmente não precisa de ingestão.'},
+     {v:'objeto',nome:'Object storage',desc:'S3, ADLS, GCS. O dado já está num lake: quase sempre dá para apontar em vez de copiar.'},
+     {v:'mainframe',nome:'Mainframe / AS400 / DB2',desc:'Legado crítico com janela de acesso negociada e formatos que exigem conversão.'}
+   ]},
+  {k:'objetos',t:'Quantos objetos essa carga precisa trazer?',
+   dica:'Volume de linhas e quantidade de objetos são coisas diferentes, e é esta que decide a estratégia: 3 tabelas gigantes e 300 tabelas pequenas pedem desenhos opostos.',
+   op:[
+     {v:'poucos',nome:'Poucos (até 3)',desc:'Um pipeline explícito por objeto é mais legível e mais fácil de depurar. Metadados aqui só adicionam peça.'},
+     {v:'dezenas',nome:'Dezenas (4 a 50)',desc:'A faixa em que o pipeline dirigido por metadados começa a se pagar: uma peça no lugar de dezenas.'},
+     {v:'centenas',nome:'Centenas (50+)',desc:'Metadados deixam de ser opção e viram necessidade. Manter um pipeline por objeto nessa escala é inviável.'}
    ]},
   {k:'volume',t:'Qual o volume esperado?',
    dica:'Volume decide entre processamento distribuído e ferramenta visual — e é onde mais se erra por otimismo.',
@@ -7175,12 +7471,29 @@ const FAB_CTXQ=[
      {v:'grande',nome:'Grande',desc:'Dezenas de milhões — Dataflow Gen2 começa a doer aqui.'},
      {v:'muitogrande',nome:'Muito grande',desc:'Bilhões de linhas: Spark e particionamento deixam de ser opcionais.'}
    ]},
+  {k:'mudanca',t:'A origem permite saber o que mudou desde a última carga?',
+   dica:'É o bloqueio prático mais comum em projeto real. Sem uma forma de identificar o que mudou, carga incremental é impossível — e recomendar incremental sem verificar isso seria o pior conselho que esta ferramenta poderia dar.',
+   quando:ctx=>['relacional','sap','oracle','api','arquivos','sharepoint','clouddw','saas','nosql','mainframe'].includes(ctx.origem),
+   op:[
+     {v:'coluna',nome:'Sim, há coluna de data ou versão',desc:'O caso ideal: watermark por data de atualização. Habilita carga incremental controlada.'},
+     {v:'cdc',nome:'Sim, a origem tem CDC nativo',desc:'Change Data Capture ou Mirroring: a origem entrega as mudanças, inclusive exclusões. É o melhor cenário.'},
+     {v:'nao',nome:'Não há como saber',desc:'Sem coluna de controle e sem CDC. Só resta carga full a cada execução, ou comparar snapshots — caro e pouco confiável para detectar exclusão.'},
+     {v:'naosei',nome:'Ainda não sei',desc:'Descobrir isso é o primeiro trabalho técnico do projeto: determina se a carga será incremental ou full.'}
+   ]},
   {k:'freq',t:'Com que frequência o dado precisa chegar?',
    dica:'Tempo real custa muito mais para construir e operar. Se ninguém age em minutos, lote é mais barato e mais simples.',
    op:[
      {v:'batch',nome:'Batch',desc:'Diário, algumas vezes ao dia. Cobre a maioria dos casos.'},
      {v:'nrt',nome:'Near real time',desc:'Minutos. Mirroring e micro-batch resolvem.'},
      {v:'realtime',nome:'Real time',desc:'Segundos. Só se alguém ou algo age imediatamente sobre o dado.'}
+   ]},
+  {k:'janela',t:'Quanto tempo há disponível para a carga rodar?',
+   dica:'Volume alto com a madrugada inteira e volume alto com vinte minutos são problemas diferentes. É a janela que decide particionamento e paralelismo.',
+   quando:ctx=>ctx.freq!=='realtime',
+   op:[
+     {v:'folgada',nome:'Folgada (madrugada inteira)',desc:'Dá para processar em série, sem otimização agressiva. Simplicidade vale mais que performance.'},
+     {v:'horas',nome:'Algumas horas',desc:'Exige carga incremental e atenção ao tempo de cada etapa. Ainda cabe sem paralelismo pesado.'},
+     {v:'apertada',nome:'Minutos',desc:'Particionamento e paralelismo deixam de ser refinamento. Full load está fora de questão.'}
    ]},
   {k:'consumo',t:'Como o dado será consumido?',
    dica:'O consumo define a camada final e o quanto de curadoria é necessário antes dela.',
@@ -7190,6 +7503,20 @@ const FAB_CTXQ=[
      {v:'ml',nome:'Machine Learning',desc:'Treino e inferência — exige dado consistente e histórico.'},
      {v:'apis',nome:'APIs / data product',desc:'Outros times ou sistemas consomem o dado.'}
    ]},
+  {k:'historico',t:'Precisa saber como o dado era antes?',
+   dica:'Define a modelagem inteira. Guardar só o estado atual é bem mais simples — e irreversível se depois pedirem o histórico.',
+   op:[
+     {v:'atual',nome:'Não, só o estado atual',desc:'Sobrescrever a cada carga. O mais simples, e suficiente para muito relatório operacional.'},
+     {v:'scd',nome:'Sim, histórico de mudanças',desc:'Dimensão de mudança lenta (SCD2): guarda o valor anterior com data de início e fim. Exige MERGE e modelagem dimensional.'},
+     {v:'auditoria',nome:'Sim, auditoria completa',desc:'Todo estado já recebido, com data. Bronze com snapshot torna-se inegociável, e Data Vault entra em consideração.'}
+   ]},
+  {k:'sensivel',t:'Há dado pessoal ou sensível envolvido?',
+   dica:'Define segurança, mascaramento e retenção. Descobrir isso depois de publicar costuma significar refazer o modelo semântico.',
+   op:[
+     {v:'nao',nome:'Não',desc:'Dado operacional sem identificação de pessoa. Governança padrão basta.'},
+     {v:'pessoal',nome:'Sim, dado pessoal (LGPD)',desc:'Nome, CPF, contato, localização. Exige RLS, controle de acesso e política de retenção definida.'},
+     {v:'restrito',nome:'Sim, altamente restrito',desc:'Saúde, financeiro ou segredo de negócio. Além de RLS, pede mascaramento por coluna, linhagem e trilha de auditoria.'}
+   ]},
   {k:'equipe',t:'Quem vai manter isso no dia a dia?',
    dica:'É o contexto mais ignorado e o que mais derruba arquitetura: a melhor solução no papel não sobrevive a quem não consegue mantê-la.',
    op:[
@@ -7197,6 +7524,25 @@ const FAB_CTXQ=[
      {v:'sql',nome:'Time forte em T-SQL',desc:'Vindo de SQL Server. Favorece Warehouse e Stored Procedure.'},
      {v:'lowcode',nome:'Preferência por interface visual',desc:'Vindo de Power BI. Favorece Dataflow Gen2 — com limite de volume.'},
      {v:'misto',nome:'Misto',desc:'Há gente de código e de interface visual.'}
+   ]},
+  {k:'estrategia',t:'Qual estratégia de ingestão e orquestração?',
+   dica:'É a decisão que mais muda o resto: ela define se você mantém um pipeline ou quarenta, e o que faz sentido sugerir daqui para frente.',
+   rec:ctx=>{
+     if(ctx.freq==='realtime'||ctx.origem==='streaming')return 'streaming';
+     if(ctx.mudanca==='cdc'&&ctx.objetos!=='centenas')return 'zeroetl';
+     if(ctx.objetos==='centenas')return 'metadata';
+     if(ctx.objetos==='poucos'&&ctx.volume!=='muitogrande')return 'explicito';
+     if(ctx.volume==='muitogrande'||ctx.janela==='apertada'||ctx.equipe==='codigo')return 'codigo';
+     if(ctx.equipe==='lowcode')return 'lowcode';
+     return 'metadata';
+   },
+   op:[
+     {v:'metadata',nome:'Dirigido por metadados',desc:'Uma tabela de controle define o que processar; um pipeline com Lookup + ForEach atende N objetos. Incluir origem nova vira INSERT, não desenvolvimento. Custa mais para montar e paga a partir de ~5 objetos.'},
+     {v:'explicito',nome:'Um pipeline por objeto',desc:'Cada carga é explícita e fácil de ler. Simples de começar e de depurar, mas mantê-lo cresce linearmente: 40 objetos são 40 pipelines para versionar e corrigir.'},
+     {v:'codigo',nome:'Code-first (Notebook/Spark)',desc:'A lógica vive em código versionado, testável e revisável em PR. Escala melhor em volume alto e transformação complexa. Exige Python/Spark no time.'},
+     {v:'lowcode',nome:'Low-code (Dataflow Gen2)',desc:'A área de negócio mantém sozinha, com Power Query. Entrega rápido em volume baixo e médio; encarece e desacelera quando o volume cresce.'},
+     {v:'zeroetl',nome:'Zero-ETL (Mirroring / Shortcut)',desc:'Sem pipeline para manter: o dado é espelhado ou apontado onde já está. É o menor custo de manutenção — quando a origem é suportada e você não precisa filtrar na entrada.'},
+     {v:'streaming',nome:'Streaming-first',desc:'O evento entra em fluxo contínuo e é roteado por Eventstream. Latência de segundos, ao custo de complexidade operacional bem maior que lote.'}
    ]},
   {k:'criticidade',t:'Qual a criticidade dessa carga?',
    dica:'Define o rigor de controle, log e tratamento de erro que vale a pena investir desde o início.',
@@ -7213,7 +7559,13 @@ let _fabIni={aberto:false,passo:0};
 // perguntas ainda sem resposta, na ordem
 function fabCtxFaltando(){
   const ctx=fabCtx();
-  return FAB_CTXQ.filter(q=>!ctx[q.k]);
+  // `quando` mantem o questionario adaptativo: nao pergunta o que nao decide
+  // nada naquele cenario — CDC nao faz sentido para streaming, por exemplo.
+  return FAB_CTXQ.filter(q=>!ctx[q.k]&&(!q.quando||q.quando(ctx)));
+}
+function fabCtxAplicaveis(){
+  const ctx=fabCtx();
+  return FAB_CTXQ.filter(q=>!q.quando||q.quando(ctx)||ctx[q.k]);
 }
 function fabCtxRotulo(k,v){
   const q=FAB_CTXQ_MAP[k];if(!q)return v;
@@ -7225,7 +7577,7 @@ function fabCtxRotulo(k,v){
 function fabIniOpcoes(){
   const ctx=fabCtx();
   const ini=FAB_INICIO[ctx.objetivo]||FAB_INICIO.ingestao;
-  const mapa={relacional:'src_sqlserver',sap:'src_sap',pi:'src_pi',api:'src_api',arquivos:'src_files',streaming:'src_stream'};
+  const mapa={relacional:'src_sqlserver',sap:'src_sap',pi:'src_pi',api:'src_api',arquivos:'src_files',streaming:'src_stream',clouddw:'src_bigquery',saas:'src_saas',nosql:'src_nosql',dataverse:'src_dataverse',objeto:'src_objeto',mainframe:'src_mainframe'};
   const pref=mapa[ctx.origem];
   const op=ini.op.filter(o=>FAB_COMP[o.id]).map(o=>({...o,comp:FAB_COMP[o.id],peso:0}));
   if(pref&&FAB_COMP[pref]&&!op.some(o=>o.id===pref))
@@ -7268,7 +7620,7 @@ function fabRenderCtxModal(){
     el.innerHTML=`<div class="fab-ini-cab"><span class="fab-ini-prog ok">Contexto completo</span>
         <b>Contexto desta arquitetura</b>
         <i>Estas respostas pesam em todas as recomendações. Clique numa delas para alterar.</i></div>
-      <div class="fab-ini-ops">${FAB_CTXQ.map(q=>
+      <div class="fab-ini-ops">${fabCtxAplicaveis().map(q=>
         `<button class="fab-ini-op" data-fabctxq="${q.k}">
           <span class="fab-ini-txt"><b>${escapeHtml(q.t)}</b>
           <p>${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</p></span></button>`).join('')}</div>`;
@@ -7276,12 +7628,15 @@ function fabRenderCtxModal(){
   }
   const q=falta[0];
   el.innerHTML=`<div class="fab-ini-cab">
-      <span class="fab-ini-prog">Contexto ${FAB_CTXQ.length-falta.length+1} de ${FAB_CTXQ.length}</span>
+      <span class="fab-ini-prog">Contexto ${fabCtxAplicaveis().filter(x=>ctx[x.k]).length+1} de ${fabCtxAplicaveis().length}</span>
       <b>${escapeHtml(q.t)}</b><i>${escapeHtml(q.dica)}</i></div>
-    <div class="fab-ini-ops">${q.op.map(o=>
-      `<button class="fab-ini-op" data-fabctxr="${q.k}" data-v="${o.v}">
-        <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}</b>
-        <p>${escapeHtml(o.desc)}</p></span></button>`).join('')}</div>`;
+    <div class="fab-ini-ops">${(()=>{
+      const sug=q.rec?q.rec(ctx):null;
+      return q.op.map(o=>
+      `<button class="fab-ini-op${o.v===sug?' top':''}" data-fabctxr="${q.k}" data-v="${o.v}">
+        <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}${o.v===sug?'<em>recomendado</em>':''}</b>
+        <p>${escapeHtml(o.desc)}</p></span></button>`).join('');
+    })()}</div>`;
 }
 // As arquiteturas de referencia continuam disponiveis, mas so DEPOIS do
 // contexto — e ordenadas por ele. Antes disso seria o mesmo chute de sempre.
@@ -7311,6 +7666,7 @@ function fabRenderIni(){
   if(!fabArq()||fabNos().length){el.style.display='none';el.innerHTML='';return}
   el.style.display='';
   const falta=fabCtxFaltando();
+  const ctx=fabCtx();
   if(!_fabIni.aberto){
     el.innerHTML=`<button class="fab-ini-q" data-fabini="abrir">
         <span class="fab-ini-mark">?</span>
@@ -7323,23 +7679,30 @@ function fabRenderIni(){
   // ainda coletando contexto
   if(falta.length){
     const q=falta[0];
-    const resp=FAB_CTXQ.length-falta.length;
+    const _apl=fabCtxAplicaveis();
+    const resp=_apl.filter(x=>ctx[x.k]).length, tot=_apl.length;
     el.innerHTML=`<div class="fab-ini-cx">
       <div class="fab-ini-cab">
-        <span class="fab-ini-prog">Contexto ${resp+1} de ${FAB_CTXQ.length}</span>
+        <span class="fab-ini-prog">Contexto ${resp+1} de ${tot}</span>
         <b>${escapeHtml(q.t)}</b>
         <i>${escapeHtml(q.dica)}</i>
       </div>
-      <div class="fab-ini-ops">${q.op.map(o=>
-        `<button class="fab-ini-op" data-fabini="resp" data-k="${q.k}" data-v="${o.v}">
-          <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}</b>
-          <p>${escapeHtml(o.desc)}</p></span></button>`).join('')}</div>
-      <button class="fab-ini-fechar" data-fabini="voltar">${resp>0?'← voltar':'cancelar'}</button>
+      <div class="fab-ini-ops">${(()=>{
+        const sug=q.rec?q.rec(ctx):null;
+        const lista=q.op.slice().sort((a,b)=>(b.v===sug?1:0)-(a.v===sug?1:0));
+        return lista.map(o=>
+        `<button class="fab-ini-op${o.v===sug?' top':''}" data-fabini="resp" data-k="${q.k}" data-v="${o.v}">
+          <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}${o.v===sug?'<em>recomendado para o seu contexto</em>':''}</b>
+          <p>${escapeHtml(o.desc)}</p></span></button>`).join('');
+      })()}</div>
+      <div class="fab-ini-rodape">
+        <button class="fab-ini-fechar" data-fabini="voltar">${resp>0?'← voltar':'cancelar'}</button>
+        ${resp>=4?'<button class="fab-ini-fechar" data-fabini="pular">Já tenho o suficiente</button>':''}
+      </div>
     </div>`;
     return;
   }
   // contexto completo: recomendar a PRIMEIRA atividade, so ela
-  const ctx=fabCtx();
   const chips=FAB_CTXQ.filter(q=>ctx[q.k]).map(q=>
     `<span class="fab-ini-chip" data-fabini="refazer" data-k="${q.k}" title="Alterar">${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</span>`).join('');
   const ops=fabIniOpcoes();
@@ -7377,6 +7740,13 @@ function fabIniAcao(acao,k,v){
     else _fabIni.aberto=false;
     fabRenderIni();return;
   }
+  // pular marca o restante como nao informado; a barra continua acusando base
+  // incompleta, entao a recomendacao nao se apresenta como firme
+  if(acao==='pular'&&a){
+    a.ctx=a.ctx||{};
+    fabCtxFaltando().forEach(q=>{a.ctx[q.k]='naoinformado'});
+    fabSave();fabRenderIni();fabRenderPainel();return;
+  }
   if(acao==='refazer'&&a){delete a.ctx[k];fabSave();fabRenderIni();fabRenderPainel();return}
   if(acao==='resp'&&a){
     a.ctx=a.ctx||{};a.ctx[k]=v;
@@ -7407,11 +7777,15 @@ function fabNoHTML(n){
   // o rotulo de baixo carrega o proposito, nao a etapa: e o proposito que
   // explica o no para quem le o diagrama depois
   const sub=fabPropNome(n)||et.nome||'';
+  const filho=n.comp==='invoke'
+    ?`<button class="fab-no-filho" data-fabfilho="${n.id}" title="${n.filho?'Abrir o pipeline chamado':'Montar o pipeline que será chamado'}">${
+      n.filho?'abrir pipeline ↗':'montar pipeline ↗'}</button>`:'';
   const cfgTxt=Object.values(n.cfg||{}).length?
     `<span class="fab-no-cfg">${escapeHtml(Object.values(n.cfg).map(v=>FAB_ROT[v]||v).join(' · '))}</span>`:'';
   return `<div class="fab-no${sel}${pend?' pend':''}${emEscopo}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}">
     <div class="fab-no-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</div>
     <div class="fab-no-txt"><b>${escapeHtml(d.nome)}</b><i>${escapeHtml(sub)}</i>${cfgTxt}</div>
+    ${filho}
     ${pend?'<span class="fab-no-pend" title="Falta definir o objetivo deste componente">?</span>':''}
     <button class="fab-no-del" data-fabdel="${n.id}" title="Remover">✕</button>
   </div>`;
@@ -7500,7 +7874,16 @@ function fabRender(){
 
 function fabRenderAbas(){
   const el=$('#fabAbas');if(!el)return;
-  el.innerHTML=fabArqs.map(a=>
+  const atual=fabArq();
+  // dentro de um pipeline filho a barra vira trilha de volta, como no Fabric
+  if(atual&&atual.pai){
+    const pai=fabArqs.find(a=>a.id===atual.pai);
+    el.innerHTML=`<button class="fab-aba fab-volta" data-fabvolta="1">← ${escapeHtml(pai?pai.nome:'voltar')}</button>`+
+      `<span class="fab-trilha">›</span>`+
+      `<button class="fab-aba on" data-fabarq="${atual.id}">${escapeHtml(atual.nome)}</button>`;
+    return;
+  }
+  el.innerHTML=fabArqs.filter(a=>!a.pai).map(a=>
     `<button class="fab-aba${a.id===fabCur?' on':''}" data-fabarq="${a.id}">${escapeHtml(a.nome)}</button>`
   ).join('')+`<button class="fab-aba fab-aba-add" id="fabNova" title="Nova arquitetura">+</button>`;
 }
@@ -7531,7 +7914,8 @@ function fabRenderSugs(){
     box.innerHTML=abre+
       `<div class="fab-perg"><b>${escapeHtml(pend.t)}</b>${pend.dica?`<i>${escapeHtml(pend.dica)}</i>`:''}</div>`+
       pend.op.map(o=>`<button class="fab-op" data-fabop="${pend.tipo}" data-campo="${pend.campo||''}" data-v="${o.v}">
-          <b>${escapeHtml(o.nome)}</b>${o.desc?`<i>${escapeHtml(o.desc)}</i>`:''}</button>`).join('')+
+          <b>${escapeHtml(o.nome)}</b>${o.desc?`<i>${escapeHtml(o.desc)}</i>`:''}${
+            o.alerta?`<span class="fab-op-alerta">${escapeHtml(o.alerta)}</span>`:''}</button>`).join('')+
       `</div>`+linha;
     return;
   }
@@ -7612,14 +7996,15 @@ function fabRenderPainel(){
   else if(_fabPainel==='road')corpo=fabPainelRoad();
   else corpo=fabPainelResumo();
   const ctx=fabCtx();
-  const resp=FAB_CTXQ.filter(q=>ctx[q.k]).length;
-  const firmeza=resp===FAB_CTXQ.length?'firme':resp>=4?'media':'fraca';
+  const apl=fabCtxAplicaveis(),tot=apl.length;
+  const resp=apl.filter(q=>ctx[q.k]&&ctx[q.k]!=='naoinformado').length;
+  const firmeza=resp===tot?'firme':resp>=Math.ceil(tot/2)?'media':'fraca';
   const faixa=`<div class="fab-ctxbar ${firmeza}" data-fabctx="abrir" title="Clique para revisar o contexto">
-    <span class="fab-ctxbar-t">Contexto ${resp}/${FAB_CTXQ.length}</span>
-    <span class="fab-ctxbar-d">${resp===FAB_CTXQ.length?'recomendações com base completa'
+    <span class="fab-ctxbar-t">Contexto ${resp}/${tot}</span>
+    <span class="fab-ctxbar-d">${resp===tot?'recomendações com base completa'
       :resp===0?'sem contexto — as sugestões são genéricas'
-      :'faltam '+(FAB_CTXQ.length-resp)+' respostas para as recomendações ficarem firmes'}</span>
-    ${resp?`<span class="fab-ctxbar-chips">${FAB_CTXQ.filter(q=>ctx[q.k]).map(q=>
+      :'faltam '+(tot-resp)+' respostas para as recomendações ficarem firmes'}</span>
+    ${resp?`<span class="fab-ctxbar-chips">${apl.filter(q=>ctx[q.k]&&ctx[q.k]!=='naoinformado').map(q=>
       `<i>${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</i>`).join('')}</span>`:''}
   </div>`;
   el.innerHTML=faixa+`
@@ -7750,6 +8135,10 @@ function fabSugerirRef(r){
   if(r.volume==='grande'||r.volume==='muitogrande'){pontos.medalhao+=2;pontos.kimball-=1}
   if(r.origem==='api'||r.origem==='sap'){pontos.controle+=3;pontos.medalhao+=2}
   if(r.origem==='arquivos'){pontos.medalhao+=2}
+  if(r.estrategia==='metadata')pontos.controle+=7;
+  if(r.estrategia==='streaming')pontos.realtime+=6;
+  if(r.estrategia==='zeroetl'){pontos.medalhao+=2;pontos.controle-=4}
+  if(r.estrategia==='codigo')pontos.medalhao+=3;
   pontos.medalhao+=1; // desempate: e o padrao-base
   return Object.keys(FAB_REF).map(k=>({id:k,...FAB_REF[k],p:pontos[k]}))
     .sort((a,b)=>b.p-a.p).slice(0,3);
@@ -7819,6 +8208,10 @@ const FAB_PEDE={
   'sproc-lakehouse':['warehouse'],'incremental-sem-controle':['ctrltable','sproc'],
   'controle-sem-log':['logtable'],'critico-sem-alerta':['notify','activator'],
   'foreach-aninhado':['invoke'],'container-vazio':['invoke','copy','notebook'],
+  'metadata-sem-controle':['ctrltable','lookup'],'zeroetl-com-pipeline':['mirroring','shortcut'],
+  'incremental-sem-fonte':['bronze','notebook'],'sensivel-sem-acesso':['rls'],
+  'auditoria-sem-bronze':['bronze'],'scd-sem-merge':['sproc'],
+  'janela-sem-paralelismo':['notebook'],'muitos-objetos-explicito':['ctrltable','lookup','foreach'],
   'equipe-x-ferramenta':['dataflow'],'sql-sem-warehouse':['warehouse']
 };
 
@@ -7830,7 +8223,8 @@ const FAB_PEDE={
 const FAB_INICIAVEL=new Set([
   // origens: o comeco natural de qualquer fluxo de dados
   'src_sqlserver','src_oracle','src_sap','src_saphana','src_pi','src_api',
-  'src_sharepoint','src_files','src_stream',
+  'src_sharepoint','src_files','src_stream','src_bigquery','src_snowflake','src_databricks',
+  'src_saas','src_nosql','src_dataverse','src_objeto','src_mainframe',
   // armazenamento que ja existe: quando o desenho parte do que ja esta no ar
   'lakehouse','warehouse','eventhouse','sqldb','onelake','shortcut','mirroring',
   // fundacao e governanca: nao dependem de fluxo anterior
@@ -7934,7 +8328,7 @@ function fabInit(){
 
   // ---- selecionar / arrastar / navegar ----
   st.addEventListener('pointerdown',e=>{
-    if(e.target.closest('[data-fabsug]')||e.target.closest('[data-fabvertudo]')||e.target.closest('[data-fabop]')||e.target.closest('[data-fabini]'))return;
+    if(e.target.closest('[data-fabsug]')||e.target.closest('[data-fabvertudo]')||e.target.closest('[data-fabop]')||e.target.closest('[data-fabini]')||e.target.closest('[data-fabfilho]'))return;
     const del=e.target.closest('[data-fabdel]');
     if(del){fabApagar(del.dataset.fabdel);return}
     const eg=e.target.closest('[data-fabedge]');
@@ -8001,6 +8395,8 @@ function fabInit(){
   st.addEventListener('pointercancel',soltar);
 
   st.addEventListener('wheel',e=>{
+    // sobre cartao de pergunta ou lista de sugestoes, a roda rola o conteudo
+    if(e.target.closest('#fabStart')||e.target.closest('.fab-fluxo'))return;
     e.preventDefault();
     const r=st.getBoundingClientRect();
     fabZoom(e.deltaY<0?1.12:.89,e.clientX-r.left,e.clientY-r.top);
@@ -8010,6 +8406,8 @@ function fabInit(){
   st.addEventListener('click',e=>{
     const ini=e.target.closest('[data-fabini]');
     if(ini){fabIniAcao(ini.dataset.fabini,ini.dataset.k,ini.dataset.v);return}
+    const fl=e.target.closest('[data-fabfilho]');
+    if(fl){fabAbrirFilho(fl.dataset.fabfilho);return}
     // resposta a uma pergunta da arvore: define proposito ou config obrigatoria
     const op=e.target.closest('[data-fabop]');
     if(op){
@@ -8046,6 +8444,7 @@ function fabInit(){
   // ---- abas de arquitetura ----
   const abas=$('#fabAbas');
   if(abas)abas.addEventListener('click',e=>{
+    if(e.target.closest('[data-fabvolta]')){fabVoltarPai();return}
     if(e.target.closest('#fabNova')){fabNovaVazia();return}
     const a=e.target.closest('[data-fabarq]');
     if(a&&a.dataset.fabarq!==fabCur){
