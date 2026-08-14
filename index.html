@@ -1878,10 +1878,18 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-no.noescopo{box-shadow:0 1px 3px rgba(0,0,0,.07)}
 /* artefato nao executa: e escrito ou lido. Forma diferente para nao ser lido
    como mais um passo da sequencia. */
-.fab-no.art{border-radius:10px 10px 4px 4px;border-style:solid;border-top-width:3px;
-  background:linear-gradient(180deg,color-mix(in srgb,var(--et) 7%,var(--bg)) 0%,var(--bg) 38%)}
-.fab-no.art .fab-no-txt b::after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;
-  background:var(--et);margin-left:6px;vertical-align:middle;opacity:.6}
+/* A natureza precisa ser inequivoca: tabela nao executa, atividade sim. */
+.fab-no-nat{position:absolute;top:-8px;right:10px;font-size:8.5px;font-weight:800;letter-spacing:.6px;
+  padding:2px 6px;border-radius:5px;background:var(--bg);border:1px solid var(--sep);color:var(--label2);
+  line-height:1.35;white-space:nowrap}
+.fab-no.nat-tabela{border-radius:4px;border-left-width:4px;border-style:dashed;
+  background:repeating-linear-gradient(180deg,var(--bg) 0 14px,color-mix(in srgb,var(--et) 5%,var(--bg)) 14px 15px)}
+.fab-no.nat-tabela .fab-no-nat{background:var(--et);color:#fff;border-color:var(--et)}
+.fab-no.nat-armazem{border-radius:14px 14px 6px 6px;border-top-width:3px}
+.fab-no.nat-consumo{border-radius:6px 18px 18px 6px}
+.fab-no.nat-config{border-style:dotted;border-width:2px;border-left-width:4px}
+.fab-no.nat-origem{border-radius:18px 6px 6px 18px}
+.fab-no.nat-atividade{border-radius:10px}
 .fab-edge-rot{font-size:9.5px;font-weight:600;fill:var(--label2);text-anchor:middle;
   font-family:system-ui,sans-serif;opacity:0;transition:opacity .12s}
 .fab-edge.rel:hover .fab-edge-rot,.fab-edge.rel .fab-edge-rot{opacity:.75}
@@ -2119,6 +2127,19 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-foco button{border:0;background:none;padding:0;color:#0078d4;font-size:11.5px;
   font-weight:600;cursor:pointer;text-decoration:underline;flex-shrink:0}
 .fab-foco-acoes{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0}
+.fab-cols{margin:-6px 0 12px;padding:12px 14px;border:1px solid var(--sep);border-radius:9px;background:var(--hover)}
+.fab-cols>b{display:block;font-size:13px;color:var(--label);margin-bottom:3px}
+.fab-cols-sub{margin:0 0 10px;font-size:11.5px;color:var(--label2);line-height:1.45}
+.fab-col{padding:7px 0;border-top:1px solid var(--sep)}
+.fab-col code{font-size:12px;font-weight:700;color:var(--label);font-family:ui-monospace,Menlo,Consolas,monospace}
+.fab-col i{font-style:normal;font-size:10.5px;color:var(--et,#0078d4);margin-left:7px;font-weight:600}
+.fab-col p{margin:3px 0 0;font-size:11.5px;color:var(--label2);line-height:1.45}
+.fab-cols-ddl{width:100%;margin-top:11px;padding:8px;border:1px solid var(--sep);background:var(--bg);
+  color:var(--label);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+.fab-cols-ddl:hover{border-color:#0078d4}
+.fab-cols-pre{margin:8px 0 0;padding:10px;background:var(--bg);border:1px solid var(--sep);border-radius:7px;
+  font-size:10.5px;line-height:1.5;overflow-x:auto;color:var(--label);
+  font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre}
 .fab-det{margin:-6px 0 12px;padding:11px 13px;border:1px solid var(--sep);border-radius:9px;
   background:var(--hover);font-size:12.5px;line-height:1.55}
 .fab-det>p{margin:0 0 9px;color:var(--label)}
@@ -5124,6 +5145,100 @@ const FAB_ARTEFATO=new Set([
   'workspace','rls','lineage','deploy','monitorhub'
 ]);
 function fabEhArtefato(c){return FAB_ARTEFATO.has(c)}
+// Colunas base de cada tabela. Nao e schema completo: e o minimo que faz a
+// tabela cumprir o papel dela — e o que costuma faltar quando alguem monta
+// isso na pressa. `se` deixa a coluna aparecer so quando o contexto a exige.
+const FAB_COLUNAS={
+  logtable:{t:'Log de Execução',ddl:'log_execucao',cols:[
+    {n:'execucao_id',t:'uniqueidentifier',p:'O RunId do pipeline. É a chave que amarra tudo que aconteceu numa rodada.'},
+    {n:'execucao_pai_id',t:'uniqueidentifier NULL',p:'Preenchido quando o pipeline foi chamado por outro. Sem isso não se reconstrói execução aninhada.',se:g=>g.tem(['invoke'])},
+    {n:'pipeline_nome',t:'varchar(200)',p:'Qual pipeline rodou. Necessário assim que existe mais de um.'},
+    {n:'objeto',t:'varchar(200)',p:'Tabela ou arquivo processado. É esta coluna que responde "qual dos 40 falhou" — sem ela o log só diz que o lote quebrou.'},
+    {n:'inicio',t:'datetime2',p:'Início da etapa.'},
+    {n:'fim',t:'datetime2 NULL',p:'Nulo enquanto roda. Linha com fim nulo e início antigo denuncia execução travada.'},
+    {n:'status',t:'varchar(20)',p:'iniciado / sucesso / erro. Grave "iniciado" ANTES de executar: se o processo morrer, a linha fica lá acusando.'},
+    {n:'linhas_lidas',t:'bigint NULL',p:'Volume lido da origem.'},
+    {n:'linhas_gravadas',t:'bigint NULL',p:'Volume gravado. Diferença grande em relação ao lido revela filtro comendo dado bom.'},
+    {n:'erro_mensagem',t:'varchar(4000) NULL',p:'Mensagem do erro. Sem ela, investigar exige reproduzir o problema.'},
+    {n:'watermark_de',t:'datetime2 NULL',p:'Início da janela processada. É o que permite reprocessar exatamente a janela que falhou.',se:g=>g.tem(['ctrltable'])},
+    {n:'watermark_ate',t:'datetime2 NULL',p:'Fim da janela processada.',se:g=>g.tem(['ctrltable'])},
+    {n:'tentativa',t:'int DEFAULT 1',p:'Número da tentativa. Distingue falha intermitente de falha real.'},
+    {n:'duracao_seg',t:'AS DATEDIFF(second,inicio,fim)',p:'Coluna calculada. Tendência de duração revela degradação antes de virar incidente.'}
+  ]},
+  ctrltable:{t:'Tabela de Controle',ddl:'controle_carga',cols:[
+    {n:'objeto_id',t:'int IDENTITY PK',p:'Chave do objeto controlado.'},
+    {n:'origem_sistema',t:'varchar(60)',p:'Qual sistema. Separa SAP de SQL Server quando ambos alimentam a mesma plataforma.'},
+    {n:'origem_schema',t:'varchar(120)',p:'Schema na origem.'},
+    {n:'origem_objeto',t:'varchar(200)',p:'Tabela ou endpoint de origem.'},
+    {n:'destino_schema',t:'varchar(120)',p:'Schema de destino no Fabric.'},
+    {n:'destino_objeto',t:'varchar(200)',p:'Tabela de destino.'},
+    {n:'modo_carga',t:'varchar(20)',p:'full / incremental / merge. É o que o pipeline lê para decidir o caminho.'},
+    {n:'coluna_watermark',t:'varchar(120) NULL',p:'QUAL coluna da origem controla o incremental. Deixar isso implícito no código é o erro que trava a manutenção.'},
+    {n:'watermark_valor',t:'varchar(60) NULL',p:'Último valor lido. Guardado como texto para servir data, número ou versão.'},
+    {n:'ativo',t:'bit DEFAULT 1',p:'Liga e desliga a carga sem publicar nada. Vale ouro em incidente.'},
+    {n:'ordem',t:'int DEFAULT 100',p:'Prioridade de execução. Dimensão antes de fato, mestre antes de movimento.'},
+    {n:'paralelismo_max',t:'int NULL',p:'Teto de execução simultânea para este objeto. Protege origem frágil.',se:g=>g.cfg('foreach','execucao','paralelo')},
+    {n:'atualizado_em',t:'datetime2',p:'Quando a configuração mudou.'},
+    {n:'atualizado_por',t:'varchar(120)',p:'Quem mudou. A tabela decide o comportamento do fluxo inteiro: mudança sem autor é risco.'}
+  ]},
+  bronze:{t:'Bronze',ddl:'bronze.<objeto>',cols:[
+    {n:'<colunas da origem>',t:'como vieram',p:'Sem conversão de tipo e sem renomear. O valor do Bronze é ser fiel ao que a origem entregou, inclusive nos defeitos.'},
+    {n:'_ingerido_em',t:'timestamp',p:'Quando esta linha entrou. Base de tudo que é auditoria e reprocessamento.'},
+    {n:'_execucao_id',t:'string',p:'Amarra a linha à execução que a trouxe. É o que permite apagar exatamente o que uma carga errada gravou.'},
+    {n:'_origem_sistema',t:'string',p:'De qual sistema veio. Indispensável quando várias origens alimentam a mesma tabela.'},
+    {n:'_arquivo_origem',t:'string NULL',p:'Nome do arquivo de origem, quando a integração é por arquivo.',se:(g,ctx)=>fabCtxTem(ctx,'origem','arquivos')||g.tem(['src_files','src_mainframe'])},
+    {n:'_hash_linha',t:'string',p:'Hash do conteúdo. Quando a origem não diz o que mudou, é comparando hash que se detecta alteração.',se:(g,ctx)=>fabCtxTem(ctx,'mudanca','nao')},
+    {n:'_data_particao',t:'date',p:'Coluna de partição. Sem ela, consulta em volume alto varre a tabela inteira.',se:(g,ctx)=>fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande')}
+  ]},
+  silver:{t:'Silver',ddl:'silver.<entidade>',cols:[
+    {n:'<chave de negócio>',t:'tipada',p:'A chave natural da entidade, já no tipo correto e padronizada entre origens.'},
+    {n:'<atributos tratados>',t:'tipados',p:'Nomes de negócio, tipos corretos, domínio validado.'},
+    {n:'_valido',t:'boolean',p:'Marca a linha que reprovou na validação. Melhor sinalizar do que descartar em silêncio.'},
+    {n:'_motivo_rejeicao',t:'string NULL',p:'Qual regra reprovou. É o que permite discutir qualidade com o dono da origem.'},
+    {n:'_atualizado_em',t:'timestamp',p:'Quando esta versão da linha foi gravada.'},
+    {n:'_execucao_id',t:'string',p:'Rastreia até a carga que produziu a linha.'},
+    {n:'_origem_sistema',t:'string',p:'Preservado do Bronze: quando duas origens divergem, é ele que diz qual venceu.'}
+  ]},
+  gold:{t:'Gold',ddl:'gold.<dim|fato>_<assunto>',
+    cols:[
+      {n:'sk_<entidade>',t:'bigint IDENTITY',p:'Chave substituta. Isola o modelo de mudança na chave da origem.'},
+      {n:'<chave de negócio>',t:'tipada',p:'A chave natural, preservada para rastrear até a origem.'},
+      {n:'<atributos / métricas>',t:'tipados',p:'Já com a regra de negócio aplicada — não no relatório.'},
+      {n:'valido_de',t:'datetime2',p:'Início da vigência desta versão da linha (SCD2).',se:(g,ctx)=>fabCtxTem(ctx,'historico','scd')},
+      {n:'valido_ate',t:'datetime2 NULL',p:'Fim da vigência. Nulo é a versão corrente.',se:(g,ctx)=>fabCtxTem(ctx,'historico','scd')},
+      {n:'corrente',t:'bit',p:'Atalho para a versão vigente. Evita filtro por data em toda consulta.',se:(g,ctx)=>fabCtxTem(ctx,'historico','scd')},
+      {n:'_execucao_id',t:'string',p:'Qual carga produziu a linha.'},
+      {n:'_atualizado_em',t:'datetime2',p:'Quando mudou pela última vez.'}
+    ]}
+};
+// colunas aplicaveis ao contexto e a arquitetura montada
+function fabColunas(comp){
+  const d=FAB_COLUNAS[comp];if(!d)return null;
+  const g=fabGrafo(),ctx=fabCtx();
+  return {...d,cols:d.cols.filter(c=>{try{return !c.se||c.se(g,ctx)}catch(e){return true}})};
+}
+
+// Natureza do componente, dita no proprio card. Sem isso o usuario precisa
+// adivinhar se aquilo roda ou se e escrito.
+const FAB_NATUREZA={
+  tabela:{rot:'TABELA',dica:'É uma tabela: não executa, é escrita e lida.'},
+  armazem:{rot:'ARMAZENAMENTO',dica:'Item do Fabric onde o dado mora.'},
+  consumo:{rot:'CONSUMO',dica:'Entrega o dado a quem usa.'},
+  config:{rot:'CONFIGURAÇÃO',dica:'Estrutura e governança, não faz parte do fluxo de execução.'},
+  origem:{rot:'ORIGEM',dica:'Sistema externo de onde o dado vem.'},
+  atividade:{rot:'ATIVIDADE',dica:'Executa dentro de um pipeline.'}
+};
+const FAB_NAT={
+  ctrltable:'tabela',logtable:'tabela',bronze:'tabela',silver:'tabela',gold:'tabela',
+  lakehouse:'armazem',warehouse:'armazem',eventhouse:'armazem',sqldb:'armazem',onelake:'armazem',
+  semantic:'consumo',pbi:'consumo',rtdash:'consumo',pbimonitor:'consumo',mlmodel:'consumo',
+  sqlendpoint:'consumo',
+  workspace:'config',rls:'config',lineage:'config',deploy:'config',monitorhub:'config'
+};
+function fabNatureza(comp){
+  if(FAB_NAT[comp])return FAB_NAT[comp];
+  return (FAB_COMP[comp]||{}).etapa==='origem'?'origem':'atividade';
+}
 // Artefato que nao faz sentido existir sem alguem escrevendo nele. Uma tabela
 // de log sem escritor e inerte — e e o erro mais comum de quem monta isso.
 const FAB_ESCRITOR={
@@ -7505,7 +7620,21 @@ function fabAplicarPratica(){
 function fabPergProx(no){
   return FAB_PERG_PROX[no.comp+':'+(no.prop||'')]||FAB_PERG_PROX[no.comp]||null;
 }
-let _fabDetalhe=false;
+let _fabDetalhe=false,_fabColunas=false;
+function fabColunasHTML(comp){
+  const c=fabColunas(comp);if(!c)return '';
+  const ddl='CREATE TABLE '+c.ddl+' (\n'+
+    c.cols.map(x=>'  '+x.n.padEnd(22)+' '+x.t).join(',\n')+'\n);';
+  return `<div class="fab-cols">
+    <b>Colunas base — ${escapeHtml(c.t)}</b>
+    <p class="fab-cols-sub">O mínimo para a tabela cumprir o papel dela. Ajustadas ao contexto que você respondeu.</p>
+    ${c.cols.map(x=>`<div class="fab-col">
+      <code>${escapeHtml(x.n)}</code><i>${escapeHtml(x.t)}</i>
+      <p>${escapeHtml(x.p)}</p></div>`).join('')}
+    <button class="fab-cols-ddl" data-fabddl="${escapeHtml(comp)}">Copiar esboço de DDL</button>
+    <pre class="fab-cols-pre">${escapeHtml(ddl)}</pre>
+  </div>`;
+}
 function fabDetalheHTML(d){
   const li=(t,a,c)=>a&&a.length?`<div class="fab-det-sec ${c||''}"><b>${t}</b><ul>${a.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>`:'';
   return `<div class="fab-det">
@@ -7572,10 +7701,11 @@ function fabPainelPasso(){
         ${cfg?`<i>${escapeHtml(cfg)}</i>`:''}
       </span>
       <span class="fab-foco-acoes">
+        ${FAB_COLUNAS[p.no.comp]?`<button data-fabguia="colunas">${_fabColunas?'ocultar':'colunas'}</button>`:''}
         ${(d.propositos&&d.propositos.length)?`<button data-fabguia="reobjetivo" title="Trocar o objetivo deste componente">alterar</button>`:''}
         <button data-fabguia="detalhe">${_fabDetalhe?'menos':'detalhes'}</button>
       </span>
-    </div>`+(_fabDetalhe?fabDetalheHTML(d):'');
+    </div>`+(_fabColunas?fabColunasHTML(p.no.comp):'')+(_fabDetalhe?fabDetalheHTML(d):'');
   }
   const cab=foco+`<div class="fab-passo-cab">
     <span class="fab-passo-n">Passo ${_fabGuia.passo}</span>
@@ -8059,6 +8189,7 @@ function fabNoHTML(n){
   const sel=_fabSel===n.id?' sel':'';
   const pend=fabTemPendencia(n);
   const emEscopo=n.escopo?' noescopo':'';
+  const nat=fabNatureza(n.comp);
   const art=fabEhArtefato(n.comp)?' art':'';
   // o rotulo de baixo carrega o proposito, nao a etapa: e o proposito que
   // explica o no para quem le o diagrama depois
@@ -8068,9 +8199,10 @@ function fabNoHTML(n){
       n.filho?'abrir pipeline ↗':'montar pipeline ↗'}</button>`:'';
   const cfgTxt=Object.values(n.cfg||{}).length?
     `<span class="fab-no-cfg">${escapeHtml(Object.values(n.cfg).map(v=>FAB_ROT[v]||v).join(' · '))}</span>`:'';
-  return `<div class="fab-no${sel}${pend?' pend':''}${emEscopo}${art}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}">
+  return `<div class="fab-no${sel}${pend?' pend':''}${emEscopo}${art} nat-${nat}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}">
     <div class="fab-no-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</div>
     <div class="fab-no-txt"><b>${escapeHtml(d.nome)}</b><i>${escapeHtml(sub)}</i>${cfgTxt}</div>
+    <span class="fab-no-nat" title="${escapeHtml(FAB_NATUREZA[nat].dica)}">${FAB_NATUREZA[nat].rot}</span>
     ${filho}
     ${pend?'<span class="fab-no-pend" title="Falta definir o objetivo deste componente">?</span>':''}
     <button class="fab-no-del" data-fabdel="${n.id}" title="Remover">✕</button>
@@ -8785,6 +8917,15 @@ function fabInit(){
   if(pn)pn.addEventListener('click',e=>{
     const b=e.target.closest('[data-fabpainel]');
     if(b){_fabPainel=b.dataset.fabpainel;try{sv('bt-fab-painel',_fabPainel)}catch(_){}fabRenderPainel();return}
+    const dd=e.target.closest('[data-fabddl]');
+    if(dd){
+      const c=fabColunas(dd.dataset.fabddl);
+      if(c){
+        const ddl='CREATE TABLE '+c.ddl+' (\n'+c.cols.map(x=>'  '+x.n.padEnd(22)+' '+x.t).join(',\n')+'\n);';
+        try{navigator.clipboard.writeText(ddl);toast('DDL copiado')}catch(_){toast('Não foi possível copiar')}
+      }
+      return;
+    }
     const op=e.target.closest('[data-fabpasso]');
     if(op){fabPassoEscolher(op.dataset.fabpasso,op.dataset.v,op.dataset.campo,op.dataset.tipo);return}
     const al=e.target.closest('[data-fabalerta]');
@@ -8817,6 +8958,7 @@ function fabInit(){
       const a=g.dataset.fabguia;
       if(a==='livre')fabAbrirPaleta();
       else if(a==='pratica'){fabAplicarPratica()}
+      else if(a==='colunas'){_fabColunas=!_fabColunas;fabRenderPainel()}
       else if(a==='detalhe'){_fabDetalhe=!_fabDetalhe;fabRenderPainel()}
       else if(a==='reobjetivo'){
         const no=fabItems.find(n=>n.id===_fabGuia.atual);
