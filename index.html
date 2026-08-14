@@ -2056,6 +2056,16 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-res-et p{margin:1px 0 0 13px;color:var(--label2);line-height:1.4}
 
 /* painel de montagem passo a passo */
+.fab-foco{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;margin-bottom:12px;
+  border:1px solid var(--sep);border-left:4px solid var(--et);border-radius:9px;background:var(--bg)}
+.fab-foco-ico{width:24px;height:24px;flex-shrink:0;color:var(--et)}
+.fab-foco-ico svg{width:100%;height:100%;display:block}
+.fab-foco-txt{min-width:0;flex:1}
+.fab-foco-txt b{display:block;font-size:13px;color:var(--label);line-height:1.3}
+.fab-foco-txt i{display:block;font-style:normal;font-size:11.5px;color:var(--label2);line-height:1.4;margin-top:2px}
+.fab-foco-txt i.sem{color:#c07d1a}
+.fab-foco button{border:0;background:none;padding:0;color:#0078d4;font-size:11.5px;
+  font-weight:600;cursor:pointer;text-decoration:underline;flex-shrink:0}
 .fab-passo-cab{padding-bottom:11px;margin-bottom:11px;border-bottom:1px solid var(--sep)}
 .fab-passo-n{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
   color:#fff;background:#0078d4;padding:2px 8px;border-radius:10px;margin-bottom:6px}
@@ -6643,6 +6653,109 @@ const FAB_INICIO={
     ]}
 };
 
+// A pergunta que enquadra o proximo passo. "Depois de Lookup, o que vem?" e
+// generico demais: nao ajuda a decidir. A pergunta certa discrimina as opcoes —
+// as respostas sao os proprios componentes de `proximos`.
+// Chave: "componente:proposito" quando o proposito muda a pergunta, ou so
+// "componente" quando ele nao ramifica.
+const FAB_PERG_PROX={
+  // --- Copy Data ---
+  'copy:bruto':'O dado bruto chegou. O que precisa existir em volta dessa carga?',
+  'copy:incremental':'O que garante que a próxima execução continue do ponto certo?',
+  'copy:historica':'Carga histórica é longa e falha no meio. O que a torna retomável?',
+  'copy:arquivo':'Antes de processar, o que precisa ser verificado no arquivo?',
+  'copy:staging':'O que transforma esse staging em modelo consumível?',
+  // --- Pipeline ---
+  'pipeline:orquestrar':'Como o pipeline descobre o que processar em cada execução?',
+  'pipeline:unica':'O que acompanha essa carga para ela não falhar em silêncio?',
+  'pipeline:mestre':'Como o mestre chama as etapas e acompanha o resultado?',
+  'pipeline:manutencao':'Sobre o que a rotina de manutenção age?',
+  // --- Stored Procedure ---
+  'sproc:controle_exec':'A procedure grava o resultado da execução. Onde, e quem lê isso depois?',
+  'sproc:merge':'O MERGE carrega o quê, e quem consome o resultado?',
+  'sproc:watermark':'Onde o watermark fica guardado?',
+  'sproc:validacao':'E quando a validação reprovar, o que acontece?',
+  // --- Notebook ---
+  'notebook:limpeza':'Para onde vai o dado limpo, e como você garante que ele está correto?',
+  'notebook:modelagem':'Quem vai consumir o dado modelado?',
+  'notebook:ingestao_api':'API falha e muda sem aviso. O que a ingestão precisa em volta?',
+  'notebook:ml':'O que o modelo produz, e como o negócio recebe isso?',
+  'notebook:manutencao_nb':'Sobre qual armazenamento a manutenção age?',
+  // --- Lookup ---
+  'lookup:lista':'O que o pipeline faz com a lista que o Lookup devolveu?',
+  'lookup:watermark_lk':'Para que serve o valor lido?',
+  'lookup:param_lk':'O que é decidido a partir do parâmetro lido?',
+  'lookup:check_lk':'E se a pré-condição não for atendida?',
+  // --- Invoke Pipeline ---
+  'invoke:modular':'Qual peça o mestre chama, e como você acompanha a execução aninhada?',
+  'invoke:reuso':'De onde vêm os parâmetros de cada chamada?',
+  'invoke:fases':'Qual é a próxima fase da cadeia?',
+  // --- Dataflow Gen2 ---
+  'dataflow:self':'Onde o resultado é gravado, e como você garante a qualidade?',
+  'dataflow:cadastro':'Como impedir que dado inválido entre?',
+  'dataflow:leve':'Onde o dado tratado aterrissa?',
+  // --- Lakehouse ---
+  'lakehouse:bronze_l':'O dado cru está guardado. O que o torna confiável?',
+  'lakehouse:silver_l':'O dado está limpo. O que falta para o negócio consumir?',
+  'lakehouse:gold_l':'A camada está pronta. Como ela chega ao usuário?',
+  'lakehouse:geral':'O que você vai fazer com o dado que está aqui?',
+  // --- Warehouse ---
+  'warehouse:dimensional':'O que carrega as dimensões e os fatos?',
+  'warehouse:controle_wh':'Quais tabelas de controle vivem aqui, e quem as alimenta?',
+  'warehouse:serving':'Quem consome esse serving, e com qual recorte de acesso?',
+  // --- Semantic Model ---
+  'semantic:corporativo':'Quem consome o modelo, e quem pode ver o quê?',
+  'semantic:monitor':'Como o time enxerga o estado das cargas?',
+  'semantic:dominio':'Quem consome esse domínio?',
+  // --- Eventstream / Shortcut / Mirroring ---
+  'eventstream:rt_dash':'Onde o evento é armazenado para consulta por janela de tempo?',
+  'eventstream:alerta':'O que dispara a ação quando a condição é atingida?',
+  'eventstream:persistir':'Onde o histórico do fluxo fica, e o que se faz com ele?',
+  'shortcut:externo':'O dado externo está acessível. O que você faz com ele?',
+  'shortcut:interno':'O que governa esse compartilhamento entre times?',
+  'mirroring:replica':'O espelho traz o modelo da origem. O que falta antes do consumo?',
+  'mirroring:offload':'Sobre o espelho, o que você constrói?',
+  // --- componentes que nao ramificam por proposito ---
+  'src_sqlserver':'Como esse dado vai entrar no Fabric?',
+  'src_oracle':'Como esse dado vai entrar no Fabric?',
+  'src_sap':'Extração do SAP é cara. Como trazer esse dado?',
+  'src_saphana':'Como aproveitar as views já modeladas no HANA?',
+  'src_pi':'Sensor gera volume altíssimo. Como esse dado entra?',
+  'src_api':'API pede paginação e retry. Como trazer esse dado?',
+  'src_sharepoint':'Cadastro manual muda sem aviso. Como trazer isso?',
+  'src_files':'Como esses arquivos entram no Fabric?',
+  'src_stream':'Como o fluxo contínuo entra no Fabric?',
+  'bronze':'O dado cru está preservado. O que o torna confiável?',
+  'silver':'O dado está limpo. O que falta para o negócio consumir?',
+  'gold':'A curadoria está pronta. Como ela chega ao usuário?',
+  'foreach':'O que roda para cada item da lista?',
+  'ifcond':'Quais caminhos partem dessa decisão?',
+  'getmeta':'O que é decidido a partir do metadado lido?',
+  'ctrltable':'Quem lê essa tabela, e quem a mantém atualizada?',
+  'logtable':'Quem escreve no log, e quem lê o que está nele?',
+  'dq':'A validação rodou. O que acontece com o resultado?',
+  'workspace':'A estrutura está definida. O que a mantém sob controle?',
+  'sqlendpoint':'Quem consome por SQL?',
+  'eventhouse':'O dado de tempo real está armazenado. Quem age sobre ele?',
+  'mlmodel':'O modelo produz previsão. Como o negócio recebe isso?',
+  'copyjob':'A cópia está configurada. O que acompanha a execução?',
+  'sparkjob':'O job processa em escala. O que acompanha a execução?',
+  'pbi':'O relatório existe. O que falta para publicá-lo com segurança?',
+  'rtdash':'O painel mostra o agora. E quando ninguém está olhando?',
+  'onelake':'O substrato está aí. Como você organiza o que vive nele?',
+  'notify':'O aviso chega a quem precisa. E o histórico, fica onde?',
+  'monitorhub':'O monitor nativo tem retenção curta. O que dá histórico longo?',
+  'fail':'A parada foi intencional. Quem fica sabendo dela?',
+  'sqldb':'O banco operacional está aqui. Como o analítico aproveita esse dado?',
+  'activator':'O gatilho está armado. Como saber se ele está bem calibrado?',
+  'pbimonitor':'O painel mostra o estado das cargas. E quando ninguém está olhando?',
+  'deploy':'A promoção entre ambientes está controlada. O que ela promove?',
+  'rls':'O acesso está definido. Onde essa regra precisa viver para valer sempre?',
+  'lineage':'A linhagem mapeia as dependências. O que você faz com esse mapa?'
+};
+function fabPergProx(no){
+  return FAB_PERG_PROX[no.comp+':'+(no.prop||'')]||FAB_PERG_PROX[no.comp]||null;
+}
 let _fabGuia=ld('bt-fab-guia',{ativo:false,atual:null,passo:1});
 function fabSalvarGuia(){try{sv('bt-fab-guia',_fabGuia)}catch(e){}}
 
@@ -6673,8 +6786,8 @@ function fabPasso(){
     t:'Fim deste ramo',
     dica:'A partir de '+d.nome+' não há mais passo recomendado. Veja a aba Validação para o que ainda falta na arquitetura, ou selecione outro componente do diagrama para seguir por outro caminho.'};
   return {tipo:'proximo',no,
-    t:'Depois de '+d.nome+', o que vem?',
-    dica:fabPropNome(no)?'Considerando que o objetivo dele é: '+fabPropNome(no).toLowerCase()+'.':'',
+    t:fabPergProx(no)||('Depois de '+d.nome+', o que vem?'),
+    dica:'',
     op:sugs.map(s=>({...s,comp:FAB_COMP[s.id]}))};
 }
 
@@ -6684,7 +6797,22 @@ function fabPainelPasso(){
   // o cartao no centro do palco ja esta conduzindo: repetir as mesmas opcoes
   // aqui so divide a atencao
   if(p.tipo==='inicio')return '<div class="fab-vaziop">A definição do ponto de partida está no cartão ao centro. Assim que a primeira atividade existir, o próximo passo aparece aqui.</div>';
-  const cab=`<div class="fab-passo-cab">
+  let foco='';
+  if(p.no){
+    const d=FAB_COMP[p.no.comp],et=FAB_ETAPA[d.etapa]||{cor:'#888'};
+    const obj=fabPropNome(p.no);
+    const cfg=Object.entries(p.no.cfg||{}).map(([k,v])=>FAB_ROT[v]||v).join(' · ');
+    foco=`<div class="fab-foco" style="--et:${et.cor}">
+      <span class="fab-foco-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</span>
+      <span class="fab-foco-txt">
+        <b>${escapeHtml(d.nome)}</b>
+        ${obj?`<i>Objetivo: ${escapeHtml(obj)}</i>`:'<i class="sem">sem objetivo declarado</i>'}
+        ${cfg?`<i>${escapeHtml(cfg)}</i>`:''}
+      </span>
+      ${(d.propositos&&d.propositos.length)?`<button data-fabguia="reobjetivo" title="Trocar o objetivo deste componente">alterar</button>`:''}
+    </div>`;
+  }
+  const cab=foco+`<div class="fab-passo-cab">
     <span class="fab-passo-n">Passo ${_fabGuia.passo}</span>
     <b>${escapeHtml(p.t)}</b>
     ${p.dica?`<i>${escapeHtml(p.dica)}</i>`:''}
@@ -7626,7 +7754,12 @@ function fabInit(){
     if(cb){fabAbrirContexto();return}
     const g=e.target.closest('[data-fabguia]');
     if(g){
-      if(g.dataset.fabguia==='livre')fabAbrirPaleta();
+      const a=g.dataset.fabguia;
+      if(a==='livre')fabAbrirPaleta();
+      else if(a==='reobjetivo'){
+        const no=fabItems.find(n=>n.id===_fabGuia.atual);
+        if(no){fabMarcar();delete no.prop;fabSave();fabRender()}
+      }
       else{_fabGuia.atual=null;_fabGuia.passo=1;fabSalvarGuia();fabRenderPainel()}
     }
   });
