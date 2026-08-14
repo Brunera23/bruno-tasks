@@ -1896,8 +1896,10 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-sug-linha{position:absolute;height:1.5px;background:var(--sep);pointer-events:none}
 .fab-fluxo{position:absolute;transform:translateY(-50%);width:290px;display:flex;
   flex-direction:column;align-items:flex-start;gap:7px}
-.fab-sug{display:flex;align-items:center;gap:8px;height:38px;padding:0 14px 0 10px;max-width:100%;
-  border:1.5px dashed var(--sep);background:var(--bg);border-radius:18px;cursor:pointer;white-space:nowrap;
+.fab-fluxo.esq{align-items:flex-end}
+.fab-fluxo.esq .fab-op,.fab-fluxo.esq .fab-perg{text-align:right}
+.fab-sug{display:flex;align-items:center;gap:9px;padding:7px 14px 7px 10px;max-width:100%;
+  border:1.5px dashed var(--sep);background:var(--bg);border-radius:12px;cursor:pointer;white-space:nowrap;
   font-size:13px;font-weight:600;color:var(--label2);animation:fabIn .18s ease-out}
 @keyframes fabIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
 .fab-sug:hover{border-style:solid;border-color:var(--et);color:var(--label);background:var(--card);
@@ -2082,6 +2084,23 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-det-sec.evitar{border-left:3px solid #d9534f;padding-left:9px}
 .fab-det-sec.bom li{color:#1e6b34}
 .fab-det-sec.risco li{color:#a3312c}
+.fab-pratica{margin-bottom:13px;padding:12px 14px;border:1.5px solid #1e6b34;border-radius:10px;background:#f2f9f4}
+.fab-pratica>b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#1e6b34;margin-bottom:8px}
+.fab-pratica-seq{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:9px}
+.fab-pratica-p{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;background:var(--bg);
+  border:1px solid var(--sep);border-left:3px solid var(--et);border-radius:7px;font-size:12px;
+  font-weight:600;color:var(--label)}
+.fab-pratica-p i{width:16px;height:16px;color:var(--et);flex-shrink:0}
+.fab-pratica-p i svg{width:100%;height:100%;display:block}
+.fab-seta{color:#1e6b34;font-weight:700;font-size:13px}
+.fab-pratica>p{margin:0 0 10px;font-size:12.5px;line-height:1.55;color:var(--label)}
+.fab-pratica>button{width:100%;padding:9px;border:0;border-radius:8px;background:#1e6b34;color:#fff;
+  font-size:12.5px;font-weight:650;cursor:pointer}
+.fab-pratica>button:hover{filter:brightness(1.12)}
+.fab-passo-curto{display:block;margin-top:3px;font-size:11.5px;color:var(--label2);font-style:italic}
+.fab-sug-txt{display:flex;flex-direction:column;gap:1px;min-width:0;text-align:left}
+.fab-sug-txt b{font-size:12.5px;font-weight:650;color:var(--label);line-height:1.25;white-space:nowrap}
+.fab-sug-txt i{font-size:10.5px;font-style:normal;color:var(--label2);line-height:1.25;white-space:nowrap}
 .fab-passo-cab{padding-bottom:11px;margin-bottom:11px;border-bottom:1px solid var(--sep)}
 .fab-passo-n{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
   color:#fff;background:#0078d4;padding:2px 8px;border-radius:10px;margin-bottom:6px}
@@ -5073,6 +5092,7 @@ const FAB_ETAPA=Object.fromEntries(FAB_ETAPAS.map(e=>[e.id,e]));
 const FAB_COMP={
   // ===== ORIGEM =====
   src_sqlserver:{nome:'SQL Server',etapa:'origem',ico:'db',
+    curto:'Sistema interno em SQL Server',
     oque:'Banco relacional on-premises ou em VM, origem transacional clássica.',
     quando:'Sistemas internos (ERP próprio, sistemas legados) com carga transacional.',
     evitar:'Não consulte o SQL transacional direto do Power BI em produção — você transfere carga do BI para o sistema que roda o negócio.',
@@ -5084,6 +5104,7 @@ const FAB_COMP={
       {id:'dataflow',nivel:'ok',porque:'Dataflow Gen2 serve se a transformação é leve e quem mantém prefere interface visual a código.'}
     ]},
   src_oracle:{nome:'Oracle',etapa:'origem',ico:'db',
+    curto:'ERP ou legado de grande porte',
     oque:'Banco relacional corporativo, comum em ERPs e sistemas legados de grande porte.',
     quando:'Origem transacional de grande porte já estabelecida na empresa.',
     evitar:'Extrações full em tabelas grandes sem coluna de watermark — custo alto e janela longa.',
@@ -5095,6 +5116,7 @@ const FAB_COMP={
       {id:'dataflow',nivel:'ok',porque:'Viável para volumes menores, mas perde para o Copy Data em throughput.'}
     ]},
   src_sap:{nome:'SAP (ECC / BW)',etapa:'origem',ico:'db',
+    curto:'Core do negócio no SAP',
     oque:'ERP SAP — origem de dados de negócio (financeiro, suprimentos, produção).',
     quando:'Dados mestres e transacionais do core do negócio.',
     evitar:'Tentar replicar tabelas SAP cruas sem entender o modelo — os nomes são crípticos e as regras vivem na aplicação, não no banco.',
@@ -5106,6 +5128,7 @@ const FAB_COMP={
       {id:'ctrltable',nivel:'rec',porque:'Extração SAP é cara. Controle incremental por tabela evita reextrair o que já veio.'}
     ]},
   src_saphana:{nome:'SAP HANA',etapa:'origem',ico:'db',
+    curto:'Views de negócio já modeladas no HANA',
     oque:'Banco colunar in-memory da SAP, frequentemente camada analítica do ERP.',
     quando:'Quando a empresa já modelou views de negócio no HANA e você quer reaproveitá-las.',
     evitar:'Refazer no Fabric a modelagem que já existe e é confiável no HANA — reaproveite as views.',
@@ -5116,6 +5139,7 @@ const FAB_COMP={
       {id:'bronze',nivel:'rec',porque:'Mesmo vindo modelado, guarde o extrato cru: a view pode mudar e você precisa do histórico do que foi lido.'}
     ]},
   src_pi:{nome:'PI System',etapa:'origem',ico:'stream',
+    curto:'Sensores de planta, série temporal',
     oque:'Historiador industrial (AVEVA/OSIsoft) — séries temporais de sensores de planta.',
     quando:'Dados de processo industrial: temperatura, pressão, vazão, status de equipamento.',
     evitar:'Tratar série temporal de sensor como tabela relacional comum — o volume e o padrão de consulta são diferentes.',
@@ -5128,6 +5152,7 @@ const FAB_COMP={
       {id:'notebook',nivel:'rec',porque:'Sensor cru quase nunca é consumível: você precisa de reamostragem, tratamento de gap e agregação por janela — trabalho de Notebook.'}
     ]},
   src_api:{nome:'REST API',etapa:'origem',ico:'api',
+    curto:'Sistema de terceiro sem acesso ao banco',
     oque:'Endpoint HTTP de sistema externo (SaaS, parceiro, serviço interno).',
     quando:'Dados que só existem em um sistema de terceiro sem acesso ao banco.',
     evitar:'Chamar a API sem paginação e sem retry — funciona no teste com 100 registros e quebra em produção com 100 mil.',
@@ -5140,6 +5165,7 @@ const FAB_COMP={
       {id:'bronze',nivel:'rec',porque:'Guarde o JSON cru como veio. Quando o contrato da API mudar, o histórico bruto é a única forma de reprocessar.'}
     ]},
   src_sharepoint:{nome:'SharePoint',etapa:'origem',ico:'file',
+    curto:'Cadastro mantido à mão pela área',
     oque:'Listas e bibliotecas de arquivos do SharePoint/Teams.',
     quando:'Dados mantidos manualmente pela área de negócio (cadastros, de-para, metas).',
     evitar:'Deixar regra crítica de negócio dependendo de planilha que qualquer um edita sem validação.',
@@ -5151,6 +5177,7 @@ const FAB_COMP={
       {id:'bronze',nivel:'ok',porque:'Guardar o snapshot diário dá o histórico que o SharePoint não te dá.'}
     ]},
   src_files:{nome:'Arquivos (CSV/Excel/JSON)',etapa:'origem',ico:'file',
+    curto:'Integração por arquivo com terceiros',
     oque:'Arquivos entregues por sistema externo, parceiro ou processo manual.',
     quando:'Integração por arquivo — comum com parceiros, bancos e órgãos.',
     evitar:'Processar arquivo direto para a camada final sem guardar o original recebido.',
@@ -5162,6 +5189,7 @@ const FAB_COMP={
       {id:'bronze',nivel:'rec',porque:'Guarde o arquivo exatamente como chegou. É a sua única defesa quando alguém questionar o número daqui a seis meses.'}
     ]},
   src_stream:{nome:'Streaming (Event Hub / IoT / Kafka)',etapa:'origem',ico:'stream',
+    curto:'Evento que perde valor com o tempo',
     oque:'Fluxo contínuo de eventos — telemetria, cliques, transações, sensores.',
     quando:'Quando o valor do dado cai com o tempo: alarme, detecção de fraude, monitoramento de processo.',
     evitar:'Escolher streaming porque é moderno. Se ninguém age sobre o dado em minutos, lote é mais simples e mais barato.',
@@ -5174,6 +5202,7 @@ const FAB_COMP={
 
   // ===== INGESTÃO =====
   copy:{nome:'Copy Data',etapa:'ingestao',ico:'copy',
+    curto:'Mover volume sem transformar',
     oque:'Atividade de pipeline que move dados da origem para o destino, sem transformar.',
     quando:'Ingestão de volume relevante onde você quer throughput e não precisa transformar no caminho.',
     evitar:'Usar Copy para transformar. Ele copia — transformação no meio do caminho vira lógica escondida e difícil de testar.',
@@ -5191,6 +5220,7 @@ const FAB_COMP={
       {id:'warehouse',nivel:'evitar',porque:'Carregar dado cru direto no Warehouse é anti-pattern comum. Warehouse é caro e é para dado modelado — dado cru pertence ao Lakehouse.'}
     ]},
   copyjob:{nome:'Copy Job',etapa:'ingestao',ico:'copy',
+    curto:'Ingestão recorrente, sem orquestração ao redor',
     oque:'Experiência de cópia gerenciada: define origem, destino e modo (full ou incremental) sem montar pipeline.',
     quando:'Ingestão recorrente e direta, quando você não precisa de orquestração ao redor.',
     evitar:'Quando a carga faz parte de um fluxo maior com dependências — aí você quer um pipeline de verdade.',
@@ -5201,6 +5231,7 @@ const FAB_COMP={
       {id:'logtable',nivel:'ok',porque:'O Copy Job já reporta no Monitoring Hub, mas um log próprio permite dashboard consolidado.'}
     ]},
   dataflow:{nome:'Dataflow Gen2',etapa:'ingestao',ico:'dataflow',
+    curto:'Transformação visual, volume baixo ou médio',
     oque:'Transformação visual com Power Query — conecta, trata e grava no destino.',
     quando:'Volume pequeno/médio e quem mantém prefere interface visual a código.',
     evitar:'Volume alto. Dataflow Gen2 fica caro e lento em escala — a partir de dezenas de milhões de linhas, prefira Notebook ou Copy.',
@@ -5214,6 +5245,7 @@ const FAB_COMP={
       {id:'notebook',nivel:'ok',porque:'Se a regra virou um emaranhado de passos no Power Query, migrar para código costuma ser mais barato que manter.'}
     ]},
   shortcut:{nome:'Shortcut (OneLake)',etapa:'ingestao',ico:'link',
+    curto:'Ler dado de outro lake sem copiar',
     oque:'Ponteiro para dado que vive em outro lugar (ADLS, S3, outro workspace) — lido sem cópia.',
     quando:'O dado já está em um lake e você só precisa lê-lo de dentro do Fabric.',
     evitar:'Quando você precisa de snapshot histórico. Shortcut aponta para o estado atual — se a origem mudar, seu histórico muda junto.',
@@ -5225,6 +5257,7 @@ const FAB_COMP={
       {id:'bronze',nivel:'ok',porque:'Um shortcut pode servir de Bronze quando você aceita não ter histórico próprio.'}
     ]},
   mirroring:{nome:'Mirroring',etapa:'ingestao',ico:'mirror',
+    curto:'Réplica contínua, sem manter pipeline',
     oque:'Replicação contínua e gerenciada de um banco (SQL, Cosmos, Snowflake) para o OneLake.',
     quando:'Você quer o dado transacional quase em tempo real no Fabric sem manter pipeline.',
     evitar:'Quando você precisa filtrar ou transformar na entrada — Mirroring replica o que existe.',
@@ -5236,6 +5269,7 @@ const FAB_COMP={
       {id:'sqlendpoint',nivel:'ok',porque:'O espelho fica consultável por T-SQL imediatamente.'}
     ]},
   eventstream:{nome:'Eventstream',etapa:'ingestao',ico:'estream',
+    curto:'Receber e rotear eventos contínuos',
     oque:'Captura, filtra e roteia eventos em fluxo contínuo, sem código.',
     quando:'Ingestão de streaming com necessidade de rotear para mais de um destino.',
     evitar:'Usar para lote disfarçado de streaming — se o dado chega de hora em hora, pipeline é mais simples.',
@@ -5250,6 +5284,7 @@ const FAB_COMP={
 
   // ===== ORQUESTRAÇÃO =====
   pipeline:{nome:'Data Pipeline',etapa:'orquestracao',ico:'pipe',
+    curto:'Encadear passos com ordem e dependência',
     oque:'Orquestrador do Fabric: encadeia atividades com dependência, condição e tratamento de erro.',
     quando:'Sempre que houver mais de um passo com ordem e dependência entre eles.',
     evitar:'Um pipeline gigante com trinta atividades. Quebre em pipelines menores chamados por Invoke Pipeline.',
@@ -5267,6 +5302,7 @@ const FAB_COMP={
       {id:'foreach',nivel:'ok',porque:'Itera sobre a lista devolvida pelo Lookup.'}
     ]},
   lookup:{nome:'Lookup (atividade)',etapa:'orquestracao',ico:'lookup',
+    curto:'Ler metadado: lista, watermark, parâmetro',
     oque:'Lê o conteúdo de uma tabela, consulta ou procedure e devolve o resultado para o pipeline usar.',
     quando:'Ler configuração e metadados: lista de tabelas a processar, último watermark, parâmetros de carga, flags de habilitação.',
     evitar:'Trazer volume de dado com Lookup. Ele é para metadado e configuração — o resultado tem limite de tamanho e mora na memória do pipeline.',
@@ -5278,6 +5314,7 @@ const FAB_COMP={
       {id:'ifcond',nivel:'ok',porque:'Decidir o caminho a partir do que o Lookup devolveu (ex.: pular a carga se não houver dado novo).'}
     ]},
   foreach:{nome:'ForEach (atividade)',etapa:'orquestracao',ico:'loop',
+    curto:'Repetir a mesma lógica para N objetos',
     oque:'Itera sobre uma lista executando as atividades que ficam DENTRO dele, uma vez para cada item — em série ou em paralelo.',
     quando:'Processar N tabelas, N arquivos ou N partições com a mesma lógica. As atividades ficam dentro do escopo do laço, não em sequência depois dele.',
     evitar:'Paralelismo alto sem pensar na origem: 20 cópias simultâneas podem derrubar o banco de onde você está lendo.',
@@ -5290,6 +5327,7 @@ const FAB_COMP={
       {id:'notebook',nivel:'ok',porque:'Quando cada item exige lógica que não cabe em atividade padrão.'}
     ]},
   invoke:{nome:'Invoke Pipeline (atividade)',etapa:'orquestracao',ico:'branch',
+    curto:'Quebrar em pipelines menores e reutilizáveis',
     oque:'Chama outro pipeline a partir do atual, passando parâmetros e podendo aguardar a conclusão.',
     quando:'Modularizar. Um pipeline mestre orquestra filhos especializados (ingestão, transformação, publicação). Também para reusar um pipeline parametrizado em vários contextos.',
     evitar:'Encadear muitos níveis de profundidade — o monitoramento fica confuso e a causa raiz de uma falha vira caça ao tesouro.',
@@ -5301,6 +5339,7 @@ const FAB_COMP={
       {id:'notify',nivel:'ok',porque:'Notificar no mestre evita N notificações duplicadas dos filhos.'}
     ]},
   sproc:{nome:'Stored Procedure',etapa:'orquestracao',ico:'sproc',
+    curto:'T-SQL: controle de execução, MERGE, watermark',
     oque:'Procedure T-SQL no Warehouse, executada pelo pipeline. Encapsula lógica de carga, MERGE e controle de execução.',
     quando:'Controle de execução (marcar início/fim de carga, gravar status, atualizar watermark), MERGE em dimensão/fato, validações em conjunto.',
     evitar:'Colocar regra de negócio crítica só dentro da procedure sem versionamento em Git — vira conhecimento que mora no banco e some com quem escreveu.',
@@ -5315,6 +5354,7 @@ const FAB_COMP={
       {id:'semantic',nivel:'ok',porque:'Depois de carregar, disparar a atualização do modelo semântico fecha o ciclo.'}
     ]},
   ifcond:{nome:'If / Switch',etapa:'orquestracao',ico:'branch',
+    curto:'Caminhos diferentes por condição',
     oque:'Desvio condicional no pipeline a partir de expressão ou de valor vindo de outra atividade.',
     quando:'Caminhos diferentes por tipo de carga (full x incremental), por ambiente, ou por resultado de validação.',
     evitar:'Aninhar condições em vários níveis — vira ilegível. Prefira pipelines filhos especializados.',
@@ -5326,6 +5366,7 @@ const FAB_COMP={
       {id:'fail',nivel:'ok',porque:'Falhar explicitamente é melhor que seguir com dado inválido.'}
     ]},
   getmeta:{nome:'Get Metadata',etapa:'orquestracao',ico:'lookup',
+    curto:'Checar se o arquivo chegou e não está vazio',
     oque:'Lê metadados de arquivo ou pasta: existência, tamanho, data de modificação, lista de itens.',
     quando:'Integração por arquivo: verificar se o arquivo chegou, se não está vazio, se é mais novo que o último processado.',
     evitar:'Substituir controle de execução por checagem de arquivo — saber que o arquivo existe não é saber que ele foi processado.',
@@ -5337,6 +5378,7 @@ const FAB_COMP={
       {id:'notify',nivel:'rec',porque:'Arquivo que não chegou é um evento que alguém precisa saber.'}
     ]},
   notify:{nome:'Notificação (Teams / Outlook)',etapa:'orquestracao',ico:'notify',
+    curto:'Avisar no caminho de falha',
     oque:'Envia mensagem no caminho de sucesso ou de falha do pipeline.',
     quando:'Sempre no caminho de falha. Opcionalmente no sucesso de cargas críticas.',
     evitar:'Notificar todo sucesso de toda carga — a equipe filtra a caixa e para de ler justamente quando importa.',
@@ -5346,6 +5388,7 @@ const FAB_COMP={
       {id:'logtable',nivel:'rec',porque:'Notificação avisa; log explica. Você precisa dos dois — a mensagem some, o log fica.'}
     ]},
   fail:{nome:'Fail (atividade)',etapa:'orquestracao',ico:'fail',
+    curto:'Parar de propósito quando a validação reprova',
     oque:'Encerra o pipeline com falha explícita e mensagem customizada.',
     quando:'Quando uma validação reprova e seguir seria pior que parar.',
     evitar:'Falhar sem mensagem — quem for investigar vai ficar sem contexto.',
@@ -5357,6 +5400,7 @@ const FAB_COMP={
 
   // ===== ARMAZENAMENTO =====
   lakehouse:{nome:'Lakehouse',etapa:'armazenamento',ico:'lake',
+    curto:'Dado cru e intermediário, volume alto, Spark',
     oque:'Armazenamento em Delta sobre o OneLake, com acesso por Spark e por T-SQL (leitura).',
     quando:'Padrão para dado cru e intermediário, volume alto, dado semi-estruturado e qualquer coisa que precise de Spark.',
     evitar:'Usar Lakehouse quando o time só sabe T-SQL e precisa escrever — no Lakehouse a escrita via SQL Endpoint é limitada.',
@@ -5371,6 +5415,7 @@ const FAB_COMP={
       {id:'semantic',nivel:'ok',porque:'Modelo semântico direto sobre o Lakehouse funciona — mas prefira sobre a camada Gold, não sobre dado cru.'}
     ]},
   warehouse:{nome:'Warehouse',etapa:'armazenamento',ico:'wh',
+    curto:'Modelo dimensional e escrita por T-SQL',
     oque:'Data warehouse T-SQL completo no Fabric, com escrita transacional por SQL.',
     quando:'Modelagem dimensional, time forte em T-SQL, necessidade de escrita e MERGE por SQL, controle de execução por procedure.',
     evitar:'Usar como landing zone de dado cru. É mais caro que Lakehouse e não foi feito para dado bruto e semi-estruturado.',
@@ -5385,6 +5430,7 @@ const FAB_COMP={
       {id:'ctrltable',nivel:'rec',porque:'A tabela de controle precisa de escrita transacional — Warehouse é onde ela funciona bem.'}
     ]},
   eventhouse:{nome:'Eventhouse (KQL)',etapa:'armazenamento',ico:'event',
+    curto:'Telemetria em alto volume, consulta por tempo',
     oque:'Banco otimizado para série temporal e telemetria, consultado por KQL.',
     quando:'Alto volume de evento com consulta por janela de tempo: sensor, log, telemetria, clickstream.',
     evitar:'Usar como warehouse de negócio. Não é feito para modelo dimensional nem para junção complexa entre entidades.',
@@ -5397,6 +5443,7 @@ const FAB_COMP={
       {id:'lakehouse',nivel:'ok',porque:'Descarregar histórico frio para Delta reduz custo mantendo o dado disponível.'}
     ]},
   sqldb:{nome:'SQL database (Fabric)',etapa:'armazenamento',ico:'sqldb',
+    curto:'Escrita transacional dentro do Fabric',
     oque:'Banco operacional dentro do Fabric, com replicação automática para o OneLake.',
     quando:'Aplicação que precisa de escrita transacional (cadastro, de-para, configuração mantida por usuário) dentro do ecossistema.',
     evitar:'Usar como destino analítico de grande volume — não é o papel dele.',
@@ -5407,6 +5454,7 @@ const FAB_COMP={
       {id:'lakehouse',nivel:'ok',porque:'O dado replicado fica disponível para o analítico sem pipeline.'}
     ]},
   onelake:{nome:'OneLake',etapa:'armazenamento',ico:'onelake',
+    curto:'Substrato de armazenamento do tenant',
     oque:'Camada única de armazenamento do tenant — todo item do Fabric grava nele.',
     quando:'É o substrato: você não escolhe usar, você organiza como usa (domínios, workspaces, pastas).',
     evitar:'Tratar como pasta de rede sem convenção de nomes e sem dono definido.',
@@ -5420,6 +5468,7 @@ const FAB_COMP={
 
   // ===== CAMADAS =====
   bronze:{nome:'Bronze (dado cru)',etapa:'armazenamento',ico:'layer',
+    curto:'Guardar o dado como veio, sem regra',
     oque:'Camada que guarda o dado exatamente como veio da origem, sem regra aplicada.',
     quando:'Sempre que houver mais de uma origem, extração cara, ou necessidade de auditoria e reprocessamento.',
     evitar:'Aplicar limpeza aqui. O valor do Bronze é ser fiel ao que a origem entregou — inclusive nos defeitos.',
@@ -5431,6 +5480,7 @@ const FAB_COMP={
       {id:'dq',nivel:'rec',porque:'Validar na entrada do Silver evita propagar lixo para as camadas de cima.'}
     ]},
   silver:{nome:'Silver (limpo e padronizado)',etapa:'transformacao',ico:'layer',
+    curto:'Dado limpo, tipado e padronizado',
     oque:'Dado limpo, tipado, deduplicado e com esquema padronizado entre origens.',
     quando:'Sempre que houver mais de uma origem falando da mesma entidade, ou dado cru com qualidade irregular.',
     evitar:'Aplicar regra específica de um relatório aqui. Silver é dado confiável e reutilizável — regra de consumo é Gold.',
@@ -5443,6 +5493,7 @@ const FAB_COMP={
       {id:'dq',nivel:'rec',porque:'É aqui que a validação tem melhor custo-benefício: barato de corrigir, cedo o bastante para não contaminar.'}
     ]},
   gold:{nome:'Gold (pronto para consumo)',etapa:'curadoria',ico:'layer',
+    curto:'Dado modelado, pronto para consumo',
     oque:'Dado modelado para consumo: agregado, dimensional, com regra de negócio aplicada.',
     quando:'Sempre que houver consumo analítico — dashboard, relatório, modelo de ML.',
     evitar:'Apontar o Power BI direto no Silver para "economizar uma camada". A regra de negócio acaba dentro do relatório, e cada relatório terá a sua.',
@@ -5456,6 +5507,7 @@ const FAB_COMP={
 
   // ===== TRANSFORMAÇÃO =====
   notebook:{nome:'Notebook (Spark)',etapa:'transformacao',ico:'nb',
+    curto:'Transformação complexa ou volume alto, em código',
     oque:'Código PySpark/SQL executado sobre o Lakehouse, versionável em Git.',
     quando:'Transformação complexa, volume alto, lógica que precisa de teste e revisão, ingestão de API com paginação e retry.',
     evitar:'Usar Spark para processar poucos milhares de linhas — o tempo de subir a sessão custa mais que o trabalho.',
@@ -5471,6 +5523,7 @@ const FAB_COMP={
       {id:'mlmodel',nivel:'ok',porque:'Notebook é onde o modelo é treinado e registrado.'}
     ]},
   sparkjob:{nome:'Spark Job Definition',etapa:'transformacao',ico:'spark',
+    curto:'Rotina Spark empacotada para produção',
     oque:'Job Spark empacotado (arquivo .py/.jar) executado sem interface de notebook.',
     quando:'Rotina de produção madura, empacotada e versionada, sem necessidade de exploração.',
     evitar:'Fase de desenvolvimento e exploração — notebook é muito mais produtivo aí.',
@@ -5481,6 +5534,7 @@ const FAB_COMP={
       {id:'logtable',nivel:'rec',porque:'Job sem log é caixa-preta.'}
     ]},
   sqlendpoint:{nome:'SQL Analytics Endpoint',etapa:'transformacao',ico:'sql',
+    curto:'Consultar o Lakehouse por T-SQL (leitura)',
     oque:'Endpoint T-SQL de leitura gerado automaticamente sobre o Lakehouse.',
     quando:'Consultar tabelas Delta com SQL, criar views, conectar ferramenta externa que fala T-SQL.',
     evitar:'Esperar escrita. O endpoint do Lakehouse é de leitura — para escrever por SQL você precisa de Warehouse.',
@@ -5493,6 +5547,7 @@ const FAB_COMP={
 
   // ===== CONSUMO =====
   semantic:{nome:'Semantic Model',etapa:'consumo',ico:'semantic',
+    curto:'Centralizar medida e segurança do consumo',
     oque:'Camada semântica: relacionamentos, medidas DAX, hierarquias e regras de segurança.',
     quando:'Sempre que houver mais de um relatório sobre o mesmo assunto, ou métrica que precisa ter uma definição só.',
     evitar:'Um modelo semântico por relatório. É assim que "faturamento" passa a ter cinco valores diferentes na empresa.',
@@ -5504,6 +5559,7 @@ const FAB_COMP={
       {id:'pbimonitor',nivel:'ok',porque:'Se o modelo é sobre a tabela de log, ele vira o painel de monitoramento das suas cargas.'}
     ]},
   pbi:{nome:'Power BI (relatório)',etapa:'consumo',ico:'pbi',
+    curto:'Relatório para pessoas',
     oque:'Relatórios e dashboards sobre o modelo semântico.',
     quando:'Consumo analítico por pessoas.',
     evitar:'Colocar regra de negócio dentro do relatório. Ela pertence ao Gold ou ao modelo semântico.',
@@ -5514,6 +5570,7 @@ const FAB_COMP={
       {id:'workspace',nivel:'ok',porque:'Separar workspace de desenvolvimento e de produção evita relatório em construção na frente do diretor.'}
     ]},
   rtdash:{nome:'Real-Time Dashboard',etapa:'consumo',ico:'dash',
+    curto:'Monitoramento operacional em segundos',
     oque:'Painel de atualização contínua consultando KQL diretamente.',
     quando:'Monitoramento operacional em que segundos importam: chão de fábrica, logística, operação.',
     evitar:'Usar para análise histórica — para isso, Power BI sobre Gold é melhor e mais barato.',
@@ -5523,6 +5580,7 @@ const FAB_COMP={
       {id:'activator',nivel:'rec',porque:'Painel mostra; Activator age. Se ninguém está olhando a tela às 3h da manhã, você precisa do segundo.'}
     ]},
   activator:{nome:'Activator',etapa:'consumo',ico:'activator',
+    curto:'Disparar ação quando a condição bate',
     oque:'Dispara ação (alerta, e-mail, Teams, fluxo) quando uma condição no dado é atingida.',
     quando:'Quando o dado precisa gerar ação sem depender de alguém olhar um painel.',
     evitar:'Configurar limite sem validar com quem opera — alerta demais vira ruído ignorado.',
@@ -5532,6 +5590,7 @@ const FAB_COMP={
       {id:'logtable',nivel:'ok',porque:'Registrar o que foi disparado permite calibrar o limite depois.'}
     ]},
   mlmodel:{nome:'Modelo de ML',etapa:'consumo',ico:'agent',
+    curto:'Previsão, classificação, anomalia',
     oque:'Modelo treinado e registrado no Fabric, com experimentos rastreados.',
     quando:'Previsão, classificação, detecção de anomalia — manutenção preditiva, churn, demanda.',
     evitar:'Partir para ML antes de o dado ser confiável. Modelo sobre dado ruim produz previsão ruim com aparência de ciência.',
@@ -5545,6 +5604,7 @@ const FAB_COMP={
 
   // ===== GOVERNANÇA E CONTROLE =====
   ctrltable:{nome:'Tabela de Controle',etapa:'governanca',ico:'ctrl',
+    curto:'O que processar e até onde já foi',
     oque:'Tabela de metadados que define o que processar e como: lista de objetos, watermark, flags, parâmetros.',
     quando:'Assim que houver mais de três objetos com a mesma lógica de carga.',
     evitar:'Deixar a tabela de controle sem dono e sem validação — ela passa a decidir o comportamento do fluxo inteiro.',
@@ -5557,6 +5617,7 @@ const FAB_COMP={
       {id:'logtable',nivel:'rec',porque:'Controle diz o que fazer; log diz o que aconteceu. São tabelas diferentes com papéis diferentes.'}
     ]},
   logtable:{nome:'Log de Execução',etapa:'governanca',ico:'log',
+    curto:'O que rodou, quanto, e com qual erro',
     oque:'Tabela que registra cada execução: id, objeto, início, fim, status, volume lido/gravado e mensagem de erro.',
     quando:'Em qualquer arquitetura com carga automatizada. É a peça que mais falta e a que mais dói quando falta.',
     evitar:'Confiar apenas no Monitoring Hub. Ele mostra execução recente, mas não guarda histórico longo nem permite cruzar com dado de negócio.',
@@ -5570,6 +5631,7 @@ const FAB_COMP={
       {id:'warehouse',nivel:'rec',porque:'O log precisa de escrita transacional e consulta SQL — Warehouse é o lugar dele.'}
     ]},
   pbimonitor:{nome:'Painel de Monitoramento',etapa:'governanca',ico:'dashb',
+    curto:'Estado das cargas sem abrir o Fabric',
     oque:'Relatório Power BI sobre a tabela de log: status das cargas, duração, volume e falhas.',
     quando:'Assim que houver log de execução. É o que transforma dado de operação em visibilidade.',
     evitar:'Construir o painel antes de o log existir e estar confiável.',
@@ -5579,6 +5641,7 @@ const FAB_COMP={
       {id:'activator',nivel:'ok',porque:'Painel exige alguém olhando. Alerta não.'}
     ]},
   monitorhub:{nome:'Monitoring Hub',etapa:'governanca',ico:'eye',
+    curto:'Investigar execução recente',
     oque:'Monitoramento nativo do Fabric: execuções de pipeline, notebook e dataflow.',
     quando:'Sempre disponível — use para investigação pontual e depuração.',
     evitar:'Tratar como substituto de log próprio. A retenção é limitada e não dá para cruzar com dado de negócio.',
@@ -5588,6 +5651,7 @@ const FAB_COMP={
       {id:'logtable',nivel:'rec',porque:'O log próprio complementa o que o Monitoring Hub não faz: histórico longo e visão consolidada.'}
     ]},
   dq:{nome:'Qualidade de Dados',etapa:'governanca',ico:'dq',
+    curto:'Validar antes de propagar erro',
     oque:'Validações explícitas: not null, unicidade, domínio, integridade referencial, variação esperada de volume.',
     quando:'Na entrada de cada camada. Mais barato no Silver, indispensável antes do Gold.',
     evitar:'Validar só no final. Quando o erro aparece no relatório, ele já contaminou tudo no caminho.',
@@ -5599,6 +5663,7 @@ const FAB_COMP={
       {id:'fail',nivel:'ok',porque:'Em regra crítica, parar é melhor que propagar dado inválido.'}
     ]},
   workspace:{nome:'Workspace / Domínio',etapa:'governanca',ico:'ws',
+    curto:'Separar ambientes e domínios',
     oque:'Organização lógica: workspaces por camada ou por domínio, agrupados em domínios, sobre capacidades.',
     quando:'Antes de criar o primeiro item. Reorganizar depois é caro e quebra referência.',
     evitar:'Um workspace único para tudo. Vira impossível separar quem acessa o quê e isolar produção de desenvolvimento.',
@@ -5609,6 +5674,7 @@ const FAB_COMP={
       {id:'rls',nivel:'rec',porque:'Workspace controla acesso ao item; RLS controla acesso à linha. Você precisa dos dois.'}
     ]},
   deploy:{nome:'Deployment Pipeline + Git',etapa:'governanca',ico:'git',
+    curto:'Promover entre ambientes com histórico',
     oque:'Versionamento em Git e promoção controlada entre desenvolvimento, teste e produção.',
     quando:'A partir do momento em que mais de uma pessoa mexe, ou em que existe usuário de verdade.',
     evitar:'Desenvolver direto em produção. Funciona até o dia em que não funciona — e aí é na frente do cliente.',
@@ -5618,6 +5684,7 @@ const FAB_COMP={
       {id:'workspace',nivel:'rec',porque:'A promoção pressupõe workspaces separados por ambiente.'}
     ]},
   rls:{nome:'Segurança e Acesso (RLS/OLS)',etapa:'governanca',ico:'shield',
+    curto:'Definir quem vê o quê',
     oque:'Controle de quem vê o quê: por workspace, por item, por linha (RLS) e por coluna (OLS).',
     quando:'Sempre que houver dado sensível ou segmentação por área, região ou cliente.',
     evitar:'Resolver segurança criando um relatório por área. Multiplica manutenção e uma hora alguém vê o que não devia.',
@@ -5628,6 +5695,7 @@ const FAB_COMP={
       {id:'lineage',nivel:'ok',porque:'Saber por onde o dado sensível passa é pré-requisito para protegê-lo.'}
     ]},
   lineage:{nome:'Linhagem / Catálogo',etapa:'governanca',ico:'lineage',
+    curto:'Rastrear dependência e impacto',
     oque:'Rastreamento de origem e dependência entre itens, com catálogo e classificação.',
     quando:'A partir de dezenas de itens, ou quando houver exigência de auditoria.',
     evitar:'Confiar só na linhagem automática. Ela mostra a dependência técnica, não o significado do dado.',
@@ -6779,6 +6847,80 @@ const FAB_PERG_PROX={
   'rls':'O acesso está definido. Onde essa regra precisa viver para valer sempre?',
   'lineage':'A linhagem mapeia as dependências. O que você faz com esse mapa?'
 };
+// A sequencia que caracteriza boa pratica naquela situacao. Uma lista de opcoes
+// nao ensina ORDEM — e ordem e o que separa uma arquitetura correta de uma que
+// so tem as pecas certas. "Invocar pipeline com ou sem log antes?" e exatamente
+// esse tipo de duvida, e ela nao se responde escolhendo um item de menu.
+const FAB_PRATICA={
+  'foreach':{passos:['logtable','invoke'],
+    porque:'Registre por ITEM, não por lote. Sem isso você descobre que a carga falhou, mas não qual dos 40 objetos falhou — e reprocessa todos.'},
+  'invoke':{passos:['logtable'],
+    porque:'Com pipeline aninhado, o log precisa guardar id de execução pai e filho. É o que permite achar em qual nível quebrou sem abrir cada monitor.'},
+  'copy:bruto':{passos:['bronze','logtable','notify'],
+    porque:'Aterrissa cru, registra o que veio, avisa se falhar. Os três juntos: sem Bronze você não reprocessa, sem log não sabe o volume, sem aviso descobre pelo usuário.'},
+  'copy:incremental':{passos:['ctrltable','sproc','logtable'],
+    porque:'O watermark é lido ANTES da carga e gravado DEPOIS que ela conclui. Gravar antes de terminar faz a próxima execução pular a janela que falhou.'},
+  'copy:historica':{passos:['bronze','logtable','ctrltable'],
+    porque:'Grave o watermark inicial só no fim da carga histórica. É ele que faz o incremental começar do ponto certo em vez de reler tudo.'},
+  'copy:arquivo':{passos:['getmeta','ifcond','bronze'],
+    porque:'Confirme que o arquivo chegou antes de gastar CU processando o vazio. Verificar, decidir, então processar.'},
+  'pipeline:orquestrar':{passos:['ctrltable','lookup','foreach'],
+    porque:'A tríade do pipeline dirigido por metadados: a tabela define o escopo, o Lookup lê, o ForEach itera. Incluir objeto novo vira INSERT, não desenvolvimento.'},
+  'pipeline:mestre':{passos:['invoke','logtable','notify'],
+    porque:'Notifique no mestre, não em cada filho — senão uma falha vira vinte mensagens e o time para de ler.'},
+  'sproc:controle_exec':{passos:['logtable','semantic','pbimonitor'],
+    porque:'A procedure grava, o modelo semântico lê, o painel mostra. Log sem painel é dado que ninguém olha.'},
+  'sproc:merge':{passos:['gold','logtable'],
+    porque:'Registre linhas inseridas e atualizadas. É o número que revela carga que rodou mas não trouxe nada.'},
+  'lookup:lista':{passos:['foreach'],
+    porque:'Lookup devolve, ForEach itera. Um sem o outro não faz sentido em carga dirigida por metadados.'},
+  'notebook:limpeza':{passos:['dq','silver','logtable'],
+    porque:'Valide ANTES de gravar no Silver. Depois de gravado, o erro já se propagou para quem consome.'},
+  'notebook:ingestao_api':{passos:['bronze','ctrltable','logtable'],
+    porque:'Guarde o JSON cru antes de interpretar. Quando o contrato da API mudar, é o histórico bruto que permite reprocessar.'},
+  'eventstream:alerta':{passos:['eventhouse','activator'],
+    porque:'Armazene antes de alertar. Sem histórico você não tem como calibrar o limite e o alarme vira ruído.'},
+  'bronze':{passos:['dq','silver'],
+    porque:'Valide na entrada do Silver, onde o erro ainda é barato de corrigir.'},
+  'silver':{passos:['gold','semantic'],
+    porque:'A regra de negócio mora no Gold, não no relatório. Sem essa camada, cada consumo cria a sua versão da métrica.'},
+  'logtable':{passos:['semantic','pbimonitor'],
+    porque:'Log só vira visibilidade quando alguém consegue lê-lo sem abrir o Fabric.'},
+  'warehouse:controle_wh':{passos:['ctrltable','logtable','sproc'],
+    porque:'Controle e log no mesmo Warehouse das procedures: escrita transacional e consulta por SQL no mesmo lugar.'}
+};
+function fabPratica(no){
+  const k=FAB_PRATICA[no.comp+':'+(no.prop||'')]||FAB_PRATICA[no.comp];
+  if(!k)return null;
+  // so vale como sugestao o que ainda nao existe ligado a este no
+  const jaTem=new Set(fabLigs().filter(e=>e.from===no.id).map(e=>{
+    const a=fabNos().find(n=>n.id===e.to);return a?a.comp:null;}).filter(Boolean));
+  const faltam=k.passos.filter(c=>FAB_COMP[c]&&!jaTem.has(c));
+  return faltam.length?{...k,faltam}:null;
+}
+// aplica a sequencia inteira, na ordem, encadeando um no outro
+function fabAplicarPratica(){
+  const no=fabNos().find(n=>n.id===_fabGuia.atual);if(!no)return;
+  const pr=fabPratica(no);if(!pr)return;
+  fabMarcar();
+  let orig=no, criados=0;
+  pr.faltam.forEach((c,i)=>{
+    const v=fabVaga(orig);
+    const novo=fabNovoNo(c,v.x,v.y);
+    if(!novo)return;
+    fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)+i,
+      arq:fabCur,from:orig.id,to:novo.id,
+      dentro:fabEhContainer(orig.comp)||undefined});
+    // dentro de um container todos os passos sao irmaos no mesmo escopo;
+    // fora dele a sequencia encadeia
+    if(!fabEhContainer(no.comp))orig=novo;
+    criados++;
+  });
+  _fabGuia.passo+=criados;fabSalvarGuia();
+  fabSave();fabRender();
+  setTimeout(()=>{try{fabAjustar()}catch(e){}},40);
+  toast('Sequência aplicada: '+pr.faltam.map(c=>FAB_COMP[c].nome).join(' → '));
+}
 function fabPergProx(no){
   return FAB_PERG_PROX[no.comp+':'+(no.prop||'')]||FAB_PERG_PROX[no.comp]||null;
 }
@@ -6843,7 +6985,9 @@ function fabPainelPasso(){
       <span class="fab-foco-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</span>
       <span class="fab-foco-txt">
         <b>${escapeHtml(d.nome)}</b>
-        ${obj?`<i>Objetivo: ${escapeHtml(obj)}</i>`:'<i class="sem">sem objetivo declarado</i>'}
+        ${obj?`<i>Objetivo: ${escapeHtml(obj)}</i>`
+          :((d.propositos&&d.propositos.length)?'<i class="sem">sem objetivo declarado</i>'
+            :`<i>${escapeHtml(d.curto||et.nome)}</i>`)}
         ${cfg?`<i>${escapeHtml(cfg)}</i>`:''}
       </span>
       <span class="fab-foco-acoes">
@@ -6860,6 +7004,24 @@ function fabPainelPasso(){
   if(p.tipo==='completo'){
     return cab+`<button class="fab-passo-sair" data-fabguia="reiniciar">Escolher outro ponto do diagrama</button>`;
   }
+  // A boa pratica vem ANTES das opcoes avulsas: a ordem e a recomendacao,
+  // a lista e o que sobra para quem quer divergir dela.
+  let pratica='';
+  if(p.tipo==='proximo'&&p.no){
+    const pr=fabPratica(p.no);
+    if(pr){
+      pratica=`<div class="fab-pratica">
+        <b>Boa prática nesta situação</b>
+        <div class="fab-pratica-seq">${pr.faltam.map((c,i)=>{
+          const d=FAB_COMP[c],et=FAB_ETAPA[d.etapa]||{cor:'#888'};
+          return `${i?'<span class="fab-seta">→</span>':''}<span class="fab-pratica-p" style="--et:${et.cor}">
+            <i>${FAB_ICO[d.ico]||FAB_ICO.base}</i>${escapeHtml(d.nome)}</span>`;
+        }).join('')}</div>
+        <p>${escapeHtml(pr.porque)}</p>
+        <button data-fabguia="pratica">Aplicar nesta ordem</button>
+      </div>`;
+    }
+  }
   const cards=p.op.map(o=>{
     if(p.tipo==='pendencia'){
       return `<button class="fab-passo-op" data-fabpasso="pend" data-campo="${p.pend.campo||''}"
@@ -6875,12 +7037,13 @@ function fabPainelPasso(){
       <span class="fab-passo-ico">${FAB_ICO[c.ico]||FAB_ICO.base}</span>
       <span class="fab-passo-txt">
         <b>${escapeHtml(c.nome)}<i>${escapeHtml(et.nome)}</i></b>
+        ${c.curto?`<span class="fab-passo-curto">${escapeHtml(c.curto)}</span>`:''}
         <p>${escapeHtml(o.porque||c.oque)}</p>
         ${nota}
         ${risco}
       </span></button>`;
   }).join('');
-  return cab+`<div class="fab-passo-ops">${cards}</div>`+
+  return cab+pratica+`<div class="fab-passo-ops">${cards}</div>`+
     (p.tipo!=='inicio'?`<button class="fab-passo-sair" data-fabguia="livre">Nenhuma dessas — abrir o catálogo completo</button>`:'');
 }
 
@@ -7264,11 +7427,17 @@ function fabRenderSugs(){
   const no=fabNos().find(n=>n.id===_fabSel);
   if(!no){box.innerHTML='';box.style.display='none';return}
   box.style.display='';
-  const x=no.x+FAB_W+52,y0=no.y+FAB_H/2;
+  // Se nao couber a direita, o bloco vira para a esquerda do no. Sem isso ele
+  // sai da area visivel justamente quando o diagrama cresce para a direita.
+  const L=300, st=$('#fabStage'), c=fabCam();
+  const dirVis=st?(st.clientWidth-c.x)/c.z:1e9;
+  const vira=(no.x+FAB_W+52+L)>dirVis && (no.x-52-L)>(-c.x/c.z);
+  const x=vira?no.x-52-L:no.x+FAB_W+52, y0=no.y+FAB_H/2;
+  const lx=vira?no.x-52:no.x+FAB_W;
   // Um unico container em fluxo, ancorado no meio do no. Antes cada cartao era
   // posicionado em coordenada propria, e opcoes altas cobriam o cabecalho.
-  const linha=`<div class="fab-sug-linha" style="left:${no.x+FAB_W}px;top:${y0}px;width:52px"></div>`;
-  const abre=`<div class="fab-fluxo" style="left:${x}px;top:${y0}px">`;
+  const linha=`<div class="fab-sug-linha" style="left:${lx}px;top:${y0}px;width:52px"></div>`;
+  const abre=`<div class="fab-fluxo${vira?' esq':''}" style="left:${x}px;top:${y0}px">`;
 
   const pend=fabPendencia(no);
   if(pend){
@@ -7289,7 +7458,8 @@ function fabRenderSugs(){
     const et=FAB_ETAPA[s.comp.etapa]||{cor:'#888'};
     return `<button class="${cls}" data-fabsug="${s.id}" style="--et:${et.cor}">
       <span class="fab-sug-ico">${FAB_ICO[s.comp.ico]||FAB_ICO.base}</span>
-      <span class="fab-sug-nome">${escapeHtml(s.comp.nome)}</span></button>`;
+      <span class="fab-sug-txt"><b>${escapeHtml(s.comp.nome)}</b>${
+        s.comp.curto?`<i>${escapeHtml(s.comp.curto)}</i>`:''}</span></button>`;
   }).join('');
   const verTudo=ocultas.length?`<button class="fab-vertudo" data-fabvertudo="1">${
     _fabVerTudo?'ocultar não recomendados':'ver '+ocultas.length+' não recomendado'+(ocultas.length>1?'s':'')}</button>`:'';
@@ -7795,6 +7965,7 @@ function fabInit(){
     if(g){
       const a=g.dataset.fabguia;
       if(a==='livre')fabAbrirPaleta();
+      else if(a==='pratica'){fabAplicarPratica()}
       else if(a==='detalhe'){_fabDetalhe=!_fabDetalhe;fabRenderPainel()}
       else if(a==='reobjetivo'){
         const no=fabItems.find(n=>n.id===_fabGuia.atual);
