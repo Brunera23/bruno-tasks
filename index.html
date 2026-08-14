@@ -1861,8 +1861,21 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-world{position:absolute;top:0;left:0;transform-origin:0 0}
 .fab-edges{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
 .fab-edge{pointer-events:auto}
-.fab-escopo rect{fill:none;stroke-width:1.5;stroke-dasharray:6 4;opacity:.55}
-.fab-escopo text{font-size:10.5px;font-weight:600;opacity:.85;font-family:system-ui,sans-serif}
+.fab-cont{position:absolute;border:1.5px solid var(--et);border-radius:14px;box-sizing:border-box;
+  background:color-mix(in srgb,var(--et) 5%,var(--bg));cursor:grab;user-select:none}
+.fab-cont.sel{box-shadow:0 0 0 3px color-mix(in srgb,var(--et) 26%,transparent)}
+.fab-cont-head{display:flex;align-items:center;gap:9px;height:42px;padding:0 12px;
+  background:color-mix(in srgb,var(--et) 13%,var(--bg));border-bottom:1px solid color-mix(in srgb,var(--et) 30%,transparent);
+  border-radius:12px 12px 0 0;position:relative}
+.fab-cont-ico{width:24px;height:24px;color:var(--et);flex-shrink:0}
+.fab-cont-ico svg{width:100%;height:100%;display:block}
+.fab-cont-txt{min-width:0;display:flex;flex-direction:column;gap:0}
+.fab-cont-txt b{font-size:13px;font-weight:650;color:var(--label);line-height:1.2;white-space:nowrap}
+.fab-cont-txt i{font-size:11px;font-style:normal;color:var(--et);font-weight:600;line-height:1.2;white-space:nowrap}
+.fab-cont-n{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--label2);
+  background:var(--bg);border:1px solid var(--sep);padding:2px 8px;border-radius:9px;white-space:nowrap}
+.fab-cont-vazio{position:absolute;left:18px;top:60px;font-size:12px;color:var(--label2);font-style:italic}
+.fab-no.noescopo{box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .fab-edge.dentro .fab-edge-line{stroke-dasharray:5 4}
 .fab-edge-hit{stroke:transparent;stroke-width:16;fill:none;cursor:pointer}
 .fab-edge-line{stroke:var(--label2);stroke-width:1.9;fill:none;opacity:.55}
@@ -2212,7 +2225,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
            A partir daí, cada componente que você seleciona mostra o que faz sentido vir depois — e por quê.</p>
         <button class="fab-btn prim" id="fabVazioBtn">Começar</button>
       </div>
-      <span class="fab-hint">A moldura tracejada marca o que roda <b>dentro</b> de um laço ou ramo · Clique em um componente para ver o que vem depois · arraste o fundo para navegar · roda do mouse dá zoom · <b>A</b> abre o catálogo · <b>Del</b> remove · <b>Ctrl+Z</b> desfaz</span>
+      <span class="fab-hint">Um laço mostra <b>dentro da própria caixa</b> o que roda a cada item · Clique em um componente para ver o que vem depois · arraste o fundo para navegar · roda do mouse dá zoom · <b>A</b> abre o catálogo · <b>Del</b> remove · <b>Ctrl+Z</b> desfaz</span>
     </div>
 
     <div class="fab-modal" id="fabPaleta">
@@ -5071,6 +5084,17 @@ const FAB_CONTEM={
   ifcond:{rotulo:'no ramo escolhido',cor:'#e0653a'}
 };
 function fabEhContainer(comp){return !!FAB_CONTEM[comp]}
+// Artefatos proprios: um pipeline chamado por Invoke e outro pipeline, nao uma
+// atividade dentro do laco. Ele encerra a heranca de escopo.
+const FAB_QUEBRA_ESCOPO=new Set(['pipeline']);
+// escopo do que nasce a partir de `orig`
+function fabEscopoDe(orig,comp){
+  if(!orig)return undefined;
+  if(FAB_QUEBRA_ESCOPO.has(comp))return undefined;
+  return fabEhContainer(orig.comp)?orig.id:orig.escopo;
+}
+// membros de um escopo, na ordem em que o fluxo os encadeia
+function fabMembros(cid){return fabNos().filter(n=>n.escopo===cid)}
 const FAB_ETAPAS=[
   {id:'origem',        nome:'Origem',        cor:'#8a8f98'},
   {id:'ingestao',      nome:'Ingestão',      cor:'#0078d4'},
@@ -5849,6 +5873,14 @@ const FAB_VALID=[
     quando:(g,ctx)=>ctx.equipe==='sql'&&g.contar()>=4&&!g.tem(['warehouse','sqldb']),
     texto:'Seu time é forte em T-SQL, mas a arquitetura não tem Warehouse. No Lakehouse a escrita por SQL é limitada — o time ficaria dependente de Spark.',
     resolver:'Considere um Warehouse para a camada onde o time precisa escrever.'},
+  {id:'foreach-aninhado',nivel:'aviso',titulo:'Laço dentro de laço',
+    quando:g=>g.nos.some(n=>n.comp==='foreach'&&n.escopo),
+    texto:'Há um ForEach dentro de outro. O Fabric aceita apenas um nível de aninhamento de ForEach/Until — essa estrutura não é publicável como está.',
+    resolver:'Mova o laço interno para outro pipeline e chame-o por Invoke Pipeline a partir do laço externo.'},
+  {id:'container-vazio',nivel:'sugestao',titulo:'Laço sem nada dentro',
+    quando:g=>g.nos.some(n=>fabEhContainer(n.comp)&&!g.nos.some(k=>k.escopo===n.id)),
+    texto:'Existe um ForEach ou If sem nenhuma atividade dentro. Ele não faz nada assim.',
+    resolver:'Selecione o laço e escolha o que roda dentro dele.'},
   {id:'orfao',nivel:'sugestao',titulo:'Componente solto no diagrama',
     quando:g=>g.orfaos().length>0,
     texto:'Há componentes sem nenhuma ligação. Ou falta conectá-los, ou eles não pertencem a esta arquitetura.',
@@ -6303,7 +6335,18 @@ let fabCur=ld('bt-fab-cur','');            // arquitetura aberta
 let fabCams=ld('bt-fab-cam',{});
 let _fabSel=null,_fabDrag=null,_fabPan=null,_fabHover=null,_fabVerTudo=false,_fabPainel=ld('bt-fab-painel','passo');
 let _fabHist=[],_fabHistFut=[],_fabHistCong=false;
-const FAB_W=200,FAB_H=66;                  // tamanho do no, no estilo das atividades de pipeline
+const FAB_W=200,FAB_H=66,FAB_HEAD=42,FAB_PAD=18;
+// Caixa ocupada por um no. Container cresce para caber quem esta dentro dele —
+// e o que faz o aninhamento ser real em vez de uma borda desenhada ao lado.
+function fabCaixa(n){
+  if(!fabEhContainer(n.comp))return {x:n.x,y:n.y,w:FAB_W,h:FAB_H};
+  const m=fabNos().filter(k=>k.escopo===n.id);
+  if(!m.length)return {x:n.x,y:n.y,w:FAB_W+FAB_PAD*2,h:FAB_HEAD+FAB_H+FAB_PAD*2};
+  const x1=Math.min(n.x,...m.map(k=>k.x-FAB_PAD));
+  const x2=Math.max(n.x+FAB_W+FAB_PAD*2,...m.map(k=>k.x+FAB_W+FAB_PAD));
+  const y2=Math.max(...m.map(k=>k.y+FAB_H))+FAB_PAD;
+  return {x:x1,y:n.y,w:x2-x1,h:Math.max(FAB_HEAD+FAB_H+FAB_PAD*2,y2-n.y)};
+}                  // tamanho do no, no estilo das atividades de pipeline
 
 function fabSave(){
   try{sv('bt-fab-arqs',fabArqs);sv('bt-fab-items',fabItems);sv('bt-fab-edges',fabEdges);sv('bt-fab-cur',fabCur)}catch(e){}
@@ -6402,6 +6445,12 @@ function fabTemPendencia(no){return !!fabPendencia(no)}
 // A base vem do proposito declarado; o catalogo do componente entra como
 // complemento. Peso: o que ja existe no quadro perde prioridade; o que a
 // validacao esta pedindo ganha.
+// Fabric permite um unico nivel de ForEach/Until. If e Switch podem entrar
+// dentro deles; outro laco, nao — a saida oficial e chamar outro pipeline.
+function fabNivelProibido(orig,comp){
+  if(comp!=='foreach')return false;
+  return fabEhContainer(orig.comp)||!!orig.escopo;
+}
 function fabSugestoes(no){
   const def=FAB_COMP[no.comp];if(!def)return [];
   const g=fabGrafo(),ctx=fabCtx();
@@ -6422,6 +6471,9 @@ function fabSugestoes(no){
     const c=FAB_COMP[p.id];
     let peso=p.nivel==='rec'?100:p.nivel==='ok'?50:0;
     if(p.doProp)peso+=60;                           // veio do proposito declarado
+    // limite do produto, nao preferencia: laco dentro de laco nao existe no Fabric
+    if(fabNivelProibido(no,p.id)){peso=-999;p={...p,nivel:'evitar',
+      porque:'O Fabric aceita um único nível de ForEach. Para repetir dentro de um laço, chame outro pipeline por Invoke Pipeline — é a saída oficial.'}}
     // Respeita a ordem do fluxo: saindo de uma Origem, a Ingestao vem antes da
     // Transformacao. Sem isso o passo a passo pula etapas e o desenho fica
     // dificil de ler. Orquestracao e Governanca sao transversais: nao contam.
@@ -6530,8 +6582,9 @@ function fabZoom(f,cx,cy){
 function fabAjustar(){
   const st=$('#fabStage'),nos=fabNos();if(!st||!nos.length)return;
   const r=st.getBoundingClientRect();
-  const x1=Math.min(...nos.map(n=>n.x)),y1=Math.min(...nos.map(n=>n.y));
-  const x2=Math.max(...nos.map(n=>n.x+FAB_W)),y2=Math.max(...nos.map(n=>n.y+FAB_H));
+  const cs=nos.map(fabCaixa);
+  const x1=Math.min(...cs.map(c=>c.x)),y1=Math.min(...cs.map(c=>c.y));
+  const x2=Math.max(...cs.map(c=>c.x+c.w)),y2=Math.max(...cs.map(c=>c.y+c.h));
   const z=Math.min(1.3,Math.max(.18,Math.min((r.width-90)/(x2-x1||1),(r.height-90)/(y2-y1||1))));
   const c=fabCam();c.z=z;
   c.x=(r.width-(x2-x1)*z)/2-x1*z;
@@ -6542,20 +6595,22 @@ function fabAjustar(){
 // curva entre dois nos, saindo pela direita e entrando pela esquerda quando o
 // fluxo vai para frente; contorna por cima quando volta
 function fabCurva(a,b){
-  const x1=a.x+FAB_W,y1=a.y+FAB_H/2,x2=b.x,y2=b.y+FAB_H/2;
+  const ca=fabCaixa(a),cb=fabCaixa(b);
+  const x1=ca.x+ca.w,y1=ca.y+Math.min(ca.h,FAB_H)/2,x2=cb.x,y2=cb.y+Math.min(cb.h,FAB_H)/2;
   if(x2>=x1-20){
     const d=Math.max(30,Math.min(90,(x2-x1)/2));
     return {d:`M${x1},${y1} C${x1+d},${y1} ${x2-d},${y2} ${x2},${y2}`,mx:(x1+x2)/2,my:(y1+y2)/2};
   }
-  const ax=a.x+FAB_W/2,bx=b.x+FAB_W/2,top=Math.min(a.y,b.y)-46;
-  return {d:`M${ax},${a.y} C${ax},${top} ${bx},${top} ${bx},${b.y}`,mx:(ax+bx)/2,my:top+10};
+  const ax=ca.x+ca.w/2,bx=cb.x+cb.w/2,top=Math.min(ca.y,cb.y)-46;
+  return {d:`M${ax},${ca.y} C${ax},${top} ${bx},${top} ${bx},${cb.y}`,mx:(ax+bx)/2,my:top+10};
 }
 
 // ---------- criacao ----------
-function fabNovoNo(comp,x,y,prop){
+function fabNovoNo(comp,x,y,prop,escopo){
   const def=FAB_COMP[comp];if(!def)return null;
   const no={id:'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
     arq:fabCur,comp,x:Math.round(x/8)*8,y:Math.round(y/8)*8,nota:'',cfg:{}};
+  if(escopo)no.escopo=escopo;
   if(prop&&def.propositos&&def.propositos.some(p=>p.id===prop))no.prop=prop;
   fabItems.push(no);return no;
 }
@@ -6577,7 +6632,9 @@ function fabVaga(orig){
   const nos=fabNos();
   // filho de container nasce recuado e abaixo, para caber dentro da moldura
   const _d=orig&&fabEhContainer(orig.comp);
-  let x=orig?orig.x+(_d?56:FAB_W+96):120,y=orig?orig.y+(_d?FAB_H+44:0):120;
+  const _c=orig?fabCaixa(orig):null;
+  let x=orig?(_d?orig.x+FAB_PAD:_c.x+_c.w+96):120,
+      y=orig?(_d?orig.y+FAB_HEAD+FAB_PAD:orig.y):120;
   const bate=(px,py)=>nos.some(n=>Math.abs(n.x-px)<FAB_W+24&&Math.abs(n.y-py)<FAB_H+22);
   let guarda=0;
   while(bate(x,y)&&guarda++<40){
@@ -6590,7 +6647,7 @@ function fabAceitar(sug){
   const orig=fabNos().find(n=>n.id===_fabSel);if(!orig)return;
   fabMarcar();
   const v=fabVaga(orig);
-  const novo=fabNovoNo(sug.id,v.x,v.y);
+  const novo=fabNovoNo(sug.id,v.x,v.y,null,fabEscopoDe(orig,sug.id));
   if(novo){
     fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
       arq:fabCur,from:orig.id,to:novo.id,dentro:fabEhContainer(orig.comp)||undefined});
@@ -6903,19 +6960,21 @@ function fabAplicarPratica(){
   const no=fabNos().find(n=>n.id===_fabGuia.atual);if(!no)return;
   const pr=fabPratica(no);if(!pr)return;
   fabMarcar();
+  // Um laco contem uma SEQUENCIA, nao um punhado de irmaos soltos: o primeiro
+  // passo entra no escopo, os seguintes encadeiam nele. E assim que "log antes,
+  // invoke depois" fica legivel no desenho.
+  const esc=fabEhContainer(no.comp)?no.id:no.escopo;
   let orig=no, criados=0;
   pr.faltam.forEach((c,i)=>{
     const v=fabVaga(orig);
-    const novo=fabNovoNo(c,v.x,v.y);
+    const novo=fabNovoNo(c,v.x,v.y,null,FAB_QUEBRA_ESCOPO.has(c)?undefined:esc);
     if(!novo)return;
     fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)+i,
-      arq:fabCur,from:orig.id,to:novo.id,
-      dentro:fabEhContainer(orig.comp)||undefined});
-    // dentro de um container todos os passos sao irmaos no mesmo escopo;
-    // fora dele a sequencia encadeia
-    if(!fabEhContainer(no.comp))orig=novo;
-    criados++;
+      arq:fabCur,from:orig.id,to:novo.id,dentro:fabEhContainer(orig.comp)||undefined});
+    orig=novo;criados++;
   });
+  // segue a partir do ultimo passo criado, nao do container
+  if(criados){_fabGuia.atual=orig.id;_fabSel=orig.id}
   _fabGuia.passo+=criados;fabSalvarGuia();
   fabSave();fabRender();
   setTimeout(()=>{try{fabAjustar()}catch(e){}},40);
@@ -7064,7 +7123,7 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
   }else{
     const orig=fabNos().find(n=>n.id===_fabGuia.atual);
     const v=fabVaga(orig);
-    const no=fabNovoNo(valor,v.x,v.y);
+    const no=fabNovoNo(valor,v.x,v.y,null,fabEscopoDe(orig,valor));
     if(no&&orig){
       fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
         arq:fabCur,from:orig.id,to:no.id,dentro:fabEhContainer(orig.comp)||undefined});
@@ -7344,12 +7403,13 @@ function fabNoHTML(n){
   const et=FAB_ETAPA[d.etapa]||{cor:'#888'};
   const sel=_fabSel===n.id?' sel':'';
   const pend=fabTemPendencia(n);
+  const emEscopo=n.escopo?' noescopo':'';
   // o rotulo de baixo carrega o proposito, nao a etapa: e o proposito que
   // explica o no para quem le o diagrama depois
   const sub=fabPropNome(n)||et.nome||'';
   const cfgTxt=Object.values(n.cfg||{}).length?
     `<span class="fab-no-cfg">${escapeHtml(Object.values(n.cfg).map(v=>FAB_ROT[v]||v).join(' · '))}</span>`:'';
-  return `<div class="fab-no${sel}${pend?' pend':''}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}">
+  return `<div class="fab-no${sel}${pend?' pend':''}${emEscopo}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}">
     <div class="fab-no-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</div>
     <div class="fab-no-txt"><b>${escapeHtml(d.nome)}</b><i>${escapeHtml(sub)}</i>${cfgTxt}</div>
     ${pend?'<span class="fab-no-pend" title="Falta definir o objetivo deste componente">?</span>':''}
@@ -7357,8 +7417,28 @@ function fabNoHTML(n){
   </div>`;
 }
 
+// Compatibilidade: antes o escopo vivia na aresta e so alcancava o primeiro
+// filho. Reconstroi no no, seguindo a cadeia a partir de cada container.
+function fabMigrarEscopo(){
+  let mudou=false;
+  fabNos().filter(n=>fabEhContainer(n.comp)).forEach(c=>{
+    const fila=fabEdges.filter(e=>e.arq===fabCur&&e.from===c.id&&e.dentro).map(e=>e.to);
+    const vistos=new Set();
+    while(fila.length){
+      const id=fila.shift();if(vistos.has(id))continue;vistos.add(id);
+      const n=fabItems.find(x=>x.id===id);if(!n)continue;
+      if(!n.escopo&&!FAB_QUEBRA_ESCOPO.has(n.comp)){n.escopo=c.id;mudou=true}
+      if(n.escopo===c.id)fabEdges.filter(e=>e.from===id&&!e.dentro).forEach(e=>{
+        const alvo=fabItems.find(x=>x.id===e.to);
+        if(alvo&&!alvo.escopo&&!FAB_QUEBRA_ESCOPO.has(alvo.comp))fila.push(e.to);
+      });
+    }
+  });
+  return mudou;
+}
 function fabRender(){
   const w=$('#fabWorld');if(!w)return;
+  if(fabArq()&&fabMigrarEscopo())fabSave();
   fabRenderAbas();
   const arq=fabArq();
   const vazio=$('#fabVazio'),palco=$('#fabStage');
@@ -7374,22 +7454,29 @@ function fabRender(){
   const nos=fabNos(),mapa={};nos.forEach(n=>mapa[n.id]=n);
   // Moldura de escopo, atras de tudo: cerca os filhos de cada container e
   // acompanha os nos quando eles sao arrastados.
-  let molduras='';
-  nos.filter(n=>fabEhContainer(n.comp)).forEach(c=>{
-    const filhos=fabLigs().filter(e=>e.from===c.id&&e.dentro).map(e=>mapa[e.to]).filter(Boolean);
-    if(!filhos.length)return;
-    const P=18,T=22;
-    const x1=Math.min(...filhos.map(n=>n.x))-P, y1=Math.min(...filhos.map(n=>n.y))-P-T;
-    const x2=Math.max(...filhos.map(n=>n.x+FAB_W))+P, y2=Math.max(...filhos.map(n=>n.y+FAB_H))+P;
-    const cor=(FAB_CONTEM[c.comp]||{}).cor||'#888';
-    molduras+=`<g class="fab-escopo">
-      <rect x="${x1}" y="${y1}" width="${x2-x1}" height="${y2-y1}" rx="12" style="stroke:${cor}"/>
-      <text x="${x1+12}" y="${y1+15}" style="fill:${cor}">${escapeHtml(FAB_COMP[c.comp].nome)} — ${escapeHtml((FAB_CONTEM[c.comp]||{}).rotulo||'')}</text>
-    </g>`;
-  });
+  // Containers viram caixas que ENVOLVEM os filhos, desenhadas antes dos nos
+  // comuns para que o conteudo fique por cima.
+  const caixas=nos.filter(n=>fabEhContainer(n.comp)).map(c=>{
+    const b=fabCaixa(c),d=FAB_COMP[c.comp],cf=FAB_CONTEM[c.comp]||{};
+    const sel=_fabSel===c.id?' sel':'';
+    const pend=fabTemPendencia(c)?'<span class="fab-no-pend">?</span>':'';
+    const qt=nos.filter(k=>k.escopo===c.id).length;
+    return `<div class="fab-cont${sel}" data-fab="${c.id}" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;--et:${cf.cor||'#888'}">
+      <div class="fab-cont-head">
+        <span class="fab-cont-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</span>
+        <span class="fab-cont-txt"><b>${escapeHtml(d.nome)}</b><i>${escapeHtml(cf.rotulo||'')}</i></span>
+        <span class="fab-cont-n">${qt} ${qt===1?'atividade':'atividades'}</span>
+        ${pend}
+        <button class="fab-no-del" data-fabdel="${c.id}" title="Remover">✕</button>
+      </div>
+      ${qt?'':'<div class="fab-cont-vazio">Escolha o que roda dentro deste laço</div>'}
+    </div>`;
+  }).join('');
   let arestas='';
   fabLigs().forEach(e=>{
     const a=mapa[e.from],b=mapa[e.to];if(!a||!b)return;
+    // entrada no escopo nao vira seta: quem diz "esta dentro" e a moldura
+    if(e.dentro&&b.escopo===a.id)return;
     const c=fabCurva(a,b);
     arestas+=`<g class="fab-edge${e.dentro?' dentro':''}" data-fabedge="${e.id}">
       <path d="${c.d}" class="fab-edge-hit"/>
@@ -7403,7 +7490,7 @@ function fabRender(){
   w.innerHTML=`<svg class="fab-edges" width="${sw}" height="${sh}">
     <defs><marker id="fabSeta" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="5.5" markerHeight="5.5" orient="auto">
       <path d="M1,1 L11,6 L1,11 z" fill="var(--label2)"/></marker></defs>
-    ${molduras}${arestas}</svg>`+nos.map(fabNoHTML).join('')+`<div id="fabSugs" class="fab-sugs"></div>`;
+    ${arestas}</svg>`+caixas+nos.filter(n=>!fabEhContainer(n.comp)).map(fabNoHTML).join('')+`<div id="fabSugs" class="fab-sugs"></div>`;
 
   fabApplyCam();
   fabRenderSugs();
@@ -7731,6 +7818,7 @@ const FAB_PEDE={
   'ml-sem-dq':['dq'],'wh-como-bronze':['lakehouse','bronze'],'pbi-sobre-cru':['silver','gold'],
   'sproc-lakehouse':['warehouse'],'incremental-sem-controle':['ctrltable','sproc'],
   'controle-sem-log':['logtable'],'critico-sem-alerta':['notify','activator'],
+  'foreach-aninhado':['invoke'],'container-vazio':['invoke','copy','notebook'],
   'equipe-x-ferramenta':['dataflow'],'sql-sem-warehouse':['warehouse']
 };
 
@@ -7818,6 +7906,11 @@ function fabRenderPaleta(q){
 }
 function fabAddManual(comp){
   if(!fabArq()){toast('Crie uma arquitetura primeiro');return}
+  const _o=fabNos().find(n=>n.id===_fabSel);
+  if(_o&&fabNivelProibido(_o,comp)){
+    toast('O Fabric aceita um único nível de ForEach. Use Invoke Pipeline para ir mais fundo.');
+    return;
+  }
   if(!fabNos().length&&!fabPodeIniciar(comp)){
     toast(FAB_COMP[comp].nome+' não abre uma arquitetura: '+fabPorqueNaoInicia(comp));
     return;
@@ -7825,7 +7918,7 @@ function fabAddManual(comp){
   fabMarcar();
   const orig=fabNos().find(n=>n.id===_fabSel);
   const v=fabVaga(orig);
-  const no=fabNovoNo(comp,v.x,v.y);
+  const no=fabNovoNo(comp,v.x,v.y,null,fabEscopoDe(orig,comp));
   if(no&&orig){
     fabEdges.push({id:'e'+Math.random().toString(36).slice(2,9),arq:fabCur,from:orig.id,to:no.id,
       dentro:fabEhContainer(orig.comp)||undefined});
@@ -7860,7 +7953,10 @@ function fabInit(){
       }
       const it=fabItems.find(x=>x.id===id);
       const p=fabParaMundo(e.clientX,e.clientY);
-      _fabDrag={id,dx:p.x-it.x,dy:p.y-it.y,moveu:false};
+      // arrastar um container leva junto tudo que esta dentro dele
+      const membros=fabEhContainer(it.comp)?fabNos().filter(n=>n.escopo===it.id)
+        .map(n=>({id:n.id,ox:n.x-it.x,oy:n.y-it.y})):[];
+      _fabDrag={id,dx:p.x-it.x,dy:p.y-it.y,moveu:false,membros};
       st.setPointerCapture(e.pointerId);
       return;
     }
@@ -7877,6 +7973,12 @@ function fabInit(){
       if(!_fabDrag.moveu){fabMarcar();_fabDrag.moveu=true}
       it.x=Math.round((p.x-_fabDrag.dx)/8)*8;
       it.y=Math.round((p.y-_fabDrag.dy)/8)*8;
+      (_fabDrag.membros||[]).forEach(m=>{
+        const f=fabItems.find(x=>x.id===m.id);if(!f)return;
+        f.x=it.x+m.ox;f.y=it.y+m.oy;
+        const fe=$('#fabWorld').querySelector(`[data-fab="${f.id}"]`);
+        if(fe){fe.style.left=f.x+'px';fe.style.top=f.y+'px'}
+      });
       const el=$('#fabWorld').querySelector(`[data-fab="${it.id}"]`);
       if(el){el.style.left=it.x+'px';el.style.top=it.y+'px'}
       return;
