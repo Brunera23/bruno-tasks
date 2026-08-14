@@ -2008,6 +2008,13 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
   border:1px solid var(--sep);color:var(--label2);cursor:pointer}
 .fab-ini-chip:hover{border-color:#0078d4;color:var(--label)}
 .fab-ini-op.top{border-color:#0078d4;background:#eef5ff}
+.fab-ini-op.marcada{border-color:#1e6b34;background:#f2f9f4}
+.fab-ini-check{width:20px;height:20px;flex-shrink:0;border:1.5px solid var(--sep);border-radius:5px;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;margin-top:1px}
+.fab-ini-op.marcada .fab-ini-check{background:#1e6b34;border-color:#1e6b34}
+.fab-ini-confirma{margin:0 20px 16px;padding:11px;border:0;border-radius:9px;background:#0078d4;color:#fff;
+  font-size:13px;font-weight:650;cursor:pointer}
+.fab-ini-confirma:disabled{background:var(--hover);color:var(--label2);cursor:default}
 .fab-ini-txt b em{display:inline-block;font-style:normal;font-size:9.5px;font-weight:700;text-transform:uppercase;
   letter-spacing:.4px;background:#0078d4;color:#fff;padding:2px 7px;border-radius:9px;margin-left:7px;vertical-align:middle}
 .fab-ini-anc{display:block;margin-top:5px;font-size:11.5px;color:#1c4f80}
@@ -5889,7 +5896,7 @@ const FAB_REF={
 // nivel: 'aviso' (risco real) | 'sugestao' (oportunidade)
 const FAB_VALID=[
   {id:'sem-log',nivel:'aviso',titulo:'Carga automatizada sem log de execução',
-    quando:(g,ctx)=>g.tem(['pipeline','copy','notebook','dataflow','copyjob'])&&!g.tem(['logtable'])&&ctx.criticidade!=='exploratoria',
+    quando:(g,ctx)=>g.tem(['pipeline','copy','notebook','dataflow','copyjob'])&&!g.tem(['logtable'])&&!fabCtxTem(ctx,'criticidade','exploratoria'),
     texto:'Existe carga automatizada, mas nenhuma tabela de log. Sem isso você descobre a falha pelo usuário reclamando, e não tem histórico para provar que a carga rodou.',
     resolver:'Adicione um Log de Execução e alimente-o com procedures de início e fim.'},
   {id:'sem-monitor',nivel:'sugestao',titulo:'Log existe, mas ninguém olha',
@@ -5901,7 +5908,7 @@ const FAB_VALID=[
     texto:'Com mais de uma origem e sem Bronze, qualquer erro na regra de limpeza exige reextrair tudo da origem — que nem sempre é possível e quase nunca é barato.',
     resolver:'Insira uma camada Bronze guardando o dado como veio, antes de qualquer tratamento.'},
   {id:'sem-erro',nivel:'aviso',titulo:'Nenhum tratamento de erro',
-    quando:(g,ctx)=>g.tem(['pipeline','copy'])&&!g.tem(['notify','fail','ifcond'])&&ctx.criticidade!=='exploratoria',
+    quando:(g,ctx)=>g.tem(['pipeline','copy'])&&!g.tem(['notify','fail','ifcond'])&&!fabCtxTem(ctx,'criticidade','exploratoria'),
     texto:'O fluxo não tem caminho de falha. Uma carga que quebra às 2h da manhã só será descoberta quando alguém notar o número errado.',
     resolver:'Adicione uma Notificação no caminho de falha do pipeline.'},
   {id:'api-sem-watermark',nivel:'aviso',titulo:'API sem controle incremental',
@@ -5931,11 +5938,11 @@ const FAB_VALID=[
     texto:'Existe uma procedure declarada para controlar execução, mas nenhuma tabela de log onde gravar o resultado. A procedure não tem onde escrever.',
     resolver:'Adicione um Log de Execução como destino da procedure.'},
   {id:'df-volume',nivel:'aviso',titulo:'Dataflow Gen2 em volume alto',
-    quando:(g,ctx)=>g.tem(['dataflow'])&&(ctx.volume==='grande'||ctx.volume==='muitogrande'),
+    quando:(g,ctx)=>g.tem(['dataflow'])&&(fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande')),
     texto:'Dataflow Gen2 fica caro e lento em volume alto. O consumo de CU cresce rápido e a janela de carga tende a estourar.',
     resolver:'Troque por Copy Data (movimentação) + Notebook (transformação).'},
   {id:'volume-sem-spark',nivel:'sugestao',titulo:'Volume alto sem processamento distribuído',
-    quando:(g,ctx)=>(ctx.volume==='grande'||ctx.volume==='muitogrande')&&!g.tem(['notebook','sparkjob']),
+    quando:(g,ctx)=>(fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande'))&&!g.tem(['notebook','sparkjob']),
     texto:'Com volume alto, transformação sem Spark tende a virar gargalo e a estourar a janela de carga.',
     resolver:'Considere Notebook (Spark) para as transformações mais pesadas.'},
   {id:'consumo-sem-semantic',nivel:'sugestao',titulo:'Power BI sem modelo semântico',
@@ -5975,15 +5982,15 @@ const FAB_VALID=[
     texto:'Modelo sobre dado não validado degrada em silêncio: a previsão continua saindo, só que errada — com aparência de ciência.',
     resolver:'Valide a entrada do modelo e registre a métrica de cada execução.'},
   {id:'critico-sem-alerta',nivel:'aviso',titulo:'Carga crítica sem alerta',
-    quando:(g,ctx)=>ctx.criticidade==='alta'&&g.contar()>=3&&!g.tem(['notify','activator']),
+    quando:(g,ctx)=>fabCtxTem(ctx,'criticidade','alta')&&g.contar()>=3&&!g.tem(['notify','activator']),
     texto:'Você marcou esta carga como crítica para o negócio, com SLA. Sem alerta, a falha só aparece quando alguém cobra o número.',
     resolver:'Adicione Notificação no caminho de falha, ou Activator sobre o log.'},
   {id:'equipe-x-ferramenta',nivel:'aviso',titulo:'Ferramenta fora do alcance do time',
-    quando:(g,ctx)=>ctx.equipe==='lowcode'&&g.tem(['notebook','sparkjob']),
+    quando:(g,ctx)=>fabCtxTem(ctx,'equipe','lowcode')&&g.tem(['notebook','sparkjob']),
     texto:'O contexto diz que quem mantém prefere interface visual, mas a arquitetura depende de Notebook/Spark. Solução boa no papel que o time não mantém vira dívida no primeiro incidente.',
     resolver:'Troque por Dataflow Gen2 onde o volume permitir, ou planeje capacitação antes de colocar em produção.'},
   {id:'sql-sem-warehouse',nivel:'sugestao',titulo:'Time de T-SQL sem Warehouse',
-    quando:(g,ctx)=>ctx.equipe==='sql'&&g.contar()>=4&&!g.tem(['warehouse','sqldb']),
+    quando:(g,ctx)=>fabCtxTem(ctx,'equipe','sql')&&g.contar()>=4&&!g.tem(['warehouse','sqldb']),
     texto:'Seu time é forte em T-SQL, mas a arquitetura não tem Warehouse. No Lakehouse a escrita por SQL é limitada — o time ficaria dependente de Spark.',
     resolver:'Considere um Warehouse para a camada onde o time precisa escrever.'},
   {id:'foreach-aninhado',nivel:'aviso',titulo:'Laço dentro de laço',
@@ -5995,39 +6002,39 @@ const FAB_VALID=[
     texto:'Existe um ForEach ou If sem nenhuma atividade dentro. Ele não faz nada assim.',
     resolver:'Selecione o laço e escolha o que roda dentro dele.'},
   {id:'metadata-sem-controle',nivel:'aviso',titulo:'Estratégia por metadados sem tabela de controle',
-    quando:(g,ctx)=>ctx.estrategia==='metadata'&&g.contar()>=3&&!g.tem(['ctrltable']),
+    quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','metadata')&&g.contar()>=3&&!g.tem(['ctrltable']),
     texto:'A estratégia declarada é dirigida por metadados, mas não há tabela de controle. Sem ela o pipeline não tem de onde ler o escopo — e você volta a manter um pipeline por objeto.',
     resolver:'Adicione uma Tabela de Controle e leia dela com Lookup + ForEach.'},
   {id:'zeroetl-com-pipeline',nivel:'sugestao',titulo:'Zero-ETL com pipeline montado',
-    quando:(g,ctx)=>ctx.estrategia==='zeroetl'&&g.tem(['copy','dataflow'])&&!g.tem(['mirroring','shortcut']),
+    quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','zeroetl')&&g.tem(['copy','dataflow'])&&!g.tem(['mirroring','shortcut']),
     texto:'A estratégia escolhida foi não manter ingestão, mas a arquitetura tem carga por pipeline e nenhum Mirroring ou Shortcut. Uma das duas decisões precisa mudar.',
     resolver:'Troque a ingestão por Mirroring/Shortcut, ou reveja a estratégia no contexto.'},
   {id:'explicito-em-escala',nivel:'sugestao',titulo:'Pipeline por objeto com muitas origens',
-    quando:(g,ctx)=>ctx.estrategia==='explicito'&&g.contarEtapa('origem')>=3,
+    quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','explicito')&&g.contarEtapa('origem')>=3,
     texto:'Com três ou mais origens, manter um pipeline por objeto cresce linearmente: cada correção precisa ser aplicada em todos.',
     resolver:'Considere migrar para a estratégia dirigida por metadados — revise no contexto.'},
   {id:'incremental-sem-fonte',nivel:'aviso',titulo:'Carga incremental sem como detectar mudança',
-    quando:(g,ctx)=>ctx.mudanca==='nao'&&(g.prop('copy','incremental')||g.tem(['ctrltable'])),
+    quando:(g,ctx)=>fabCtxTem(ctx,'mudanca','nao')&&(g.prop('copy','incremental')||g.tem(['ctrltable'])),
     texto:'O contexto diz que a origem não permite saber o que mudou, mas a arquitetura assume carga incremental. Sem coluna de controle nem CDC, o watermark não tem de onde sair.',
     resolver:'Use carga full com snapshot em Bronze, ou negocie com o dono da origem a inclusão de uma coluna de data de atualização.'},
   {id:'sensivel-sem-acesso',nivel:'aviso',titulo:'Dado pessoal sem controle de acesso',
-    quando:(g,ctx)=>(ctx.sensivel==='pessoal'||ctx.sensivel==='restrito')&&g.tem(['semantic','pbi'])&&!g.tem(['rls']),
+    quando:(g,ctx)=>(fabCtxTem(ctx,'sensivel','pessoal')||fabCtxTem(ctx,'sensivel','restrito'))&&g.tem(['semantic','pbi'])&&!g.tem(['rls']),
     texto:'Você indicou dado pessoal ou restrito, e há consumo publicado sem definição de quem vê o quê. É exposição indevida esperando acontecer, e problema de auditoria.',
     resolver:'Defina RLS no modelo semântico antes de publicar.'},
   {id:'auditoria-sem-bronze',nivel:'aviso',titulo:'Auditoria exigida sem camada Bronze',
-    quando:(g,ctx)=>ctx.historico==='auditoria'&&g.contar()>=3&&!g.tem(['bronze']),
+    quando:(g,ctx)=>fabCtxTem(ctx,'historico','auditoria')&&g.contar()>=3&&!g.tem(['bronze']),
     texto:'O contexto pede auditoria completa, mas não há Bronze guardando o que a origem entregou. Sem isso não há o que auditar.',
     resolver:'Adicione uma camada Bronze com snapshot datado de cada carga.'},
   {id:'scd-sem-merge',nivel:'sugestao',titulo:'Histórico de mudanças sem MERGE',
-    quando:(g,ctx)=>ctx.historico==='scd'&&g.tem(['gold'])&&!g.tem(['sproc','notebook']),
+    quando:(g,ctx)=>fabCtxTem(ctx,'historico','scd')&&g.tem(['gold'])&&!g.tem(['sproc','notebook']),
     texto:'SCD2 exige comparar o registro novo com o vigente e fechar a versão anterior. Isso não acontece sozinho.',
     resolver:'Adicione uma Stored Procedure (ou Notebook) responsável pelo MERGE com data de início e fim.'},
   {id:'janela-sem-paralelismo',nivel:'sugestao',titulo:'Janela apertada sem processamento paralelo',
-    quando:(g,ctx)=>ctx.janela==='apertada'&&g.contar()>=4&&!g.tem(['notebook','sparkjob']),
+    quando:(g,ctx)=>fabCtxTem(ctx,'janela','apertada')&&g.contar()>=4&&!g.tem(['notebook','sparkjob']),
     texto:'Com janela de minutos e sem processamento distribuído, a carga tende a estourar o tempo disponível.',
     resolver:'Considere Notebook com particionamento e paralelismo nas etapas mais pesadas.'},
   {id:'muitos-objetos-explicito',nivel:'aviso',titulo:'Centenas de objetos sem metadados',
-    quando:(g,ctx)=>ctx.objetos==='centenas'&&g.contar()>=4&&!g.tem(['ctrltable']),
+    quando:(g,ctx)=>fabCtxTem(ctx,'objetos','centenas')&&g.contar()>=4&&!g.tem(['ctrltable']),
     texto:'Com centenas de objetos e sem tabela de controle, cada inclusão vira desenvolvimento e cada correção precisa ser replicada em todos os pipelines.',
     resolver:'Adote pipeline dirigido por metadados: Tabela de Controle + Lookup + ForEach.'},
   {id:'orfao',nivel:'sugestao',titulo:'Componente solto no diagrama',
@@ -6692,94 +6699,94 @@ function fabSugestoes(no){
     // time nao sabe manter Spark e o pior erro que esta ferramenta pode cometer.
     const ctxPros=[],ctxContras=[];
     const emp=(d,nota)=>{peso+=d;if(nota)(d>0?ctxPros:ctxContras).push(nota)};
-    if(ctx.volume==='grande'||ctx.volume==='muitogrande'){
-      if(p.id==='notebook'||p.id==='sparkjob')emp(25,'Volume '+(ctx.volume==='muitogrande'?'muito alto':'alto')+': processamento distribuído deixa de ser opcional.');
+    if(fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande')){
+      if(p.id==='notebook'||p.id==='sparkjob')emp(25,'Volume '+(fabCtxTem(ctx,'volume','muitogrande')?'muito alto':'alto')+': processamento distribuído deixa de ser opcional.');
       if(p.id==='dataflow')emp(-45,'Volume alto: Dataflow Gen2 fica caro e lento nessa faixa.');
     }
-    if(ctx.freq==='realtime'&&(p.id==='eventstream'||p.id==='eventhouse'||p.id==='activator'))
+    if(fabCtxTem(ctx,'freq','realtime')&&(p.id==='eventstream'||p.id==='eventhouse'||p.id==='activator'))
       emp(30,'Você indicou tempo real: este é o caminho nativo para isso.');
-    if(ctx.freq==='batch'&&(p.id==='eventstream'||p.id==='eventhouse'))
+    if(fabCtxTem(ctx,'freq','batch')&&(p.id==='eventstream'||p.id==='eventhouse'))
       emp(-30,'Seu cenário é batch: streaming adiciona custo e complexidade sem ganho.');
-    if(ctx.consumo==='ml'&&(p.id==='mlmodel'||p.id==='dq'))emp(25,'Consumo por ML: entrada validada é pré-requisito, não refinamento.');
-    if(ctx.consumo==='dashboard'&&(p.id==='semantic'||p.id==='pbi'))emp(20,'Consumo em dashboard: a camada semântica centraliza a métrica.');
+    if(fabCtxTem(ctx,'consumo','ml')&&(p.id==='mlmodel'||p.id==='dq'))emp(25,'Consumo por ML: entrada validada é pré-requisito, não refinamento.');
+    if(fabCtxTem(ctx,'consumo','dashboard')&&(p.id==='semantic'||p.id==='pbi'))emp(20,'Consumo em dashboard: a camada semântica centraliza a métrica.');
     // quem mantem — o contexto mais ignorado e o que mais derruba arquitetura
-    if(ctx.equipe==='sql'){
+    if(fabCtxTem(ctx,'equipe','sql')){
       if(p.id==='sproc'||p.id==='warehouse')emp(30,'Seu time é forte em T-SQL: esta peça ele mantém sem treinamento novo.');
       if(p.id==='notebook'||p.id==='sparkjob')emp(-20,'Seu time é de T-SQL: Spark exigiria capacitação antes de virar rotina.');
     }
-    if(ctx.equipe==='lowcode'){
+    if(fabCtxTem(ctx,'equipe','lowcode')){
       if(p.id==='dataflow')emp(30,'Preferência por interface visual: Dataflow Gen2 é o que seu time mantém.');
       if(p.id==='notebook'||p.id==='sparkjob')emp(-25,'Sem gente de código, um Notebook vira caixa-preta que ninguém revisa.');
     }
-    if(ctx.equipe==='codigo'){
+    if(fabCtxTem(ctx,'equipe','codigo')){
       if(p.id==='notebook'||p.id==='sparkjob')emp(25,'Time confortável com código: Notebook dá controle e entra no Git.');
       if(p.id==='dataflow')emp(-15,'Com time de código, lógica versionada tende a valer mais que interface visual.');
     }
     // Estrategia declarada: e a decisao que redefine o escopo do que faz
     // sentido sugerir, entao pesa mais que as demais dimensoes de contexto.
-    if(ctx.estrategia==='metadata'){
+    if(fabCtxTem(ctx,'estrategia','metadata')){
       if(['ctrltable','lookup','foreach','invoke'].includes(p.id))
         emp(55,'Estratégia dirigida por metadados: esta peça é o que faz um pipeline atender N objetos.');
     }
-    if(ctx.estrategia==='explicito'){
+    if(fabCtxTem(ctx,'estrategia','explicito')){
       if(['ctrltable','lookup','foreach'].includes(p.id))
         emp(-50,'Você optou por um pipeline por objeto: metadados adicionam complexidade sem o ganho de escala aqui.');
       if(p.id==='copy')emp(20,'Carga explícita: a atividade direta é o caminho mais legível.');
     }
-    if(ctx.estrategia==='codigo'){
+    if(fabCtxTem(ctx,'estrategia','codigo')){
       if(['notebook','sparkjob'].includes(p.id))emp(45,'Estratégia code-first: lógica versionada e testável em PR.');
       if(p.id==='dataflow')emp(-50,'Estratégia code-first: Dataflow tira a lógica do Git e da revisão.');
     }
-    if(ctx.estrategia==='lowcode'){
+    if(fabCtxTem(ctx,'estrategia','lowcode')){
       if(p.id==='dataflow')emp(45,'Estratégia low-code: é a peça que a área de negócio mantém sozinha.');
       if(['notebook','sparkjob'].includes(p.id))emp(-45,'Estratégia low-code: código foge de quem vai manter isso.');
     }
-    if(ctx.estrategia==='zeroetl'){
+    if(fabCtxTem(ctx,'estrategia','zeroetl')){
       if(['mirroring','shortcut'].includes(p.id))emp(55,'Estratégia zero-ETL: sem pipeline para manter, é o menor custo de operação.');
       if(['copy','dataflow','pipeline'].includes(p.id))emp(-40,'Estratégia zero-ETL: montar pipeline contraria a escolha de não manter ingestão.');
     }
-    if(ctx.estrategia==='streaming'){
+    if(fabCtxTem(ctx,'estrategia','streaming')){
       if(['eventstream','eventhouse','activator','rtdash'].includes(p.id))emp(50,'Estratégia streaming-first: caminho nativo de fluxo contínuo.');
       if(['copy','copyjob'].includes(p.id))emp(-35,'Estratégia streaming-first: cópia em lote é o caminho oposto ao escolhido.');
     }
     // Quantidade de objetos: e ela, nao o volume, que decide metadados
-    if(ctx.objetos==='centenas'&&['ctrltable','lookup','foreach','invoke'].includes(p.id))
+    if(fabCtxTem(ctx,'objetos','centenas')&&['ctrltable','lookup','foreach','invoke'].includes(p.id))
       emp(50,'Centenas de objetos: manter um pipeline por objeto é inviável — metadados deixam de ser opção.');
-    if(ctx.objetos==='poucos'&&['ctrltable','lookup','foreach'].includes(p.id))
+    if(fabCtxTem(ctx,'objetos','poucos')&&['ctrltable','lookup','foreach'].includes(p.id))
       emp(-40,'Com até 3 objetos, metadados adicionam peças sem entregar escala. Um pipeline explícito é mais legível.');
     // Como a origem identifica mudanca: define se incremental e viavel
-    if(ctx.mudanca==='nao'){
+    if(fabCtxTem(ctx,'mudanca','nao')){
       if(['ctrltable'].includes(p.id))emp(-35,'A origem não permite saber o que mudou: watermark não tem de onde sair. Aqui a carga é full.');
       if(p.id==='bronze')emp(30,'Sem forma de detectar mudança, o snapshot em Bronze é o que te dá histórico e permite comparar entre cargas.');
       if(p.id==='notebook')emp(20,'Comparar snapshots para detectar o que mudou é trabalho de código.');
     }
-    if(ctx.mudanca==='cdc'&&['mirroring'].includes(p.id))
+    if(fabCtxTem(ctx,'mudanca','cdc')&&['mirroring'].includes(p.id))
       emp(50,'A origem tem CDC: Mirroring entrega as mudanças sem você manter pipeline algum.');
-    if(ctx.mudanca==='coluna'&&['ctrltable','lookup'].includes(p.id))
+    if(fabCtxTem(ctx,'mudanca','coluna')&&['ctrltable','lookup'].includes(p.id))
       emp(35,'Há coluna de data na origem: dá para guardar watermark e fazer incremental de verdade.');
     // Historico exigido: muda a modelagem
-    if(ctx.historico==='auditoria'&&p.id==='bronze')
+    if(fabCtxTem(ctx,'historico','auditoria')&&p.id==='bronze')
       emp(45,'Auditoria completa exige guardar todo estado recebido — é exatamente o papel do Bronze.');
-    if(ctx.historico==='scd'){
+    if(fabCtxTem(ctx,'historico','scd')){
       if(['sproc','warehouse','gold'].includes(p.id))emp(30,'Histórico de mudanças (SCD2) pede MERGE com data de início e fim, em modelo dimensional.');
     }
-    if(ctx.historico==='atual'&&p.id==='bronze')
+    if(fabCtxTem(ctx,'historico','atual')&&p.id==='bronze')
       emp(-15,'Só o estado atual é necessário: o Bronze continua útil para reprocessar, mas pesa menos na decisão.');
     // Dado sensivel: governanca deixa de ser refinamento
-    if(ctx.sensivel==='pessoal'&&['rls','lineage','dq'].includes(p.id))
+    if(fabCtxTem(ctx,'sensivel','pessoal')&&['rls','lineage','dq'].includes(p.id))
       emp(40,'Há dado pessoal (LGPD): controle de acesso e rastreabilidade são exigência, não melhoria.');
-    if(ctx.sensivel==='restrito'&&['rls','lineage','workspace','deploy'].includes(p.id))
+    if(fabCtxTem(ctx,'sensivel','restrito')&&['rls','lineage','workspace','deploy'].includes(p.id))
       emp(50,'Dado altamente restrito: acesso, linhagem e trilha de auditoria são pré-requisito para publicar.');
     // Janela de carga: decide particionamento e paralelismo
-    if(ctx.janela==='apertada'){
+    if(fabCtxTem(ctx,'janela','apertada')){
       if(['notebook','sparkjob'].includes(p.id))emp(35,'Janela apertada: paralelismo e particionamento deixam de ser refinamento.');
       if(p.id==='dataflow')emp(-40,'Janela apertada: Dataflow Gen2 é o caminho mais lento das opções.');
       if(['ctrltable','lookup'].includes(p.id))emp(25,'Com janela curta, carga full não cabe — incremental vira obrigatório.');
     }
     // criticidade define o rigor que se paga desde o inicio
-    if(ctx.criticidade==='alta'&&['logtable','notify','dq','deploy','pbimonitor','activator'].includes(p.id))
+    if(fabCtxTem(ctx,'criticidade','alta')&&['logtable','notify','dq','deploy','pbimonitor','activator'].includes(p.id))
       emp(35,'Criticidade alta: com SLA e alguém cobrando, controle e alerta não são refinamento.');
-    if(ctx.criticidade==='exploratoria'&&['deploy','rls','lineage','workspace'].includes(p.id))
+    if(fabCtxTem(ctx,'criticidade','exploratoria')&&['deploy','rls','lineage','workspace'].includes(p.id))
       emp(-20,'Cenário exploratório: governança pesada pode esperar a solução se provar.');
     return {...p,comp:c,peso,ctxNota:ctxPros[0]||'',ctxAviso:ctxContras[0]||''};
   });
@@ -7473,7 +7480,7 @@ const FAB_CTXQ=[
    ]},
   {k:'mudanca',t:'A origem permite saber o que mudou desde a última carga?',
    dica:'É o bloqueio prático mais comum em projeto real. Sem uma forma de identificar o que mudou, carga incremental é impossível — e recomendar incremental sem verificar isso seria o pior conselho que esta ferramenta poderia dar.',
-   quando:ctx=>['relacional','sap','oracle','api','arquivos','sharepoint','clouddw','saas','nosql','mainframe'].includes(ctx.origem),
+   quando:ctx=>['relacional','sap','oracle','api','arquivos','sharepoint','clouddw','saas','nosql','mainframe'].includes(Array.isArray(ctx.origem)?ctx.origem[0]:ctx.origem),
    op:[
      {v:'coluna',nome:'Sim, há coluna de data ou versão',desc:'O caso ideal: watermark por data de atualização. Habilita carga incremental controlada.'},
      {v:'cdc',nome:'Sim, a origem tem CDC nativo',desc:'Change Data Capture ou Mirroring: a origem entrega as mudanças, inclusive exclusões. É o melhor cenário.'},
@@ -7489,14 +7496,14 @@ const FAB_CTXQ=[
    ]},
   {k:'janela',t:'Quanto tempo há disponível para a carga rodar?',
    dica:'Volume alto com a madrugada inteira e volume alto com vinte minutos são problemas diferentes. É a janela que decide particionamento e paralelismo.',
-   quando:ctx=>ctx.freq!=='realtime',
+   quando:ctx=>!fabCtxTem(ctx,'freq','realtime'),
    op:[
      {v:'folgada',nome:'Folgada (madrugada inteira)',desc:'Dá para processar em série, sem otimização agressiva. Simplicidade vale mais que performance.'},
      {v:'horas',nome:'Algumas horas',desc:'Exige carga incremental e atenção ao tempo de cada etapa. Ainda cabe sem paralelismo pesado.'},
      {v:'apertada',nome:'Minutos',desc:'Particionamento e paralelismo deixam de ser refinamento. Full load está fora de questão.'}
    ]},
-  {k:'consumo',t:'Como o dado será consumido?',
-   dica:'O consumo define a camada final e o quanto de curadoria é necessário antes dela.',
+  {k:'consumo',t:'Como o dado será consumido?',multi:true,
+   dica:'Pode marcar mais de um — servir dashboard e ML ao mesmo tempo é comum, e cada consumo puxa exigências diferentes. O consumo define a camada final e o quanto de curadoria é necessário antes dela.',
    op:[
      {v:'dashboard',nome:'Dashboard e relatórios',desc:'Power BI sobre modelo semântico.'},
      {v:'operacional',nome:'Relatórios operacionais',desc:'Consulta detalhada, próxima do transacional.'},
@@ -7525,15 +7532,15 @@ const FAB_CTXQ=[
      {v:'lowcode',nome:'Preferência por interface visual',desc:'Vindo de Power BI. Favorece Dataflow Gen2 — com limite de volume.'},
      {v:'misto',nome:'Misto',desc:'Há gente de código e de interface visual.'}
    ]},
-  {k:'estrategia',t:'Qual estratégia de ingestão e orquestração?',
-   dica:'É a decisão que mais muda o resto: ela define se você mantém um pipeline ou quarenta, e o que faz sentido sugerir daqui para frente.',
+  {k:'estrategia',t:'Qual estratégia de ingestão e orquestração?',multi:true,
+   dica:'Pode marcar mais de uma: o normal é usar metadados para o grosso das cargas e pipeline explícito para os casos especiais. É a decisão que mais muda o resto: ela define se você mantém um pipeline ou quarenta, e o que faz sentido sugerir daqui para frente.',
    rec:ctx=>{
-     if(ctx.freq==='realtime'||ctx.origem==='streaming')return 'streaming';
-     if(ctx.mudanca==='cdc'&&ctx.objetos!=='centenas')return 'zeroetl';
-     if(ctx.objetos==='centenas')return 'metadata';
-     if(ctx.objetos==='poucos'&&ctx.volume!=='muitogrande')return 'explicito';
-     if(ctx.volume==='muitogrande'||ctx.janela==='apertada'||ctx.equipe==='codigo')return 'codigo';
-     if(ctx.equipe==='lowcode')return 'lowcode';
+     if(fabCtxTem(ctx,'freq','realtime')||fabCtxTem(ctx,'origem','streaming'))return 'streaming';
+     if(fabCtxTem(ctx,'mudanca','cdc')&&!fabCtxTem(ctx,'objetos','centenas'))return 'zeroetl';
+     if(fabCtxTem(ctx,'objetos','centenas'))return 'metadata';
+     if(fabCtxTem(ctx,'objetos','poucos')&&!fabCtxTem(ctx,'volume','muitogrande'))return 'explicito';
+     if(fabCtxTem(ctx,'volume','muitogrande')||fabCtxTem(ctx,'janela','apertada')||fabCtxTem(ctx,'equipe','codigo'))return 'codigo';
+     if(fabCtxTem(ctx,'equipe','lowcode'))return 'lowcode';
      return 'metadata';
    },
    op:[
@@ -7561,15 +7568,26 @@ function fabCtxFaltando(){
   const ctx=fabCtx();
   // `quando` mantem o questionario adaptativo: nao pergunta o que nao decide
   // nada naquele cenario — CDC nao faz sentido para streaming, por exemplo.
-  return FAB_CTXQ.filter(q=>!ctx[q.k]&&(!q.quando||q.quando(ctx)));
+  return FAB_CTXQ.filter(q=>!fabCtxRespondida(ctx,q)&&(!q.quando||q.quando(ctx)));
 }
 function fabCtxAplicaveis(){
   const ctx=fabCtx();
-  return FAB_CTXQ.filter(q=>!q.quando||q.quando(ctx)||ctx[q.k]);
+  return FAB_CTXQ.filter(q=>!q.quando||q.quando(ctx)||fabCtxRespondida(ctx,q));
 }
 function fabCtxRotulo(k,v){
   const q=FAB_CTXQ_MAP[k];if(!q)return v;
-  return (q.op.find(o=>o.v===v)||{}).nome||v;
+  const nome=x=>(q.op.find(o=>o.v===x)||{}).nome||x;
+  return Array.isArray(v)?v.map(nome).join(' + '):nome(v);
+}
+// Le contexto que pode ser unico ou multiplo, sem o resto do motor precisar
+// saber a diferenca.
+function fabCtxTem(ctx,k,v){
+  const x=ctx[k];
+  return Array.isArray(x)?x.includes(v):x===v;
+}
+function fabCtxRespondida(ctx,q){
+  const v=ctx[q.k];
+  return Array.isArray(v)?v.length>0:!!v;
 }
 
 // Opcoes de partida, ordenadas pelo contexto. O `porque` de cada uma cita o que
@@ -7584,9 +7602,9 @@ function fabIniOpcoes(){
     op.push({id:pref,comp:FAB_COMP[pref],porque:FAB_COMP[pref].oque,peso:0});
   op.forEach(o=>{
     if(o.id===pref){o.peso+=100;o.ancora='Você indicou esta origem no contexto.'}
-    if(ctx.freq==='realtime'&&(o.id==='src_stream'||o.id==='src_pi'))o.peso+=25;
-    if(ctx.freq==='batch'&&o.id==='src_stream')o.peso-=25;
-    if(ctx.consumo==='ml'&&o.id==='src_pi')o.peso+=10;
+    if(fabCtxTem(ctx,'freq','realtime')&&(o.id==='src_stream'||o.id==='src_pi'))o.peso+=25;
+    if(fabCtxTem(ctx,'freq','batch')&&o.id==='src_stream')o.peso-=25;
+    if(fabCtxTem(ctx,'consumo','ml')&&o.id==='src_pi')o.peso+=10;
   });
   op.sort((a,b)=>b.peso-a.peso);
   return op;
@@ -7627,16 +7645,24 @@ function fabRenderCtxModal(){
     return;
   }
   const q=falta[0];
+  const sel=_fabIni.sel||[];
   el.innerHTML=`<div class="fab-ini-cab">
-      <span class="fab-ini-prog">Contexto ${fabCtxAplicaveis().filter(x=>ctx[x.k]).length+1} de ${fabCtxAplicaveis().length}</span>
+      <span class="fab-ini-prog">Contexto ${fabCtxAplicaveis().filter(x=>fabCtxRespondida(ctx,x)).length+1} de ${fabCtxAplicaveis().length}</span>
       <b>${escapeHtml(q.t)}</b><i>${escapeHtml(q.dica)}</i></div>
     <div class="fab-ini-ops">${(()=>{
       const sug=q.rec?q.rec(ctx):null;
-      return q.op.map(o=>
-      `<button class="fab-ini-op${o.v===sug?' top':''}" data-fabctxr="${q.k}" data-v="${o.v}">
-        <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}${o.v===sug?'<em>recomendado</em>':''}</b>
-        <p>${escapeHtml(o.desc)}</p></span></button>`).join('');
-    })()}</div>`;
+      const sel=_fabIni.sel||[];
+      return q.op.map(o=>{
+        const on=q.multi&&sel.includes(o.v);
+        return `<button class="fab-ini-op${o.v===sug?' top':''}${on?' marcada':''}"
+          data-fabctx${q.multi?'m':'r'}="${q.k}" data-v="${o.v}">
+          ${q.multi?`<span class="fab-ini-check">${on?'✓':''}</span>`:''}
+          <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}${o.v===sug?'<em>recomendado</em>':''}</b>
+          <p>${escapeHtml(o.desc)}</p></span></button>`;
+      }).join('');
+    })()}</div>
+    ${q.multi?`<button class="fab-ini-confirma" data-fabctxc="${q.k}" ${sel.length?'':'disabled'}>${
+      sel.length>1?`Continuar com ${sel.length} selecionadas`:sel.length?'Continuar':'Marque ao menos uma'}</button>`:''}`;
 }
 // As arquiteturas de referencia continuam disponiveis, mas so DEPOIS do
 // contexto — e ordenadas por ele. Antes disso seria o mesmo chute de sempre.
@@ -7680,7 +7706,7 @@ function fabRenderIni(){
   if(falta.length){
     const q=falta[0];
     const _apl=fabCtxAplicaveis();
-    const resp=_apl.filter(x=>ctx[x.k]).length, tot=_apl.length;
+    const resp=_apl.filter(x=>fabCtxRespondida(ctx,x)).length, tot=_apl.length;
     el.innerHTML=`<div class="fab-ini-cx">
       <div class="fab-ini-cab">
         <span class="fab-ini-prog">Contexto ${resp+1} de ${tot}</span>
@@ -7689,12 +7715,21 @@ function fabRenderIni(){
       </div>
       <div class="fab-ini-ops">${(()=>{
         const sug=q.rec?q.rec(ctx):null;
+        const sel=_fabIni.sel||[];
         const lista=q.op.slice().sort((a,b)=>(b.v===sug?1:0)-(a.v===sug?1:0));
-        return lista.map(o=>
-        `<button class="fab-ini-op${o.v===sug?' top':''}" data-fabini="resp" data-k="${q.k}" data-v="${o.v}">
-          <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}${o.v===sug?'<em>recomendado para o seu contexto</em>':''}</b>
-          <p>${escapeHtml(o.desc)}</p></span></button>`).join('');
+        return lista.map(o=>{
+          const on=q.multi&&sel.includes(o.v);
+          return `<button class="fab-ini-op${o.v===sug?' top':''}${on?' marcada':''}"
+            data-fabini="${q.multi?'alterna':'resp'}" data-k="${q.k}" data-v="${o.v}">
+            ${q.multi?`<span class="fab-ini-check">${on?'✓':''}</span>`:''}
+            <span class="fab-ini-txt"><b>${escapeHtml(o.nome)}${o.v===sug?'<em>recomendado para o seu contexto</em>':''}</b>
+            <p>${escapeHtml(o.desc)}</p></span></button>`;
+        }).join('');
       })()}</div>
+      ${q.multi?`<button class="fab-ini-confirma" data-fabini="confirma" data-k="${q.k}"
+        ${(_fabIni.sel||[]).length?'':'disabled'}>${
+        (_fabIni.sel||[]).length>1?`Continuar com ${(_fabIni.sel||[]).length} selecionadas`
+        :(_fabIni.sel||[]).length?'Continuar':'Marque ao menos uma'}</button>`:''}
       <div class="fab-ini-rodape">
         <button class="fab-ini-fechar" data-fabini="voltar">${resp>0?'← voltar':'cancelar'}</button>
         ${resp>=4?'<button class="fab-ini-fechar" data-fabini="pular">Já tenho o suficiente</button>':''}
@@ -7703,7 +7738,7 @@ function fabRenderIni(){
     return;
   }
   // contexto completo: recomendar a PRIMEIRA atividade, so ela
-  const chips=FAB_CTXQ.filter(q=>ctx[q.k]).map(q=>
+  const chips=FAB_CTXQ.filter(q=>fabCtxRespondida(ctx,q)).map(q=>
     `<span class="fab-ini-chip" data-fabini="refazer" data-k="${q.k}" title="Alterar">${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</span>`).join('');
   const ops=fabIniOpcoes();
   el.innerHTML=`<div class="fab-ini-cx">
@@ -7732,10 +7767,11 @@ function fabRenderIni(){
 
 function fabIniAcao(acao,k,v){
   const a=fabArq();
-  if(acao==='abrir'){_fabIni={aberto:true,passo:0};fabRenderIni();return}
+  if(acao==='abrir'){_fabIni={aberto:true,passo:0,sel:[]};fabRenderIni();return}
   if(acao==='voltar'){
     // voltar = desfazer a ultima resposta, que reabre aquela pergunta
-    const dadas=a?FAB_CTXQ.filter(q=>a.ctx&&a.ctx[q.k]):[];
+    if((_fabIni.sel||[]).length){_fabIni.sel=[];fabRenderIni();return}
+    const dadas=a?FAB_CTXQ.filter(q=>a.ctx&&fabCtxRespondida(a.ctx,q)):[];
     if(dadas.length){delete a.ctx[dadas[dadas.length-1].k];fabSave();fabRenderPainel()}
     else _fabIni.aberto=false;
     fabRenderIni();return;
@@ -7748,6 +7784,21 @@ function fabIniAcao(acao,k,v){
     fabSave();fabRenderIni();fabRenderPainel();return;
   }
   if(acao==='refazer'&&a){delete a.ctx[k];fabSave();fabRenderIni();fabRenderPainel();return}
+  if(acao==='alterna'){
+    const sel=_fabIni.sel||[];
+    _fabIni.sel = sel.includes(v)? sel.filter(x=>x!==v) : sel.concat([v]);
+    fabRenderIni();return;
+  }
+  if(acao==='confirma'&&a){
+    const sel=_fabIni.sel||[];
+    if(!sel.length)return;
+    a.ctx=a.ctx||{};
+    // ordem canonica das opcoes, nao a de clique — o rotulo fica estavel
+    const q=FAB_CTXQ_MAP[k];
+    a.ctx[k]=q.op.map(o=>o.v).filter(x=>sel.includes(x));
+    _fabIni.sel=[];
+    fabSave();fabRenderIni();fabRenderPainel();return;
+  }
   if(acao==='resp'&&a){
     a.ctx=a.ctx||{};a.ctx[k]=v;
     if(k==='objetivo'&&/^(Nova arquitetura|Do zero)$/.test(a.nome))a.nome=fabCtxRotulo('objetivo',v);
@@ -7997,14 +8048,14 @@ function fabRenderPainel(){
   else corpo=fabPainelResumo();
   const ctx=fabCtx();
   const apl=fabCtxAplicaveis(),tot=apl.length;
-  const resp=apl.filter(q=>ctx[q.k]&&ctx[q.k]!=='naoinformado').length;
+  const resp=apl.filter(q=>fabCtxRespondida(ctx,q)&&ctx[q.k]!=='naoinformado').length;
   const firmeza=resp===tot?'firme':resp>=Math.ceil(tot/2)?'media':'fraca';
   const faixa=`<div class="fab-ctxbar ${firmeza}" data-fabctx="abrir" title="Clique para revisar o contexto">
     <span class="fab-ctxbar-t">Contexto ${resp}/${tot}</span>
     <span class="fab-ctxbar-d">${resp===tot?'recomendações com base completa'
       :resp===0?'sem contexto — as sugestões são genéricas'
       :'faltam '+(tot-resp)+' respostas para as recomendações ficarem firmes'}</span>
-    ${resp?`<span class="fab-ctxbar-chips">${apl.filter(q=>ctx[q.k]&&ctx[q.k]!=='naoinformado').map(q=>
+    ${resp?`<span class="fab-ctxbar-chips">${apl.filter(q=>fabCtxRespondida(ctx,q)&&ctx[q.k]!=='naoinformado').map(q=>
       `<i>${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</i>`).join('')}</span>`:''}
   </div>`;
   el.innerHTML=faixa+`
@@ -8122,23 +8173,23 @@ function fabRenderWizard(){
 function fabSugerirRef(r){
   const pontos={};
   Object.keys(FAB_REF).forEach(k=>pontos[k]=0);
-  if(r.objetivo==='rt'||r.freq==='realtime'){pontos.realtime+=6}
-  if(r.origem==='streaming'){pontos.realtime+=4}
-  if(r.origem==='pi'){pontos.industrial+=6;pontos.realtime+=2}
-  if(r.objetivo==='ia'||r.consumo==='ml'){pontos.industrial+=5;pontos.medalhao+=2}
-  if(r.objetivo==='dw'){pontos.kimball+=6}
-  if(r.consumo==='dashboard'){pontos.kimball+=2;pontos.medalhao+=2}
-  if(r.objetivo==='lakehouse'){pontos.medalhao+=5}
-  if(r.objetivo==='ingestao'){pontos.controle+=5;pontos.medalhao+=3}
-  if(r.objetivo==='governanca'){pontos.controle+=4;pontos.dataproduct+=4}
-  if(r.objetivo==='selfservice'||r.consumo==='apis'){pontos.dataproduct+=5}
-  if(r.volume==='grande'||r.volume==='muitogrande'){pontos.medalhao+=2;pontos.kimball-=1}
-  if(r.origem==='api'||r.origem==='sap'){pontos.controle+=3;pontos.medalhao+=2}
-  if(r.origem==='arquivos'){pontos.medalhao+=2}
-  if(r.estrategia==='metadata')pontos.controle+=7;
-  if(r.estrategia==='streaming')pontos.realtime+=6;
-  if(r.estrategia==='zeroetl'){pontos.medalhao+=2;pontos.controle-=4}
-  if(r.estrategia==='codigo')pontos.medalhao+=3;
+  if(fabCtxTem(r,'objetivo','rt')||fabCtxTem(r,'freq','realtime')){pontos.realtime+=6}
+  if(fabCtxTem(r,'origem','streaming')){pontos.realtime+=4}
+  if(fabCtxTem(r,'origem','pi')){pontos.industrial+=6;pontos.realtime+=2}
+  if(fabCtxTem(r,'objetivo','ia')||fabCtxTem(r,'consumo','ml')){pontos.industrial+=5;pontos.medalhao+=2}
+  if(fabCtxTem(r,'objetivo','dw')){pontos.kimball+=6}
+  if(fabCtxTem(r,'consumo','dashboard')){pontos.kimball+=2;pontos.medalhao+=2}
+  if(fabCtxTem(r,'objetivo','lakehouse')){pontos.medalhao+=5}
+  if(fabCtxTem(r,'objetivo','ingestao')){pontos.controle+=5;pontos.medalhao+=3}
+  if(fabCtxTem(r,'objetivo','governanca')){pontos.controle+=4;pontos.dataproduct+=4}
+  if(fabCtxTem(r,'objetivo','selfservice')||fabCtxTem(r,'consumo','apis')){pontos.dataproduct+=5}
+  if(fabCtxTem(r,'volume','grande')||fabCtxTem(r,'volume','muitogrande')){pontos.medalhao+=2;pontos.kimball-=1}
+  if(fabCtxTem(r,'origem','api')||fabCtxTem(r,'origem','sap')){pontos.controle+=3;pontos.medalhao+=2}
+  if(fabCtxTem(r,'origem','arquivos')){pontos.medalhao+=2}
+  if(fabCtxTem(r,'estrategia','metadata'))pontos.controle+=7;
+  if(fabCtxTem(r,'estrategia','streaming'))pontos.realtime+=6;
+  if(fabCtxTem(r,'estrategia','zeroetl')){pontos.medalhao+=2;pontos.controle-=4}
+  if(fabCtxTem(r,'estrategia','codigo'))pontos.medalhao+=3;
   pontos.medalhao+=1; // desempate: e o padrao-base
   return Object.keys(FAB_REF).map(k=>({id:k,...FAB_REF[k],p:pontos[k]}))
     .sort((a,b)=>b.p-a.p).slice(0,3);
@@ -8179,11 +8230,11 @@ function fabCriarDoWizard(refId){
     const mapaOrigem={relacional:'src_sqlserver',sap:'src_sap',pi:'src_pi',api:'src_api',arquivos:'src_files',streaming:'src_stream'};
     const org=mapaOrigem[r.origem];
     if(org&&!nos.includes(org)&&!nos.some(n=>FAB_COMP[n]?.etapa==='origem'))nos.unshift(org);
-    if((r.volume==='grande'||r.volume==='muitogrande')&&!nos.includes('notebook')){nos.push('notebook');props.notebook=props.notebook||'limpeza'}
-    if(r.consumo==='ml'&&!nos.includes('mlmodel'))nos.push('mlmodel');
+    if((fabCtxTem(r,'volume','grande')||fabCtxTem(r,'volume','muitogrande'))&&!nos.includes('notebook')){nos.push('notebook');props.notebook=props.notebook||'limpeza'}
+    if(fabCtxTem(r,'consumo','ml')&&!nos.includes('mlmodel'))nos.push('mlmodel');
     if(!nos.includes('logtable'))nos.push('logtable');
     // ingestão de API não se resolve com Copy: troca a peça e já declara a intenção
-    if(r.origem==='api'&&nos.includes('copy')){props.copy='incremental'}
+    if(fabCtxTem(r,'origem','api')&&nos.includes('copy')){props.copy='incremental'}
   }
   fabMarcar();
   _fabGuia={ativo:refId!=='__vazio',atual:null,passo:1};fabSalvarGuia();
@@ -8502,6 +8553,19 @@ function fabInit(){
   const cm=$('#fabCtxModal');
   if(cm)cm.addEventListener('click',e=>{
     if(e.target===cm||e.target.closest('#fabCtxFechar')){fabFecharCtxModal();return}
+    const m=e.target.closest('[data-fabctxm]');
+    if(m){
+      const sel=_fabIni.sel||[];const v=m.dataset.v;
+      _fabIni.sel=sel.includes(v)?sel.filter(x=>x!==v):sel.concat([v]);
+      fabRenderCtxModal();return;
+    }
+    const c=e.target.closest('[data-fabctxc]');
+    if(c){
+      const a=fabArq(),sel=_fabIni.sel||[];if(!a||!sel.length)return;
+      const q=FAB_CTXQ_MAP[c.dataset.fabctxc];
+      a.ctx=a.ctx||{};a.ctx[q.k]=q.op.map(o=>o.v).filter(x=>sel.includes(x));
+      _fabIni.sel=[];fabSave();fabRenderCtxModal();fabRenderPainel();return;
+    }
     const r=e.target.closest('[data-fabctxr]');
     if(r){
       const a=fabArq();if(!a)return;
