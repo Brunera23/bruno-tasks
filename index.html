@@ -1499,6 +1499,10 @@
     .agents-view{display:none}.agents-view.active{display:block}
     @media(min-width:1024px){.main:has(#agentsView.active){max-width:1500px}}
     @media(min-width:1024px){.main:has(.canvas-view.active),.main:has(.fabric-view.active){max-width:none;padding-right:24px}}
+    /* O Fabric Advisor usa a tela inteira: o painel de widgets nao existe aqui,
+       entao a margem que ele reservava era faixa morta na direita. */
+    .main.wdg-open:has(.fabric-view.active){margin-right:0}
+    @media(min-width:1024px){.main:has(.fabric-view.active){padding:14px 18px 8px}}
     @media(min-width:1024px){.main:has(.task-kanban-wrap.active){max-width:1500px}}
     .kanban{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;overflow-y:visible;padding:4px 2px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;cursor:grab;user-select:none}
     .kanban.active{cursor:grabbing}
@@ -1832,26 +1836,30 @@
 .fabric-view{display:none}
 /* o painel de widgets pertence a view de Tarefas e cobria a barra daqui */
 body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-panel{display:none!important}
-.fabric-view.active{display:flex;flex-direction:column;height:calc(100dvh - 40px)}
-.fab-topo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.fab-tools{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
-.fab-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid var(--sep);
+.fabric-view.active{display:flex;flex-direction:column;height:calc(100dvh - 26px)}
+/* Titulo, abas de arquitetura e ferramentas numa linha so: duas fileiras
+   custavam ~110px de altura para dizer onde voce esta. */
+.fab-topo{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;margin-bottom:10px}
+.fabric-view .page-head h1{font-size:1.08rem;font-weight:700;letter-spacing:-.02em;white-space:nowrap;flex-shrink:0}
+.fab-tools{display:flex;align-items:center;gap:7px;margin-left:auto;flex-shrink:0}
+.fab-btn{display:inline-flex;align-items:center;gap:6px;height:31px;padding:0 11px;border:1px solid var(--sep);
   background:var(--card);color:var(--label);border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .fab-btn:hover{background:var(--hover);border-color:var(--label2)}
 .fab-btn.prim{background:var(--accent,#0078d4);border-color:transparent;color:#fff}
 .fab-btn.prim:hover{filter:brightness(1.08)}
 .fab-zoom{display:flex;border:1px solid var(--sep);border-radius:9px;overflow:hidden}
-.fab-zoom button{width:34px;height:34px;border:0;background:var(--card);color:var(--label);cursor:pointer;font-size:15px;font-weight:600}
+.fab-zoom button{width:31px;height:31px;border:0;background:var(--card);color:var(--label);cursor:pointer;font-size:15px;font-weight:600}
 .fab-zoom button:hover{background:var(--hover)}
 .fab-zoom button+button{border-left:1px solid var(--sep)}
 .fab-zoom button.larg{width:auto;padding:0 12px;font-size:12.5px}
 
-.fab-abas{display:flex;gap:6px;padding:10px 0 8px;overflow-x:auto;flex-shrink:0}
-.fab-aba{padding:6px 14px;border:1px solid var(--sep);background:var(--card);color:var(--label2);
-  border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.fab-abas{display:flex;gap:5px;padding:0;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none}
+.fab-abas::-webkit-scrollbar{display:none}
+.fab-aba{padding:5px 12px;border:1px solid var(--sep);background:var(--card);color:var(--label2);
+  border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .fab-aba:hover{background:var(--hover)}
 .fab-aba.on{background:var(--label);color:var(--bg);border-color:var(--label)}
-.fab-aba-add{font-size:16px;line-height:1;padding:6px 12px}
+.fab-aba-add{font-size:15px;line-height:1;padding:5px 11px}
 
 .fab-corpo{display:flex;gap:12px;flex:1;min-height:0}
 .fab-stage{position:relative;flex:1;min-width:0;overflow:hidden;border:1px solid var(--sep);border-radius:14px;
@@ -1949,6 +1957,16 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-vertudo{border:0;background:none;color:var(--label2);font-size:11px;cursor:pointer;
   text-decoration:underline;padding:2px 0;white-space:nowrap}
 .fab-vertudo:hover{color:var(--label)}
+/* eco da pergunta: o quadro so sinaliza; quem responde e o painel */
+.fab-perg-eco{display:flex;align-items:center;gap:9px;width:100%;padding:10px 12px;text-align:left;
+  background:var(--card);border:1.5px dashed #e8a33d;border-radius:11px;cursor:pointer;font-family:inherit;
+  box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.fab-perg-eco:hover{border-style:solid;background:var(--hover)}
+.fab-perg-eco-m{width:20px;height:20px;flex-shrink:0;border-radius:50%;background:#e8a33d;color:#fff;
+  font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
+.fab-perg-eco-t{min-width:0;display:flex;flex-direction:column;gap:1px}
+.fab-perg-eco-t b{font-size:12.5px;font-weight:650;color:var(--label);line-height:1.3}
+.fab-perg-eco-t i{font-style:normal;font-size:11px;color:var(--label2)}
 .fab-perg{width:100%;padding:9px 11px;background:var(--card);border:1px solid var(--sep);
   border-radius:9px;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);box-sizing:border-box}
 .fab-perg b{display:block;color:var(--label);font-size:13.5px;line-height:1.3}
@@ -2002,7 +2020,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 
 /* faixa de contexto: sempre visivel, porque e ela que sustenta as recomendacoes */
 .fab-ctxbar{border-bottom:1px solid var(--sep);background:var(--hover)}
-.fab-ctxbar-lin{display:flex;align-items:center;gap:8px;padding:8px 12px}
+.fab-ctxbar-lin{display:flex;align-items:center;gap:9px;padding:9px 13px}
 .fab-ctxbar-lin>button{border:0;background:none;cursor:pointer;font-family:inherit;text-align:left;padding:0}
 .fab-ctxbar-t{flex-shrink:0}
 .fab-ctxbar-t:hover{filter:brightness(1.18)}
@@ -2011,7 +2029,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-ctxbar-rev{margin-top:8px;border:1px solid var(--sep);background:var(--card);color:var(--label2);
   font-size:11.5px;font-weight:650;padding:5px 11px;border-radius:8px;cursor:pointer;font-family:inherit}
 .fab-ctxbar-rev:hover{border-color:#0078d4;color:var(--label)}
-.fab-ctxbar-t{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+.fab-ctxbar-t{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
   padding:2px 8px;border-radius:10px;color:#fff}
 .fab-ctxbar.firme .fab-ctxbar-t{background:#1e6b34}
 .fab-ctxbar.media .fab-ctxbar-t{background:#c07d1a}
@@ -2086,11 +2104,11 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-card-sec.risco li{color:#a3312c}
 
 /* painel lateral */
-.fab-painel{width:348px;flex-shrink:0;display:flex;flex-direction:column;border:1px solid var(--sep);
+.fab-painel{width:364px;flex-shrink:0;display:flex;flex-direction:column;border:1px solid var(--sep);
   border-radius:14px;background:var(--card);overflow:hidden;transition:width .22s var(--ease-expo)}
 /* recolhido, o painel devolve a largura toda ao quadro */
 .fab-painel.min{width:38px}
-.fab-painel-min{flex:0 0 34px;border:0;background:none;color:var(--label3);font-size:16px;cursor:pointer;
+.fab-painel-min{flex:0 0 30px;border:0;background:none;color:var(--label3);font-size:15px;cursor:pointer;
   line-height:1;border-left:1px solid var(--sep)}
 .fab-painel-min:hover{background:var(--hover);color:var(--label)}
 .fab-painel-abrir{width:100%;height:100%;border:0;background:none;cursor:pointer;display:flex;
@@ -2100,9 +2118,9 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-painel-abrir-t{writing-mode:vertical-rl;font-size:12px;font-weight:650;color:var(--label2);
   letter-spacing:.02em;white-space:nowrap}
 .fab-painel-abas{display:flex;border-bottom:1px solid var(--sep);flex-shrink:0}
-.fab-painel-abas button{flex:1;padding:12px 4px;border:0;background:none;color:var(--label2);font-size:13px;
-  font-weight:650;cursor:pointer;position:relative}
-.fab-painel-abas button:hover{background:var(--hover)}
+.fab-painel-abas button{flex:1;padding:11px 3px;border:0;background:none;color:var(--label2);font-size:12px;
+  font-weight:650;cursor:pointer;position:relative;white-space:nowrap;font-family:inherit;letter-spacing:-.01em}
+.fab-painel-abas button:hover{background:var(--hover);color:var(--label)}
 .fab-painel-abas button.on{color:var(--label);box-shadow:inset 0 -2px 0 var(--label)}
 .fab-badge{display:inline-block;margin-left:5px;min-width:16px;padding:1px 4px;border-radius:8px;
   background:#e8a33d;color:#fff;font-size:10px;font-weight:700}
@@ -2199,11 +2217,19 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-passo-cab b{display:block;font-size:16.5px;color:var(--label);line-height:1.3}
 .fab-passo-cab i{display:block;margin-top:6px;font-style:normal;font-size:12.5px;color:var(--label2);line-height:1.55}
 .fab-passo-ops{display:flex;flex-direction:column;gap:8px}
-.fab-passo-op{display:flex;gap:11px;width:100%;text-align:left;padding:13px 14px;border:1.5px solid var(--sep);
-  background:var(--bg);border-radius:10px;cursor:pointer}
-.fab-passo-op:hover{border-color:var(--et,#0078d4);background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.1)}
-.fab-passo-op>b{display:block;font-size:14px;font-weight:650;color:var(--label);line-height:1.3}
-.fab-passo-op>p{margin:4px 0 0;font-size:12.5px;color:var(--label2);line-height:1.5}
+/* A resposta de uma pergunta empilha: nome, explicacao, ressalva. Em `flex`
+   linha, o titulo, o texto e o alerta viravam tres colunas espremidas — era o
+   que deixava "Por execucao | Uma linha por rodada | Atencao:" ilegivel. */
+.fab-passo-op{display:flex;flex-direction:column;gap:0;width:100%;text-align:left;
+  padding:12px 13px;border:1.5px solid var(--sep);
+  background:var(--bg);border-radius:11px;cursor:pointer;font-family:inherit;
+  transition:border-color .12s,background .12s,box-shadow .12s}
+.fab-passo-op.comp{flex-direction:row;gap:11px;align-items:flex-start}
+.fab-passo-op:hover{border-color:var(--et,#0078d4);background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.09)}
+.fab-passo-op>b{display:block;font-size:13.5px;font-weight:680;color:var(--label);line-height:1.3}
+.fab-passo-op>p{margin:5px 0 0;font-size:12.5px;color:var(--label2);line-height:1.5}
+.fab-passo-op>.fab-passo-risco{margin-top:9px;padding:7px 9px;border-radius:7px;
+  background:#fdf1ef;border-left:3px solid #d9534f}
 .fab-passo-ico{width:27px;height:27px;flex-shrink:0;color:var(--et)}
 .fab-passo-ico svg{width:100%;height:100%;display:block}
 .fab-passo-txt{min-width:0;flex:1}
@@ -2211,7 +2237,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-passo-txt b i{font-style:normal;font-size:10.5px;font-weight:600;color:var(--et);margin-left:6px;
   text-transform:uppercase;letter-spacing:.4px}
 .fab-passo-txt p{margin:5px 0 0;font-size:12.5px;color:var(--label);line-height:1.55}
-.fab-passo-risco{display:block;margin-top:6px;font-size:11.5px;color:#a3312c;line-height:1.35}
+.fab-passo-risco{display:block;margin-top:6px;font-size:11.5px;color:#a3312c;line-height:1.45}
 .fab-passo-sair{width:100%;margin-top:13px;padding:11px;border:1px dashed var(--sep);background:none;
   color:var(--label2);border-radius:9px;font-size:12.5px;cursor:pointer}
 .fab-passo-sair:hover{border-color:var(--label2);color:var(--label)}
@@ -2289,7 +2315,8 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
     </style>
     <div class="fabric-view" id="fabricView">
       <div class="page-head fab-topo">
-        <div class="page-head-left"><div class="greeting">Arquitetura guiada no Microsoft Fabric</div><h1>Fabric Advisor</h1></div>
+        <h1 title="Arquitetura guiada no Microsoft Fabric">Fabric Advisor</h1>
+        <div class="fab-abas" id="fabAbas"></div>
         <div class="fab-tools">
           <button class="fab-btn prim" id="fabNovaBtn">+ Nova arquitetura</button>
           <button class="fab-btn" id="fabAddBtn">+ Componente</button>
@@ -2302,7 +2329,6 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
           <button class="fab-btn" id="fabExcluir" title="Excluir arquitetura">Excluir</button>
         </div>
       </div>
-      <div class="fab-abas" id="fabAbas"></div>
       <div class="fab-corpo">
         <div class="fab-stage" id="fabStage"><div class="fab-world" id="fabWorld"></div><div class="fab-start" id="fabStart"></div></div>
         <div class="fab-painel" id="fabPainel"></div>
@@ -8909,6 +8935,17 @@ function fabRenderSugs(){
 
   const pend=fabPendencia(no);
   if(pend){
+    // Nao dizer a mesma coisa duas vezes. Se o painel ja esta com esta pergunta
+    // aberta, o quadro so aponta que ela existe — antes o cartao repetia texto
+    // por texto e ainda cobria o diagrama.
+    const noPainel=!_fabPainelMin&&_fabPainel==='passo'&&_fabGuia.atual===no.id;
+    if(noPainel){
+      box.innerHTML=abre+`<button class="fab-perg-eco" data-fabfoco="1">
+        <span class="fab-perg-eco-m">?</span>
+        <span class="fab-perg-eco-t"><b>${escapeHtml(pend.t)}</b><i>responda no painel ao lado</i></span>
+      </button></div>`+linha;
+      return;
+    }
     box.innerHTML=abre+
       `<div class="fab-perg"><b>${escapeHtml(pend.t)}</b>${pend.dica?`<i>${escapeHtml(pend.dica)}</i>`:''}</div>`+
       pend.op.map(o=>`<button class="fab-op" data-fabop="${pend.tipo}" data-campo="${pend.campo||''}" data-v="${o.v}">
@@ -9479,6 +9516,12 @@ function fabInit(){
       else if(op.dataset.fabop==='escritor')fabCriarEscritor(_fabSel,op.dataset.v);
       else fabDefinirCfg(_fabSel,op.dataset.campo,op.dataset.v);
       return;
+    }
+    const eco=e.target.closest('[data-fabfoco]');
+    if(eco){
+      if(_fabPainelMin){_fabPainelMin=false;try{sv('bt-fab-pmin',false)}catch(_){}}
+      _fabPainel='passo';try{sv('bt-fab-painel','passo')}catch(_){}
+      _fabGuia.atual=_fabSel;fabSalvarGuia();fabRender();return;
     }
     const vt=e.target.closest('[data-fabvertudo]');
     if(vt){_fabVerTudo=!_fabVerTudo;fabRenderSugs();return}
