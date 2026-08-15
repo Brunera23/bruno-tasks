@@ -1859,9 +1859,9 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
   background-size:24px 24px;cursor:grab;touch-action:none}
 .fab-stage:active{cursor:grabbing}
 .fab-world{position:absolute;top:0;left:0;transform-origin:0 0}
-.fab-edges{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+.fab-edges{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;z-index:2}
 .fab-edge{pointer-events:auto}
-.fab-cont{position:absolute;border:1.5px solid var(--et);border-radius:14px;box-sizing:border-box;
+.fab-cont{position:absolute;z-index:1;border:1.5px solid var(--et);border-radius:14px;box-sizing:border-box;
   background:color-mix(in srgb,var(--et) 5%,var(--bg));cursor:grab;user-select:none}
 .fab-cont.sel{box-shadow:0 0 0 3px color-mix(in srgb,var(--et) 26%,transparent)}
 .fab-cont-head{display:flex;align-items:center;gap:9px;height:42px;padding:0 12px;
@@ -1903,7 +1903,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-edge:hover .fab-edge-xbg,.fab-edge:hover .fab-edge-x{opacity:1}
 
 /* no no estilo das atividades de pipeline do Fabric */
-.fab-no{position:absolute;width:200px;height:66px;display:flex;align-items:center;gap:10px;padding:0 12px;
+.fab-no{position:absolute;z-index:3;width:200px;height:66px;display:flex;align-items:center;gap:10px;padding:0 12px;
   background:var(--bg);border:1.5px solid var(--sep);border-left:4px solid var(--et);border-radius:10px;
   box-shadow:0 1px 3px rgba(0,0,0,.07);cursor:grab;user-select:none;box-sizing:border-box}
 .fab-no:hover{border-color:var(--et);box-shadow:0 3px 10px rgba(0,0,0,.12)}
@@ -1928,7 +1928,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-no:hover .fab-no-del,.fab-no.sel .fab-no-del{opacity:1}
 
 /* sugestoes flutuantes e perguntas da arvore */
-.fab-sugs{position:absolute;top:0;left:0;width:0;height:0}
+.fab-sugs{position:absolute;top:0;left:0;width:0;height:0;z-index:4}
 .fab-sug-linha{position:absolute;height:1.5px;background:var(--sep);pointer-events:none}
 .fab-fluxo{position:absolute;transform:translateY(-50%);width:290px;display:flex;
   flex-direction:column;align-items:flex-start;gap:7px;max-height:78vh;overflow-y:auto;
@@ -5239,6 +5239,24 @@ function fabNatureza(comp){
   if(FAB_NAT[comp])return FAB_NAT[comp];
   return (FAB_COMP[comp]||{}).etapa==='origem'?'origem':'atividade';
 }
+// O rotulo da ligacao sai da natureza dos dois lados. Sem isso "Log de Execucao
+// -> Warehouse" virava seta de fluxo, como se a tabela desaguasse no armazem —
+// quando na verdade ela MORA nele. Tabela nao flui para lugar nenhum: ela e
+// hospedada, escrita e lida.
+function fabRelacao(ca,cb){
+  const a=fabNatureza(ca),b=fabNatureza(cb);
+  if(a==='config'||b==='config')return '';
+  if(a==='origem')return b==='atividade'?'lido por':'';
+  if(b==='origem')return '';
+  if(a==='atividade')return b==='atividade'?'':(b==='consumo'?'atualiza':'grava em');
+  if(b==='atividade')return 'lido por';
+  // artefato de um lado e do outro: a relacao aqui e de moradia ou de leitura
+  if(a==='tabela'&&b==='armazem')return 'mora em';
+  if(a==='armazem'&&b==='tabela')return 'hospeda';
+  if(b==='consumo')return 'lido por';
+  if(a==='tabela'&&b==='tabela')return 'alimenta';
+  return '';
+}
 // Artefato que nao faz sentido existir sem alguem escrevendo nele. Uma tabela
 // de log sem escritor e inerte — e e o erro mais comum de quem monta isso.
 const FAB_ESCRITOR={
@@ -5264,14 +5282,21 @@ function fabTemEscritor(no){
 // Artefatos proprios: um pipeline chamado por Invoke e outro pipeline, nao uma
 // atividade dentro do laco. Ele encerra a heranca de escopo.
 const FAB_QUEBRA_ESCOPO=new Set(['pipeline']);
+// Quem pode morar dentro de um container. Artefato NUNCA: a tabela de log e uma
+// so, escrita a cada iteracao. Uma copia dela dentro do laco diria que existe
+// uma por item — e um modelo semantico ali dentro nao faz sentido nenhum.
+function fabHerdaEscopo(comp){
+  return !FAB_QUEBRA_ESCOPO.has(comp)&&!fabEhArtefato(comp);
+}
+// a aresta so e "de contencao" quando o alvo de fato entra no escopo do
+// container; para artefato ela e uma ligacao normal, desenhada como seta
+function fabEhDentro(orig,comp){
+  return (orig&&fabEhContainer(orig.comp)&&fabHerdaEscopo(comp))||undefined;
+}
 // escopo do que nasce a partir de `orig`
 function fabEscopoDe(orig,comp){
   if(!orig)return undefined;
-  if(FAB_QUEBRA_ESCOPO.has(comp))return undefined;
-  // Artefato e global ao pipeline: a tabela de log e uma so, escrita a cada
-  // iteracao. Uma copia dela dentro do laco diria que existe uma por item — e
-  // um modelo semantico ali dentro nao faz sentido nenhum.
-  if(fabEhArtefato(comp))return undefined;
+  if(!fabHerdaEscopo(comp))return undefined;
   return fabEhContainer(orig.comp)?orig.id:orig.escopo;
 }
 // membros de um escopo, na ordem em que o fluxo os encadeia
@@ -6317,6 +6342,16 @@ const FAB_VALID=[
     texto:'Há artefato — tabela, camada ou modelo — dentro do escopo de um laço. Artefato não roda por iteração: a tabela de log é uma só, escrita a cada item, e um modelo semântico não se atualiza item a item.',
     resolver:'Mova o artefato para fora do laço. Dentro dele fica só o que executa a cada item.',
     detalhe:g=>g.nos.filter(n=>n.escopo&&fabEhArtefato(n.comp)).map(n=>FAB_COMP[n.comp].nome).join(', ')},
+  {id:'laco-sem-ordem',nivel:'aviso',titulo:'Atividades soltas dentro do laço',
+    quando:g=>g.soltosNoLaco().length>0,
+    texto:'Atividade dentro de um laço sem ligação com as irmãs roda ao MESMO tempo que elas, não depois. Se a intenção era "chame o pipeline filho e então registre o resultado", sem a seta entre as duas a procedure grava o log antes de haver resultado — e o histórico fica bonito e mentiroso.',
+    resolver:'Ligue uma atividade na outra para declarar a ordem dentro da iteração.',
+    detalhe:g=>g.soltosNoLaco().map(n=>FAB_COMP[n.comp]?.nome).filter(Boolean).join(', ')},
+  {id:'tabela-sem-casa',nivel:'sugestao',titulo:'Tabela sem armazenamento declarado',
+    quando:g=>g.semCasa().length>0,
+    texto:'Tabela não é um item do Fabric: ela mora dentro de um Lakehouse, Warehouse ou SQL Database. Enquanto o diagrama não disser onde, fica em aberto a decisão que manda no resto — log e controle num Warehouse podem ser escritos por Stored Procedure; num Lakehouse, não.',
+    resolver:'Ligue a tabela ao armazenamento que a hospeda.',
+    detalhe:g=>g.semCasa().map(n=>FAB_COMP[n.comp]?.nome).filter(Boolean).join(', ')},
   {id:'orfao',nivel:'sugestao',titulo:'Componente solto no diagrama',
     quando:g=>g.orfaos().length>0,
     texto:'Há componentes sem nenhuma ligação. Ou falta conectá-los, ou eles não pertencem a esta arquitetura.',
@@ -6889,6 +6924,42 @@ function fabGrafo(){
     propCfg:(comp,p,k,v)=>nos.some(n=>n.comp===comp&&n.prop===p&&n.cfg&&n.cfg[k]===v),
     pendentes:()=>nos.filter(n=>fabTemPendencia(n)),
     orfaos:()=>nos.length<2?[]:nos.filter(n=>!ligs.some(e=>e.from===n.id||e.to===n.id)),
+    // Tabela nao e item do Fabric: ela mora dentro de um Lakehouse/Warehouse.
+    // Uma cadeia de camadas conta como abrigada se QUALQUER elo dela alcanca o
+    // armazenamento — senao Bronze/Silver/Gold acusariam tres vezes o mesmo.
+    semCasa:()=>{
+      const idx={};nos.forEach(n=>idx[n.id]=n);
+      const viz={};nos.forEach(n=>viz[n.id]=[]);
+      ligs.forEach(e=>{if(viz[e.from]&&viz[e.to]){viz[e.from].push(e.to);viz[e.to].push(e.from)}});
+      const abrigada=n=>{
+        const vis=new Set([n.id]),fila=[n.id];
+        while(fila.length){
+          for(const v of viz[fila.shift()]||[]){
+            if(vis.has(v))continue;vis.add(v);
+            const k=idx[v];if(!k)continue;
+            const nat=fabNatureza(k.comp);
+            if(nat==='armazem')return true;
+            if(nat==='tabela')fila.push(v);
+          }
+        }
+        return false;
+      };
+      return nos.filter(n=>fabNatureza(n.comp)==='tabela'&&!abrigada(n));
+    },
+    // Dentro de um laco, atividade sem ligacao com as irmas roda AO MESMO TEMPO
+    // que elas. "Chame o filho e depois registre" so existe se a seta existir.
+    soltosNoLaco:()=>{
+      const out=[];
+      nos.filter(n=>fabEhContainer(n.comp)).forEach(c=>{
+        const m=nos.filter(k=>k.escopo===c.id);
+        if(m.length<2)return;
+        const ids=new Set(m.map(k=>k.id));
+        m.forEach(k=>{
+          if(!ligs.some(e=>(e.from===k.id&&ids.has(e.to))||(e.to===k.id&&ids.has(e.from))))out.push(k);
+        });
+      });
+      return out;
+    },
     temCiclo:()=>{
       const adj={};nos.forEach(n=>adj[n.id]=[]);
       ligs.forEach(e=>{if(adj[e.from])adj[e.from].push(e.to)});
@@ -6967,6 +7038,16 @@ function fabSugestoes(no){
       porque:'O pipeline chamado é outro artefato, com canvas próprio. Use "montar pipeline" no card do Invoke para desenhá-lo em um quadro separado.'}}
     if(fabNivelProibido(no,p.id)){peso=-999;p={...p,nivel:'evitar',
       porque:'O Fabric aceita um único nível de ForEach. Para repetir dentro de um laço, chame outro pipeline por Invoke Pipeline — é a saída oficial.'}}
+    // Dentro de um laco entra so o que executa por item. Artefato e um so para a
+    // arquitetura inteira — a tabela de log nao se multiplica por iteracao. O que
+    // roda por item e quem ESCREVE nela.
+    if(fabEhContainer(no.comp)&&fabEhArtefato(p.id)){
+      const _esc=FAB_ESCRITOR[p.id];
+      peso=-999;p={...p,nivel:'evitar',
+        porque:c.nome+' é '+(fabNatureza(p.id)==='tabela'?'uma tabela':'um artefato')+', não uma atividade: existe uma só para toda a arquitetura, não uma por iteração. '+
+          (_esc?'Dentro do laço entra quem grava nela — '+_esc.op.map(o=>o[1]).join(' ou ')+' — e a tabela fica do lado de fora.'
+               :'Ele fica fora do laço, alimentado pelo que roda dentro.')};
+    }
     // Respeita a ordem do fluxo: saindo de uma Origem, a Ingestao vem antes da
     // Transformacao. Sem isso o passo a passo pula etapas e o desenho fica
     // dificil de ler. Orquestracao e Governanca sao transversais: nao contam.
@@ -7260,7 +7341,7 @@ function fabAceitar(sug){
   const novo=fabNovoNo(sug.id,v.x,v.y,null,fabEscopoDe(orig,sug.id));
   if(novo){
     fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
-      arq:fabCur,from:orig.id,to:novo.id,dentro:fabEhContainer(orig.comp)||undefined});
+      arq:fabCur,from:orig.id,to:novo.id,dentro:fabEhDentro(orig,novo.comp)});
     _fabSel=novo.id;
   }
   fabSave();fabRender();
@@ -7326,7 +7407,7 @@ function fabSemear(comps,props,cfgs){
       if(pos[p.id]===undefined||pos[p.id]<=pos[c])return;
       if(fabEdges.some(e=>e.from===criados[c]&&e.to===criados[p.id]))return;
       fabEdges.push({id:'e'+Math.random().toString(36).slice(2,9),arq:fabCur,from:criados[c],to:criados[p.id],
-        dentro:fabEhContainer(c)||undefined});
+        dentro:(fabEhContainer(c)&&fabHerdaEscopo(p.id))||undefined});
     });
   });
 }
@@ -7607,7 +7688,7 @@ function fabAplicarPratica(){
       (FAB_QUEBRA_ESCOPO.has(c)||fabEhArtefato(c))?undefined:esc);
     if(!novo)return;
     fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)+i,
-      arq:fabCur,from:orig.id,to:novo.id,dentro:fabEhContainer(orig.comp)||undefined});
+      arq:fabCur,from:orig.id,to:novo.id,dentro:fabEhDentro(orig,novo.comp)});
     orig=novo;criados++;
   });
   // segue a partir do ultimo passo criado, nao do container
@@ -7780,7 +7861,7 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
     const no=fabNovoNo(valor,v.x,v.y,null,fabEscopoDe(orig,valor));
     if(no&&orig){
       fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
-        arq:fabCur,from:orig.id,to:no.id,dentro:fabEhContainer(orig.comp)||undefined});
+        arq:fabCur,from:orig.id,to:no.id,dentro:fabEhDentro(orig,no.comp)});
       _fabGuia.atual=no.id;_fabSel=no.id;
     }
   }
@@ -8213,16 +8294,22 @@ function fabNoHTML(n){
 // filho. Reconstroi no no, seguindo a cadeia a partir de cada container.
 function fabMigrarEscopo(){
   let mudou=false;
+  // Artefato que ficou preso num laco (por diagrama antigo ou por heranca pela
+  // aresta) sai dele. Era o que fazia a tabela de log ser contada como
+  // atividade do ForEach e a moldura esticar para engoli-la.
+  fabNos().forEach(n=>{
+    if(n.escopo&&!fabHerdaEscopo(n.comp)){delete n.escopo;mudou=true}
+  });
   fabNos().filter(n=>fabEhContainer(n.comp)).forEach(c=>{
     const fila=fabEdges.filter(e=>e.arq===fabCur&&e.from===c.id&&e.dentro).map(e=>e.to);
     const vistos=new Set();
     while(fila.length){
       const id=fila.shift();if(vistos.has(id))continue;vistos.add(id);
       const n=fabItems.find(x=>x.id===id);if(!n)continue;
-      if(!n.escopo&&!FAB_QUEBRA_ESCOPO.has(n.comp)){n.escopo=c.id;mudou=true}
+      if(!n.escopo&&fabHerdaEscopo(n.comp)){n.escopo=c.id;mudou=true}
       if(n.escopo===c.id)fabEdges.filter(e=>e.from===id&&!e.dentro).forEach(e=>{
         const alvo=fabItems.find(x=>x.id===e.to);
-        if(alvo&&!alvo.escopo&&!FAB_QUEBRA_ESCOPO.has(alvo.comp))fila.push(e.to);
+        if(alvo&&!alvo.escopo&&fabHerdaEscopo(alvo.comp))fila.push(e.to);
       });
     }
   });
@@ -8270,10 +8357,7 @@ function fabRender(){
     // entrada no escopo nao vira seta: quem diz "esta dentro" e a moldura
     if(e.dentro&&b.escopo===a.id)return;
     const c=fabCurva(a,b);
-    // a relacao entre os dois diz o rotulo: atividade grava em artefato,
-    // artefato e lido por atividade, atividade precede atividade
-    const aA=fabEhArtefato(a.comp),bA=fabEhArtefato(b.comp);
-    const rel=(!aA&&bA)?'grava em':(aA&&!bA)?'lido por':'';
+    const rel=fabRelacao(a.comp,b.comp);
     arestas+=`<g class="fab-edge${e.dentro?' dentro':''}${rel?' rel':''}" data-fabedge="${e.id}">
       ${rel?`<text x="${c.mx}" y="${c.my-9}" class="fab-edge-rot">${rel}</text>`:''}
       <path d="${c.d}" class="fab-edge-hit"/>
@@ -8455,6 +8539,8 @@ function fabAlvoDoAlerta(v){
     case 'incremental-sem-fonte': return acha(n=>n.comp==='copy');
     case 'sproc-lakehouse': return acha(n=>n.comp==='sproc');
     case 'controle-sem-log': return acha(n=>n.comp==='sproc');
+    case 'laco-sem-ordem': {const t=fabGrafo().soltosNoLaco();return t.length?t[0].id:null}
+    case 'tabela-sem-casa': {const t=fabGrafo().semCasa();return t.length?t[0].id:null}
     case 'orfao': {const o=fabGrafo().orfaos();return o.length?o[0].id:null}
     case 'pendencias': {const pd=fabGrafo().pendentes();return pd.length?pd[0].id:null}
     default: return null;
@@ -8662,6 +8748,7 @@ const FAB_PEDE={
   'ml-sem-dq':['dq'],'wh-como-bronze':['lakehouse','bronze'],'pbi-sobre-cru':['silver','gold'],
   'sproc-lakehouse':['warehouse'],'incremental-sem-controle':['ctrltable','sproc'],
   'controle-sem-log':['logtable'],'critico-sem-alerta':['notify','activator'],
+  'tabela-sem-casa':['warehouse','lakehouse'],
   'foreach-aninhado':['invoke'],'container-vazio':['invoke','copy','notebook'],
   'metadata-sem-controle':['ctrltable','lookup'],'zeroetl-com-pipeline':['mirroring','shortcut'],
   'incremental-sem-fonte':['bronze','notebook'],'sensivel-sem-acesso':['rls'],
@@ -8773,7 +8860,7 @@ function fabAddManual(comp){
   const no=fabNovoNo(comp,v.x,v.y,null,fabEscopoDe(orig,comp));
   if(no&&orig){
     fabEdges.push({id:'e'+Math.random().toString(36).slice(2,9),arq:fabCur,from:orig.id,to:no.id,
-      dentro:fabEhContainer(orig.comp)||undefined});
+      dentro:fabEhDentro(orig,no.comp)});
   }
   if(no){_fabSel=no.id;_fabGuia.atual=no.id;fabSalvarGuia()}
   fabFecharPaleta();fabSave();fabRender();
