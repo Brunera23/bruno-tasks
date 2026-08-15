@@ -2170,6 +2170,9 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-passo-cab{padding-bottom:11px;margin-bottom:11px;border-bottom:1px solid var(--sep)}
 .fab-passo-n{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
   color:#fff;background:#0078d4;padding:2px 8px;border-radius:10px;margin-bottom:6px}
+/* decisao que vem do esqueleto da estrategia, nao do "o que costuma vir depois" */
+.fab-passo-n.rot{background:#6b4ec4}
+.fab-passo-n.refino{background:var(--label3)}
 .fab-passo-cab b{display:block;font-size:16.5px;color:var(--label);line-height:1.3}
 .fab-passo-cab i{display:block;margin-top:6px;font-style:normal;font-size:12.5px;color:var(--label2);line-height:1.55}
 .fab-passo-ops{display:flex;flex-direction:column;gap:8px}
@@ -5145,6 +5148,68 @@ const FAB_ARTEFATO=new Set([
   'workspace','rls','lineage','deploy','monitorhub'
 ]);
 function fabEhArtefato(c){return FAB_ARTEFATO.has(c)}
+// Monitoramento, alerta e governanca sao TRANSVERSAIS: eles se penduram no
+// fluxo, nao o continuam. Quando o passo a passo tratava tudo como sequencia,
+// escolher "Notificacao" sequestrava a conducao — e a linha principal, que e o
+// caminho do dado ate o consumo declarado, nunca chegava ao fim. O resultado
+// era um passeio, nao uma arquitetura.
+const FAB_TRANSVERSAL=new Set(['notify','fail','logtable','pbimonitor','activator',
+  'monitorhub','workspace','rls','lineage','deploy','dq']);
+function fabEhTransversal(c){return FAB_TRANSVERSAL.has(c)}
+// Posicao no caminho do dado. Sugerir o que vem ANTES do no atual era o erro
+// que mais confundia a estrategia: "Copy Data -> Lookup" e a ordem invertida do
+// padrao dirigido por metadados, onde o Lookup le a tabela de controle e o laco
+// vem antes da copia. Etapa sozinha nao resolvia porque orquestracao inteira
+// caia num balde so.
+const FAB_ORDEM_ETAPA={origem:0,orquestracao:20,ingestao:30,armazenamento:40,
+  transformacao:50,curadoria:60,governanca:70,consumo:80};
+const FAB_ORDEM={
+  pipeline:5, ctrltable:10, lookup:15, foreach:20, ifcond:20, until:20, invoke:22,
+  mirroring:26, shortcut:26, eventstream:26, copy:30, copyjob:30, dataflow:32,
+  onelake:38, lakehouse:38, warehouse:38, eventhouse:38, sqldb:38,
+  bronze:40, notebook:50, sparkjob:50, sproc:52, silver:55, dq:56,
+  gold:60, logtable:64, notify:66, fail:66, sqlendpoint:70,
+  semantic:80, pbi:85, rtdash:85, pbimonitor:85, mlmodel:85, activator:88
+};
+function fabOrdem(c){
+  if(FAB_ORDEM[c]!==undefined)return FAB_ORDEM[c];
+  const d=FAB_COMP[c];return d?(FAB_ORDEM_ETAPA[d.etapa]!==undefined?FAB_ORDEM_ETAPA[d.etapa]:40):40;
+}
+// De onde uma peca deve pendurar. Um Painel de Monitoramento cobrado pela
+// validacao nao se liga na Stored Procedure que estava selecionada: ele se liga
+// na tabela de log, que e o que ele le. Sem isso, o que a validacao pedia
+// entrava no desenho pelo lugar errado.
+// aresta que fecha ciclo trava a orquestracao: o motor local chegou a montar
+// Notebook -> Silver -> Notebook por conta propria. Aqui isso deixa de existir.
+function fabCriaCiclo(de,para){
+  if(de===para)return true;
+  const adj={};fabLigs().forEach(e=>{(adj[e.from]=adj[e.from]||[]).push(e.to)});
+  const vis=new Set([para]),fila=[para];
+  while(fila.length){
+    for(const v of adj[fila.shift()]||[]){
+      if(v===de)return true;
+      if(!vis.has(v)){vis.add(v);fila.push(v)}
+    }
+  }
+  return false;
+}
+function fabAncora(comp,padrao,apos){
+  const alvo=fabOrdem(comp);
+  const nos=fabNos();
+  // preferencia declarada pelo roteiro: "isto se pendura naquilo"
+  for(const c of (apos||[])){const n=nos.find(x=>x.comp===c);if(n)return n}
+  const cand=nos.filter(n=>n.comp!==comp&&!fabEhContainer(n.comp)&&fabOrdem(n.comp)<alvo);
+  if(!cand.length)return padrao;
+  // o mais avancado no caminho do dado; artefato exige relacao que faca sentido
+  const lista=fabEhArtefato(comp)?(cand.filter(n=>fabRelacao(n.comp,comp)).length
+    ?cand.filter(n=>fabRelacao(n.comp,comp)):cand):cand;
+  return lista.sort((a,b)=>fabOrdem(b.comp)-fabOrdem(a.comp))[0];
+}
+// Artefato e unico na arquitetura: existe UMA tabela de log, nao uma por quem
+// escreve nela. Ao aceitar de novo, liga-se a que ja existe.
+function fabArtefatoExistente(comp){
+  return fabEhArtefato(comp)?fabNos().find(n=>n.comp===comp):null;
+}
 // Colunas base de cada tabela. Nao e schema completo: e o minimo que faz a
 // tabela cumprir o papel dela — e o que costuma faltar quando alguem monta
 // isso na pressa. `se` deixa a coluna aparecer so quando o contexto a exige.
@@ -5607,6 +5672,7 @@ const FAB_COMP={
     op:[
       ['sqldb','Azure SQL Database','Suporte maduro, o caso mais comum.'],
       ['sqlmi','SQL Managed Instance','Suportado, com atenção à configuração de rede.'],
+      ['sqlserver','SQL Server (on-premises / VM)','Exige o servidor conectado via Azure Arc — não é ligar e usar. Confirme a versão e a habilitação antes de desenhar a arquitetura em cima disso.'],
       ['cosmos','Cosmos DB','Espelha documento; o achatamento continua sendo trabalho seu.'],
       ['snowflake','Snowflake','Espelha sem pipeline, mas consome compute do lado do Snowflake.'],
       ['postgres','PostgreSQL','Suporte mais recente — confirme disponibilidade na sua região antes de assumir.']]}],
@@ -5669,7 +5735,7 @@ const FAB_COMP={
     riscos:['Limite de tamanho do retorno','Se a tabela de controle estiver errada, o pipeline inteiro processa errado'],
     proximos:[
       {id:'foreach',nivel:'rec',porque:'O par clássico: Lookup devolve a lista, ForEach itera sobre ela. É o coração do pipeline dirigido por metadados.'},
-      {id:'ctrltable',nivel:'rec',porque:'O Lookup precisa ler de algum lugar — a tabela de controle é esse lugar.'},
+      {id:'ctrltable',nivel:'rec',sentido:'le',porque:'O Lookup precisa ler de algum lugar — a tabela de controle é esse lugar. Ela vem ANTES dele: é ela que define o escopo da carga.'},
       {id:'ifcond',nivel:'ok',porque:'Decidir o caminho a partir do que o Lookup devolveu (ex.: pular a carga se não houver dado novo).'}
     ]},
   foreach:{nome:'ForEach (atividade)',etapa:'orquestracao',ico:'loop',
@@ -6927,7 +6993,7 @@ function fabGrafo(){
     // Tabela nao e item do Fabric: ela mora dentro de um Lakehouse/Warehouse.
     // Uma cadeia de camadas conta como abrigada se QUALQUER elo dela alcanca o
     // armazenamento — senao Bronze/Silver/Gold acusariam tres vezes o mesmo.
-    semCasa:()=>{
+    semCasa:(só)=>{
       const idx={};nos.forEach(n=>idx[n.id]=n);
       const viz={};nos.forEach(n=>viz[n.id]=[]);
       ligs.forEach(e=>{if(viz[e.from]&&viz[e.to]){viz[e.from].push(e.to);viz[e.to].push(e.from)}});
@@ -6944,7 +7010,7 @@ function fabGrafo(){
         }
         return false;
       };
-      return nos.filter(n=>fabNatureza(n.comp)==='tabela'&&!abrigada(n));
+      return nos.filter(n=>fabNatureza(n.comp)==='tabela'&&(!só||só.includes(n.comp))&&!abrigada(n));
     },
     // Dentro de um laco, atividade sem ligacao com as irmas roda AO MESMO TEMPO
     // que elas. "Chame o filho e depois registre" so existe se a seta existir.
@@ -7012,59 +7078,14 @@ function fabNivelProibido(orig,comp){
   if(comp!=='foreach')return false;
   return fabEhContainer(orig.comp)||!!orig.escopo;
 }
-function fabSugestoes(no){
-  const def=FAB_COMP[no.comp];if(!def)return [];
-  const g=fabGrafo(),ctx=fabCtx();
-  // proposito declarado manda: as opcoes dele vem primeiro e mais fortes
-  const prop=def.propositos&&no.prop?def.propositos.find(p=>p.id===no.prop):null;
-  const daProp=prop?(prop.proximos||[]):[];
-  const vistos=new Set(daProp.map(p=>p.id));
-  const lista=daProp.map(p=>({...p,doProp:true}))
-    .concat((def.proximos||[]).filter(p=>!vistos.has(p.id)));
-  const jaLigado=new Set(fabLigs().filter(e=>e.from===no.id).map(e=>{
-    const alvo=fabNos().find(n=>n.id===e.to);return alvo?alvo.comp:null;
-  }).filter(Boolean));
-  const faltando=new Set();
-  FAB_VALID.forEach(r=>{
-    try{if(r.quando(g,ctx))(FAB_PEDE[r.id]||[]).forEach(c=>faltando.add(c))}catch(e){}
-  });
-  const out=lista.filter(p=>FAB_COMP[p.id]).map(p=>{
-    const c=FAB_COMP[p.id];
-    let peso=p.nivel==='rec'?100:p.nivel==='ok'?50:0;
-    if(p.doProp)peso+=60;                           // veio do proposito declarado
-    // limite do produto, nao preferencia: laco dentro de laco nao existe no Fabric
-    // o pipeline chamado vive em quadro proprio, nao neste
-    if(no.comp==='invoke'&&p.id==='pipeline'){peso=-999;p={...p,nivel:'evitar',
-      porque:'O pipeline chamado é outro artefato, com canvas próprio. Use "montar pipeline" no card do Invoke para desenhá-lo em um quadro separado.'}}
-    if(fabNivelProibido(no,p.id)){peso=-999;p={...p,nivel:'evitar',
-      porque:'O Fabric aceita um único nível de ForEach. Para repetir dentro de um laço, chame outro pipeline por Invoke Pipeline — é a saída oficial.'}}
-    // Dentro de um laco entra so o que executa por item. Artefato e um so para a
-    // arquitetura inteira — a tabela de log nao se multiplica por iteracao. O que
-    // roda por item e quem ESCREVE nela.
-    if(fabEhContainer(no.comp)&&fabEhArtefato(p.id)){
-      const _esc=FAB_ESCRITOR[p.id];
-      peso=-999;p={...p,nivel:'evitar',
-        porque:c.nome+' é '+(fabNatureza(p.id)==='tabela'?'uma tabela':'um artefato')+', não uma atividade: existe uma só para toda a arquitetura, não uma por iteração. '+
-          (_esc?'Dentro do laço entra quem grava nela — '+_esc.op.map(o=>o[1]).join(' ou ')+' — e a tabela fica do lado de fora.'
-               :'Ele fica fora do laço, alimentado pelo que roda dentro.')};
-    }
-    // Respeita a ordem do fluxo: saindo de uma Origem, a Ingestao vem antes da
-    // Transformacao. Sem isso o passo a passo pula etapas e o desenho fica
-    // dificil de ler. Orquestracao e Governanca sao transversais: nao contam.
-    const _lin=['origem','ingestao','armazenamento','transformacao','curadoria','consumo'];
-    const _de=_lin.indexOf(def.etapa),_para=_lin.indexOf(c.etapa);
-    if(_de>=0&&_para>=0&&_para-_de>1)peso-=(_para-_de-1)*18;
-    if(jaLigado.has(p.id))peso-=70;                 // ja conectado a partir daqui
-    else if(g.tem([p.id]))peso-=25;                 // existe no quadro, mas nao ligado aqui
-    if(faltando.has(p.id))peso+=40;
-    // contexto: o que o usuario respondeu no inicio empurra ou segura a sugestao
-    // O contexto declarado pesa aqui, e cada empurrao guarda o motivo: uma
-    // recomendacao so e confiavel se der para auditar de onde ela veio.
-    // Pros e contras ficam separados de proposito: um empurrao positivo nao pode
-    // esconder a ressalva. Recomendar Notebook por causa do volume enquanto o
-    // time nao sabe manter Spark e o pior erro que esta ferramenta pode cometer.
-    const ctxPros=[],ctxContras=[];
-    const emp=(d,nota)=>{peso+=d;if(nota)(d>0?ctxPros:ctxContras).push(nota)};
+// O peso que o contexto declarado da a um componente, e o MOTIVO de cada
+// empurrao. Extraido do motor de sugestoes para que o roteiro use exatamente a
+// mesma justificativa: as duas telas precisam dizer a mesma coisa.
+function fabCtxPeso(pid,ctx){
+  let peso=0;const ctxPros=[],ctxContras=[];
+  const emp=(d,nota)=>{peso+=d;if(nota)(d>0?ctxPros:ctxContras).push(nota)};
+  const p={id:pid};
+
     if(fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande')){
       if(p.id==='notebook'||p.id==='sparkjob')emp(25,'Volume '+(fabCtxTem(ctx,'volume','muitogrande')?'muito alto':'alto')+': processamento distribuído deixa de ser opcional.');
       if(p.id==='dataflow')emp(-45,'Volume alto: Dataflow Gen2 fica caro e lento nessa faixa.');
@@ -7093,6 +7114,8 @@ function fabSugestoes(no){
     if(fabCtxTem(ctx,'estrategia','metadata')){
       if(['ctrltable','lookup','foreach','invoke'].includes(p.id))
         emp(55,'Estratégia dirigida por metadados: esta peça é o que faz um pipeline atender N objetos.');
+      if(['mirroring','shortcut'].includes(p.id))
+        emp(-40,'Você declarou pipeline dirigido por metadados: réplica gerenciada é a estratégia oposta — ela não passa por tabela de controle nem por laço.');
     }
     if(fabCtxTem(ctx,'estrategia','explicito')){
       if(['ctrltable','lookup','foreach'].includes(p.id))
@@ -7115,6 +7138,95 @@ function fabSugestoes(no){
       if(['eventstream','eventhouse','activator','rtdash'].includes(p.id))emp(50,'Estratégia streaming-first: caminho nativo de fluxo contínuo.');
       if(['copy','copyjob'].includes(p.id))emp(-35,'Estratégia streaming-first: cópia em lote é o caminho oposto ao escolhido.');
     }
+  return {peso,ctxPros,ctxContras};
+}
+function fabSugestoes(no){
+  const def=FAB_COMP[no.comp];if(!def)return [];
+  const g=fabGrafo(),ctx=fabCtx();
+  // proposito declarado manda: as opcoes dele vem primeiro e mais fortes
+  const prop=def.propositos&&no.prop?def.propositos.find(p=>p.id===no.prop):null;
+  const daProp=prop?(prop.proximos||[]):[];
+  const vistos=new Set(daProp.map(p=>p.id));
+  const lista=daProp.map(p=>({...p,doProp:true}))
+    .concat((def.proximos||[]).filter(p=>!vistos.has(p.id)));
+  const jaLigado=new Set(fabLigs().filter(e=>e.from===no.id).map(e=>{
+    const alvo=fabNos().find(n=>n.id===e.to);return alvo?alvo.comp:null;
+  }).filter(Boolean));
+  const faltando=new Map();
+  FAB_VALID.forEach(r=>{
+    try{if(r.quando(g,ctx))(FAB_PEDE[r.id]||[]).forEach(c=>{if(!faltando.has(c))faltando.set(c,r)})}catch(e){}
+  });
+  // O catalogo de cada componente lista o que costuma vir depois DELE. Sozinho
+  // isso deixava o contexto sem poder nenhum: declarar "dirigido por metadados"
+  // so reordenava um menu fixo, e a Tabela de Controle nunca entrava na
+  // conversa porque nao estava em `proximos` da origem. Aqui o que a aba
+  // Validacao esta cobrando entra como candidato, com o motivo dela junto —
+  // recomendacao e validacao passam a dizer a mesma coisa.
+  const naLista=new Set(lista.map(x=>x.id));
+  faltando.forEach((r,cid)=>{
+    if(naLista.has(cid)||cid===no.comp||!FAB_COMP[cid])return;
+    if(fabNatureza(cid)==='config')return;   // governanca se resolve na aba, nao no fluxo
+    if(fabEhContainer(no.comp)&&fabEhArtefato(cid))return;
+    lista.push({id:cid,nivel:'ok',pedido:true,
+      porque:'Falta na arquitetura: '+r.titulo.toLowerCase()+'. '+(r.resolver||'')});
+  });
+  const out=lista.filter(p=>FAB_COMP[p.id]).map(p=>{
+    const c=FAB_COMP[p.id];
+    let peso=p.nivel==='rec'?100:p.nivel==='ok'?50:0;
+    if(p.doProp)peso+=60;                           // veio do proposito declarado
+    // limite do produto, nao preferencia: laco dentro de laco nao existe no Fabric
+    // o pipeline chamado vive em quadro proprio, nao neste
+    if(no.comp==='invoke'&&p.id==='pipeline'){peso=-999;p={...p,nivel:'evitar',
+      porque:'O pipeline chamado é outro artefato, com canvas próprio. Use "montar pipeline" no card do Invoke para desenhá-lo em um quadro separado.'}}
+    if(fabNivelProibido(no,p.id)){peso=-999;p={...p,nivel:'evitar',
+      porque:'O Fabric aceita um único nível de ForEach. Para repetir dentro de um laço, chame outro pipeline por Invoke Pipeline — é a saída oficial.'}}
+    // Dentro de um laco entra so o que executa por item. Artefato e um so para a
+    // arquitetura inteira — a tabela de log nao se multiplica por iteracao. O que
+    // roda por item e quem ESCREVE nela.
+    if(fabEhContainer(no.comp)&&fabEhArtefato(p.id)){
+      const _esc=FAB_ESCRITOR[p.id];
+      peso=-999;p={...p,nivel:'evitar',
+        porque:c.nome+' é '+(fabNatureza(p.id)==='tabela'?'uma tabela':'um artefato')+', não uma atividade: existe uma só para toda a arquitetura, não uma por iteração. '+
+          (_esc?'Dentro do laço entra quem grava nela — '+_esc.op.map(o=>o[1]).join(' ou ')+' — e a tabela fica do lado de fora.'
+               :'Ele fica fora do laço, alimentado pelo que roda dentro.')};
+    }
+    // O fluxo anda para a frente. Voltar so faz sentido para peca transversal
+    // (log, alerta, governanca), que se pendura em qualquer ponto.
+    if(!fabEhTransversal(p.id)&&!fabEhTransversal(no.comp)){
+      const _oa=fabOrdem(no.comp),_ob=fabOrdem(p.id);
+      if(_ob<_oa){
+        if(_oa-_ob>=12){peso=-999;p={...p,nivel:'evitar',
+          porque:c.nome+' vem ANTES de '+def.nome+' no caminho do dado — ligar assim inverte a ordem do fluxo. Selecione o ponto certo do diagrama para encaixá-lo.'}}
+        else peso-=(_oa-_ob)*3;
+      }
+    }
+    // Respeita a ordem do fluxo: saindo de uma Origem, a Ingestao vem antes da
+    // Transformacao. Sem isso o passo a passo pula etapas e o desenho fica
+    // dificil de ler. Orquestracao e Governanca sao transversais: nao contam.
+    const _lin=['origem','ingestao','armazenamento','transformacao','curadoria','consumo'];
+    const _de=_lin.indexOf(def.etapa),_para=_lin.indexOf(c.etapa);
+    if(_de>=0&&_para>=0&&_para-_de>1)peso-=(_para-_de-1)*18;
+    // Encadear a peca nela mesma nunca e o proximo passo — o motor local chegou
+    // a montar uma fila de dez Notebooks, um puxando o outro.
+    if(p.id===no.comp){peso=-999;p={...p,nivel:'evitar',
+      porque:'Encadear '+c.nome+' em outro '+c.nome+' não é um passo de arquitetura. Se são duas etapas distintas, diga o que muda entre elas — objetivo, camada ou destino.'}}
+    // Repetir a MESMA peca no MESMO ponto nunca e o proximo passo. O motor
+    // local chegou a empilhar quatro Notebooks saindo do Silver.
+    if(jaLigado.has(p.id)){peso=-999;p={...p,nivel:'evitar',
+      porque:c.nome+' já sai de '+def.nome+' neste diagrama. Se você precisa de um segundo, adicione pelo catálogo — o passo a passo não repete a mesma peça no mesmo ponto.'}}
+    else if(g.tem([p.id]))peso-=(fabEhArtefato(p.id)?25:60); // ja existe: repetir raramente e a resposta
+    if(faltando.has(p.id))peso+=40;
+    if(p.pedido)peso+=15;   // veio da validacao: e lacuna declarada, nao palpite
+    // contexto: o que o usuario respondeu no inicio empurra ou segura a sugestao
+    // O contexto declarado pesa aqui, e cada empurrao guarda o motivo: uma
+    // recomendacao so e confiavel se der para auditar de onde ela veio.
+    // Pros e contras ficam separados de proposito: um empurrao positivo nao pode
+    // esconder a ressalva. Recomendar Notebook por causa do volume enquanto o
+    // time nao sabe manter Spark e o pior erro que esta ferramenta pode cometer.
+    const _cp=fabCtxPeso(p.id,ctx);
+    peso+=_cp.peso;
+    const ctxPros=_cp.ctxPros,ctxContras=_cp.ctxContras;
+    const emp=(d,nota)=>{peso+=d;if(nota)(d>0?ctxPros:ctxContras).push(nota)};
     // Configuracao obrigatoria ja declarada NESTE no. Nao e preferencia de
     // contexto: e o que a peca vai ser, e por isso muda o que vem depois dela.
     const _cfg=no.cfg||{};
@@ -7199,6 +7311,223 @@ function fabValidar(){
     }catch(e){console.warn('[fab] regra '+r.id+' falhou',e)}
   });
   return out.sort((a,b)=>(a.nivel==='aviso'?0:1)-(b.nivel==='aviso'?0:1));
+}
+
+// ---------- roteiro: o esqueleto da estrategia ----------
+// O motor de sugestoes sabe dizer "o que pode vir depois DESTA peca". Isso nao e
+// uma arquitetura: e um passeio. Ele nunca cobra o caminho inteiro, entao a
+// estrategia declarada no contexto podia terminar sem tabela de controle, sem
+// laco e sem camada de consumo — foi exatamente o que a auditoria mostrou.
+//
+// O roteiro inverte a logica: dado o contexto, existe um esqueleto de POSICOES,
+// cada uma com uma decisao e alternativas reais. O passo a passo caminha por ele
+// e so cai no motor local quando o esqueleto esta completo. E tambem e ele que
+// responde a pergunta que originou a ferramenta: quais caminhos existem aqui.
+//
+// Cada posicao: `se` diz se ela vale neste contexto, `ok` diz se ja esta
+// resolvida, `apos` diz de onde a peca se pendura, `dentro` diz se ela roda
+// dentro do laco.
+const FAB_ROTEIRO=[
+  {id:'controle', foco:['origem'], se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
+   t:'Onde fica a lista do que precisa ser processado?',
+   dica:'Dirigido por metadados começa aqui. Enquanto o escopo estiver escrito dentro do pipeline, incluir um objeto novo é desenvolvimento — não configuração.',
+   ok:g=>g.tem(['ctrltable']), solto:true,
+   op:[{id:'ctrltable',porque:'A tabela que diz o que carregar, de onde, para onde, em que modo e até onde já foi. É ela que transforma N pipelines em um.'}]},
+
+  {id:'leitura', foco:['ctrltable'], se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
+   t:'Quem lê essa lista em tempo de execução?',
+   dica:'A tabela sozinha não faz nada. Alguém precisa lê-la e devolver o resultado para o pipeline decidir o que fazer.',
+   ok:g=>g.tem(['lookup']), apos:['ctrltable'],
+   op:[{id:'lookup',porque:'Lookup lê a tabela de controle e devolve a lista de objetos ativos. É o par direto dela.'}]},
+
+  {id:'iteracao', foco:['lookup','ctrltable'], se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
+   t:'Como repetir a mesma lógica para cada objeto da lista?',
+   dica:'É aqui que se decide se o pipeline cresce em tamanho ou em dados. Também é a decisão que define o isolamento de erro: o que acontece quando o objeto 17 falha.',
+   ok:g=>g.tem(['foreach','invoke']), apos:['lookup'],
+   op:[
+     {id:'foreach',porque:'ForEach itera sobre o que o Lookup devolveu. É o coração do padrão dirigido por metadados.'},
+     {id:'invoke',porque:'Se a lógica por objeto já é grande, chame um pipeline filho: o pai orquestra, o filho executa. Também é a saída oficial quando faltaria um segundo nível de laço.'}]},
+
+  {id:'movimento', foco:['foreach','lookup','origem','pipeline'],
+   t:'O que efetivamente traz o dado da origem?',
+   dica:'Esta é a decisão de custo e de manutenção da ingestão. Ela depende menos do que você prefere e mais do volume, da origem e de quem vai manter isso daqui a um ano.',
+   ok:g=>g.tem(['copy','copyjob','dataflow','notebook','mirroring','shortcut','eventstream','sparkjob']),
+   apos:['foreach','lookup'], deOrigem:true, dentro:'foreach',
+   op:[
+     {id:'copy',porque:'Copy Data é o padrão quando você precisa de controle sobre janela, filtro e carga incremental.',
+      se:ctx=>!fabCtxTem(ctx,'estrategia','zeroetl')&&!fabCtxTem(ctx,'estrategia','streaming')},
+     {id:'notebook',porque:'Notebook Spark quando o volume é alto ou a lógica de carga é complexa demais para atividade visual.',
+      se:ctx=>fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande')||fabCtxTem(ctx,'estrategia','codigo')},
+     {id:'dataflow',porque:'Dataflow Gen2 quando a transformação é leve e quem mantém prefere interface visual a código.',
+      se:ctx=>fabCtxTem(ctx,'estrategia','lowcode')||fabCtxTem(ctx,'equipe','lowcode')},
+     {id:'copyjob',porque:'Copy Job resolve incremental sem pipeline quando a origem tem coluna de data ou versão.',
+      se:ctx=>!fabCtxTem(ctx,'estrategia','metadata')},
+     {id:'mirroring',porque:'Mirroring replica continuamente sem pipeline para manter — desde que a origem seja suportada.',
+      se:ctx=>fabCtxTem(ctx,'estrategia','zeroetl')||fabCtxTem(ctx,'freq','realtime')},
+     {id:'shortcut',porque:'Shortcut não copia nada: aponta para o dado onde ele já está.',
+      se:ctx=>fabCtxTem(ctx,'estrategia','zeroetl')||fabCtxTem(ctx,'origem','objeto')},
+     {id:'eventstream',porque:'Fluxo contínuo de eventos: o caminho nativo quando o dado chega empurrado, não consultado.',
+      se:ctx=>fabCtxTem(ctx,'freq','realtime')||fabCtxTem(ctx,'estrategia','streaming')}]},
+
+  {id:'aterrissagem', foco:['copy','copyjob','dataflow','notebook','mirroring','shortcut','eventstream','sparkjob'],
+   t:'Onde o dado aterrissa quando entra no Fabric?',
+   dica:'O destino da ingestão decide o que dá para fazer depois. Gravar direto em camada tratada parece economia de tempo até o primeiro reprocessamento.',
+   ok:g=>g.tem(['bronze','lakehouse','warehouse','eventhouse']),
+   apos:['copy','copyjob','dataflow','notebook','mirroring','shortcut','eventstream'],
+   op:[
+     {id:'bronze',porque:'Camada crua, fiel à origem inclusive nos defeitos. É o que permite reprocessar sem voltar ao sistema de origem.',
+      se:ctx=>!fabCtxTem(ctx,'freq','realtime')},
+     {id:'eventhouse',porque:'Telemetria e evento em série temporal: o motor KQL é feito para esse formato.',
+      se:ctx=>fabCtxTem(ctx,'freq','realtime')||fabCtxTem(ctx,'origem','pi')},
+     {id:'lakehouse',porque:'O item do Fabric que hospeda as camadas em Delta. É onde Bronze, Silver e Gold moram.'}]},
+
+  {id:'registro', foco:['bronze','lakehouse','warehouse','eventhouse','copy','copyjob','foreach','notebook','dataflow'], se:ctx=>!fabCtxTem(ctx,'criticidade','baixa'),
+   t:'Como você vai saber o que rodou, e o que falhou?',
+   dica:'Sem isso a resposta para "a carga de ontem funcionou?" é abrir o Fabric e olhar. Com dezenas de objetos, é a diferença entre reprocessar um e reprocessar quarenta.',
+   ok:g=>g.tem(['sproc'])||g.prop('notebook','log'),
+   apos:['copy','notebook','dataflow','foreach'], dentro:'foreach',
+   op:[
+     {id:'sproc',porque:'Uma procedure de início e outra de fim, chamadas pelo pipeline: gravam status, duração, volume e erro de forma transacional. É o caminho mais limpo.',
+      se:ctx=>!fabCtxTem(ctx,'equipe','codigo')||true},
+     {id:'notebook',porque:'Se a carga já é código, registrar de dentro dele evita uma ida e volta ao Warehouse.',
+      se:ctx=>fabCtxTem(ctx,'equipe','codigo')||fabCtxTem(ctx,'estrategia','codigo')}]},
+
+  {id:'log', foco:['sproc','notebook'], se:ctx=>!fabCtxTem(ctx,'criticidade','baixa'),
+   t:'Onde esse registro é gravado?',
+   dica:'O log é uma tabela, não uma atividade: ele não roda. Quem grava nele é a procedure — e é a granularidade dessa tabela que decide se você reprocessa um objeto ou quarenta.',
+   ok:g=>g.tem(['logtable']), apos:['sproc','notebook'],
+   op:[{id:'logtable',porque:'Uma linha por execução (ou por objeto), com status, duração, volume e erro. É o que responde "a carga de ontem funcionou?" sem abrir o Fabric.'}]},
+
+  {id:'casa_controle', foco:['logtable','ctrltable','sproc'],
+   t:'Onde vivem as tabelas de controle e de log?',
+   dica:'Elas precisam de escrita transacional e consulta SQL. É essa escolha que decide se dá para escrevê-las por Stored Procedure — o endpoint do Lakehouse é só de leitura.',
+   ok:g=>!g.semCasa(['logtable','ctrltable']).length,
+   alvo:g=>g.semCasa(['logtable','ctrltable'])[0],
+   op:[
+     {id:'warehouse',porque:'Warehouse tem T-SQL completo e escrita transacional. É o lar natural de controle e log.'},
+     {id:'sqldb',porque:'SQL database do Fabric quando o controle serve também uma aplicação operacional, e não só o analítico.',
+      se:ctx=>fabCtxTem(ctx,'equipe','sql')}]},
+
+  {id:'casa_camadas', foco:['bronze','silver','gold'],
+   t:'Onde ficam as camadas de dado?',
+   dica:'Bronze, Silver e Gold são tabelas Delta — elas moram num item que as hospede. Misturar camada de dado com tabela de controle no mesmo item é o que depois trava a permissão.',
+   ok:g=>!g.semCasa(['bronze','silver','gold']).length,
+   alvo:g=>g.semCasa(['bronze','silver','gold'])[0],
+   op:[
+     {id:'lakehouse',porque:'Delta no OneLake, com Spark e SQL por cima. É onde as camadas do medalhão moram.'},
+     {id:'warehouse',porque:'Se a camada curada é lida por T-SQL e mantida por procedure, o Warehouse hospeda melhor que o Lakehouse.',
+      se:ctx=>fabCtxTem(ctx,'equipe','sql')}]},
+
+  {id:'erro', foco:['sproc','logtable','foreach','copy'], se:ctx=>fabCtxTem(ctx,'criticidade','alta'),
+   t:'O que acontece quando a carga falha?',
+   dica:'Você marcou esta carga como crítica. Falha silenciosa em carga crítica é o pior defeito de uma arquitetura: o número errado circula como se fosse certo.',
+   ok:g=>g.tem(['notify','fail','activator']),
+   apos:['sproc','foreach','copy'],
+   op:[
+     {id:'notify',porque:'Avisa um humano. Configure para disparar só em falha — notificar demais é o mesmo que não notificar.'},
+     {id:'fail',porque:'Interrompe explicitamente. Em regra crítica, parar é melhor que propagar dado inválido para a camada de cima.'},
+     {id:'activator',porque:'Alerta baseado em regra sobre o próprio dado, sem alguém olhando painel.'}]},
+
+  {id:'limpeza', foco:['bronze','lakehouse','eventhouse'], se:ctx=>!fabCtxTem(ctx,'objetivo','ingestao'),
+   t:'O dado cru está guardado. O que o torna confiável?',
+   dica:'Bronze é fiel à origem — inclusive aos defeitos dela. Alguém precisa tipar, padronizar e validar antes que isso vire número no relatório.',
+   ok:g=>g.tem(['silver']), apos:['bronze','lakehouse'],
+   op:[
+     {id:'silver',porque:'Camada limpa e padronizada: tipos corretos, chave de negócio resolvida, domínio validado.'},
+     {id:'notebook',porque:'A transformação de Bronze para Silver é trabalho de código quando o volume é alto.',
+      se:ctx=>fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande')||fabCtxTem(ctx,'estrategia','codigo')},
+     {id:'dataflow',porque:'Transformação visual quando a regra é simples e quem mantém não escreve código.',
+      se:ctx=>fabCtxTem(ctx,'equipe','lowcode')}]},
+
+  {id:'qualidade', foco:['silver','bronze','notebook','dataflow'], se:ctx=>fabCtxTem(ctx,'criticidade','alta')||fabCtxTem(ctx,'consumo','ml'),
+   t:'Quem garante que o dado passou nas regras?',
+   dica:'Validação implícita não existe: ou a regra está escrita em algum lugar, ou ninguém a está aplicando.',
+   ok:g=>g.tem(['dq']), apos:['silver','bronze','notebook'],
+   op:[{id:'dq',porque:'Not null, unicidade, integridade referencial e variação de volume. Marcar a linha reprovada é melhor que descartá-la em silêncio.'}]},
+
+  {id:'curadoria', foco:['silver','dq','sproc','notebook'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice')||fabCtxTem(ctx,'objetivo','dw'),
+   t:'Como o negócio enxerga esse dado?',
+   dica:'Regra de negócio aplicada no relatório é regra que cada relatório aplica de um jeito. A camada de curadoria existe para que a métrica tenha uma definição só.',
+   ok:g=>g.tem(['gold']), apos:['silver','notebook','sproc','warehouse'],
+   op:[{id:'gold',porque:'Dimensões e fatos, com a regra de negócio já aplicada. É o que o modelo semântico consome.'}]},
+
+  {id:'semantico', foco:['gold','warehouse','silver'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice'),
+   t:'Onde a métrica é definida uma única vez?',
+   dica:'Sem camada semântica, cada relatório reimplementa a métrica — e dois diretores discutem faturamento com números diferentes.',
+   ok:g=>g.tem(['semantic']), apos:['gold','warehouse','silver'],
+   op:[{id:'semantic',porque:'Modelo semântico sobre a camada curada: uma definição de métrica valendo para todo consumo.'}]},
+
+  {id:'entrega', foco:['semantic'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard'),
+   t:'Como isso chega a quem decide?',
+   dica:'Último passo do caminho do dado. Daqui em diante o que resta é governança.',
+   ok:g=>g.tem(['pbi','rtdash']), apos:['semantic'],
+   op:[
+     {id:'pbi',porque:'Relatório sobre o modelo semântico.'},
+     {id:'rtdash',porque:'Painel em tempo real sobre o Eventhouse, quando a latência importa mais que o histórico.',
+      se:ctx=>fabCtxTem(ctx,'freq','realtime')}]},
+
+  {id:'monitor', foco:['logtable','pbi','semantic'], se:ctx=>!fabCtxTem(ctx,'criticidade','baixa'),
+   t:'Quem olha o log quando ninguém está olhando?',
+   dica:'Log sem leitor é arquivo morto: ele só serve depois do incidente, e mesmo assim só se alguém lembrar dele.',
+   ok:g=>!g.tem(['logtable'])||g.tem(['pbimonitor','activator','monitorhub']),
+   apos:['logtable'],
+   op:[
+     {id:'pbimonitor',porque:'Painel sobre o log: status das cargas, duração e falhas, sem abrir o Fabric.'},
+     {id:'activator',porque:'Alerta automático quando o status gravado for de falha ou a duração fugir do normal.'}]},
+
+  {id:'seguranca', foco:['semantic','gold','pbi','rls'], se:ctx=>fabCtxTem(ctx,'sensivel','sim'),
+   t:'Quem pode ver o quê?',
+   dica:'Você indicou dado sensível. Definir isso depois de publicar significa que alguém já viu o que não devia.',
+   ok:g=>g.tem(['rls']), apos:['semantic','gold','warehouse'],
+   op:[{id:'rls',porque:'Segurança por linha e por coluna definida no modelo: vale uma vez para todo consumo.'}]},
+
+  {id:'ambientes', foco:['pbi','rtdash','workspace','semantic','deploy'],
+   t:'Onde isso tudo é publicado, e como vai para produção?',
+   dica:'É a decisão mais cara de desfazer. Reorganizar workspace depois quebra referência de relatório, de shortcut e de permissão.',
+   ok:g=>g.tem(['workspace','deploy']), solto:true,
+   op:[
+     {id:'workspace',porque:'Workspaces separados por ambiente e domínio, sobre a capacidade certa.'},
+     {id:'deploy',porque:'Deployment pipeline: promover de desenvolvimento para produção sem refazer à mão.'}]}
+];
+// posicoes que valem neste contexto, com o estado de cada uma
+function fabRoteiro(){
+  const g=fabGrafo(),ctx=fabCtx();
+  return FAB_ROTEIRO.filter(pos=>{try{return !pos.se||pos.se(ctx)}catch(e){return false}})
+    .map(pos=>{
+      let pronta=false;try{pronta=!!pos.ok(g,ctx)}catch(e){pronta=false}
+      let op=(pos.op||[]).filter(o=>FAB_COMP[o.id]&&(!o.se||(()=>{try{return o.se(ctx)}catch(e){return false}})()));
+      // Uma posicao nunca cria a mesma peca duas vezes. Sem isso, uma posicao
+      // cujo `ok` nao fosse satisfeito pela opcao escolhida ficava repetindo a
+      // pergunta — foi assim que a auditoria produziu dez Notebooks em fila.
+      // Posicao com `alvo` proprio e a excecao: ali religar o que ja existe e
+      // justamente o trabalho (dar casa a mais uma tabela).
+      if(!pos.alvo){
+        const livres=op.filter(o=>!g.tem([o.id]));
+        if(!livres.length)pronta=true; else op=livres;
+      }
+      return {...pos,pronta,op};
+    }).filter(pos=>pos.op.length);
+}
+// a proxima decisao do esqueleto que ainda nao foi tomada
+function fabRoteiroFalta(){return fabRoteiro().find(p=>!p.pronta)||null}
+// a peca do diagrama de onde a proxima decisao em aberto se pendura. E o que
+// mantem o passo a passo caminhando pelo esqueleto: sem isso a conducao ficava
+// presa na ultima peca criada e voltava a emendar sugestoes locais.
+function fabFocoDe(comp){
+  const nat=fabNatureza(comp);
+  return fabRoteiro().filter(x=>!x.pronta).some(x=>{
+    const f=x.foco||x.apos||[];
+    return f.includes(comp)||(f.includes('origem')&&nat==='origem');
+  });
+}
+function fabProxFoco(){
+  const nos=fabNos();
+  for(const q of fabRoteiro().filter(x=>!x.pronta)){
+    const f=q.foco||q.apos||[];
+    const n=nos.find(x=>f.includes(x.comp)||(f.includes('origem')&&fabNatureza(x.comp)==='origem'));
+    if(n)return n;
+  }
+  return null;
 }
 
 // ---------- roadmap ----------
@@ -7337,15 +7666,21 @@ function fabVaga(orig,global){
 function fabAceitar(sug){
   const orig=fabNos().find(n=>n.id===_fabSel);if(!orig)return;
   fabMarcar();
-  const v=fabVaga(orig,fabEhArtefato(sug.id));
-  const novo=fabNovoNo(sug.id,v.x,v.y,null,fabEscopoDe(orig,sug.id));
+  const anc=sug.pedido?fabAncora(sug.id,orig):orig;
+  const le=sug.sentido==='le';
+  const jaTem=fabArtefatoExistente(sug.id);
+  const v=jaTem?null:fabVaga(anc,fabEhArtefato(sug.id));
+  const novo=jaTem||fabNovoNo(sug.id,v.x,v.y,null,le?undefined:fabEscopoDe(anc,sug.id));
   if(novo){
-    fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
-      arq:fabCur,from:orig.id,to:novo.id,dentro:fabEhDentro(orig,novo.comp)});
-    _fabSel=novo.id;
+    const de=le?novo:anc, para=le?anc:novo;
+    if(!fabCriaCiclo(de.id,para.id)&&!fabLigs().some(e=>e.from===de.id&&e.to===para.id))
+      fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+        arq:fabCur,from:de.id,to:para.id,dentro:fabEhDentro(de,para.comp)});
+    // transversal (e o que vem antes) nao vira o novo ponto de partida
+    _fabSel=(le||fabEhTransversal(sug.id))?orig.id:novo.id;
   }
   fabSave();fabRender();
-  toast(FAB_COMP[sug.id].nome+' adicionado');
+  toast(FAB_COMP[sug.id].nome+(jaTem?' ligado':' adicionado'));
 }
 function fabApagar(id){
   const n=fabItems.find(x=>x.id===id);if(!n)return;
@@ -7748,10 +8083,66 @@ function fabPasso(){
   const no=nos.find(n=>n.id===_fabGuia.atual);
   if(!no){_fabGuia.atual=null;fabSalvarGuia();return fabPasso()}
   const pend=fabPendencia(no);
+  // resolvido o que a peca transversal exigia, a conducao retoma o caminho do
+  // dado — em vez de seguir emendando monitoramento em cima de monitoramento
+  if(!pend&&_fabGuia.volta&&fabEhTransversal(no.comp)){
+    const v=nos.find(n=>n.id===_fabGuia.volta);
+    delete _fabGuia.volta;fabSalvarGuia();
+    if(v&&v.id!==no.id){_fabGuia.atual=v.id;_fabSel=v.id;fabSalvarGuia();return fabPasso()}
+  }
   if(pend)return {tipo:'pendencia',no,t:pend.t,dica:pend.dica,pend,
     op:pend.op.map(o=>({...o,comp:null}))};
+  // O esqueleto da estrategia manda. So quando ele esta completo e que a
+  // conducao passa para o motor local ("o que costuma vir depois desta peca").
+  const rot=fabRoteiro(),abertas=rot.filter(x=>!x.pronta);
+  // Entre as decisoes em aberto, prioriza a que se pendura JUSTAMENTE na peca
+  // em que voce esta parado. Sem isso o roteiro puxava a conversa de volta para
+  // o inicio toda vez que voce selecionava um no adiante — e isso e tao
+  // confuso quanto nao ter roteiro nenhum. O que ficou para tras continua
+  // cobrado na aba Validacao.
+  // A decisao apresentada e a que fala da peca em que voce esta parado. Se
+  // nenhuma posicao do esqueleto se refere a ela, quem responde e o motor local
+  // ("o que costuma vir depois desta peca") — e so quando ele tambem nao tem
+  // nada e que o roteiro puxa a proxima lacuna da estrategia. O que ficou para
+  // tras nunca some: continua cobrado na aba Validacao.
+  const _nat=fabNatureza(no.comp);
+  const pos=abertas.find(x=>{
+    const f=x.foco||x.apos||[];
+    return f.includes(no.comp)||(f.includes('origem')&&_nat==='origem');
+  });
+  if(pos){
+    // As alternativas da posicao sao ordenadas e justificadas pelo MESMO
+    // contexto que o motor de sugestoes usa — as duas telas dizem a mesma coisa.
+    const _ctx=fabCtx();
+    const op=pos.op.map(o=>{
+      const cp=fabCtxPeso(o.id,_ctx);
+      return {...o,comp:FAB_COMP[o.id],peso:cp.peso,
+        ctxNota:cp.ctxPros[0]||'',ctxAviso:cp.ctxContras[0]||''};
+    }).sort((a,b)=>b.peso-a.peso);
+    // Se voce esta parado justamente na peca de onde esta decisao se pendura, a
+    // pergunta especifica daquele componente e melhor que a generica da posicao:
+    // "O que roda DENTRO do laço?" diz mais que "o que traz o dado?".
+    const _pq=(pos.apos&&pos.apos.includes(no.comp)&&fabPergProx(no))||pos.t;
+    return {tipo:'roteiro',no,pos,t:_pq,dica:pos.dica,
+      prog:{i:rot.indexOf(pos)+1,n:rot.length},op};
+  }
   const sugs=fabSugestoes(no).filter(s=>s.peso>0);
   const d=FAB_COMP[no.comp];
+  // motor local esgotado: o roteiro assume e cobra a proxima lacuna
+  if(!sugs.length&&abertas.length){
+    const q=abertas[0],_ctx2=fabCtx();
+    return {tipo:'roteiro',no,pos:q,t:q.t,dica:q.dica,
+      prog:{i:rot.indexOf(q)+1,n:rot.length},
+      op:q.op.map(o=>{const cp=fabCtxPeso(o.id,_ctx2);
+        return {...o,comp:FAB_COMP[o.id],peso:cp.peso,ctxNota:cp.ctxPros[0]||'',ctxAviso:cp.ctxContras[0]||''}})
+        .sort((a,b)=>b.peso-a.peso)};
+  }
+  // esqueleto completo: o que vem daqui e refinamento, nao estrategia
+  const _rd=!rot.length||rot.every(x=>x.pronta);
+  if(sugs.length&&_rd)return {tipo:'proximo',no,refino:true,
+    t:fabPergProx(no)||('Depois de '+d.nome+', o que vem?'),
+    dica:'A estratégia declarada já está fechada no diagrama. Daqui em diante são refinamentos — nada aqui é obrigatório.',
+    op:sugs.map(x=>({...x,comp:FAB_COMP[x.id]}))};
   if(!sugs.length)return {tipo:'completo',no,
     t:'Fim deste ramo',
     dica:'A partir de '+d.nome+' não há mais passo recomendado. Veja a aba Validação para o que ainda falta na arquitetura, ou selecione outro componente do diagrama para seguir por outro caminho.'};
@@ -7789,7 +8180,9 @@ function fabPainelPasso(){
     </div>`+(_fabColunas?fabColunasHTML(p.no.comp):'')+(_fabDetalhe?fabDetalheHTML(d):'');
   }
   const cab=foco+`<div class="fab-passo-cab">
-    <span class="fab-passo-n">Passo ${_fabGuia.passo}</span>
+    <span class="fab-passo-n${p.tipo==='roteiro'?' rot':''}${p.refino?' refino':''}">${p.tipo==='roteiro'
+      ?`Estratégia · decisão ${p.prog.i} de ${p.prog.n}`
+      :p.refino?'Refinamento':`Passo ${_fabGuia.passo}`}</span>
     <b>${escapeHtml(p.t)}</b>
     ${p.dica?`<i>${escapeHtml(p.dica)}</i>`:''}
   </div>`;
@@ -7799,7 +8192,7 @@ function fabPainelPasso(){
   // A boa pratica vem ANTES das opcoes avulsas: a ordem e a recomendacao,
   // a lista e o que sobra para quem quer divergir dela.
   let pratica='';
-  if(p.tipo==='proximo'&&p.no){
+  if((p.tipo==='proximo'||p.tipo==='roteiro')&&p.no){
     const pr=fabPratica(p.no);
     if(pr){
       pratica=`<div class="fab-pratica">
@@ -7855,14 +8248,76 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
   if(p.tipo==='inicio'){
     const no=fabNovoNo(valor,140,180);
     if(no){_fabGuia.atual=no.id;_fabSel=no.id}
+  }else if(p.tipo==='roteiro'){
+    const orig=fabNos().find(n=>n.id===_fabGuia.atual);
+    const pos=p.pos;
+    let anc=orig;
+    if(pos.alvo){try{anc=pos.alvo(fabGrafo())||orig}catch(e){anc=orig}}
+    else anc=fabAncora(valor,orig,pos.apos);
+    // posicao que roda por item entra dentro do laco, junto de quem ja esta la
+    let esc;
+    if(pos.dentro&&fabHerdaEscopo(valor)){
+      const cont=fabNos().find(n=>n.comp===pos.dentro);
+      if(cont){
+        esc=cont.id;
+        const irmaos=fabNos().filter(n=>n.escopo===cont.id);
+        anc=irmaos.length?irmaos[irmaos.length-1]:cont;
+      }
+    }
+    if(esc===undefined)esc=fabEscopoDe(anc,valor);
+    if(pos.solto)anc=null;
+    const le=!!pos.sentidoLe;
+    const jaTem=fabArtefatoExistente(valor);
+    const v=jaTem?null:fabVaga(anc,fabEhArtefato(valor));
+    const no=jaTem||fabNovoNo(valor,v.x,v.y,null,le?undefined:esc);
+    if(no){
+      if(anc){
+        const de=le?no:anc, para=le?anc:no;
+        if(!fabCriaCiclo(de.id,para.id)&&!fabLigs().some(e=>e.from===de.id&&e.to===para.id))
+          fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+            arq:fabCur,from:de.id,to:para.id,dentro:fabEhDentro(de,para.comp)});
+      }
+      // quem move o dado le a origem: sem esta aresta o sistema de origem
+      // ficava solto no diagrama, como se o dado viesse do nada
+      if(pos.deOrigem){
+        const org=fabNos().find(n=>fabNatureza(n.comp)==='origem');
+        if(org&&org.id!==no.id&&!fabLigs().some(e=>e.from===org.id&&e.to===no.id))
+          fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+            arq:fabCur,from:org.id,to:no.id});
+      }
+      delete _fabGuia.volta;_fabGuia.atual=no.id;_fabSel=no.id;
+      // se nenhuma decisao em aberto fala da peca recem-criada, a conducao vai
+      // para aquela de onde a proxima decisao da estrategia se pendura
+      if(!fabPendencia(no)&&!fabFocoDe(no.comp)){
+        const pf=fabProxFoco();
+        if(pf){_fabGuia.atual=pf.id;_fabSel=pf.id}
+      }
+    }
   }else{
     const orig=fabNos().find(n=>n.id===_fabGuia.atual);
-    const v=fabVaga(orig,fabEhArtefato(valor));
-    const no=fabNovoNo(valor,v.x,v.y,null,fabEscopoDe(orig,valor));
-    if(no&&orig){
-      fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
-        arq:fabCur,from:orig.id,to:no.id,dentro:fabEhDentro(orig,no.comp)});
-      _fabGuia.atual=no.id;_fabSel=no.id;
+    const sug=orig?fabSugestoes(orig).find(x=>x.id===valor):null;
+    // lacuna cobrada pela validacao encaixa onde ela pertence, nao onde o
+    // cursor estava; e o que a atividade LE entra antes dela, nao depois
+    const anc=(sug&&sug.pedido)?fabAncora(valor,orig):orig;
+    const le=!!(sug&&sug.sentido==='le');
+    const jaTem=fabArtefatoExistente(valor);
+    const v=jaTem?null:fabVaga(anc,fabEhArtefato(valor));
+    const no=jaTem||fabNovoNo(valor,v.x,v.y,null,le?undefined:fabEscopoDe(anc,valor));
+    if(no&&anc){
+      const de=le?no:anc, para=le?anc:no;
+      if(!fabCriaCiclo(de.id,para.id)&&!fabLigs().some(e=>e.from===de.id&&e.to===para.id))
+        fabEdges.push({id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+          arq:fabCur,from:de.id,to:para.id,dentro:fabEhDentro(de,para.comp)});
+      // Peca transversal (e o que vem antes) nao continua a linha: a conducao
+      // vai ate ela so para resolver o que ela exige, e volta para o fluxo.
+      if(le||fabEhTransversal(valor)){_fabGuia.volta=orig.id;_fabGuia.atual=no.id;_fabSel=no.id}
+      else {
+        delete _fabGuia.volta;_fabGuia.atual=no.id;_fabSel=no.id;
+        if(!fabPendencia(no)&&!fabFocoDe(no.comp)){
+          const pf=fabProxFoco();
+          if(pf){_fabGuia.atual=pf.id;_fabSel=pf.id}
+        }
+      }
     }
   }
   _fabGuia.passo++;_fabGuia.ativo=true;fabSalvarGuia();
