@@ -2035,6 +2035,101 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-ini-fechar:hover{border-color:var(--label2);color:var(--label)}
 
 /* faixa de contexto: sempre visivel, porque e ela que sustenta as recomendacoes */
+/* Aba Estrategias: o leque de caminhos, nao um caminho so */
+.fab-est-cab{margin:0 0 12px;font-size:12px;color:var(--label2);line-height:1.5}
+.fab-est-conflito{padding:11px 12px;margin-bottom:12px;border-radius:10px;
+  background:#fdf1ef;border-left:3px solid #d9534f}
+.fab-est-conflito>b{display:block;font-size:12.5px;color:#8f2620;font-weight:700}
+.fab-est-conflito p{margin:6px 0 0;font-size:11.5px;color:var(--label);line-height:1.5}
+.fab-est-conflito p i{font-style:normal;font-weight:650}
+.fab-est-conflito span{display:block;margin-top:7px;font-size:11px;color:var(--label2)}
+.fab-est-lista{display:flex;flex-direction:column;gap:9px}
+.fab-est-card{padding:11px 12px;border:1px solid var(--sep);border-radius:11px;background:var(--bg)}
+.fab-est-card.on{border-color:var(--label2);background:var(--card);box-shadow:0 1px 6px rgba(0,0,0,.05)}
+.fab-est-top{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.fab-est-top b{font-size:13px;font-weight:700;color:var(--label)}
+.fab-est-dec{font-size:9px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:5px;
+  background:var(--label);color:var(--bg);text-transform:uppercase}
+.fab-est-v{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.5px;padding:3px 8px;
+  border-radius:6px;background:var(--b);color:var(--c);text-transform:uppercase;white-space:nowrap}
+.fab-est-res{margin:7px 0 0;font-size:11.5px;color:var(--label2);line-height:1.5}
+.fab-est-porque{margin:7px 0 0;font-size:12px;color:var(--label);line-height:1.55;
+  padding:7px 9px;border-radius:7px;background:var(--hover)}
+.fab-est-linha{display:flex;gap:8px;margin-top:7px;font-size:11.5px;line-height:1.5}
+.fab-est-linha i{font-style:normal;font-weight:700;color:var(--label2);flex:0 0 86px}
+.fab-est-linha span{color:var(--label);min-width:0}
+.fab-est-custos{display:flex;gap:12px;margin-top:8px;padding-top:7px;border-top:1px solid var(--sep);
+  font-size:11px;color:var(--label2)}
+.fab-est-custos b{color:var(--label);font-weight:650}
+.fab-est-sec{margin-top:16px}
+.fab-est-sec>b{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--label2);margin-bottom:7px}
+.fab-est-vazio{margin:0 0 8px;font-size:11px;color:var(--label3)}
+.fab-est-pos{margin:0;padding-left:16px;font-size:11.5px;color:var(--label);line-height:1.6}
+.fab-est-pos li.ok{color:var(--label3);text-decoration:line-through}
+.fab-est-ap{margin:9px 0 0;font-size:11px;color:var(--label2);line-height:1.5}
+.fab-est-sec.fora ul{margin:0;padding-left:16px;font-size:11.5px;color:var(--label2);line-height:1.6}
+/* a matriz: 6 estrategias x 7 padroes de carga */
+.fab-mx{display:flex;flex-direction:column;gap:3px;overflow-x:auto;padding-bottom:4px}
+.fab-mx-linha{display:flex;gap:3px;align-items:stretch}
+.fab-mx-linha>span:first-child{flex:0 0 74px;font-size:9.5px;color:var(--label2);
+  display:flex;align-items:center;line-height:1.2}
+.fab-mx-h{flex:1 1 0;min-width:44px;font-size:9px;font-weight:700;color:var(--label2);
+  text-align:center;text-transform:uppercase;letter-spacing:.3px}
+.fab-mx-cel{flex:1 1 0;min-width:44px;padding:7px 2px;border:0;border-radius:6px;cursor:pointer;
+  background:var(--b);color:var(--c);font-size:8.5px;font-weight:800;font-family:inherit;
+  text-transform:uppercase;letter-spacing:.3px}
+.fab-mx-cel:hover{filter:brightness(.94)}
+.fab-mx-cel.sel{box-shadow:0 0 0 2px var(--c)}
+.fab-mx-expl{margin-top:9px;padding:9px 11px;border-radius:8px;background:var(--b);border-left:3px solid var(--c)}
+.fab-mx-expl b{display:block;font-size:11.5px;color:var(--c);font-weight:700}
+.fab-mx-expl p{margin:5px 0 0;font-size:11.5px;color:var(--label);line-height:1.55}
+/* Anti-padrao: o app avisa no momento em que ele nasce, nao numa aba que voce
+   precisa lembrar de abrir. */
+.fab-ap-faixa{padding:12px 13px;border-bottom:1px solid var(--sep);
+  background:#fdf1ef;border-left:3px solid #d9534f}
+.fab-ap-top{display:flex;align-items:center;gap:8px}
+.fab-ap-selo{font-size:9px;font-weight:800;letter-spacing:.7px;padding:3px 7px;border-radius:5px;
+  background:#d9534f;color:#fff;white-space:nowrap;flex-shrink:0}
+.fab-ap-top b{font-size:12.5px;font-weight:700;color:#8f2620;line-height:1.3;min-width:0}
+.fab-ap-x{margin-left:auto;border:0;background:none;color:#a3312c;font-size:14px;cursor:pointer;
+  line-height:1;padding:0 2px;flex-shrink:0;opacity:.7}
+.fab-ap-x:hover{opacity:1}
+.fab-ap-doi{margin:8px 0 0;font-size:12px;color:var(--label);line-height:1.55}
+.fab-ap-custo{margin:6px 0 0;font-size:11.5px;color:#8f2620;line-height:1.5}
+.fab-ap-custo i{font-style:normal;font-weight:700}
+.fab-ap-fix{margin:8px 0 0;font-size:11.5px;color:var(--label2);line-height:1.5;
+  padding-top:7px;border-top:1px solid rgba(217,83,79,.25)}
+.fab-ap-acoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.fab-ap-acoes button{border:1px solid #e0a8a4;background:var(--bg);color:#8f2620;font-size:11.5px;
+  font-weight:650;padding:6px 11px;border-radius:8px;cursor:pointer;font-family:inherit}
+.fab-ap-acoes button:hover{background:#fff;border-color:#d9534f}
+/* o no culpado fica marcado enquanto a regra valer */
+.fab-no.antipadrao{border-color:#d9534f;box-shadow:0 0 0 2px rgba(217,83,79,.16),0 1px 3px rgba(0,0,0,.07)}
+.fab-no-ap{position:absolute;top:-9px;left:10px;font-size:8px;font-weight:800;letter-spacing:.6px;
+  padding:2px 6px;border-radius:5px;background:#d9534f;color:#fff;line-height:1.35;white-space:nowrap;
+  animation:fabApPulso 1.4s ease-out 2}
+@keyframes fabApPulso{0%,100%{box-shadow:0 0 0 0 rgba(217,83,79,0)}50%{box-shadow:0 0 0 5px rgba(217,83,79,.28)}}
+/* Prontidao: a resposta para "quando ja esta bom?". Barra + veredito, sempre
+   visivel, clicavel para a aba de Validacao. */
+.fab-pront{display:flex;flex-direction:column;gap:0;padding:10px 13px 11px;cursor:pointer;
+  border-bottom:1px solid var(--sep);background:none;border-top:0;border-left:0;border-right:0;
+  width:100%;text-align:left;font-family:inherit}
+.fab-pront:hover{background:var(--hover)}
+.fab-pront-bar{height:4px;border-radius:3px;background:var(--sep);overflow:hidden;margin-bottom:8px}
+.fab-pront-bar span{display:block;height:100%;border-radius:3px;background:#e8a33d;transition:width .3s var(--ease-expo)}
+.fab-pront.ok .fab-pront-bar span{background:#2f9e4f}
+.fab-pront-txt b{display:block;font-size:12.5px;font-weight:700;color:var(--label);line-height:1.3}
+.fab-pront.ok .fab-pront-txt b{color:#1e6b34}
+.fab-pront-txt i{display:block;margin-top:2px;font-style:normal;font-size:11px;color:var(--label2);line-height:1.4}
+/* ponto final do passo a passo */
+.fab-fecho{padding:13px 14px;margin-bottom:14px;border-radius:11px;
+  background:#eef7ef;border:1px solid #cfe6d4}
+.fab-fecho>b{display:block;font-size:13.5px;font-weight:700;color:#1e6b34;line-height:1.3}
+.fab-fecho>p{margin:6px 0 0;font-size:12.5px;color:var(--label);line-height:1.55}
+.fab-fecho-op{margin-top:10px;padding-top:9px;border-top:1px solid #cfe6d4}
+.fab-fecho-op i{font-style:normal;font-size:11.5px;color:var(--label2);font-weight:600}
+.fab-fecho-op ul{margin:5px 0 0;padding-left:16px;font-size:12px;color:var(--label2);line-height:1.55}
 /* Linha de status, nao banner: ela diz o quao firme e a base da recomendacao
    e sai da frente. */
 .fab-ctxbar{border-bottom:1px solid var(--sep);background:var(--bg)}
@@ -5241,7 +5336,7 @@ function fabEhContainer(comp){return !!FAB_CONTEM[comp]}
 const FAB_ARTEFATO=new Set([
   'lakehouse','warehouse','eventhouse','sqldb','onelake','bronze','silver','gold',
   'ctrltable','logtable','semantic','pbi','rtdash','pbimonitor','mlmodel','sqlendpoint',
-  'workspace','rls','lineage','deploy','monitorhub'
+  'workspace','rls','lineage','deploy','monitorhub','capacidade','keyvault'
 ]);
 function fabEhArtefato(c){return FAB_ARTEFATO.has(c)}
 // Monitoramento, alerta e governanca sao TRANSVERSAIS: eles se penduram no
@@ -5250,7 +5345,7 @@ function fabEhArtefato(c){return FAB_ARTEFATO.has(c)}
 // caminho do dado ate o consumo declarado, nunca chegava ao fim. O resultado
 // era um passeio, nao uma arquitetura.
 const FAB_TRANSVERSAL=new Set(['notify','fail','logtable','pbimonitor','activator',
-  'monitorhub','workspace','rls','lineage','deploy','dq']);
+  'monitorhub','workspace','rls','lineage','deploy','dq','capacidade','keyvault','otimiza']);
 function fabEhTransversal(c){return FAB_TRANSVERSAL.has(c)}
 // Posicao no caminho do dado. Sugerir o que vem ANTES do no atual era o erro
 // que mais confundia a estrategia: "Copy Data -> Lookup" e a ordem invertida do
@@ -5264,7 +5359,8 @@ const FAB_ORDEM={
   mirroring:26, shortcut:26, eventstream:26, copy:30, copyjob:30, dataflow:32,
   onelake:38, lakehouse:38, warehouse:38, eventhouse:38, sqldb:38,
   bronze:40, notebook:50, sparkjob:50, sproc:52, silver:55, dq:56,
-  gold:60, logtable:64, notify:66, fail:66, sqlendpoint:70,
+  gold:60, logtable:64, notify:66, fail:66, otimiza:68, sqlendpoint:70,
+  capacidade:72, keyvault:72,
   semantic:80, pbi:85, rtdash:85, pbimonitor:85, mlmodel:85, activator:88
 };
 function fabOrdem(c){
@@ -5394,7 +5490,8 @@ const FAB_NAT={
   lakehouse:'armazem',warehouse:'armazem',eventhouse:'armazem',sqldb:'armazem',onelake:'armazem',
   semantic:'consumo',pbi:'consumo',rtdash:'consumo',pbimonitor:'consumo',mlmodel:'consumo',
   sqlendpoint:'consumo',
-  workspace:'config',rls:'config',lineage:'config',deploy:'config',monitorhub:'config'
+  workspace:'config',rls:'config',lineage:'config',deploy:'config',monitorhub:'config',
+  capacidade:'config',keyvault:'config'
 };
 function fabNatureza(comp){
   if(FAB_NAT[comp])return FAB_NAT[comp];
@@ -6287,6 +6384,40 @@ const FAB_COMP={
     riscos:['Precisa de curadoria humana para ter valor real'],
     proximos:[
       {id:'rls',nivel:'ok',porque:'Classificar o dado sensível é o passo antes de protegê-lo.'}
+    ]},
+  // Tres decisoes que so aparecem quando ja doi, e ai custam caro: quem divide
+  // CU com quem, onde mora o segredo, e quem compacta os arquivos pequenos que
+  // a carga incremental cria toda noite.
+  capacidade:{nome:'Capacidade / CU',etapa:'governanca',ico:'shield',
+    curto:'Quem divide compute com quem',
+    oque:'A capacidade Fabric que sustenta os workspaces, e o rateio de CU entre as cargas.',
+    quando:'Assim que houver mais de um workspace sério, ou carga crítica com SLA.',
+    evitar:'Deixar desenvolvimento e produção na mesma capacidade sem teto. Um notebook mal comportado em teste derruba o refresh do relatório do diretor, e a relação entre as duas coisas não é óbvia para ninguém.',
+    beneficios:['Isola carga crítica de experimento','Torna o custo atribuível a quem o gera','Permite achar o culpado quando tudo fica lento junto'],
+    riscos:['Capacidade dedicada por ambiente custa mais','Throttling mal entendido vira "o Fabric está lento"'],
+    proximos:[
+      {id:'workspace',nivel:'rec',porque:'Capacidade e workspace se decidem juntos: é o workspace que é atribuído à capacidade.'},
+      {id:'monitorhub',nivel:'rec',porque:'Sem acompanhar consumo de CU, você descobre o estouro pelo throttling.'}
+    ]},
+  keyvault:{nome:'Key Vault (segredos)',etapa:'governanca',ico:'shield',
+    curto:'Credencial fora do desenho',
+    oque:'Cofre de segredos referenciado pela conexão, com identidade gerenciada.',
+    quando:'Sempre que houver credencial de origem, token de API ou string de conexão.',
+    evitar:'Senha em parâmetro de pipeline. Ela vai para o Git, aparece no log de execução e sobrevive em toda cópia do workspace.',
+    beneficios:['Rotação sem tocar no pipeline','O segredo nunca aparece no log nem no repositório','Auditoria de quem acessou o quê'],
+    riscos:['Exige permissão configurada na identidade gerenciada','Uma indisponibilidade do cofre derruba a carga'],
+    proximos:[
+      {id:'rls',nivel:'ok',porque:'Segredo protegido e acesso ao dado definido são as duas metades da mesma conversa.'}
+    ]},
+  otimiza:{nome:'Manutenção Delta (OPTIMIZE / VACUUM)',etapa:'governanca',ico:'spark',
+    curto:'Compactar o que a carga incremental espalha',
+    oque:'Rotina agendada de OPTIMIZE, V-Order e VACUUM sobre as tabelas Delta.',
+    quando:'Toda tabela que recebe escrita incremental. Sem exceção — é manutenção, não otimização prematura.',
+    evitar:'Rodar VACUUM com retenção curta enquanto há leitura longa em andamento: você apaga arquivo que alguém ainda está lendo.',
+    beneficios:['Resolve o problema de arquivos pequenos antes de ele virar incidente','V-Order acelera leitura em Direct Lake','Controla o crescimento do histórico de versões'],
+    riscos:['Consome CU: agende fora da janela de consumo','Retenção do VACUUM precisa respeitar a viagem no tempo que alguém use'],
+    proximos:[
+      {id:'monitorhub',nivel:'ok',porque:'Acompanhar duração da manutenção revela tabela que está degradando antes do usuário reclamar.'}
     ]}
 };
 
@@ -6335,7 +6466,7 @@ const FAB_REF={
 // ---------- regras de validação ----------
 // nivel: 'aviso' (risco real) | 'sugestao' (oportunidade)
 const FAB_VALID=[
-  {id:'sem-log',nivel:'aviso',titulo:'Carga automatizada sem log de execução',
+  {id:'sem-log',nivel:'aviso',antipadrao:true,porqueDoi:'Quando alguém perguntar se a carga de ontem rodou, a resposta vai ser abrir o Fabric e olhar execução por execução.',custo:'No primeiro incidente, e em todos os depois.',titulo:'Carga automatizada sem log de execução',
     quando:(g,ctx)=>g.tem(['pipeline','copy','notebook','dataflow','copyjob'])&&!g.tem(['logtable'])&&!fabCtxTem(ctx,'criticidade','exploratoria'),
     texto:'Existe carga automatizada, mas nenhuma tabela de log. Sem isso você descobre a falha pelo usuário reclamando, e não tem histórico para provar que a carga rodou.',
     resolver:'Adicione um Log de Execução e alimente-o com procedures de início e fim.'},
@@ -6343,19 +6474,19 @@ const FAB_VALID=[
     quando:g=>g.tem(['logtable'])&&!g.tem(['pbimonitor','activator']),
     texto:'Você tem log de execução mas nenhum painel ou alerta sobre ele. O log só vira visibilidade quando alguém consegue lê-lo sem abrir o Fabric.',
     resolver:'Crie um modelo semântico sobre o log e um painel de monitoramento — ou configure alerta no Activator.'},
-  {id:'sem-bronze',nivel:'aviso',titulo:'Múltiplas origens sem camada Bronze',
+  {id:'sem-bronze',nivel:'aviso',antipadrao:true,porqueDoi:'Sem o cru preservado, corrigir uma regra de limpeza exige reextrair de todas as origens — e algumas não deixam voltar no tempo.',custo:'Na primeira regra errada descoberta tarde.',titulo:'Múltiplas origens sem camada Bronze',
     quando:g=>g.contarEtapa('origem')>1&&!g.tem(['bronze']),
     texto:'Com mais de uma origem e sem Bronze, qualquer erro na regra de limpeza exige reextrair tudo da origem — que nem sempre é possível e quase nunca é barato.',
     resolver:'Insira uma camada Bronze guardando o dado como veio, antes de qualquer tratamento.'},
-  {id:'sem-erro',nivel:'aviso',titulo:'Nenhum tratamento de erro',
+  {id:'sem-erro',nivel:'aviso',antipadrao:true,porqueDoi:'A carga falha e ninguém sabe. O relatório mostra o número de ontem como se fosse o de hoje.',custo:'Na primeira falha em dia de reunião.',titulo:'Nenhum tratamento de erro',
     quando:(g,ctx)=>g.tem(['pipeline','copy'])&&!g.tem(['notify','fail','ifcond'])&&!fabCtxTem(ctx,'criticidade','exploratoria'),
     texto:'O fluxo não tem caminho de falha. Uma carga que quebra às 2h da manhã só será descoberta quando alguém notar o número errado.',
     resolver:'Adicione uma Notificação no caminho de falha do pipeline.'},
-  {id:'api-sem-watermark',nivel:'aviso',titulo:'API sem controle incremental',
+  {id:'api-sem-watermark',nivel:'aviso',antipadrao:true,porqueDoi:'Sem controle incremental, cada execução refaz a paginação inteira: a API responde mais devagar, e um dia responde 429.',custo:'Assim que o volume passar de alguns milhares de páginas.',titulo:'API sem controle incremental',
     quando:g=>g.tem(['src_api'])&&!g.tem(['ctrltable']),
     texto:'Ingestão de API sem watermark relê tudo a cada execução. Isso estoura rate limit, cresce sem parar e fica mais lento a cada dia.',
     resolver:'Adicione uma Tabela de Controle guardando o último registro lido por endpoint.'},
-  {id:'wh-como-bronze',nivel:'aviso',titulo:'Warehouse recebendo dado cru',
+  {id:'wh-como-bronze',nivel:'aviso',antipadrao:true,porqueDoi:'Warehouse é caro e é para dado modelado. Dado cru ali é custo alto para guardar o que ainda vai ser jogado fora.',custo:'Na primeira fatura de capacidade que alguém questionar.',titulo:'Warehouse recebendo dado cru',
     quando:g=>g.ligado('copy','warehouse')||g.ligado('copyjob','warehouse')
       ||g.propCfg('copy','bruto','destino','warehouse')||g.propCfg('copy','historica','destino','warehouse'),
     texto:'Há um Copy Data de ingestão bruta gravando no Warehouse. Isso é anti-pattern: o Warehouse é mais caro que o Lakehouse e não foi feito para dado bruto e semi-estruturado.',
@@ -6365,19 +6496,19 @@ const FAB_VALID=[
     texto:'Alguns componentes ainda não têm o objetivo (ou a configuração obrigatória) declarado. Sem isso o app não consegue recomendar o que vem depois deles — e o diagrama não se explica sozinho.',
     resolver:'Selecione o componente marcado com "?" e responda a pergunta que aparece ao lado.',
     detalhe:g=>g.pendentes().map(n=>FAB_COMP[n.comp]?.nome).filter(Boolean).join(', ')},
-  {id:'sproc-lakehouse',nivel:'aviso',titulo:'Procedure apoiada em Lakehouse',
+  {id:'sproc-lakehouse',nivel:'aviso',antipadrao:true,porqueDoi:'O endpoint SQL do Lakehouse é somente leitura. A procedure não vai gravar, e o erro só aparece em execução.',custo:'Na primeira tentativa de rodar.',titulo:'Procedure apoiada em Lakehouse',
     quando:g=>g.tem(['sproc'])&&!g.tem(['warehouse','sqldb']),
     texto:'Existe Stored Procedure na arquitetura, mas nenhum Warehouse ou SQL database. O endpoint do Lakehouse é somente leitura — procedure com escrita não roda sobre ele.',
     resolver:'Adicione um Warehouse (ou SQL database) para hospedar as procedures, ou troque a procedure por Notebook.'},
-  {id:'incremental-sem-controle',nivel:'aviso',titulo:'Carga incremental sem tabela de controle',
+  {id:'incremental-sem-controle',nivel:'aviso',antipadrao:true,porqueDoi:'Sem onde guardar o último valor lido, ou a carga relê tudo, ou alguém escreve a data no pipeline à mão.',custo:'Na segunda execução.',titulo:'Carga incremental sem tabela de controle',
     quando:g=>(g.prop('copy','incremental')||g.prop('lookup','watermark_lk'))&&!g.tem(['ctrltable']),
     texto:'Há carga declarada como incremental, mas nenhuma tabela de controle guardando o watermark. Sem ela, a cada execução a carga não sabe de onde continuar.',
     resolver:'Adicione uma Tabela de Controle e uma procedure que atualize o watermark ao final.'},
-  {id:'controle-sem-log',nivel:'aviso',titulo:'Procedure de controle sem tabela de log',
+  {id:'controle-sem-log',nivel:'aviso',antipadrao:true,porqueDoi:'A procedure controla a execução mas não tem onde registrar. O controle existe só na cabeça de quem escreveu.',custo:'Quando essa pessoa sair de férias.',titulo:'Procedure de controle sem tabela de log',
     quando:g=>g.prop('sproc','controle_exec')&&!g.tem(['logtable']),
     texto:'Existe uma procedure declarada para controlar execução, mas nenhuma tabela de log onde gravar o resultado. A procedure não tem onde escrever.',
     resolver:'Adicione um Log de Execução como destino da procedure.'},
-  {id:'df-volume',nivel:'aviso',titulo:'Dataflow Gen2 em volume alto',
+  {id:'df-volume',nivel:'aviso',antipadrao:true,porqueDoi:'Dataflow Gen2 nessa faixa custa mais CU e demora mais que um Copy Data equivalente, sem entregar nada a mais.',custo:'Todo dia, na conta de capacidade.',titulo:'Dataflow Gen2 em volume alto',
     quando:(g,ctx)=>g.tem(['dataflow'])&&(fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande')),
     texto:'Dataflow Gen2 fica caro e lento em volume alto. O consumo de CU cresce rápido e a janela de carga tende a estourar.',
     resolver:'Troque por Copy Data (movimentação) + Notebook (transformação).'},
@@ -6389,7 +6520,7 @@ const FAB_VALID=[
     quando:g=>g.tem(['pbi'])&&!g.tem(['semantic']),
     texto:'Relatório direto sobre a tabela faz a regra de negócio morar dentro do visual. Com dois ou três relatórios, a mesma métrica passa a ter valores diferentes.',
     resolver:'Crie um Semantic Model com as medidas centralizadas.'},
-  {id:'pbi-sobre-cru',nivel:'aviso',titulo:'Consumo apontando para dado não curado',
+  {id:'pbi-sobre-cru',nivel:'aviso',antipadrao:true,porqueDoi:'Relatório sobre dado não curado significa que a regra de negócio vive no DAX — e cada relatório reimplementa a sua.',custo:'Quando o segundo relatório mostrar outro número para a mesma métrica.',titulo:'Consumo apontando para dado não curado',
     quando:g=>g.ligado('bronze','pbi')||g.ligado('bronze','semantic'),
     texto:'Consumo direto sobre Bronze entrega dado cru ao negócio — sem regra aplicada, sem padronização e sem garantia de qualidade.',
     resolver:'Passe por Silver e Gold antes de expor ao consumo.'},
@@ -6417,15 +6548,15 @@ const FAB_VALID=[
     quando:g=>(g.contarEtapa('origem')>=3)&&!g.tem(['ctrltable']),
     texto:'Com três ou mais origens e sem tabela de controle, você tende a manter um pipeline por objeto. Incluir uma origem nova vira trabalho de desenvolvimento em vez de configuração.',
     resolver:'Adicione uma Tabela de Controle e torne o pipeline dirigido por metadados (Lookup + ForEach).'},
-  {id:'ml-sem-dq',nivel:'aviso',titulo:'Modelo de ML sem validação de entrada',
+  {id:'ml-sem-dq',nivel:'aviso',antipadrao:true,porqueDoi:'Modelo treinado com entrada não validada aprende o defeito do dado e o repete com confiança.',custo:'Na primeira decisão tomada com base na previsão.',titulo:'Modelo de ML sem validação de entrada',
     quando:g=>g.tem(['mlmodel'])&&!g.tem(['dq']),
     texto:'Modelo sobre dado não validado degrada em silêncio: a previsão continua saindo, só que errada — com aparência de ciência.',
     resolver:'Valide a entrada do modelo e registre a métrica de cada execução.'},
-  {id:'critico-sem-alerta',nivel:'aviso',titulo:'Carga crítica sem alerta',
+  {id:'critico-sem-alerta',nivel:'aviso',antipadrao:true,porqueDoi:'Carga marcada como crítica que falha em silêncio é a definição de risco não tratado.',custo:'Na primeira madrugada em que ela quebrar.',titulo:'Carga crítica sem alerta',
     quando:(g,ctx)=>fabCtxTem(ctx,'criticidade','alta')&&g.contar()>=3&&!g.tem(['notify','activator']),
     texto:'Você marcou esta carga como crítica para o negócio, com SLA. Sem alerta, a falha só aparece quando alguém cobra o número.',
     resolver:'Adicione Notificação no caminho de falha, ou Activator sobre o log.'},
-  {id:'equipe-x-ferramenta',nivel:'aviso',titulo:'Ferramenta fora do alcance do time',
+  {id:'equipe-x-ferramenta',nivel:'aviso',antipadrao:true,porqueDoi:'A ferramenta escolhida está fora do que o time mantém. Ela funciona no dia da entrega e vira caixa-preta depois.',custo:'No primeiro bug depois que quem montou saiu.',titulo:'Ferramenta fora do alcance do time',
     quando:(g,ctx)=>fabCtxTem(ctx,'equipe','lowcode')&&g.tem(['notebook','sparkjob']),
     texto:'O contexto diz que quem mantém prefere interface visual, mas a arquitetura depende de Notebook/Spark. Solução boa no papel que o time não mantém vira dívida no primeiro incidente.',
     resolver:'Troque por Dataflow Gen2 onde o volume permitir, ou planeje capacitação antes de colocar em produção.'},
@@ -6433,7 +6564,7 @@ const FAB_VALID=[
     quando:(g,ctx)=>fabCtxTem(ctx,'equipe','sql')&&g.contar()>=4&&!g.tem(['warehouse','sqldb']),
     texto:'Seu time é forte em T-SQL, mas a arquitetura não tem Warehouse. No Lakehouse a escrita por SQL é limitada — o time ficaria dependente de Spark.',
     resolver:'Considere um Warehouse para a camada onde o time precisa escrever.'},
-  {id:'foreach-aninhado',nivel:'aviso',titulo:'Laço dentro de laço',
+  {id:'foreach-aninhado',nivel:'aviso',antipadrao:true,porqueDoi:'O Fabric aceita um único nível de ForEach. O segundo nível simplesmente não executa.',custo:'Na primeira execução.',titulo:'Laço dentro de laço',
     quando:g=>g.nos.some(n=>n.comp==='foreach'&&n.escopo),
     texto:'Há um ForEach dentro de outro. O Fabric aceita apenas um nível de aninhamento de ForEach/Until — essa estrutura não é publicável como está.',
     resolver:'Mova o laço interno para outro pipeline e chame-o por Invoke Pipeline a partir do laço externo.'},
@@ -6441,7 +6572,7 @@ const FAB_VALID=[
     quando:g=>g.nos.some(n=>fabEhContainer(n.comp)&&!g.nos.some(k=>k.escopo===n.id)),
     texto:'Existe um ForEach ou If sem nenhuma atividade dentro. Ele não faz nada assim.',
     resolver:'Selecione o laço e escolha o que roda dentro dele.'},
-  {id:'metadata-sem-controle',nivel:'aviso',titulo:'Estratégia por metadados sem tabela de controle',
+  {id:'metadata-sem-controle',nivel:'aviso',antipadrao:true,porqueDoi:'A estratégia declarada é dirigida por metadados, mas não há de onde ler o escopo — o pipeline volta a ser um por objeto.',custo:'Assim que o segundo objeto entrar.',titulo:'Estratégia por metadados sem tabela de controle',
     quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','metadata')&&g.contar()>=3&&!g.tem(['ctrltable']),
     texto:'A estratégia declarada é dirigida por metadados, mas não há tabela de controle. Sem ela o pipeline não tem de onde ler o escopo — e você volta a manter um pipeline por objeto.',
     resolver:'Adicione uma Tabela de Controle e leia dela com Lookup + ForEach.'},
@@ -6453,15 +6584,15 @@ const FAB_VALID=[
     quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','explicito')&&g.contarEtapa('origem')>=3,
     texto:'Com três ou mais origens, manter um pipeline por objeto cresce linearmente: cada correção precisa ser aplicada em todos.',
     resolver:'Considere migrar para a estratégia dirigida por metadados — revise no contexto.'},
-  {id:'incremental-sem-fonte',nivel:'aviso',titulo:'Carga incremental sem como detectar mudança',
+  {id:'incremental-sem-fonte',nivel:'aviso',antipadrao:true,porqueDoi:'Carga incremental sem forma de saber o que mudou não é incremental: é full disfarçado, ou é perda de dado.',custo:'Silenciosamente, desde a primeira execução.',titulo:'Carga incremental sem como detectar mudança',
     quando:(g,ctx)=>fabCtxTem(ctx,'mudanca','nao')&&(g.prop('copy','incremental')||g.tem(['ctrltable'])),
     texto:'O contexto diz que a origem não permite saber o que mudou, mas a arquitetura assume carga incremental. Sem coluna de controle nem CDC, o watermark não tem de onde sair.',
     resolver:'Use carga full com snapshot em Bronze, ou negocie com o dono da origem a inclusão de uma coluna de data de atualização.'},
-  {id:'sensivel-sem-acesso',nivel:'aviso',titulo:'Dado pessoal sem controle de acesso',
+  {id:'sensivel-sem-acesso',nivel:'aviso',antipadrao:true,porqueDoi:'Dado pessoal sem controle de acesso publicado num workspace é exposição, e é reportável.',custo:'No primeiro acesso indevido — que você só descobre depois.',titulo:'Dado pessoal sem controle de acesso',
     quando:(g,ctx)=>(fabCtxTem(ctx,'sensivel','pessoal')||fabCtxTem(ctx,'sensivel','restrito'))&&g.tem(['semantic','pbi'])&&!g.tem(['rls']),
     texto:'Você indicou dado pessoal ou restrito, e há consumo publicado sem definição de quem vê o quê. É exposição indevida esperando acontecer, e problema de auditoria.',
     resolver:'Defina RLS no modelo semântico antes de publicar.'},
-  {id:'auditoria-sem-bronze',nivel:'aviso',titulo:'Auditoria exigida sem camada Bronze',
+  {id:'auditoria-sem-bronze',nivel:'aviso',antipadrao:true,porqueDoi:'Auditoria exige mostrar o que a origem entregou. Sem Bronze, você só tem o que sobrou depois das regras.',custo:'Na primeira auditoria.',titulo:'Auditoria exigida sem camada Bronze',
     quando:(g,ctx)=>fabCtxTem(ctx,'historico','auditoria')&&g.contar()>=3&&!g.tem(['bronze']),
     texto:'O contexto pede auditoria completa, mas não há Bronze guardando o que a origem entregou. Sem isso não há o que auditar.',
     resolver:'Adicione uma camada Bronze com snapshot datado de cada carga.'},
@@ -6473,23 +6604,23 @@ const FAB_VALID=[
     quando:(g,ctx)=>fabCtxTem(ctx,'janela','apertada')&&g.contar()>=4&&!g.tem(['notebook','sparkjob']),
     texto:'Com janela de minutos e sem processamento distribuído, a carga tende a estourar o tempo disponível.',
     resolver:'Considere Notebook com particionamento e paralelismo nas etapas mais pesadas.'},
-  {id:'muitos-objetos-explicito',nivel:'aviso',titulo:'Centenas de objetos sem metadados',
+  {id:'muitos-objetos-explicito',nivel:'aviso',antipadrao:true,porqueDoi:'Centenas de objetos em pipelines individuais: uma correção vira centenas de edições, e algumas ficam para trás.',custo:'Na primeira correção transversal.',titulo:'Centenas de objetos sem metadados',
     quando:(g,ctx)=>fabCtxTem(ctx,'objetos','centenas')&&g.contar()>=4&&!g.tem(['ctrltable']),
     texto:'Com centenas de objetos e sem tabela de controle, cada inclusão vira desenvolvimento e cada correção precisa ser replicada em todos os pipelines.',
     resolver:'Adote pipeline dirigido por metadados: Tabela de Controle + Lookup + ForEach.'},
-  {id:'import-sem-refresh',nivel:'aviso',titulo:'Modelo Import sem orquestração de atualização',
+  {id:'import-sem-refresh',nivel:'aviso',antipadrao:true,porqueDoi:'Modelo Import sem orquestração de atualização mostra o dado do último refresh manual, com cara de atual.',custo:'No primeiro dia em que alguém esquecer de atualizar.',titulo:'Modelo Import sem orquestração de atualização',
     quando:g=>g.cfg('semantic','modo','import')&&!g.tem(['pipeline','sproc']),
     texto:'O modelo está em Import, então o dado só muda quando alguém atualiza. Sem orquestração de refresh, o relatório mostra o estado do último carregamento — sem avisar que está velho.',
     resolver:'Adicione a atualização do modelo ao final do pipeline de carga.'},
-  {id:'directlake-sem-delta',nivel:'aviso',titulo:'Direct Lake sem camada em Delta',
+  {id:'directlake-sem-delta',nivel:'aviso',antipadrao:true,porqueDoi:'Direct Lake exige Delta. Sem isso, o modelo cai para DirectQuery e a performance despenca sem aviso.',custo:'Na primeira abertura do relatório.',titulo:'Direct Lake sem camada em Delta',
     quando:g=>g.cfg('semantic','modo','directlake')&&!g.tem(['gold','lakehouse','warehouse']),
     texto:'Direct Lake lê tabelas Delta do OneLake. Sem uma camada de consumo materializada lá, o modelo não tem de onde ler.',
     resolver:'Materialize a camada Gold em Lakehouse ou Warehouse.'},
-  {id:'paralelo-sem-log-item',nivel:'aviso',titulo:'ForEach em paralelo com log grosso',
+  {id:'paralelo-sem-log-item',nivel:'aviso',antipadrao:true,porqueDoi:'Iterações em paralelo com log por execução: quando uma falha, você não sabe qual, e reprocessa o lote inteiro.',custo:'Na primeira falha parcial.',titulo:'ForEach em paralelo com log grosso',
     quando:g=>g.cfg('foreach','execucao','paralelo')&&g.tem(['logtable'])&&!g.cfg('logtable','granularidade','item')&&!g.cfg('logtable','granularidade','objeto'),
     texto:'As iterações rodam simultaneamente, mas o log é por execução. Quando uma falhar, você saberá que o lote quebrou — não qual item.',
     resolver:'Mude a granularidade do log para por objeto ou por item.'},
-  {id:'invoke-sem-espera-com-log',nivel:'aviso',titulo:'Log registra sucesso que não aconteceu',
+  {id:'invoke-sem-espera-com-log',nivel:'aviso',antipadrao:true,porqueDoi:'O pai não aguarda o filho e mesmo assim grava log. Ele registra sucesso mesmo quando o filho falhou.',custo:'Sempre — e o histórico bonito esconde isso.',titulo:'Log registra sucesso que não aconteceu',
     quando:g=>g.cfg('invoke','espera','nao')&&g.tem(['logtable']),
     texto:'O pai não aguarda o filho, mas grava log. Ele vai registrar sucesso mesmo quando o filho falhar — histórico bonito e mentiroso, que é pior que não ter log.',
     resolver:'Aguarde a conclusão no Invoke Pipeline, ou registre o resultado dentro do próprio filho.'},
@@ -6505,12 +6636,12 @@ const FAB_VALID=[
     quando:g=>g.cfg('rls','modo','dinamico')&&!g.tem(['ctrltable','dq']),
     texto:'RLS dinâmico depende de uma tabela que liga usuário a permissão. Se ela ficar desatualizada, alguém vê o que não devia — e nenhum erro aparece.',
     resolver:'Trate essa tabela como dado governado: com dono, validação e carga controlada.'},
-  {id:'artefato-no-laco',nivel:'aviso',titulo:'Tabela ou modelo dentro de um laço',
+  {id:'artefato-no-laco',nivel:'aviso',antipadrao:true,porqueDoi:'Tabela dentro do laço sugere uma tabela por iteração. Quem ler o diagrama vai desenhar errado.',custo:'Quando alguém implementar a partir deste desenho.',titulo:'Tabela ou modelo dentro de um laço',
     quando:g=>g.nos.some(n=>n.escopo&&fabEhArtefato(n.comp)),
     texto:'Há artefato — tabela, camada ou modelo — dentro do escopo de um laço. Artefato não roda por iteração: a tabela de log é uma só, escrita a cada item, e um modelo semântico não se atualiza item a item.',
     resolver:'Mova o artefato para fora do laço. Dentro dele fica só o que executa a cada item.',
     detalhe:g=>g.nos.filter(n=>n.escopo&&fabEhArtefato(n.comp)).map(n=>FAB_COMP[n.comp].nome).join(', ')},
-  {id:'laco-sem-ordem',nivel:'aviso',titulo:'Atividades soltas dentro do laço',
+  {id:'laco-sem-ordem',nivel:'aviso',antipadrao:true,porqueDoi:'Atividades soltas dentro do laço rodam ao mesmo tempo, não em sequência. O log grava antes de haver resultado.',custo:'Sempre, e em silêncio.',titulo:'Atividades soltas dentro do laço',
     quando:g=>g.soltosNoLaco().length>0,
     texto:'Atividade dentro de um laço sem ligação com as irmãs roda ao MESMO tempo que elas, não depois. Se a intenção era "chame o pipeline filho e então registre o resultado", sem a seta entre as duas a procedure grava o log antes de haver resultado — e o histórico fica bonito e mentiroso.',
     resolver:'Ligue uma atividade na outra para declarar a ordem dentro da iteração.',
@@ -6520,12 +6651,150 @@ const FAB_VALID=[
     texto:'Tabela não é um item do Fabric: ela mora dentro de um Lakehouse, Warehouse ou SQL Database. Enquanto o diagrama não disser onde, fica em aberto a decisão que manda no resto — log e controle num Warehouse podem ser escritos por Stored Procedure; num Lakehouse, não.',
     resolver:'Ligue a tabela ao armazenamento que a hospeda.',
     detalhe:g=>g.semCasa().map(n=>FAB_COMP[n.comp]?.nome).filter(Boolean).join(', ')},
+
+  // ---- anti-padroes de carga incremental: os que perdem dado em silencio ----
+  {id:'wm-antes-do-sucesso',nivel:'aviso',antipadrao:true,
+   porqueDoi:'A carga falha no meio, mas o watermark já foi movido. A janela inteira é marcada como processada e o dado dela nunca chega.',
+   custo:'Na primeira falha parcial — e você descobre meses depois, conferindo um total.',
+   titulo:'Watermark gravado antes do sucesso',
+   quando:g=>g.cfg('sproc','momento_wm','antes')||g.cfg('notebook','momento_wm','antes'),
+   texto:'O novo watermark está sendo gravado no início da execução. Se a carga quebrar no meio, a próxima execução vai começar depois da janela que não foi processada — e não existe nada no desenho que faça esse dado voltar.',
+   resolver:'Grave o watermark só após o sucesso, de preferência na mesma transação que fecha a carga.'},
+  {id:'wm-sem-margem',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Registro lançado hoje com data de ontem fica para trás do watermark e nunca entra. O total do mês fecha errado, e por pouco.',
+   custo:'Todo mês, um pouco. Ninguém liga o erro à causa.',
+   titulo:'Incremental sem margem de retrocesso',
+   quando:(g,ctx)=>fabCargaDe(ctx)==='watermark'&&(g.cfg('ctrltable','margem_wm','sem')||g.cfg('copy','margem_wm','sem'))&&!fabCtxTem(ctx,'mudanca','cdc'),
+   texto:'A carga incremental não tem margem de retrocesso. Qualquer registro que chegue com data retroativa — digitação manual, integração atrasada, reprocessamento na origem — fica atrás do watermark e não é capturado nunca mais.',
+   resolver:'Declare uma margem (1 dia, 7 dias, até o fechamento) e reprocesse essa janela a cada execução.'},
+  {id:'incremental-sem-delete',nivel:'aviso',antipadrao:true,
+   porqueDoi:'A linha some da origem e continua viva no seu destino para sempre. O total do seu relatório fica maior que o do sistema.',
+   custo:'Quando alguém conferir contra a origem — e a discussão vai ser sobre confiança no dado.',
+   titulo:'Incremental que nunca vê exclusão',
+   quando:(g,ctx)=>['watermark','merge'].includes(fabCargaDe(ctx))&&g.cfg('ctrltable','delete_wm','naoimporta')===false&&!g.temCfg('ctrltable','delete_wm')&&!g.temCfg('sproc','delete_wm')&&g.tem(['ctrltable']),
+   texto:'Watermark por data de atualização não enxerga DELETE físico: a linha desaparece da origem e permanece no destino indefinidamente. Nenhuma execução vai corrigir isso sozinha.',
+   resolver:'Escolha como detectar exclusão: flag de exclusão lógica na origem, reconciliação periódica de chaves, ou trocar para CDC.'},
+  {id:'merge-sem-chave',nivel:'aviso',antipadrao:true,
+   porqueDoi:'MERGE com chave que não é única não dá erro: ele atualiza a linha errada, em silêncio.',
+   custo:'É o defeito mais caro de achar em toda a engenharia de dados.',
+   titulo:'MERGE sobre chave não garantida',
+   quando:g=>g.cfg('sproc','chave_merge','naogarantida')||g.cfg('notebook','chave_merge','naogarantida'),
+   texto:'A unicidade da chave de conciliação não é garantida. Duplicata na origem faz o MERGE escolher arbitrariamente qual linha atualizar, e o resultado muda entre execuções sem nada acusar.',
+   resolver:'Deduplique antes do MERGE, ou troque para append com marcação de versão até a chave ser confiável.'},
+  {id:'full-em-paralelo',nivel:'aviso',antipadrao:true,
+   porqueDoi:'N recargas completas simultâneas contra o mesmo banco transacional: a origem trava, e quem sente é o sistema que roda o negócio.',
+   custo:'Na primeira execução em horário com movimento.',
+   titulo:'Recarga completa em paralelo contra a origem',
+   quando:(g,ctx)=>fabCargaDe(ctx)==='full'&&g.cfg('foreach','execucao','paralelo')&&['relacional','sap','oracle'].includes(Array.isArray(ctx.origem)?ctx.origem[0]:ctx.origem),
+   texto:'Carga completa dentro de um laço em paralelo multiplica a pressão sobre a origem pelo número de iterações simultâneas. Sistema transacional não foi dimensionado para isso.',
+   resolver:'Rode em série, limite o paralelismo, ou torne a carga incremental antes de paralelizar.'},
+  {id:'wm-fonte-ausente',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Declarou incremental por watermark e a origem não tem coluna confiável para isso. O que vai rodar é full com nome de incremental.',
+   custo:'Desde a primeira execução, e a fatura cresce junto com a tabela.',
+   titulo:'Watermark sem coluna que o sustente',
+   quando:g=>g.cfg('ctrltable','coluna_wm','nenhuma')||g.cfg('copy','coluna_wm','nenhuma'),
+   texto:'O padrão de carga declarado é incremental por data ou versão, mas a origem não oferece coluna confiável. Sem ela, ou a carga recarrega tudo, ou perde alteração.',
+   resolver:'Reveja o padrão de carga: full com janela, snapshot, ou negociar CDC com quem mantém a origem.'},
+
+  // ---- modelagem ----
+  {id:'fato-sem-dimdata',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Sem dimensão de data marcada, acumulado do ano e comparação com o período anterior viram contorção em DAX — cada relatório com a sua.',
+   custo:'No primeiro pedido de "mesmo mês do ano passado".',
+   titulo:'Modelo dimensional sem dimensão de data',
+   quando:(g,ctx)=>g.tem(['gold'])&&g.tem(['semantic'])&&['estrela','flocos'].includes(Array.isArray(ctx.modelagem)?ctx.modelagem[0]:ctx.modelagem)&&g.cfg('gold','dimdata','nao'),
+   texto:'O modelo é dimensional e não há dimensão de data declarada. A inteligência de tempo do Power BI depende dela; sem ela, tudo vira medida manual.',
+   resolver:'Crie uma tabela de datas contínua e marque-a como tabela de data no modelo semântico.'},
+  {id:'datavault-sem-apresentacao',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Hubs, links e satélites não são consumíveis por quem faz relatório. Sem uma estrela por cima, o modelo fica correto e inútil.',
+   custo:'Quando o primeiro usuário de negócio tentar usar.',
+   titulo:'Data Vault sem camada de apresentação',
+   quando:(g,ctx)=>(Array.isArray(ctx.modelagem)?ctx.modelagem[0]:ctx.modelagem)==='datavault'&&g.tem(['gold'])&&!g.prop('gold','fato')&&!g.prop('gold','dim')&&!g.tem(['semantic']),
+   texto:'Data Vault é camada intermediária: ele resolve rastreabilidade e carga, não consumo. Falta a apresentação dimensional que o negócio realmente usa.',
+   resolver:'Derive fatos e dimensões a partir dos satélites, e aponte o modelo semântico para eles.'},
+  {id:'scd-sem-corrente',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Sem marca de versão corrente, todo filtro precisa comparar datas de vigência — e quem esquecer soma duas versões da mesma linha.',
+   custo:'No primeiro relatório que alguém montar sozinho.',
+   titulo:'SCD2 sem marca de versão corrente',
+   quando:(g,ctx)=>fabCargaDe(ctx)==='scd2'&&g.tem(['gold'])&&!g.temCfg('gold','scd_cols'),
+   texto:'A dimensão versiona histórico, mas não há indicação de quais atributos versionam nem coluna que identifique a versão vigente. Toda consulta vira filtro por data.',
+   resolver:'Declare os atributos que disparam versão e mantenha uma coluna `corrente` como atalho.'},
+
+  // ---- consumo e performance ----
+  {id:'directlake-sem-guardrail',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Direct Lake que estoura o limite da capacidade cai para DirectQuery em silêncio. O relatório fica lento e nada no painel explica por quê.',
+   custo:'No dia em que a tabela crescer o suficiente — sem aviso nenhum.',
+   titulo:'Direct Lake sem manutenção do Delta por trás',
+   quando:g=>g.cfg('semantic','modo','directlake')&&!g.tem(['otimiza'])&&!g.prop('notebook','manutencao_nb'),
+   texto:'Direct Lake lê o Delta direto, e depende de arquivos compactados e V-Order aplicado. Com carga incremental e sem manutenção, o número de arquivos cresce até o modelo desistir e cair para DirectQuery — sem erro, só lentidão.',
+   resolver:'Agende OPTIMIZE com V-Order nas tabelas que o modelo consome, e acompanhe o tamanho contra o limite da capacidade.'},
+  {id:'import-em-vez-de-directlake',nivel:'sugestao',
+   titulo:'Import onde Direct Lake serviria',
+   quando:(g,ctx)=>g.cfg('semantic','modo','import')&&g.tem(['gold','silver'])&&g.tem(['lakehouse'])&&!fabCtxTem(ctx,'volume','pequeno'),
+   texto:'O dado já está em Delta no Lakehouse e o modelo está em Import: você duplica o dado e passa a depender de uma janela de refresh que pode falhar.',
+   resolver:'Avalie Direct Lake — sem cópia, sem refresh, e o dado do relatório é o mesmo do Lakehouse.'},
+  {id:'endpoint-em-vez-de-delta',nivel:'aviso',antipadrao:true,
+   porqueDoi:'O SQL Analytics Endpoint sincroniza com atraso. Um notebook que lê por ele pode processar o dado de antes da carga que acabou de rodar.',
+   custo:'De forma intermitente, o que é pior que sempre: parece instabilidade.',
+   titulo:'Notebook lendo pelo endpoint SQL em vez do Delta',
+   quando:g=>g.tem(['notebook'])&&g.tem(['sqlendpoint'])&&g.ligado('sqlendpoint','notebook'),
+   texto:'O endpoint SQL é uma camada de leitura com sincronização própria, e ela não é instantânea. Spark lendo a tabela Delta direta vê o estado real; lendo pelo endpoint, pode ver o anterior.',
+   resolver:'Aponte o notebook para a tabela Delta do Lakehouse. O endpoint é para consumo por ferramenta SQL.'},
+
+  // ---- operacao e FinOps ----
+  {id:'incremental-sem-manutencao',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Cada execução incremental grava arquivos pequenos. Depois de alguns meses a leitura fica lenta sem ninguém ter mudado nada.',
+   custo:'Gradualmente, e a causa é invisível em qualquer painel de uso.',
+   titulo:'Carga incremental sem manutenção das tabelas Delta',
+   quando:(g,ctx)=>['watermark','cdc','merge','append','scd2'].includes(fabCargaDe(ctx))&&g.tem(['bronze','silver','gold'])&&!g.tem(['otimiza'])&&!g.prop('notebook','manutencao_nb'),
+   texto:'Escrita incremental frequente cria o problema de arquivos pequenos: milhares de arquivos minúsculos que o motor precisa abrir um a um. Não é otimização prematura — é manutenção, e sem ela a degradação é certa.',
+   resolver:'Agende OPTIMIZE e VACUUM sobre as tabelas que recebem escrita incremental.'},
+  {id:'segredo-no-pipeline',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Credencial em parâmetro de pipeline vai para o Git, aparece no log de execução e sobrevive em toda cópia do workspace.',
+   custo:'É o achado mais comum de qualquer auditoria — e não tem como desfazer depois de vazar.',
+   titulo:'Origem com credencial e sem cofre de segredos',
+   quando:(g,ctx)=>g.contarEtapa('origem')>0&&g.tem(['pipeline','copy','dataflow','notebook'])&&!g.tem(['keyvault'])&&!fabCtxTem(ctx,'criticidade','exploratoria'),
+   texto:'Há acesso a origem externa e nenhum cofre de segredos no desenho. Toda credencial vai acabar em parâmetro, conexão ou célula de notebook.',
+   resolver:'Adicione Key Vault com identidade gerenciada e referencie o segredo pela conexão.'},
+  {id:'log-sem-retencao',nivel:'sugestao',
+   titulo:'Log de execução sem política de retenção',
+   quando:g=>g.tem(['logtable'])&&!g.temCfg('logtable','retencao'),
+   texto:'A tabela de log é a que mais cresce e a que ninguém lembra de limpar. Log por item de uma carga de dezenas de objetos vira volume de verdade em poucos meses, e não tem valor nenhum depois dos primeiros.',
+   resolver:'Declare a retenção: detalhe curto e agregado permanente costuma ser o melhor equilíbrio.'},
+  {id:'controle-sem-desligar',nivel:'sugestao',
+   titulo:'Tabela de controle sem como desligar uma carga',
+   quando:g=>g.tem(['ctrltable'])&&!g.temCfg('ctrltable','ativo'),
+   texto:'Em incidente, a primeira coisa que se quer é desligar a carga de um objeto sem publicar nada. Sem uma coluna que o pipeline respeite, a única saída é editar e publicar sob pressão.',
+   resolver:'Inclua uma coluna `ativo` na tabela de controle e faça o Lookup filtrar por ela.'},
+  {id:'dev-prod-juntos',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Um notebook em teste consome a mesma CU do refresh do relatório do diretor. Quando tudo fica lento junto, ninguém liga uma coisa à outra.',
+   custo:'No primeiro experimento pesado em horário comercial.',
+   titulo:'Desenvolvimento e produção na mesma capacidade',
+   quando:(g,ctx)=>(fabCtxTem(ctx,'criticidade','alta')||fabCtxTem(ctx,'volume','muitogrande'))&&g.tem(['workspace'])&&!g.tem(['capacidade'])&&!g.cfg('workspace','organizacao','ambiente'),
+   texto:'Carga crítica sem separação de capacidade declarada. No Fabric tudo divide a mesma CU: experimento e produção competem, e o throttling atinge quem estiver por último.',
+   resolver:'Declare a capacidade e separe ambiente de desenvolvimento do de produção.'},
+  {id:'gateway-em-paralelo',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Paralelismo alto contra origem on-premises não acelera nada: o gargalo é o gateway, e ele fica na fila do mesmo jeito.',
+   custo:'Você paga CU por espera, e ainda pressiona a origem.',
+   titulo:'Paralelismo alto através de gateway on-premises',
+   quando:(g,ctx)=>g.cfg('foreach','execucao','paralelo')&&['relacional','sap','oracle','mainframe'].includes(Array.isArray(ctx.origem)?ctx.origem[0]:ctx.origem)&&!fabCtxTem(ctx,'estrategia','zeroetl'),
+   texto:'Iterações em paralelo contra origem que passa por gateway não escalam: o gateway processa em fila. O ganho é ilusório e a origem sente a pressão.',
+   resolver:'Limite o paralelismo ao que o gateway aguenta, ou distribua a carga em janelas.'},
+  {id:'pip-em-producao',nivel:'sugestao',
+   titulo:'Notebook de produção instalando dependência a cada execução',
+   quando:(g,ctx)=>g.tem(['notebook'])&&fabCtxTem(ctx,'criticidade','alta')&&!g.tem(['deploy']),
+   texto:'Notebook crítico sem ambiente versionado tende a resolver dependência com instalação em tempo de execução. Isso paga tempo de sessão toda vez e quebra no dia em que a versão do pacote mudar.',
+   resolver:'Fixe as bibliotecas no ambiente Spark do workspace e versione o notebook com Git.'},
+  {id:'particao-cardinalidade',nivel:'sugestao',
+   titulo:'Partição provavelmente fina demais',
+   quando:(g,ctx)=>g.tem(['bronze'])&&(fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande'))&&!g.tem(['otimiza']),
+   texto:'Volume alto em Delta pede particionamento — e particionar por coluna de alta cardinalidade cria milhares de pastas com um arquivo minúsculo cada, que é pior que não particionar.',
+   resolver:'Particione por data (dia ou mês) e resolva o resto com OPTIMIZE e ordenação.'},
   {id:'orfao',nivel:'sugestao',titulo:'Componente solto no diagrama',
     quando:g=>g.orfaos().length>0,
     texto:'Há componentes sem nenhuma ligação. Ou falta conectá-los, ou eles não pertencem a esta arquitetura.',
     resolver:'Conecte-os ao fluxo ou remova-os.',
     detalhe:g=>g.orfaos().map(n=>FAB_COMP[n.comp]?.nome).filter(Boolean).join(', ')},
-  {id:'ciclo',nivel:'aviso',titulo:'Dependência circular',
+  {id:'ciclo',nivel:'aviso',antipadrao:true,porqueDoi:'Um componente depende de si mesmo. Em orquestração isso não roda: trava.',custo:'Na primeira execução.',titulo:'Dependência circular',
     quando:g=>g.temCiclo(),
     texto:'Existe um ciclo no fluxo: um componente depende, direta ou indiretamente, de si mesmo. Em orquestração isso trava a execução.',
     resolver:'Quebre o ciclo — normalmente separando leitura de escrita, ou introduzindo uma camada intermediária.'}
@@ -6881,6 +7150,29 @@ const FAB_PROP={
        ]}
     ]},
 
+  gold:{
+    propositos:[
+      {id:'fato',nome:'Tabela de fato',desc:'Os eventos ou medidas do negócio, no grão declarado. É o centro da estrela.',
+       proximos:[
+         {id:'semantic',nivel:'rec',porque:'O fato só vira métrica dentro de um modelo semântico — antes disso ele é uma tabela grande.'},
+         {id:'sproc',nivel:'rec',porque:'A carga do fato costuma ser um MERGE que resolve as chaves substitutas das dimensões.'}
+       ]},
+      {id:'dim',nome:'Tabela de dimensão',desc:'Os atributos pelos quais o negócio corta os números. É o que faz o relatório ser navegável.',
+       proximos:[
+         {id:'semantic',nivel:'rec',porque:'Dimensão sem relacionamento no modelo semântico não filtra nada.'},
+         {id:'sproc',nivel:'ok',porque:'Dimensão com histórico exige MERGE que fecha a vigência da versão anterior.'}
+       ]},
+      {id:'hub_sat',nome:'Hub / Link / Satélite (Data Vault)',desc:'Rastreabilidade total e carga paralelizável. Não é camada de consumo: exige uma estrela por cima.',
+       proximos:[
+         {id:'gold',nivel:'rec',porque:'Data Vault é camada intermediária. Sem uma apresentação dimensional em cima, ninguém do negócio consegue usar.'},
+         {id:'notebook',nivel:'rec',porque:'Carga de satélite é altamente paralelizável — é onde Spark rende.'}
+       ]},
+      {id:'obt',nome:'Tabela larga (One Big Table)',desc:'Tudo desnormalizado. Bom para ML e exploração; ruim para BI corporativo, porque métrica sem dimensão compartilhada não reconcilia entre relatórios.',
+       proximos:[
+         {id:'mlmodel',nivel:'rec',porque:'Tabela larga é o formato que o treino de modelo espera.'},
+         {id:'notebook',nivel:'rec',porque:'A montagem da tabela larga é junção pesada — trabalho de Spark.'}
+       ]}
+    ]},
   semantic:{
     propositos:[
       {id:'corporativo',nome:'Modelo corporativo compartilhado',
@@ -7051,6 +7343,7 @@ function fabAplicar(json){
   if(!fabArqs.some(a=>a.id===fabCur))fabCur=fabArqs[0]?.id||'';
   _fabSel=null;
   _fabHistCong=true;fabSave();_fabHistCong=false;
+  _fabAP=null;_fabAPFoco=null;   // desfazer nao e inserir: nao acusa
   fabRender();
 }
 function fabDesfazer(){if(!_fabHist.length){toast('Nada para desfazer');return}_fabHistFut.push(fabEstado());fabAplicar(_fabHist.pop());toast('Desfeito')}
@@ -7115,6 +7408,8 @@ function fabGrafo(){
     // consultas sobre a intencao declarada, nao so sobre o tipo do componente
     prop:(comp,p)=>nos.some(n=>n.comp===comp&&n.prop===p),
     cfg:(comp,k,v)=>nos.some(n=>n.comp===comp&&n.cfg&&n.cfg[k]===v),
+    // a decisao foi tomada, qualquer que tenha sido o valor
+    temCfg:(comp,k)=>nos.some(n=>n.comp===comp&&n.cfg&&n.cfg[k]!==undefined&&n.cfg[k]!==''),
     propCfg:(comp,p,k,v)=>nos.some(n=>n.comp===comp&&n.prop===p&&n.cfg&&n.cfg[k]===v),
     pendentes:()=>nos.filter(n=>fabTemPendencia(n)),
     orfaos:()=>nos.length<2?[]:nos.filter(n=>!ligs.some(e=>e.from===n.id||e.to===n.id)),
@@ -7447,6 +7742,157 @@ function fabValidar(){
   return out.sort((a,b)=>(a.nivel==='aviso'?0:1)-(b.nivel==='aviso'?0:1));
 }
 
+
+// ---------- mapa de estrategias ----------
+// A pergunta que originou esta ferramenta era "quais caminhos existem aqui?".
+// O motor de sugestoes responde "o que vem depois desta peca" e o roteiro
+// responde "que decisoes faltam" — nenhum dos dois mostra o LEQUE. Este mapa
+// mostra: para cada estrategia declaravel, o que ela custa, quando deixa de
+// valer, e como ela se combina com cada padrao de carga.
+//
+// `cargas` e a grade: 6 estrategias x 7 padroes = 42 celulas, cada uma com
+// veredito e motivo. Celula sem motivo e bug, nao lacuna — o teste cobra.
+//   ideal          = e o caso canonico desta combinacao
+//   viavel         = funciona, com a ressalva escrita
+//   desaconselhado = da para fazer e voce vai se arrepender; o motivo diz quando
+//   incoerente     = as duas escolhas se contradizem; nao e questao de gosto
+const FAB_VEREDITO={
+  ideal:{rot:'ideal',cor:'#1e6b34',bg:'#dff2e1'},
+  viavel:{rot:'viável',cor:'#0a5fa8',bg:'#e4eefb'},
+  desaconselhado:{rot:'evite',cor:'#8a5a00',bg:'#fdf0d9'},
+  incoerente:{rot:'incoerente',cor:'#a3312c',bg:'#fbe0de'}
+};
+const FAB_CARGAS=['watermark','cdc','merge','scd2','full','snapshot','append'];
+
+const FAB_ESTRATEGIA=[
+  {id:'metadata',nome:'Dirigido por metadados',
+   resumo:'Uma tabela de controle define o que processar; um pipeline com Lookup e ForEach atende N objetos.',
+   custoMontagem:'alto',custoManutencao:'baixo',
+   paga:'A partir de mais ou menos cinco objetos parecidos. Incluir uma origem nova vira INSERT na tabela, não desenvolvimento — e é isso que muda a conta de manutenção.',
+   naoPaga:'Com até três objetos, ou quando cada objeto tem regra própria. Aí os metadados só escondem a lógica sem entregar escala: você lê a tabela para descobrir o que o pipeline faz.',
+   posicoes:['controle','leitura','iteracao'],
+   antipadroes:['metadata-sem-controle','muitos-objetos-explicito','paralelo-sem-log-item'],
+   cargas:{
+     watermark:['ideal','O caso canônico. A tabela de controle guarda a coluna e o último valor POR OBJETO; o Lookup lê, o laço processa, a procedure grava o novo valor só depois do sucesso.'],
+     cdc:['viavel','A tabela de controle passa a guardar a posição do change feed em vez de uma data. Ganha DELETE de graça; perde a facilidade de reprocessar uma janela por data.'],
+     merge:['ideal','Os metadados dizem qual é a chave de cada objeto, e uma única procedure genérica de MERGE atende todos. É onde a estratégia mais se paga.'],
+     scd2:['viavel','Dá para parametrizar quais atributos versionam, mas procedure genérica de SCD2 é das peças mais difíceis de manter que existem. Só encare com origem estável.'],
+     full:['viavel','O laço trata N objetos e recarrega cada um inteiro. Serve enquanto o volume por objeto for pequeno — e migrar para incremental depois é UPDATE na tabela, não redesenho.'],
+     snapshot:['desaconselhado','Metadados existem para não repetir trabalho; snapshot de N objetos multiplica storage sem multiplicar decisão. Se o motivo é auditoria, guarde o Bronze e derive de lá.'],
+     append:['viavel','Simples, desde que a chave de execução entre na tabela destino. Sem isso, reprocessar uma janela duplica tudo e ninguém percebe.']
+   }},
+
+  {id:'explicito',nome:'Um pipeline por objeto',
+   resumo:'Cada carga é escrita à mão, legível de ponta a ponta.',
+   custoMontagem:'baixo',custoManutencao:'alto',
+   paga:'Poucos objetos, cada um com regra própria, e um time que precisa depurar rápido. A leitura direta vale mais que a economia de peças.',
+   naoPaga:'A partir de umas dez cargas. O custo não é montar, é corrigir: um bug de watermark vira dez correções, e a décima sempre fica para trás.',
+   posicoes:['exp_padrao'],
+   antipadroes:['explicito-em-escala','muitos-objetos-explicito'],
+   cargas:{
+     watermark:['viavel','Cada pipeline guarda o próprio watermark. Funciona — a conta chega quando o terceiro pipeline precisa da mesma correção e só dois recebem.'],
+     cdc:['viavel','Um pipeline por origem consumindo change feed é legível. Só cuide para a ordem de aplicação ser a mesma em todos.'],
+     merge:['viavel','MERGE escrito para a chave daquele objeto é o mais claro que existe. O risco é divergir entre pipelines com o tempo.'],
+     scd2:['desaconselhado','SCD2 replicado à mão em N pipelines é onde as regras divergem em silêncio: um fecha a vigência, outro esquece, e o relatório soma duas versões da mesma linha.'],
+     full:['ideal','Poucos objetos, carga completa, pipeline que se lê de cima a baixo. É o caminho mais honesto quando a tabela cabe na janela.'],
+     snapshot:['viavel','Trivial de escrever. Só declare a retenção junto — snapshot sem política de descarte é a fatura crescendo sozinha.'],
+     append:['ideal','Insere e pronto. Combina com a simplicidade da estratégia.']
+   }},
+
+  {id:'codigo',nome:'Code-first (Notebook / Spark)',
+   resumo:'A lógica de carga vive em código versionado, testável e revisável em PR.',
+   custoMontagem:'medio',custoManutencao:'medio',
+   paga:'Volume alto, transformação complexa, ou exigência de teste e revisão. É a única estratégia em que a lógica de carga entra no Git com histórico de quem mudou o quê.',
+   naoPaga:'Sem ninguém confortável com Python e Spark no time. Notebook que só uma pessoa entende é pior que pipeline visual que três mantêm.',
+   posicoes:['cod_versionamento','cod_param'],
+   antipadroes:['equipe-x-ferramenta','pip-em-producao'],
+   cargas:{
+     watermark:['ideal','O notebook lê o watermark, filtra, grava e atualiza — e dá para escrever teste para isso, coisa que pipeline visual não permite.'],
+     cdc:['ideal','Change feed do Delta e do Mirroring é consumido nativamente em Spark, com a ordem de aplicação explícita no código.'],
+     merge:['ideal','MERGE do Delta é uma linha, trata concorrência e é atômico. É o melhor que a plataforma oferece para upsert.'],
+     scd2:['ideal','É onde code-first mais ganha: SCD2 em Delta MERGE é legível e testável — coisa que procedure genérica parametrizada raramente é.'],
+     full:['viavel','Funciona, mas usar Spark para recarregar uma tabela pequena é pagar sessão para nada. Copy Data resolve mais barato.'],
+     snapshot:['viavel','Escrever partição por data de snapshot é trivial em Spark. Combine com OPTIMIZE, ou o número de arquivos vira o gargalo.'],
+     append:['ideal','Append idempotente com chave de execução é padrão em Spark, e o reprocessamento fica seguro.']
+   }},
+
+  {id:'lowcode',nome:'Low-code (Dataflow Gen2)',
+   resumo:'A área de negócio mantém sozinha, com Power Query.',
+   custoMontagem:'baixo',custoManutencao:'medio',
+   paga:'Cadastro, planilha, de-para e volume baixo, mantidos por quem conhece a regra de negócio e não vai abrir um pipeline. Autonomia vale mais que elegância aqui.',
+   naoPaga:'Quando o volume cresce ou a transformação vira lógica de verdade. Dataflow em volume alto fica caro e lento — e a lógica não entra em revisão de código.',
+   posicoes:['low_dono','low_limite'],
+   antipadroes:['df-volume','equipe-x-ferramenta'],
+   cargas:{
+     watermark:['viavel','O incremental refresh existe, mas o controle mora dentro do Dataflow: você não consegue auditar de fora qual janela rodou nem reprocessar uma específica.'],
+     cdc:['incoerente','Dataflow Gen2 não consome change feed. O "incremental" dele é filtro por data, que é outra coisa — e não vê exclusão.'],
+     merge:['desaconselhado','Dá para apontar o destino em modo de atualização, mas sem controle de concorrência e sem log por linha. No primeiro conflito você não saberá o que aconteceu.'],
+     scd2:['incoerente','Versionamento de dimensão em Power Query não tem transação e vira ilegível na primeira manutenção. Se precisa de SCD2, esta não é a estratégia.'],
+     full:['ideal','Recarga completa de cadastro pequeno é exatamente para isso que o Dataflow serve — e a área mantém sem depender de você.'],
+     snapshot:['viavel','Funciona para volume pequeno. Declare a retenção, porque ninguém da área vai lembrar de limpar.'],
+     append:['viavel','Aceitável, mas sem controle de idempotência: rodar duas vezes duplica, e o Dataflow não vai avisar.']
+   }},
+
+  {id:'zeroetl',nome:'Zero-ETL (Mirroring / Shortcut)',
+   resumo:'Sem pipeline para manter: o dado é espelhado ou apontado onde já está.',
+   custoMontagem:'baixo',custoManutencao:'baixo',
+   paga:'Origem suportada, e você quer o dado no Fabric sem manter ingestão. É o menor custo de operação que existe na plataforma — não há janela, não há retry, não há log de carga porque não há carga.',
+   naoPaga:'Quando você precisa filtrar, transformar ou controlar o que entra. O espelho traz o modelo da origem inteiro, com os defeitos dele. E origem não suportada simplesmente não tem essa opção.',
+   posicoes:['zero_lacuna'],
+   antipadroes:['zeroetl-com-pipeline'],
+   cargas:{
+     watermark:['incoerente','Watermark existe para VOCÊ controlar a janela. O Mirroring não te dá esse controle — e não precisa dar. Se você precisa de watermark, o que você quer não é zero-ETL.'],
+     cdc:['ideal','É literalmente o que o Mirroring faz: consome o change feed da origem e materializa em Delta, exclusões inclusive.'],
+     merge:['incoerente','O merge acontece dentro do serviço, não no seu desenho. Colocar um MERGE seu em cima do espelho é refazer o que já foi feito.'],
+     scd2:['desaconselhado','O espelho traz o estado atual. Histórico exige derivar do change feed do Delta a jusante — o que já é outra estratégia, e vale declarar como tal.'],
+     full:['incoerente','Não existe carga para ser completa: a replicação é contínua. Se você está pensando em recarga, você saiu do zero-ETL.'],
+     snapshot:['viavel','Derivar snapshot a partir do espelho é legítimo, e é a forma de ter histórico sem manter ingestão. O snapshot é seu; a replicação continua do serviço.'],
+     append:['viavel','Materializar o change feed em tabela append-only é o caminho para auditoria em cima de espelho.']
+   }},
+
+  {id:'streaming',nome:'Streaming-first',
+   resumo:'O evento entra em fluxo contínuo e é roteado por Eventstream.',
+   custoMontagem:'medio',custoManutencao:'alto',
+   paga:'Quando o dado perde valor em minutos: detecção de anomalia, telemetria de planta, alerta operacional. É a única estratégia que entrega latência de segundos.',
+   naoPaga:'Quando "tempo real" na verdade quer dizer "de hora em hora". Streaming custa complexidade operacional o tempo todo, inclusive nos 90% do tempo em que ninguém está olhando.',
+   posicoes:['stream_janela','stream_atraso'],
+   antipadroes:['stream-sem-eventhouse','evento-sem-observador'],
+   cargas:{
+     watermark:['desaconselhado','Streaming tem watermark, mas é de tempo de EVENTO — outra coisa do watermark de carga em lote. Misturar os dois no mesmo desenho é receita de confusão na hora do incidente.'],
+     cdc:['viavel','Change feed roteado por Eventstream é caso real, e o mais próximo de tempo real que se consegue com origem transacional.'],
+     merge:['viavel','Só a jusante: o fluxo é append por natureza, e o merge acontece na materialização periódica. Não tente conciliar dentro do stream.'],
+     scd2:['desaconselhado','Vigência exige ordem e transação, que fluxo contínuo não garante. Derive o SCD2 em lote a partir do que foi persistido.'],
+     full:['incoerente','Fluxo contínuo não tem "execução" para ser completa. Se existe recarga, existe lote — e a estratégia é outra.'],
+     snapshot:['desaconselhado','Tirar foto de um fluxo é escolher um instante arbitrário. Se você precisa do estado consolidado, persista e derive em lote.'],
+     append:['ideal','É a natureza do fluxo: cada evento acrescenta. Só garanta idempotência por id de evento, porque reentrega acontece.']
+   }}
+];
+const FAB_EST_MAP=Object.fromEntries(FAB_ESTRATEGIA.map(e=>[e.id,e]));
+
+// veredito de uma combinacao, sempre com motivo
+function fabVeredito(estId,cargaId){
+  const e=FAB_EST_MAP[estId];if(!e)return null;
+  const c=e.cargas[cargaId];if(!c)return null;
+  return {v:c[0],porque:c[1],...FAB_VEREDITO[c[0]]};
+}
+// as estrategias declaradas no contexto, e o padrao de carga declarado
+function fabEstrategiasDo(ctx){
+  return FAB_ESTRATEGIA.filter(e=>fabCtxTem(ctx,'estrategia',e.id));
+}
+function fabCargaDe(ctx){
+  const c=Array.isArray(ctx.carga)?ctx.carga[0]:ctx.carga;
+  return (c&&c!=='naosei')?c:null;
+}
+// combinacoes declaradas que se contradizem: e o alerta mais barato que existe,
+// porque ele aparece ANTES de qualquer peca ser desenhada
+function fabConflitosDeclarados(ctx){
+  const carga=fabCargaDe(ctx);if(!carga)return [];
+  return fabEstrategiasDo(ctx).map(e=>{
+    const v=fabVeredito(e.id,carga);
+    return (v&&(v.v==='incoerente'||v.v==='desaconselhado'))?{est:e,carga,...v}:null;
+  }).filter(Boolean);
+}
+
 // ---------- roteiro: o esqueleto da estrategia ----------
 // O motor de sugestoes sabe dizer "o que pode vir depois DESTA peca". Isso nao e
 // uma arquitetura: e um passeio. Ele nunca cobra o caminho inteiro, entao a
@@ -7462,19 +7908,19 @@ function fabValidar(){
 // resolvida, `apos` diz de onde a peca se pendura, `dentro` diz se ela roda
 // dentro do laco.
 const FAB_ROTEIRO=[
-  {id:'controle', foco:['origem'], se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
+  {id:'controle', fase:'Estratégia', foco:['origem'], se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
    t:'Onde fica a lista do que precisa ser processado?',
    dica:'Dirigido por metadados começa aqui. Enquanto o escopo estiver escrito dentro do pipeline, incluir um objeto novo é desenvolvimento — não configuração.',
    ok:g=>g.tem(['ctrltable']), solto:true,
    op:[{id:'ctrltable',porque:'A tabela que diz o que carregar, de onde, para onde, em que modo e até onde já foi. É ela que transforma N pipelines em um.'}]},
 
-  {id:'leitura', foco:['ctrltable'], se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
+  {id:'leitura', fase:'Estratégia', foco:['ctrltable'], se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
    t:'Quem lê essa lista em tempo de execução?',
    dica:'A tabela sozinha não faz nada. Alguém precisa lê-la e devolver o resultado para o pipeline decidir o que fazer.',
    ok:g=>g.tem(['lookup']), apos:['ctrltable'],
    op:[{id:'lookup',porque:'Lookup lê a tabela de controle e devolve a lista de objetos ativos. É o par direto dela.'}]},
 
-  {id:'iteracao', foco:['lookup','ctrltable'], se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
+  {id:'iteracao', fase:'Estratégia', foco:['lookup','ctrltable'], se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
    t:'Como repetir a mesma lógica para cada objeto da lista?',
    dica:'É aqui que se decide se o pipeline cresce em tamanho ou em dados. Também é a decisão que define o isolamento de erro: o que acontece quando o objeto 17 falha.',
    ok:g=>g.tem(['foreach','invoke']), apos:['lookup'],
@@ -7482,7 +7928,7 @@ const FAB_ROTEIRO=[
      {id:'foreach',porque:'ForEach itera sobre o que o Lookup devolveu. É o coração do padrão dirigido por metadados.'},
      {id:'invoke',porque:'Se a lógica por objeto já é grande, chame um pipeline filho: o pai orquestra, o filho executa. Também é a saída oficial quando faltaria um segundo nível de laço.'}]},
 
-  {id:'movimento', foco:['foreach','lookup','origem','pipeline'],
+  {id:'movimento', fase:'Ingestão', foco:['foreach','lookup','origem','pipeline'],
    t:'O que efetivamente traz o dado da origem?',
    dica:'Esta é a decisão de custo e de manutenção da ingestão. Ela depende menos do que você prefere e mais do volume, da origem e de quem vai manter isso daqui a um ano.',
    ok:g=>g.tem(['copy','copyjob','dataflow','notebook','mirroring','shortcut','eventstream','sparkjob']),
@@ -7503,7 +7949,7 @@ const FAB_ROTEIRO=[
      {id:'eventstream',porque:'Fluxo contínuo de eventos: o caminho nativo quando o dado chega empurrado, não consultado.',
       se:ctx=>fabCtxTem(ctx,'freq','realtime')||fabCtxTem(ctx,'estrategia','streaming')}]},
 
-  {id:'aterrissagem', foco:['copy','copyjob','dataflow','notebook','mirroring','shortcut','eventstream','sparkjob'],
+  {id:'aterrissagem', fase:'Ingestão', foco:['copy','copyjob','dataflow','notebook','mirroring','shortcut','eventstream','sparkjob'],
    t:'Onde o dado aterrissa quando entra no Fabric?',
    dica:'O destino da ingestão decide o que dá para fazer depois. Gravar direto em camada tratada parece economia de tempo até o primeiro reprocessamento.',
    ok:g=>g.tem(['bronze','lakehouse','warehouse','eventhouse']),
@@ -7515,7 +7961,7 @@ const FAB_ROTEIRO=[
       se:ctx=>fabCtxTem(ctx,'freq','realtime')||fabCtxTem(ctx,'origem','pi')},
      {id:'lakehouse',porque:'O item do Fabric que hospeda as camadas em Delta. É onde Bronze, Silver e Gold moram.'}]},
 
-  {id:'registro', foco:['bronze','lakehouse','warehouse','eventhouse','copy','copyjob','foreach','notebook','dataflow'], se:ctx=>!fabCtxTem(ctx,'criticidade','baixa'),
+  {id:'registro', fase:'Controle', foco:['bronze','lakehouse','warehouse','eventhouse','copy','copyjob','foreach','notebook','dataflow'], se:ctx=>!fabCtxTem(ctx,'criticidade','exploratoria'),
    t:'Como você vai saber o que rodou, e o que falhou?',
    dica:'Sem isso a resposta para "a carga de ontem funcionou?" é abrir o Fabric e olhar. Com dezenas de objetos, é a diferença entre reprocessar um e reprocessar quarenta.',
    ok:g=>g.tem(['sproc'])||g.prop('notebook','log'),
@@ -7526,13 +7972,13 @@ const FAB_ROTEIRO=[
      {id:'notebook',porque:'Se a carga já é código, registrar de dentro dele evita uma ida e volta ao Warehouse.',
       se:ctx=>fabCtxTem(ctx,'equipe','codigo')||fabCtxTem(ctx,'estrategia','codigo')}]},
 
-  {id:'log', foco:['sproc','notebook'], se:ctx=>!fabCtxTem(ctx,'criticidade','baixa'),
+  {id:'log', fase:'Controle', foco:['sproc','notebook'], se:ctx=>!fabCtxTem(ctx,'criticidade','exploratoria'),
    t:'Onde esse registro é gravado?',
    dica:'O log é uma tabela, não uma atividade: ele não roda. Quem grava nele é a procedure — e é a granularidade dessa tabela que decide se você reprocessa um objeto ou quarenta.',
    ok:g=>g.tem(['logtable']), apos:['sproc','notebook'],
    op:[{id:'logtable',porque:'Uma linha por execução (ou por objeto), com status, duração, volume e erro. É o que responde "a carga de ontem funcionou?" sem abrir o Fabric.'}]},
 
-  {id:'casa_controle', foco:['logtable','ctrltable','sproc'],
+  {id:'casa_controle', fase:'Controle', foco:['logtable','ctrltable','sproc'],
    t:'Onde vivem as tabelas de controle e de log?',
    dica:'Elas precisam de escrita transacional e consulta SQL. É essa escolha que decide se dá para escrevê-las por Stored Procedure — o endpoint do Lakehouse é só de leitura.',
    ok:g=>!g.semCasa(['logtable','ctrltable']).length,
@@ -7542,7 +7988,7 @@ const FAB_ROTEIRO=[
      {id:'sqldb',porque:'SQL database do Fabric quando o controle serve também uma aplicação operacional, e não só o analítico.',
       se:ctx=>fabCtxTem(ctx,'equipe','sql')}]},
 
-  {id:'casa_camadas', foco:['bronze','silver','gold'],
+  {id:'casa_camadas', fase:'Controle', foco:['bronze','silver','gold'],
    t:'Onde ficam as camadas de dado?',
    dica:'Bronze, Silver e Gold são tabelas Delta — elas moram num item que as hospede. Misturar camada de dado com tabela de controle no mesmo item é o que depois trava a permissão.',
    ok:g=>!g.semCasa(['bronze','silver','gold']).length,
@@ -7552,7 +7998,7 @@ const FAB_ROTEIRO=[
      {id:'warehouse',porque:'Se a camada curada é lida por T-SQL e mantida por procedure, o Warehouse hospeda melhor que o Lakehouse.',
       se:ctx=>fabCtxTem(ctx,'equipe','sql')}]},
 
-  {id:'erro', foco:['sproc','logtable','foreach','copy'], se:ctx=>fabCtxTem(ctx,'criticidade','alta'),
+  {id:'erro', fase:'Controle', foco:['sproc','logtable','foreach','copy'], se:ctx=>fabCtxTem(ctx,'criticidade','alta'),
    t:'O que acontece quando a carga falha?',
    dica:'Você marcou esta carga como crítica. Falha silenciosa em carga crítica é o pior defeito de uma arquitetura: o número errado circula como se fosse certo.',
    ok:g=>g.tem(['notify','fail','activator']),
@@ -7562,7 +8008,7 @@ const FAB_ROTEIRO=[
      {id:'fail',porque:'Interrompe explicitamente. Em regra crítica, parar é melhor que propagar dado inválido para a camada de cima.'},
      {id:'activator',porque:'Alerta baseado em regra sobre o próprio dado, sem alguém olhando painel.'}]},
 
-  {id:'limpeza', foco:['bronze','lakehouse','eventhouse'], se:ctx=>!fabCtxTem(ctx,'objetivo','ingestao'),
+  {id:'limpeza', fase:'Transformação', foco:['bronze','lakehouse','eventhouse'], se:ctx=>!fabCtxTem(ctx,'objetivo','ingestao'),
    t:'O dado cru está guardado. O que o torna confiável?',
    dica:'Bronze é fiel à origem — inclusive aos defeitos dela. Alguém precisa tipar, padronizar e validar antes que isso vire número no relatório.',
    ok:g=>g.tem(['silver']), apos:['bronze','lakehouse'],
@@ -7573,25 +8019,25 @@ const FAB_ROTEIRO=[
      {id:'dataflow',porque:'Transformação visual quando a regra é simples e quem mantém não escreve código.',
       se:ctx=>fabCtxTem(ctx,'equipe','lowcode')}]},
 
-  {id:'qualidade', foco:['silver','bronze','notebook','dataflow'], se:ctx=>fabCtxTem(ctx,'criticidade','alta')||fabCtxTem(ctx,'consumo','ml'),
+  {id:'qualidade', fase:'Transformação', foco:['silver','bronze','notebook','dataflow'], se:ctx=>fabCtxTem(ctx,'criticidade','alta')||fabCtxTem(ctx,'consumo','ml'),
    t:'Quem garante que o dado passou nas regras?',
    dica:'Validação implícita não existe: ou a regra está escrita em algum lugar, ou ninguém a está aplicando.',
    ok:g=>g.tem(['dq']), apos:['silver','bronze','notebook'],
    op:[{id:'dq',porque:'Not null, unicidade, integridade referencial e variação de volume. Marcar a linha reprovada é melhor que descartá-la em silêncio.'}]},
 
-  {id:'curadoria', foco:['silver','dq','sproc','notebook'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice')||fabCtxTem(ctx,'objetivo','dw'),
+  {id:'curadoria', fase:'Consumo', foco:['silver','dq','sproc','notebook'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice')||fabCtxTem(ctx,'objetivo','dw'),
    t:'Como o negócio enxerga esse dado?',
    dica:'Regra de negócio aplicada no relatório é regra que cada relatório aplica de um jeito. A camada de curadoria existe para que a métrica tenha uma definição só.',
    ok:g=>g.tem(['gold']), apos:['silver','notebook','sproc','warehouse'],
    op:[{id:'gold',porque:'Dimensões e fatos, com a regra de negócio já aplicada. É o que o modelo semântico consome.'}]},
 
-  {id:'semantico', foco:['gold','warehouse','silver'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice'),
+  {id:'semantico', fase:'Consumo', foco:['gold','warehouse','silver'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice'),
    t:'Onde a métrica é definida uma única vez?',
    dica:'Sem camada semântica, cada relatório reimplementa a métrica — e dois diretores discutem faturamento com números diferentes.',
    ok:g=>g.tem(['semantic']), apos:['gold','warehouse','silver'],
    op:[{id:'semantic',porque:'Modelo semântico sobre a camada curada: uma definição de métrica valendo para todo consumo.'}]},
 
-  {id:'entrega', foco:['semantic'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard'),
+  {id:'entrega', fase:'Consumo', foco:['semantic'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard'),
    t:'Como isso chega a quem decide?',
    dica:'Último passo do caminho do dado. Daqui em diante o que resta é governança.',
    ok:g=>g.tem(['pbi','rtdash']), apos:['semantic'],
@@ -7600,7 +8046,7 @@ const FAB_ROTEIRO=[
      {id:'rtdash',porque:'Painel em tempo real sobre o Eventhouse, quando a latência importa mais que o histórico.',
       se:ctx=>fabCtxTem(ctx,'freq','realtime')}]},
 
-  {id:'monitor', foco:['logtable','pbi','semantic'], se:ctx=>!fabCtxTem(ctx,'criticidade','baixa'),
+  {id:'monitor', fase:'Operação', foco:['logtable','pbi','semantic'], se:ctx=>!fabCtxTem(ctx,'criticidade','exploratoria'),
    t:'Quem olha o log quando ninguém está olhando?',
    dica:'Log sem leitor é arquivo morto: ele só serve depois do incidente, e mesmo assim só se alguém lembrar dele.',
    ok:g=>!g.tem(['logtable'])||g.tem(['pbimonitor','activator','monitorhub']),
@@ -7609,13 +8055,312 @@ const FAB_ROTEIRO=[
      {id:'pbimonitor',porque:'Painel sobre o log: status das cargas, duração e falhas, sem abrir o Fabric.'},
      {id:'activator',porque:'Alerta automático quando o status gravado for de falha ou a duração fugir do normal.'}]},
 
-  {id:'seguranca', foco:['semantic','gold','pbi','rls'], se:ctx=>fabCtxTem(ctx,'sensivel','sim'),
+  {id:'seguranca', fase:'Operação', foco:['semantic','gold','pbi','rls'], se:ctx=>fabCtxTem(ctx,'sensivel','sim'),
    t:'Quem pode ver o quê?',
    dica:'Você indicou dado sensível. Definir isso depois de publicar significa que alguém já viu o que não devia.',
    ok:g=>g.tem(['rls']), apos:['semantic','gold','warehouse'],
    op:[{id:'rls',porque:'Segurança por linha e por coluna definida no modelo: vale uma vez para todo consumo.'}]},
 
-  {id:'ambientes', foco:['pbi','rtdash','workspace','semantic','deploy'],
+
+  // ---- fase Carga: o esqueleto que faltava. Declarar "incremental" nao e
+  // arquitetura; arquitetura e responder ESTAS perguntas. ----
+  {id:'wm_fonte', fase:'Carga', foco:['ctrltable','copy','notebook'],
+   se:ctx=>fabCargaDe(ctx)==='watermark',
+   t:'Qual coluna da origem marca o que mudou?',
+   dica:'É a pergunta que decide se o incremental é possível. Deixá-la implícita no código é o erro que trava a manutenção seis meses depois, quando ninguém lembra qual coluna era.',
+   ok:g=>g.temCfg('ctrltable','coluna_wm')||g.temCfg('copy','coluna_wm'),
+   cfgDe:['ctrltable','copy','notebook'],campo:'coluna_wm',
+   op:[
+     {v:'atualizado_em',nome:'Data de atualização',porque:'O caso ideal: a origem carimba toda alteração. Confirme que UPDATE realmente mexe nela — muita tabela tem a coluna e o sistema não a atualiza.'},
+     {v:'versao',nome:'Número de versão / rowversion',porque:'Monotônico e imune a fuso e relógio. É mais confiável que data quando a origem oferece.'},
+     {v:'id_sequencial',nome:'ID sequencial',porque:'Serve para tabela que só recebe inserção. Não vê atualização — se a linha muda depois de criada, você não vai saber.'},
+     {v:'nenhuma',nome:'Não há coluna confiável',porque:'Então o incremental por watermark não é viável, e insistir nele vai perder dado em silêncio. Reveja o padrão de carga.'}
+   ]},
+  {id:'wm_leitura', fase:'Carga', foco:['ctrltable','lookup','pipeline'],
+   se:ctx=>fabCargaDe(ctx)==='watermark',
+   t:'Quem lê o último valor processado?',
+   dica:'Alguém precisa buscar até onde a carga anterior chegou, antes de filtrar a origem. Sem isso, a "carga incremental" recarrega tudo e ninguém percebe — só a fatura.',
+   ok:g=>g.prop('lookup','watermark_lk')||g.prop('notebook','ingestao_api')||g.tem(['sproc']),
+   apos:['ctrltable'],
+   op:[
+     {v:'lookup',id:'lookup',porque:'Lookup lendo a tabela de controle é o caminho direto: devolve o valor para o pipeline usar no filtro da origem.'},
+     {v:'notebook',id:'notebook',porque:'Se a carga já é código, ler o watermark de dentro dele evita uma ida e volta ao Warehouse.',
+      se:ctx=>fabCtxTem(ctx,'estrategia','codigo')||fabCtxTem(ctx,'equipe','codigo')}
+   ]},
+  {id:'wm_margem', fase:'Carga', foco:['ctrltable','copy','sproc'],
+   se:ctx=>fabCargaDe(ctx)==='watermark',
+   t:'Qual a margem de retrocesso para dado que chega atrasado?',
+   dica:'Registro lançado hoje com data de ontem nunca entra num watermark sem margem — e esse é o furo mais silencioso que existe em carga incremental. Ninguém percebe até alguém conferir um número fechado.',
+   ok:g=>g.temCfg('ctrltable','margem_wm')||g.temCfg('copy','margem_wm'),
+   cfgDe:['ctrltable','copy','notebook'],campo:'margem_wm',
+   op:[
+     {v:'7d',nome:'7 dias',porque:'Padrão seguro para sistema com fechamento semanal ou integração de terceiro que atrasa. É o ponto de partida defensável quando você ainda não mediu o atraso real.'},
+     {v:'1d',nome:'1 dia',porque:'Cobre lançamento do dia anterior. O mínimo aceitável quando há digitação manual em algum ponto.'},
+     {v:'fechamento',nome:'Até o fechamento do mês',porque:'Financeiro e fiscal reabrem período. Aqui a margem tem que ir até o fechamento, e reprocessar por janela precisa ser barato.'},
+     {v:'sem',nome:'Sem margem',porque:'Só quando a origem garante que nada é lançado com data retroativa. É raro — confirme com quem opera o sistema antes de assumir, porque o furo é silencioso.'}
+   ]},
+  {id:'wm_gravacao', fase:'Carga', foco:['sproc','ctrltable','notebook'],
+   se:ctx=>fabCargaDe(ctx)==='watermark',
+   t:'Quando o novo watermark é gravado?',
+   dica:'A pergunta que separa carga incremental de perda de dado. Gravar antes de terminar significa que uma falha no meio faz a próxima execução pular a janela inteira — e ela nunca mais volta.',
+   ok:g=>g.temCfg('sproc','momento_wm')||g.temCfg('notebook','momento_wm'),
+   cfgDe:['sproc','notebook'],campo:'momento_wm',
+   op:[
+     {v:'apos_sucesso',nome:'Só depois do sucesso',porque:'O único correto. Se a carga falhar, o watermark antigo continua valendo e a próxima execução reprocessa a mesma janela — que é exatamente o que você quer.'},
+     {v:'transacao',nome:'Na mesma transação da carga',porque:'Melhor ainda quando destino e controle vivem no mesmo Warehouse: ou os dois acontecem, ou nenhum.'},
+     {v:'antes',nome:'No início da execução',porque:'Anti-padrão. Falhou no meio? A janela foi marcada como processada e o dado dela nunca chega. É a causa mais comum de buraco silencioso em incremental.'}
+   ]},
+  {id:'wm_delete', fase:'Carga', foco:['ctrltable','sproc','copy','notebook'],
+   se:ctx=>fabCargaDe(ctx)==='watermark'||fabCargaDe(ctx)==='merge',
+   t:'Como você detecta exclusão na origem?',
+   dica:'Watermark por data de atualização nunca vê DELETE físico: a linha some da origem e continua viva no seu destino para sempre. Descobre-se quando alguém pergunta por que o total não bate.',
+   ok:g=>g.temCfg('ctrltable','delete_wm')||g.temCfg('sproc','delete_wm'),
+   cfgDe:['ctrltable','sproc','notebook'],campo:'delete_wm',
+   op:[
+     {v:'soft',nome:'A origem faz exclusão lógica',porque:'O melhor caso: existe uma flag, e ela muda a data de atualização. O DELETE vira UPDATE e entra no incremental normalmente.'},
+     {v:'reconciliacao',nome:'Reconciliação periódica de chaves',porque:'Uma vez por semana ou por mês, compare a lista de chaves da origem com a do destino e marque as sumidas. Barato e resolve.'},
+     {v:'cdc_delete',nome:'Trocar para CDC',porque:'Se exclusão importa de verdade, o change feed é o caminho: ele entrega o DELETE. Isso muda o padrão de carga declarado.'},
+     {v:'naoimporta',nome:'Exclusão não acontece nesta origem',porque:'Legítimo para tabela append-only — mas registre a premissa. Ela é falsa com mais frequência do que se imagina.'}
+   ]},
+
+  {id:'cdc_ordem', fase:'Carga', foco:['copy','notebook','mirroring','eventstream'],
+   se:ctx=>fabCargaDe(ctx)==='cdc',
+   t:'Em que ordem as mudanças são aplicadas?',
+   dica:'Change feed entrega eventos, e a ordem importa: aplicar um UPDATE antes do INSERT que o criou deixa a tabela num estado que não existiu na origem.',
+   ok:g=>g.temCfg('notebook','ordem_cdc')||g.temCfg('copy','ordem_cdc')||g.tem(['mirroring']),
+   cfgDe:['notebook','copy','sproc'],campo:'ordem_cdc',
+   op:[
+     {v:'sequencia',nome:'Pela sequência do change feed',porque:'Aplicar na ordem em que a origem gerou. É o correto, e exige processar em série por chave.'},
+     {v:'ultimo',nome:'Só o último estado de cada chave',porque:'Mais rápido e suficiente quando você só quer o estado atual. Perde o caminho — não serve se alguém for auditar as transições.'},
+     {v:'servico',nome:'O serviço cuida disso',porque:'Mirroring gerenciado resolve ordem internamente. Só confirme que é mesmo Mirroring, e não um pipeline seu lendo change feed.'}
+   ]},
+  {id:'merge_chave', fase:'Carga', foco:['sproc','notebook','gold','silver'],
+   se:ctx=>['merge','scd2'].includes(fabCargaDe(ctx)),
+   t:'Qual chave concilia origem e destino?',
+   dica:'MERGE com chave que não é única não falha: ele atualiza a linha errada, em silêncio, e o número fica sutilmente errado. É o defeito mais caro de achar em toda a engenharia de dados.',
+   ok:g=>g.temCfg('sproc','chave_merge')||g.temCfg('notebook','chave_merge'),
+   cfgDe:['sproc','notebook'],campo:'chave_merge',
+   op:[
+     {v:'natural',nome:'Chave natural da origem',porque:'O caso normal. Valide a unicidade na entrada do Silver — não confie na promessa de quem mantém a origem.'},
+     {v:'composta',nome:'Chave composta',porque:'Comum em integração e em tabela de movimento. Documente as colunas: chave composta implícita é o que ninguém consegue reproduzir depois.'},
+     {v:'hash',nome:'Hash das colunas de negócio',porque:'Resolve chave longa ou composta grande, e deixa a comparação barata. Fixe o algoritmo — mudar o hash reprocessa tudo.'},
+     {v:'naogarantida',nome:'A unicidade não é garantida',porque:'Então MERGE não é seguro aqui. Deduplique antes, ou use append com marcação de versão — qualquer coisa menos um MERGE que atualiza a linha errada.'}
+   ]},
+  {id:'scd_atributos', fase:'Carga', foco:['gold','sproc','notebook'],
+   se:ctx=>fabCargaDe(ctx)==='scd2',
+   t:'Quais atributos disparam uma nova versão?',
+   dica:'Versionar tudo faz a dimensão explodir em linhas por mudança irrelevante — telefone corrigido não deveria criar uma versão histórica de cliente. Versionar de menos perde justamente o que alguém queria consultar.',
+   ok:g=>g.temCfg('gold','scd_cols')||g.temCfg('sproc','scd_cols'),
+   cfgDe:['gold','sproc','notebook'],campo:'scd_cols',
+   op:[
+     {v:'negocio',nome:'Só os atributos de negócio',porque:'Categoria, região, segmento — o que muda a leitura de um número histórico. É a escolha certa em quase todo caso.'},
+     {v:'todos',nome:'Todos os atributos',porque:'Auditoria completa da dimensão. Prepare-se para o volume: correção de cadastro vira versão nova.'},
+     {v:'lista',nome:'Uma lista explícita, revisada com o negócio',porque:'Mais trabalho no começo e menos discussão depois. É o que se faz quando a dimensão é relevante de verdade.'}
+   ]},
+  {id:'full_atomicidade', fase:'Carga', foco:['copy','sproc','notebook','gold','silver'],
+   se:ctx=>fabCargaDe(ctx)==='full',
+   t:'O que o consumo enxerga durante a recarga?',
+   dica:'TRUNCATE seguido de INSERT deixa a tabela vazia por alguns minutos. Se alguém abrir o relatório nessa janela, vê zero — e abre um chamado dizendo que o dado sumiu.',
+   ok:g=>g.temCfg('copy','atomic_full')||g.temCfg('sproc','atomic_full')||g.temCfg('notebook','atomic_full'),
+   cfgDe:['copy','sproc','notebook'],campo:'atomic_full',
+   op:[
+     {v:'swap',nome:'Carrega em staging e troca no fim',porque:'O consumo nunca vê tabela vazia nem parcial. É o padrão para recarga em horário com gente olhando.'},
+     {v:'overwrite',nome:'Overwrite atômico do Delta',porque:'No Lakehouse, sobrescrever a partição inteira é transacional: o leitor vê a versão antiga até a nova ficar pronta.'},
+     {v:'truncate',nome:'TRUNCATE e INSERT',porque:'Só quando a recarga roda em janela sem consumo. Fora disso, é buraco visível para o usuário.'}
+   ]},
+  {id:'snap_retencao', fase:'Carga', foco:['bronze','silver','gold','lakehouse'],
+   se:ctx=>fabCargaDe(ctx)==='snapshot',
+   t:'Por quanto tempo cada foto é guardada?',
+   dica:'Snapshot sem política de descarte é a fatura crescendo sozinha. E a conversa sobre apagar sempre acontece tarde demais, quando já não se sabe o que pode sair.',
+   ok:g=>g.temCfg('bronze','retencao')||g.temCfg('gold','retencao')||g.tem(['otimiza']),
+   cfgDe:['bronze','silver','gold'],campo:'retencao',
+   op:[
+     {v:'90d',nome:'90 dias',porque:'Cobre investigação operacional e reprocessamento recente sem virar custo relevante.'},
+     {v:'13m',nome:'13 meses',porque:'Permite comparação ano contra ano com um mês de folga. É o mais pedido pelo negócio.'},
+     {v:'legal',nome:'Pelo prazo legal',porque:'Fiscal e contábil têm prazo definido. Se é esse o caso, escreva qual — retenção "para sempre por segurança" não é decisão, é omissão.'},
+     {v:'rolante',nome:'Janela rolante com agregado permanente',porque:'Guarda o detalhe por pouco tempo e o agregado para sempre. O melhor equilíbrio quando o volume é alto.'}
+   ]},
+  {id:'append_dedup', fase:'Carga', foco:['bronze','copy','notebook','eventstream','silver'],
+   se:ctx=>fabCargaDe(ctx)==='append',
+   t:'O que impede duplicata ao reprocessar?',
+   dica:'Carga append é a mais simples até o dia em que alguém reprocessa uma janela. Sem chave de idempotência, o reprocessamento dobra o número — e o número dobrado parece plausível.',
+   ok:g=>g.temCfg('bronze','dedup')||g.temCfg('notebook','dedup')||g.temCfg('copy','dedup'),
+   cfgDe:['bronze','notebook','copy'],campo:'dedup',
+   op:[
+     {v:'id_evento',nome:'Id único do evento',porque:'Deduplica na escrita. É o caminho natural quando a origem gera identificador.'},
+     {v:'execucao',nome:'Apagar a janela antes de reinserir',porque:'Delete-insert por partição de execução. Simples, atômico no Delta, e reprocessável sem medo.'},
+     {v:'hash',nome:'Hash do conteúdo da linha',porque:'Serve quando a origem não identifica nada. Custa comparação, mas resolve.'},
+     {v:'nenhum',nome:'Nada impede',porque:'Então reprocessar não é uma opção — e um dia vai ser necessário. Vale resolver agora, não no incidente.'}
+   ]},
+
+  // ---- fase Estratégia: o que cada caminho declarado cobra de você ----
+  {id:'exp_padrao', fase:'Estratégia', foco:['pipeline','copy','origem'],
+   se:ctx=>fabCtxTem(ctx,'estrategia','explicito')&&!fabCtxTem(ctx,'objetos','poucos'),
+   t:'O que mantém os pipelines parecidos entre si?',
+   dica:'Um pipeline por objeto só é legível enquanto todos seguem o mesmo formato. Sem um padrão declarado, o quinto já é diferente dos quatro primeiros — e a correção de um não vale para os outros.',
+   ok:g=>g.tem(['deploy','ctrltable']),
+   apos:['pipeline','copy'],
+   op:[
+     {v:'deploy',id:'deploy',porque:'Git com um pipeline modelo versionado: novo objeto começa por cópia do padrão, não do que estava aberto na tela.'},
+     {v:'ctrltable',id:'ctrltable',porque:'Mesmo sem laço, uma tabela de controle central guarda watermark e status de todos — evita que cada pipeline invente o próprio jeito.'}
+   ]},
+  {id:'cod_versionamento', fase:'Estratégia', foco:['notebook','sparkjob','pipeline'],
+   se:ctx=>fabCtxTem(ctx,'estrategia','codigo'),
+   t:'Onde esse código vive e como ele chega em produção?',
+   dica:'A vantagem inteira do code-first é o código estar em revisão e histórico. Notebook editado direto no workspace de produção perde exatamente isso, e vira a pior das duas opções.',
+   ok:g=>g.tem(['deploy']),apos:['notebook','sparkjob'],
+   op:[{v:'deploy',id:'deploy',porque:'Git integrado ao workspace mais deployment pipeline: o que roda em produção é o que passou por PR.'}]},
+  {id:'cod_param', fase:'Estratégia', foco:['notebook','sparkjob'],
+   se:ctx=>fabCtxTem(ctx,'estrategia','codigo'),
+   t:'Como este notebook recebe o objeto que vai processar?',
+   dica:'Notebook com nome de tabela escrito dentro é um notebook por tabela — o mesmo problema do pipeline por objeto, só que em Python.',
+   ok:g=>g.temCfg('notebook','param')||g.temCfg('sparkjob','param'),
+   cfgDe:['notebook','sparkjob'],campo:'param',
+   op:[
+     {v:'celula',nome:'Célula de parâmetros',porque:'O jeito nativo: o pipeline passa os valores e o notebook os recebe. Simples e auditável.'},
+     {v:'controle',nome:'Lendo da tabela de controle',porque:'O notebook busca a configuração do objeto. Combina com estratégia dirigida por metadados.'},
+     {v:'fixo',nome:'Valores fixos no código',porque:'Vira um notebook por objeto. Se a intenção era escalar, esta escolha desfaz a estratégia declarada.'}
+   ]},
+  {id:'low_dono', fase:'Estratégia', foco:['dataflow'],
+   se:ctx=>fabCtxTem(ctx,'estrategia','lowcode'),
+   t:'Quem é o dono deste Dataflow?',
+   dica:'Low-code existe para a área manter sozinha. Sem dono declarado, ele vira órfão no primeiro afastamento — e ninguém sabe o que a transformação faz.',
+   ok:g=>g.tem(['lineage','workspace']),apos:['dataflow'],
+   op:[
+     {v:'lineage',id:'lineage',porque:'Catálogo com dono e descrição declarados: quem mantém, quem procurar quando quebrar.'},
+     {v:'workspace',id:'workspace',porque:'Workspace da área, separado do corporativo, com permissão de quem pode editar.'}
+   ]},
+  {id:'low_limite', fase:'Estratégia', foco:['dataflow','lakehouse','warehouse'],
+   se:ctx=>fabCtxTem(ctx,'estrategia','lowcode'),
+   t:'Em que ponto este Dataflow deixa de servir?',
+   dica:'Toda escolha low-code tem um limite. Declará-lo agora é o que evita a discussão emocional depois, quando ele já está lento e alguém defende mantê-lo por apego.',
+   ok:g=>g.temCfg('dataflow','limite'),
+   cfgDe:['dataflow'],campo:'limite',
+   op:[
+     {v:'volume',nome:'Quando passar de alguns milhões de linhas',porque:'É onde o Dataflow começa a custar mais e demorar mais que um Copy Data equivalente.'},
+     {v:'regra',nome:'Quando a regra virar lógica de verdade',porque:'Condicional aninhada em Power Query é ilegível para quem não a escreveu — e não entra em revisão.'},
+     {v:'critico',nome:'Quando virar carga crítica',porque:'Carga com SLA precisa de log, alerta e retry de verdade. Isso não é o forte do Dataflow.'}
+   ]},
+  {id:'zero_lacuna', fase:'Estratégia', foco:['mirroring','shortcut','lakehouse','bronze'],
+   se:ctx=>fabCtxTem(ctx,'estrategia','zeroetl'),
+   t:'O que o espelho NÃO resolve?',
+   dica:'Zero-ETL entrega o estado atual da origem, com o modelo dela. Tudo que você precisar além disso — histórico, padronização, regra de negócio — continua sendo trabalho seu, e é melhor decidir isso agora.',
+   ok:g=>g.tem(['silver','notebook','gold','bronze']),
+   apos:['mirroring','shortcut'],
+   op:[
+     {v:'silver',id:'silver',porque:'O espelho traz o modelo da origem, defeitos inclusive. Padronizar continua necessário — e é onde você recupera o controle.'},
+     {v:'bronze',id:'bronze',porque:'Se auditoria ou histórico importa, derive uma camada própria do change feed: o espelho sozinho só tem o agora.',
+      se:ctx=>fabCtxTem(ctx,'historico','auditoria')||fabCtxTem(ctx,'historico','scd')},
+     {v:'notebook',id:'notebook',porque:'Transformação sobre o espelho, sem pipeline de ingestão para manter. É o melhor dos dois mundos quando a origem é suportada.'}
+   ]},
+  {id:'stream_janela', fase:'Estratégia', foco:['eventstream','eventhouse','rtdash'],
+   se:ctx=>fabCtxTem(ctx,'estrategia','streaming')||fabCtxTem(ctx,'freq','realtime'),
+   t:'Sobre qual janela de tempo as métricas são calculadas?',
+   dica:'Fluxo contínuo não tem "total": tem total dentro de uma janela. Qual janela é decisão de negócio, e ela muda o custo de processamento e o que o painel consegue mostrar.',
+   ok:g=>g.temCfg('eventstream','janela')||g.temCfg('eventhouse','janela'),
+   cfgDe:['eventstream','eventhouse'],campo:'janela',
+   op:[
+     {v:'tumbling',nome:'Janela fixa (tumbling)',porque:'Blocos que não se sobrepõem: a cada 5 minutos, um número. Simples de explicar e de conciliar com o lote.'},
+     {v:'sliding',nome:'Janela deslizante',porque:'Últimos 15 minutos, atualizando continuamente. Melhor para detecção; mais caro de calcular.'},
+     {v:'sessao',nome:'Janela de sessão',porque:'Agrupa por atividade com intervalo de inatividade. É o que faz sentido para comportamento de usuário ou ciclo de máquina.'}
+   ]},
+  {id:'stream_atraso', fase:'Estratégia', foco:['eventstream','eventhouse'],
+   se:ctx=>fabCtxTem(ctx,'estrategia','streaming')||fabCtxTem(ctx,'freq','realtime'),
+   t:'O que acontece com o evento que chega atrasado?',
+   dica:'Sensor sem rede, aplicativo offline, reentrega da fila: o evento chega com carimbo de dez minutos atrás. Se a janela dele já fechou, ele entra no número errado ou some — e as duas coisas são ruins.',
+   ok:g=>g.temCfg('eventstream','atraso')||g.temCfg('eventhouse','atraso'),
+   cfgDe:['eventstream','eventhouse'],campo:'atraso',
+   op:[
+     {v:'tolerancia',nome:'Tolerância declarada, depois descarta',porque:'Aceita até N minutos de atraso e descarta o resto, com contagem do que foi descartado. Honesto e mensurável.'},
+     {v:'reprocessa',nome:'Reabre a janela e recalcula',porque:'Número correto ao custo de o painel mudar retroativamente. Combine com quem lê o painel antes de escolher.'},
+     {v:'lote',nome:'Corrige no lote noturno',porque:'O tempo real fica aproximado e o número fechado vem do lote. É o desenho mais comum, e o mais fácil de defender.'}
+   ]},
+
+  // ---- fase Modelagem ----
+  {id:'mod_grao', fase:'Modelagem', foco:['gold','silver','semantic'],
+   se:ctx=>['estrela','flocos','datavault'].includes(Array.isArray(ctx.modelagem)?ctx.modelagem[0]:ctx.modelagem),
+   t:'Qual a granularidade da tabela de fato?',
+   dica:'É a primeira decisão de um modelo dimensional e a mais cara de mudar. Grão errado não dá erro: dá número que não bate, e a descoberta acontece meses depois numa reunião.',
+   ok:g=>g.temCfg('gold','grao'),
+   cfgDe:['gold'],campo:'grao',
+   op:[
+     {v:'transacao',nome:'Uma linha por transação',porque:'O grão mais fino possível. Permite qualquer agregação depois — e é a escolha padrão quando o volume aguenta.'},
+     {v:'diario',nome:'Um resumo por dia e chave',porque:'Reduz volume e acelera consulta, ao preço de nunca mais responder pergunta abaixo do dia.'},
+     {v:'snapshot_periodico',nome:'Foto periódica de saldo',porque:'Para estoque, saldo e posição: o fato não é evento, é estado. Grão diferente, tabela diferente.'},
+     {v:'acumulado',nome:'Acumulado de processo',porque:'Uma linha por instância do processo, com as datas de cada etapa. É o que responde tempo de ciclo.'}
+   ]},
+  {id:'mod_chave', fase:'Modelagem', foco:['gold','sproc','notebook'],
+   se:ctx=>['estrela','flocos'].includes(Array.isArray(ctx.modelagem)?ctx.modelagem[0]:ctx.modelagem),
+   t:'As dimensões usam chave substituta?',
+   dica:'Amarrar o fato à chave da origem parece economia até a origem mudar o código, ou até um segundo sistema trazer a mesma entidade com outro identificador.',
+   ok:g=>g.temCfg('gold','sk'),
+   cfgDe:['gold'],campo:'sk',
+   op:[
+     {v:'sim',nome:'Sim, chave substituta',porque:'Isola o modelo de mudança na origem e é pré-requisito para SCD2. É o padrão em Kimball por um motivo.'},
+     {v:'natural',nome:'Não, chave natural direto',porque:'Aceitável em modelo pequeno com origem única e estável. Registre a premissa — é ela que vai cair primeiro.'}
+   ]},
+  {id:'mod_dimdata', fase:'Modelagem', foco:['gold','semantic'],
+   se:ctx=>['estrela','flocos','obt'].includes(Array.isArray(ctx.modelagem)?ctx.modelagem[0]:ctx.modelagem),
+   t:'Existe uma dimensão de data?',
+   dica:'Sem tabela de data marcada como tal, o Power BI não faz inteligência de tempo: acumulado do ano, mesmo período do ano anterior, nada disso funciona direito. E a solução em DAX é sempre pior.',
+   ok:g=>g.temCfg('gold','dimdata')||g.temCfg('semantic','dimdata'),
+   cfgDe:['gold','semantic'],campo:'dimdata',
+   op:[
+     {v:'completa',nome:'Sim, com hierarquia e marcação',porque:'Datas contínuas, sem buracos, marcada como tabela de data no modelo. É o mínimo para inteligência de tempo funcionar.'},
+     {v:'fiscal',nome:'Sim, com calendário fiscal',porque:'Quando o ano fiscal não é o civil. Sem isso, todo relatório reimplementa o deslocamento — cada um do seu jeito.'},
+     {v:'nao',nome:'Não há',porque:'Então acumulado e comparação com período anterior vão ser contorção em DAX. Vale criar antes do primeiro relatório, não depois.'}
+   ]},
+
+  // ---- fase Consumo: performance é decisão de arquitetura, não ajuste fino ----
+  {id:'perf_otimiza', fase:'Consumo', foco:['gold','silver','bronze','lakehouse','semantic'],
+   se:ctx=>['watermark','cdc','merge','append','scd2'].includes(fabCargaDe(ctx)),
+   t:'Quem cuida da manutenção das tabelas Delta?',
+   dica:'Carga incremental grava arquivos pequenos a cada execução. Depois de alguns meses, a leitura fica lenta sem ninguém ter mudado nada — e a causa é invisível em qualquer painel de uso.',
+   ok:g=>g.tem(['otimiza'])||g.prop('notebook','manutencao_nb'),
+   apos:['gold','silver','bronze','lakehouse'],
+   op:[
+     {v:'otimiza',id:'otimiza',porque:'Rotina de OPTIMIZE e VACUUM agendada: compacta os arquivos pequenos e limpa versões antigas. É manutenção, não otimização prematura.'},
+     {v:'notebook',id:'notebook',porque:'Se já há Spark no desenho, um notebook de manutenção resolve e fica versionado junto do resto.',
+      se:ctx=>fabCtxTem(ctx,'estrategia','codigo')||fabCtxTem(ctx,'equipe','codigo')}
+   ]},
+  {id:'perf_modo', fase:'Consumo', foco:['semantic','gold','warehouse','lakehouse'],
+   se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice'),
+   t:'Como o modelo semântico lê o dado?',
+   dica:'Direct Lake é o motivo de boa parte do Fabric existir, mas ele tem limites de tamanho por capacidade. Estourar o limite não dá erro: o modelo cai para DirectQuery em silêncio e a performance despenca sem explicação visível.',
+   ok:g=>g.temCfg('semantic','modo'),
+   cfgDe:['semantic'],campo:'modo',
+   op:[
+     {v:'directlake',nome:'Direct Lake',porque:'Lê o Delta direto, sem cópia e sem janela de atualização. Exige o dado em Delta e atenção ao limite da capacidade.'},
+     {v:'import',nome:'Import',porque:'Mais previsível e independente da capacidade, ao custo de duplicar o dado e precisar de orquestração de refresh.'},
+     {v:'directquery',nome:'DirectQuery',porque:'Sem cópia e sempre atual, mas cada visual vira consulta no motor. Só quando a origem aguenta e a latência do dado é inegociável.'}
+   ]},
+
+  // ---- fase Operação ----
+  {id:'ops_segredo', fase:'Operação', foco:['pipeline','copy','notebook','origem','dataflow'],
+   se:ctx=>!fabCtxTem(ctx,'criticidade','exploratoria'),
+   t:'Onde ficam as credenciais de acesso à origem?',
+   dica:'Senha em parâmetro de pipeline vai para o Git, aparece no log de execução e sobrevive em toda cópia do workspace. É o achado mais comum e mais constrangedor de qualquer auditoria.',
+   ok:g=>g.tem(['keyvault']),apos:['pipeline','copy','notebook'],
+   op:[{v:'keyvault',id:'keyvault',porque:'Azure Key Vault com identidade gerenciada: o segredo nunca aparece no desenho, no log nem no repositório.'}]},
+  {id:'ops_capacidade', fase:'Operação', foco:['workspace','deploy','capacidade'],
+   se:ctx=>fabCtxTem(ctx,'criticidade','alta')||fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande'),
+   t:'Em qual capacidade isso roda, e dividindo com quem?',
+   dica:'No Fabric tudo consome CU da mesma capacidade. Um notebook mal comportado em desenvolvimento derruba o refresh do relatório do diretor — e a relação entre as duas coisas não é óbvia para ninguém.',
+   ok:g=>g.tem(['capacidade']),apos:['workspace','deploy'],
+   op:[{v:'capacidade',id:'capacidade',porque:'Declarar a capacidade e o que compartilha CU com o quê é o que permite achar culpado quando tudo fica lento ao mesmo tempo.'}]},
+  {id:'ops_retencao', fase:'Operação', foco:['logtable','pbimonitor','ctrltable'],
+   se:ctx=>true,
+   t:'Por quanto tempo o log de execução é guardado?',
+   dica:'Tabela de log é a que mais cresce e a que ninguém lembra de limpar. Um ano de log por item de uma carga de centenas de objetos é volume de verdade — e nenhum valor depois dos primeiros meses.',
+   ok:g=>!g.tem(['logtable'])||g.temCfg('logtable','retencao'),
+   cfgDe:['logtable'],campo:'retencao',
+   op:[
+     {v:'90d',nome:'90 dias em detalhe',porque:'Cobre a investigação de qualquer incidente recente. Depois disso ninguém abre linha de log.'},
+     {v:'agregado',nome:'Detalhe curto, agregado permanente',porque:'Guarda duração e volume por dia para sempre, e o detalhe por pouco tempo. Permite ver degradação ao longo de anos sem pagar por isso.'},
+     {v:'legal',nome:'Pelo prazo de auditoria',porque:'Quando o log faz parte da evidência de controle. Se é o caso, escreva o prazo em vez de guardar por medo.'}
+   ]},
+
+  {id:'ambientes', fase:'Operação', foco:['pbi','rtdash','workspace','semantic','deploy'],
    t:'Onde isso tudo é publicado, e como vai para produção?',
    dica:'É a decisão mais cara de desfazer. Reorganizar workspace depois quebra referência de relatório, de shortcut e de permissão.',
    ok:g=>g.tem(['workspace','deploy']), solto:true,
@@ -7629,18 +8374,116 @@ function fabRoteiro(){
   return FAB_ROTEIRO.filter(pos=>{try{return !pos.se||pos.se(ctx)}catch(e){return false}})
     .map(pos=>{
       let pronta=false;try{pronta=!!pos.ok(g,ctx)}catch(e){pronta=false}
-      let op=(pos.op||[]).filter(o=>FAB_COMP[o.id]&&(!o.se||(()=>{try{return o.se(ctx)}catch(e){return false}})()));
-      // Uma posicao nunca cria a mesma peca duas vezes. Sem isso, uma posicao
-      // cujo `ok` nao fosse satisfeito pela opcao escolhida ficava repetindo a
-      // pergunta — foi assim que a auditoria produziu dez Notebooks em fila.
-      // Posicao com `alvo` proprio e a excecao: ali religar o que ja existe e
-      // justamente o trabalho (dar casa a mais uma tabela).
-      if(!pos.alvo){
-        const livres=op.filter(o=>!g.tem([o.id]));
-        if(!livres.length)pronta=true; else op=livres;
+      const _pass=o=>!o.se||(()=>{try{return o.se(ctx)}catch(e){return false}})();
+      let op;
+      if(pos.campo){
+        // Decisao de CONFIGURACAO: nao cria peca, define o que uma peca ja
+        // existente vai ser. "Quando o watermark e gravado?" nao se responde
+        // adicionando um componente — e era por nao ter esta especie que o
+        // esqueleto do incremental nunca podia ser cobrado.
+        op=(pos.op||[]).filter(_pass);
+        const alvo=(pos.cfgDe||[]).find(c=>g.tem([c]));
+        // `pronta` sai do proprio `cfgDe`, nao de um `ok` escrito a mao: as duas
+        // listas saiam de sincronia e a posicao repetia a pergunta para sempre,
+        // gravando a resposta numa peca que o `ok` nem olhava.
+        if(!alvo)pronta=true;            // a peca dona da config ainda nao existe
+        else{
+          pronta=(pos.cfgDe||[]).some(c=>g.temCfg(c,pos.campo));
+          pos={...pos,compAlvo:alvo};
+        }
+      }else{
+        op=(pos.op||[]).filter(o=>FAB_COMP[o.id]&&_pass(o));
+        // Uma posicao nunca cria a mesma peca duas vezes. Sem isso, uma posicao
+        // cujo `ok` nao fosse satisfeito pela opcao escolhida ficava repetindo a
+        // pergunta — foi assim que a auditoria produziu dez Notebooks em fila.
+        // Posicao com `alvo` proprio e a excecao: ali religar o que ja existe e
+        // justamente o trabalho (dar casa a mais uma tabela).
+        if(!pos.alvo){
+          const livres=op.filter(o=>!g.tem([o.id]));
+          if(!livres.length)pronta=true; else op=livres;
+        }
       }
       return {...pos,pronta,op};
     }).filter(pos=>pos.op.length);
+}
+
+// ---------- vigia de anti-padroes ----------
+// As regras sempre existiram, mas viviam numa aba: voce so descobria o
+// anti-padrao se fosse procurar. Aqui o app compara o conjunto de anti-padroes
+// antes e depois de cada mudanca e avisa NO MOMENTO em que um nasce — porque e
+// nesse momento que corrigir custa dez segundos em vez de uma refatoracao.
+let _fabAP=null;              // ids ativos no ultimo render (null = ainda nao mediu)
+let _fabAPFoco=null;          // o anti-padrao que a faixa esta mostrando
+let _fabAPMudo=new Set();     // dispensados pelo usuario nesta sessao
+let _fabAPNos={};             // no -> regra, para marcar o culpado no diagrama
+
+function fabAntipadroes(){return fabValidar().filter(v=>v.antipadrao)}
+
+// mapa no->regra, recalculado a cada render
+function fabMapearAP(){
+  _fabAPNos={};
+  fabAntipadroes().forEach(v=>{
+    const id=fabAlvoDoAlerta(v);
+    if(id&&!_fabAPNos[id])_fabAPNos[id]=v;
+  });
+}
+
+function fabVigia(){
+  const ativos=fabAntipadroes();
+  const agora=new Set(ativos.map(v=>v.id));
+  if(_fabAP===null){_fabAP=agora;return}     // primeiro render nao acusa nada
+  const novos=ativos.filter(v=>!_fabAP.has(v.id));
+  _fabAP=agora;
+  // um anti-padrao que sumiu volta a poder alertar se reaparecer
+  _fabAPMudo.forEach(id=>{if(!agora.has(id))_fabAPMudo.delete(id)});
+  if(_fabAPFoco&&!agora.has(_fabAPFoco))_fabAPFoco=null;
+  if(!novos.length)return;
+  const alvo=novos.find(v=>!_fabAPMudo.has(v.id));
+  if(!alvo)return;
+  _fabAPFoco=alvo.id;
+  try{toast('Anti-padrão: '+alvo.titulo)}catch(e){}
+  fabRenderPainel();
+}
+
+// a faixa vermelha no topo do painel
+function fabAPFaixa(){
+  if(!_fabAPFoco)return '';
+  const v=fabAntipadroes().find(x=>x.id===_fabAPFoco);
+  if(!v){_fabAPFoco=null;return ''}
+  const alvo=fabAlvoDoAlerta(v);
+  const falta=(FAB_PEDE[v.id]||[]).filter(c=>FAB_COMP[c]&&!fabGrafo().tem([c]));
+  return `<div class="fab-ap-faixa">
+    <div class="fab-ap-top">
+      <span class="fab-ap-selo">ANTI-PADRÃO</span>
+      <b>${escapeHtml(v.titulo)}</b>
+      <button class="fab-ap-x" data-fabapx="1" title="Dispensar">✕</button>
+    </div>
+    <p class="fab-ap-doi">${escapeHtml(v.porqueDoi||v.texto)}</p>
+    ${v.custo?`<p class="fab-ap-custo"><i>Quando a conta chega:</i> ${escapeHtml(v.custo)}</p>`:''}
+    <p class="fab-ap-fix">${escapeHtml(v.resolver)}</p>
+    <div class="fab-ap-acoes">
+      ${alvo?`<button data-fabalerta="${alvo}">Ver no diagrama</button>`:''}
+      ${falta.length?`<button data-fabalertaadd="${falta[0]}">Corrigir: + ${escapeHtml(FAB_COMP[falta[0]].nome)}</button>`:''}
+    </div>
+  </div>`;
+}
+
+// ---------- prontidao ----------
+// "Quando ja esta bom?" precisa de resposta. Sem isso o app so empurra mais
+// pecas, e toda arquitetura parece inacabada para sempre. Uma arquitetura esta
+// PRONTA para o contexto declarado quando tres coisas valem ao mesmo tempo:
+// o esqueleto da estrategia fechou, nao ha aviso de validacao, e nada ficou
+// pendente de decisao. Dai em diante o que existe e opcional — e o app diz isso.
+function fabProntidao(){
+  const rot=fabRoteiro(),g=fabGrafo(),av=fabValidar();
+  const abertas=rot.filter(x=>!x.pronta);
+  const avisos=av.filter(v=>v.nivel==='aviso'||v.antipadrao);
+  const opcionais=av.filter(v=>v.nivel!=='aviso');
+  const pend=g.pendentes();
+  const total=rot.length,feitas=total-abertas.length;
+  return {total,feitas,abertas,avisos,opcionais,pend,
+    pct:total?Math.round(feitas/total*100):(fabNos().length?100:0),
+    pronto:fabNos().length>0&&!abertas.length&&!avisos.length&&!pend.length};
 }
 // a proxima decisao do esqueleto que ainda nao foi tomada
 function fabRoteiroFalta(){return fabRoteiro().find(p=>!p.pronta)||null}
@@ -7847,6 +8690,7 @@ function fabApagar(id){
 
 // ---------- arquiteturas ----------
 function fabNovaArq(nome,ctx,nos,props,cfgs){
+  _fabAP=null;_fabAPFoco=null;   // arquitetura nova: rebase do vigia
   const id='a'+Date.now().toString(36);
   fabArqs.push({id,nome:nome||'Nova arquitetura',ctx:ctx||{}});
   fabCur=id;
@@ -7997,6 +8841,10 @@ const FAB_INICIO={
 // Chave: "componente:proposito" quando o proposito muda a pergunta, ou so
 // "componente" quando ele nao ramifica.
 const FAB_PERG_PROX={
+  // --- governanca de operacao ---
+  'capacidade':'A capacidade está declarada. Quem mais divide CU com esta carga?',
+  'keyvault':'O segredo saiu do desenho. O que mais precisa de acesso controlado?',
+  'otimiza':'A manutenção das tabelas está agendada. O que ainda degrada com o tempo?',
   // --- Copy Data ---
   'copy:bruto':'O dado bruto chegou. O que precisa existir em volta dessa carga?',
   'copy:incremental':'O que garante que a próxima execução continue do ponto certo?',
@@ -8263,11 +9111,13 @@ function fabPasso(){
     // As alternativas da posicao sao ordenadas e justificadas pelo MESMO
     // contexto que o motor de sugestoes usa — as duas telas dizem a mesma coisa.
     const _ctx=fabCtx();
-    const op=pos.op.map(o=>{
-      const cp=fabCtxPeso(o.id,_ctx);
-      return {...o,comp:FAB_COMP[o.id],peso:cp.peso,
-        ctxNota:cp.ctxPros[0]||'',ctxAviso:cp.ctxContras[0]||''};
-    }).sort((a,b)=>b.peso-a.peso);
+    const op=pos.campo
+      ? pos.op.map(o=>({...o,comp:null,desc:o.porque}))
+      : pos.op.map(o=>{
+          const cp=fabCtxPeso(o.id,_ctx);
+          return {...o,comp:FAB_COMP[o.id],peso:cp.peso,
+            ctxNota:cp.ctxPros[0]||'',ctxAviso:cp.ctxContras[0]||''};
+        }).sort((a,b)=>b.peso-a.peso);
     // Se voce esta parado justamente na peca de onde esta decisao se pendura, a
     // pergunta especifica daquele componente e melhor que a generica da posicao:
     // "O que roda DENTRO do laço?" diz mais que "o que traz o dado?".
@@ -8282,16 +9132,24 @@ function fabPasso(){
     const q=abertas[0],_ctx2=fabCtx();
     return {tipo:'roteiro',no,pos:q,t:q.t,dica:q.dica,
       prog:{i:rot.indexOf(q)+1,n:rot.length},
-      op:q.op.map(o=>{const cp=fabCtxPeso(o.id,_ctx2);
-        return {...o,comp:FAB_COMP[o.id],peso:cp.peso,ctxNota:cp.ctxPros[0]||'',ctxAviso:cp.ctxContras[0]||''}})
-        .sort((a,b)=>b.peso-a.peso)};
+      op:q.campo
+        ? q.op.map(o=>({...o,comp:null,desc:o.porque}))
+        : q.op.map(o=>{const cp=fabCtxPeso(o.id,_ctx2);
+            return {...o,comp:FAB_COMP[o.id],peso:cp.peso,ctxNota:cp.ctxPros[0]||'',ctxAviso:cp.ctxContras[0]||''}})
+            .sort((a,b)=>b.peso-a.peso)};
   }
   // esqueleto completo: o que vem daqui e refinamento, nao estrategia
   const _rd=!rot.length||rot.every(x=>x.pronta);
-  if(sugs.length&&_rd)return {tipo:'proximo',no,refino:true,
-    t:fabPergProx(no)||('Depois de '+d.nome+', o que vem?'),
-    dica:'A estratégia declarada já está fechada no diagrama. Daqui em diante são refinamentos — nada aqui é obrigatório.',
-    op:sugs.map(x=>({...x,comp:FAB_COMP[x.id]}))};
+  if(sugs.length&&_rd){
+    const _pr=fabProntidao();
+    return {tipo:'proximo',no,refino:true,pronta:_pr.pronto,fecho:_pr,
+      t:_pr.pronto?'Esta arquitetura já está de pé'
+        :(fabPergProx(no)||('Depois de '+d.nome+', o que vem?')),
+      dica:_pr.pronto
+        ?'O esqueleto da estratégia fechou, não há aviso e nada ficou pendente. Você pode parar aqui — o que vem abaixo é refinamento, não obrigação.'
+        :'A estratégia declarada já está fechada no diagrama. Daqui em diante são refinamentos — nada aqui é obrigatório.',
+      op:sugs.map(x=>({...x,comp:FAB_COMP[x.id]}))};
+  }
   if(!sugs.length)return {tipo:'completo',no,
     t:'Fim deste ramo',
     dica:'A partir de '+d.nome+' não há mais passo recomendado. Veja a aba Validação para o que ainda falta na arquitetura, ou selecione outro componente do diagrama para seguir por outro caminho.'};
@@ -8338,6 +9196,20 @@ function fabPainelPasso(){
   if(p.tipo==='completo'){
     return cab+`<button class="fab-passo-sair" data-fabguia="reiniciar">Escolher outro ponto do diagrama</button>`;
   }
+  // Quando esta pronta, o painel diz isso antes de oferecer qualquer coisa.
+  // Sem esse ponto final o app so empurra pecas, e nenhuma arquitetura parece
+  // terminada nunca.
+  let fecho='';
+  if(p.pronta&&p.fecho){
+    const op=p.fecho.opcionais;
+    fecho=`<div class="fab-fecho">
+      <b>✓ Nada obrigatório em aberto</b>
+      <p>As ${p.fecho.total} decisões do seu contexto estão tomadas, sem avisos e sem pendências.</p>
+      ${op.length?`<div class="fab-fecho-op"><i>Refinamentos possíveis, se você quiser ir além:</i>
+        <ul>${op.slice(0,4).map(v=>`<li>${escapeHtml(v.titulo)}</li>`).join('')}</ul></div>`
+        :'<div class="fab-fecho-op"><i>Nem refinamento sobrou. Pode fechar.</i></div>'}
+    </div>`;
+  }
   // A boa pratica vem ANTES das opcoes avulsas: a ordem e a recomendacao,
   // a lista e o que sobra para quem quer divergir dela.
   let pratica='';
@@ -8357,6 +9229,12 @@ function fabPainelPasso(){
     }
   }
   const cards=p.op.map(o=>{
+    // decisao de configuracao do roteiro: mesma forma da resposta de pendencia
+    if(p.tipo==='roteiro'&&p.pos&&p.pos.campo){
+      return `<button class="fab-passo-op" data-fabpasso="rotcfg" data-campo="${p.pos.campo}"
+        data-tipo="${p.pos.compAlvo||''}" data-v="${o.v}">
+        <b>${escapeHtml(o.nome)}</b>${o.porque?`<p>${escapeHtml(o.porque)}</p>`:''}</button>`;
+    }
     if(p.tipo==='pendencia'){
       return `<button class="fab-passo-op" data-fabpasso="pend" data-campo="${p.pend.campo||''}"
         data-tipo="${p.pend.tipo}" data-v="${o.v}">
@@ -8378,7 +9256,7 @@ function fabPainelPasso(){
         ${risco}
       </span></button>`;
   }).join('');
-  return cab+pratica+`<div class="fab-passo-ops">${cards}</div>`+
+  return cab+fecho+pratica+`<div class="fab-passo-ops">${cards}</div>`+
     (p.tipo!=='inicio'?`<button class="fab-passo-sair" data-fabguia="livre">Nenhuma dessas — abrir o catálogo completo</button>`:'');
 }
 
@@ -8386,6 +9264,14 @@ function fabPainelPasso(){
 // conduzir a partir dele.
 function fabPassoEscolher(tipo,valor,campo,subtipo){
   const p=fabPasso();if(!p)return;
+  // decisao de configuracao vinda do roteiro: define o que a peca existente vai
+  // ser, em vez de acrescentar peca nova
+  if(tipo==='rotcfg'){
+    const alvo=fabNos().find(n=>n.comp===subtipo);
+    if(alvo)fabDefinirCfg(alvo.id,campo,valor);
+    _fabGuia.passo++;fabSalvarGuia();
+    return;
+  }
   if(tipo==='pend'){
     if(subtipo==='proposito')fabDefinirProp(_fabGuia.atual,valor);
     else if(subtipo==='escritor')fabCriarEscritor(_fabGuia.atual,valor);
@@ -8599,6 +9485,43 @@ const FAB_CTXQ=[
      {v:'lowcode',nome:'Low-code (Dataflow Gen2)',desc:'A área de negócio mantém sozinha, com Power Query. Entrega rápido em volume baixo e médio; encarece e desacelera quando o volume cresce.'},
      {v:'zeroetl',nome:'Zero-ETL (Mirroring / Shortcut)',desc:'Sem pipeline para manter: o dado é espelhado ou apontado onde já está. É o menor custo de manutenção — quando a origem é suportada e você não precisa filtrar na entrada.'},
      {v:'streaming',nome:'Streaming-first',desc:'O evento entra em fluxo contínuo e é roteado por Eventstream. Latência de segundos, ao custo de complexidade operacional bem maior que lote.'}
+   ]},
+  {k:'carga',t:'Como cada execução traz o dado?',
+   dica:'É a decisão que mais separa arquitetura de desenho bonito. Ela define o que a origem precisa entregar, o que a tabela de controle guarda, e o que acontece quando alguém apaga uma linha lá na frente. Recomendar incremental sem verificar se dá para saber o que mudou seria o pior conselho desta ferramenta.',
+   quando:ctx=>!fabCtxTem(ctx,'origem','streaming')&&!fabCtxTem(ctx,'freq','realtime'),
+   rec:ctx=>{
+     if(fabCtxTem(ctx,'mudanca','cdc'))return 'cdc';
+     if(fabCtxTem(ctx,'historico','scd'))return 'scd2';
+     if(fabCtxTem(ctx,'historico','auditoria'))return 'snapshot';
+     if(fabCtxTem(ctx,'mudanca','coluna'))return fabCtxTem(ctx,'historico','atual')?'merge':'watermark';
+     if(fabCtxTem(ctx,'mudanca','nao'))return (fabCtxTem(ctx,'volume','pequeno')||fabCtxTem(ctx,'volume','medio'))?'full':'snapshot';
+     return 'watermark';
+   },
+   op:[
+     {v:'watermark',nome:'Incremental por data ou versão',desc:'Guarda o maior valor já lido e, na próxima execução, traz só o que passou dele. É o padrão da indústria — e o que exige mais disciplina: o watermark só pode ser gravado depois do sucesso, e dado que chega atrasado precisa de margem de retrocesso.'},
+     {v:'cdc',nome:'Change feed / CDC',desc:'A origem entrega as mudanças, inclusive as exclusões. É o melhor cenário e o único que resolve DELETE sem gambiarra. Exige suporte na origem e atenção à ordem de aplicação.'},
+     {v:'merge',nome:'Upsert por chave (MERGE)',desc:'Traz o que mudou e concilia por chave no destino: insere o novo, atualiza o existente. Depende de a chave ser realmente única — duplicata na origem faz o MERGE atualizar a linha errada, em silêncio.'},
+     {v:'scd2',nome:'Histórico de mudanças (SCD2)',desc:'Cada versão da linha vira um registro com vigência. Responde "qual era o valor em março". Dobra a complexidade da carga e triplica a do modelo — só vale se alguém for de fato consultar o passado.'},
+     {v:'full',nome:'Recarga completa',desc:'Apaga e recarrega tudo a cada execução. É o mais simples e o mais honesto quando a tabela é pequena. Deixa de servir quando o volume cresce ou a janela aperta — e nunca sobrevive a origem transacional grande.'},
+     {v:'snapshot',nome:'Foto periódica',desc:'Guarda o estado completo de cada execução, com data. É o que sustenta auditoria e reconstrução do passado sem SCD2. Cresce rápido: sem política de retenção, o custo de storage vira o problema.'},
+     {v:'append',nome:'Só inserção',desc:'Cada execução acrescenta, nada é atualizado. Natural para evento e log. Exige idempotência: reprocessar a mesma janela não pode duplicar.'},
+     {v:'naosei',nome:'Ainda não sei',desc:'Determinar isso é o primeiro trabalho técnico do projeto. Até lá, as recomendações ficam genéricas — e a ferramenta vai dizer isso em vez de fingir firmeza.'}
+   ]},
+  {k:'modelagem',t:'Como a camada de consumo é estruturada?',
+   dica:'Decide o que o modelo semântico consegue fazer e o que vira contorção em DAX depois. Trocar de modelagem com relatório publicado é das mudanças mais caras que existem.',
+   quando:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice')||fabCtxTem(ctx,'objetivo','dw')||fabCtxTem(ctx,'objetivo','lakehouse'),
+   rec:ctx=>{
+     if(fabCtxTem(ctx,'historico','auditoria'))return 'datavault';
+     if(fabCtxTem(ctx,'objetivo','dw')||fabCtxTem(ctx,'consumo','dashboard'))return 'estrela';
+     if(fabCtxTem(ctx,'consumo','ml'))return 'obt';
+     return 'estrela';
+   },
+   op:[
+     {v:'estrela',nome:'Estrela (Kimball)',desc:'Fatos no centro, dimensões ao redor, chave substituta. É o que o Power BI e o Direct Lake foram feitos para consumir — e o que a maioria dos problemas de performance em DAX revela estar faltando.'},
+     {v:'flocos',nome:'Floco de neve',desc:'Dimensões normalizadas em vários níveis. Economiza storage e agrada quem vem do OLTP, mas cada nível vira um relacionamento a mais no modelo e uma junção a mais em cada consulta.'},
+     {v:'datavault',nome:'Data Vault 2.0',desc:'Hubs, links e satélites: rastreabilidade total e carga paralelizável. Vale quando há muitas origens e exigência de auditoria. Não é camada de consumo — sem uma estrela por cima, ninguém do negócio consegue usar.'},
+     {v:'obt',nome:'One Big Table',desc:'Tudo desnormalizado numa tabela larga. Ótimo para ML e para consulta ad-hoc em Spark. Ruim para BI corporativo: métrica sem dimensão compartilhada não reconcilia entre relatórios.'},
+     {v:'naomodelado',nome:'Sem modelagem formal',desc:'O consumo lê o dado tratado como ele está. Aceitável em análise pontual; vira dívida assim que o segundo relatório precisar da mesma métrica.'}
    ]},
   {k:'criticidade',t:'Qual a criticidade dessa carga?',
    dica:'Define o rigor de controle, log e tratamento de erro que vale a pena investir desde o início.',
@@ -8885,7 +9808,10 @@ function fabNoHTML(n){
       _temPipe?'ir ao pipeline ↓':'montar pipeline ↓'}</button>`:'';
   const cfgTxt=Object.values(n.cfg||{}).length?
     `<span class="fab-no-cfg">${escapeHtml(Object.values(n.cfg).map(v=>FAB_ROT[v]||v).join(' · '))}</span>`:'';
-  return `<div class="fab-no${sel}${pend?' pend':''}${emEscopo}${art} nat-${nat}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}">
+  const _ap=_fabAPNos[n.id];
+  return `<div class="fab-no${sel}${pend?' pend':''}${emEscopo}${art} nat-${nat}${_ap?' antipadrao':''}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}"${
+    _ap?` title="Anti-padrão: ${escapeHtml(_ap.titulo)}"`:''}>
+    ${_ap?`<span class="fab-no-ap" title="${escapeHtml(_ap.porqueDoi||_ap.titulo)}">ANTI-PADRÃO</span>`:''}
     <div class="fab-no-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</div>
     <div class="fab-no-txt"><b>${escapeHtml(d.nome)}</b><i>${escapeHtml(sub)}</i>${cfgTxt}</div>
     <span class="fab-no-nat" title="${escapeHtml(FAB_NATUREZA[nat].dica)}">${FAB_NATUREZA[nat].rot}</span>
@@ -8946,6 +9872,7 @@ function fabRender(){
   if(vazio)vazio.style.display='none';
   if(palco)palco.style.visibility='';
 
+  fabMapearAP();
   const nos=fabNos(),mapa={};nos.forEach(n=>mapa[n.id]=n);
   // Moldura de escopo, atras de tudo: cerca os filhos de cada container e
   // acompanha os nos quando eles sao arrastados.
@@ -9008,6 +9935,7 @@ function fabRender(){
   fabRenderSugs();
   fabRenderIni();
   fabRenderPainel();
+  fabVigia();
 }
 
 function fabRenderAbas(){
@@ -9137,11 +10065,12 @@ function fabRenderPainel(){
   const el=$('#fabPainel');if(!el)return;
   const arq=fabArq();
   if(!arq){el.innerHTML='';return}
-  const abas=[['passo','Próximo passo'],['valid','Validação'],['road','Roadmap'],['res','Resumo']];
+  const abas=[['passo','Próximo passo'],['est','Estratégias'],['valid','Validação'],['road','Roadmap'],['res','Resumo']];
   const av=fabValidar();
   const nAvisos=av.filter(v=>v.nivel==='aviso').length;
   let corpo='';
   if(_fabPainel==='passo')corpo=fabPainelPasso();
+  else if(_fabPainel==='est')corpo=fabPainelEstrategias();
   else if(_fabPainel==='valid')corpo=fabPainelValid(av);
   else if(_fabPainel==='road')corpo=fabPainelRoad();
   else corpo=fabPainelResumo();
@@ -9181,7 +10110,22 @@ function fabRenderPainel(){
     </button>`;
     return;
   }
-  el.innerHTML=faixa+`
+  const pr=fabProntidao();
+  const _falta=[];
+  if(pr.abertas.length)_falta.push(pr.abertas.length+(pr.abertas.length===1?' decisão':' decisões'));
+  if(pr.pend.length)_falta.push(pr.pend.length+(pr.pend.length===1?' pendência':' pendências'));
+  if(pr.avisos.length)_falta.push(pr.avisos.length+(pr.avisos.length===1?' aviso':' avisos'));
+  const pront=`<div class="fab-pront${pr.pronto?' ok':''}" data-fabpronto="1"
+    title="${pr.pronto?'Nada obrigatório em aberto':'Ver o que falta'}">
+    <div class="fab-pront-bar"><span style="width:${pr.pronto?100:pr.pct}%"></span></div>
+    <div class="fab-pront-txt">
+      <b>${pr.pronto?'Pronta para o seu contexto':'Estratégia '+pr.feitas+' de '+pr.total}</b>
+      <i>${pr.pronto
+        ?(pr.opcionais.length?'daqui em diante é opcional — '+pr.opcionais.length+(pr.opcionais.length===1?' sugestão':' sugestões')+' de refinamento':'nada em aberto')
+        :'falta '+_falta.join(' · ')}</i>
+    </div>
+  </div>`;
+  el.innerHTML=faixa+fabAPFaixa()+pront+`
     <div class="fab-painel-abas">${abas.map(([k,t])=>
       `<button class="${_fabPainel===k?'on':''}" data-fabpainel="${k}">${t}${k==='valid'&&nAvisos?`<span class="fab-badge">${nAvisos}</span>`:''}</button>`
     ).join('')}<button class="fab-painel-min" data-fabmin="1" title="Recolher o painel e ampliar o quadro">›</button></div>
@@ -9240,6 +10184,116 @@ function fabPainelRoad(){
     <ul>${fase.comps.map(c=>`<li>${escapeHtml(FAB_COMP[c]?.nome||c)}</li>`).join('')}</ul>
   </div>`).join('');
 }
+
+// ---------- aba Estrategias: o leque ----------
+// Responde a pergunta que originou a ferramenta: "quais caminhos existem
+// aqui?". O passo a passo conduz por UM caminho; esta aba mostra todos, com o
+// que cada um custa e onde ele deixa de valer.
+let _fabCelula=null;   // celula da matriz aberta para explicacao
+
+function fabPainelEstrategias(){
+  const ctx=fabCtx();
+  const carga=fabCargaDe(ctx);
+  const declaradas=new Set(fabEstrategiasDo(ctx).map(e=>e.id));
+  const ordem=e=>{
+    const v=carga?fabVeredito(e.id,carga):null;
+    const peso={ideal:0,viavel:1,desaconselhado:2,incoerente:3}[v?v.v:'viavel'];
+    return (declaradas.has(e.id)?0:10)+peso;
+  };
+  const lista=FAB_ESTRATEGIA.slice().sort((a,b)=>ordem(a)-ordem(b));
+
+  // 1) contradicao declarada: aparece antes de qualquer peca existir
+  const conf=fabConflitosDeclarados(ctx);
+  const alerta=conf.length?`<div class="fab-est-conflito">
+    <b>A combinação declarada se contradiz</b>
+    ${conf.map(c=>`<p><i>${escapeHtml(c.est.nome)} + ${escapeHtml(fabCtxRotulo('carga',c.carga))}</i> — ${escapeHtml(c.rot)}: ${escapeHtml(c.porque)}</p>`).join('')}
+    <span>Isso não impede montar, mas o desenho vai carregar a contradição. Vale rever o contexto.</span>
+  </div>`:'';
+
+  const cabecalho=carga
+    ? `<p class="fab-est-cab">Padrão de carga declarado: <b>${escapeHtml(fabCtxRotulo('carga',carga))}</b>. Cada estratégia abaixo é avaliada contra ele.</p>`
+    : `<p class="fab-est-cab">Você ainda não declarou o padrão de carga. Responda essa pergunta no contexto e esta aba passa a cruzar as duas dimensões.</p>`;
+
+  // 2) os caminhos
+  const cards=lista.map(e=>{
+    const v=carga?fabVeredito(e.id,carga):null;
+    const dec=declaradas.has(e.id);
+    return `<div class="fab-est-card${dec?' on':''}">
+      <div class="fab-est-top">
+        <b>${escapeHtml(e.nome)}</b>
+        ${dec?'<span class="fab-est-dec">declarada</span>':''}
+        ${v?`<span class="fab-est-v" style="--c:${v.cor};--b:${v.bg}">${escapeHtml(v.rot)}</span>`:''}
+      </div>
+      <p class="fab-est-res">${escapeHtml(e.resumo)}</p>
+      ${v?`<p class="fab-est-porque">${escapeHtml(v.porque)}</p>`:''}
+      <div class="fab-est-linha"><i>Paga quando</i><span>${escapeHtml(e.paga)}</span></div>
+      <div class="fab-est-linha"><i>Deixa de valer</i><span>${escapeHtml(e.naoPaga)}</span></div>
+      <div class="fab-est-custos">
+        <span>montar: <b>${escapeHtml(e.custoMontagem)}</b></span>
+        <span>manter: <b>${escapeHtml(e.custoManutencao)}</b></span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 3) a matriz inteira
+  const cel=(eid,cid)=>{
+    const v=fabVeredito(eid,cid);
+    const sel=_fabCelula===eid+':'+cid?' sel':'';
+    return `<button class="fab-mx-cel${sel}" data-fabcel="${eid}:${cid}"
+      style="--c:${v.cor};--b:${v.bg}" title="${escapeHtml(v.porque)}">${escapeHtml(v.rot)}</button>`;
+  };
+  const matriz=`<div class="fab-mx">
+    <div class="fab-mx-linha cab"><span></span>${FAB_ESTRATEGIA.map(e=>
+      `<span class="fab-mx-h" title="${escapeHtml(e.nome)}">${escapeHtml(e.nome.split(' ')[0])}</span>`).join('')}</div>
+    ${FAB_CARGAS.map(c=>`<div class="fab-mx-linha">
+      <span class="fab-mx-r">${escapeHtml(fabCtxRotulo('carga',c))}</span>
+      ${FAB_ESTRATEGIA.map(e=>cel(e.id,c)).join('')}
+    </div>`).join('')}
+  </div>`;
+  let expl='';
+  if(_fabCelula){
+    const [eid,cid]=_fabCelula.split(':');
+    const v=fabVeredito(eid,cid),e=FAB_EST_MAP[eid];
+    if(v)expl=`<div class="fab-mx-expl" style="--c:${v.cor};--b:${v.bg}">
+      <b>${escapeHtml(e.nome)} + ${escapeHtml(fabCtxRotulo('carga',cid))} — ${escapeHtml(v.rot)}</b>
+      <p>${escapeHtml(v.porque)}</p></div>`;
+  }
+
+  // 4) o que a escolha implica
+  const rot=fabRoteiro();
+  const minhas=fabEstrategiasDo(ctx);
+  const posIds=new Set(minhas.flatMap(e=>e.posicoes||[]));
+  const posLista=rot.filter(x=>posIds.has(x.id)||x.fase==='Carga');
+  const implica=minhas.length?`<div class="fab-est-sec">
+    <b>O que a sua escolha implica</b>
+    ${posLista.length?`<ul class="fab-est-pos">${posLista.map(x=>
+      `<li class="${x.pronta?'ok':''}">${escapeHtml(x.t)}</li>`).join('')}</ul>`
+      :'<p class="fab-est-vazio">Nenhuma decisão específica em aberto.</p>'}
+    <p class="fab-est-ap">Anti-padrões típicos deste caminho: ${
+      minhas.flatMap(e=>e.antipadroes||[]).map(id=>{
+        const r=FAB_VALID.find(v=>v.id===id);return r?escapeHtml(r.titulo):null;
+      }).filter(Boolean).join(' · ')||'nenhum catalogado'}</p>
+  </div>`:'';
+
+  // 5) o que a ferramenta NAO sabe avaliar
+  const naoCobre=`<div class="fab-est-sec fora">
+    <b>O que esta ferramenta não avalia</b>
+    <ul>
+      <li>Custo real em reais: o consumo de CU depende do dado e do horário, e nada aqui mede isso.</li>
+      <li>Se a origem aguenta a carga que você desenhou — isso se descobre com o DBA, não num diagrama.</li>
+      <li>Licenciamento, contrato e limite de conector de terceiros.</li>
+      <li>Qualidade do dado que já existe na origem: o desenho assume que ela é o que dizem que é.</li>
+      <li>Política interna, LGPD aplicada ao seu caso, e o que o jurídico exige de retenção.</li>
+      <li>Se o time vai realmente manter o que foi desenhado depois que você sair do projeto.</li>
+    </ul>
+  </div>`;
+
+  return alerta+cabecalho+`<div class="fab-est-lista">${cards}</div>`+
+    `<div class="fab-est-sec"><b>Todos os cruzamentos</b>
+     <p class="fab-est-vazio">Clique numa célula para ver o motivo.</p>${matriz}${expl}</div>`+
+    implica+naoCobre;
+}
+
 function fabPainelResumo(){
   const arq=fabArq(),ctx=fabCtx(),nos=fabNos();
   const porEtapa={};
@@ -9416,6 +10470,11 @@ const FAB_PEDE={
   'sproc-lakehouse':['warehouse'],'incremental-sem-controle':['ctrltable','sproc'],
   'controle-sem-log':['logtable'],'critico-sem-alerta':['notify','activator'],
   'tabela-sem-casa':['warehouse','lakehouse'],
+  'incremental-sem-manutencao':['otimiza'],'directlake-sem-guardrail':['otimiza'],
+  'segredo-no-pipeline':['keyvault'],'dev-prod-juntos':['capacidade','workspace'],
+  'incremental-sem-delete':['ctrltable'],'datavault-sem-apresentacao':['semantic','gold'],
+  'fato-sem-dimdata':['gold'],'particao-cardinalidade':['otimiza'],
+  'import-em-vez-de-directlake':['semantic'],'pip-em-producao':['deploy'],
   'foreach-aninhado':['invoke'],'container-vazio':['invoke','copy','notebook'],
   'metadata-sem-controle':['ctrltable','lookup'],'zeroetl-com-pipeline':['mirroring','shortcut'],
   'incremental-sem-fonte':['bronze','notebook'],'sensivel-sem-acesso':['rls'],
@@ -9676,6 +10735,7 @@ function fabInit(){
     const a=e.target.closest('[data-fabarq]');
     if(a&&a.dataset.fabarq!==fabCur){
       fabCur=a.dataset.fabarq;_fabSel=null;_fabVerTudo=false;
+      _fabAP=null;_fabAPFoco=null;   // outro quadro, outra linha de base
       fabSave();fabRender();
     }
   });
@@ -9722,6 +10782,12 @@ function fabInit(){
     const mn=e.target.closest('[data-fabmin]');
     if(mn){_fabPainelMin=mn.dataset.fabmin==='1';try{sv('bt-fab-pmin',_fabPainelMin)}catch(_){}
       fabRenderPainel();setTimeout(()=>{try{fabAjustar()}catch(_){}},80);return}
+    const cel=e.target.closest('[data-fabcel]');
+    if(cel){_fabCelula=_fabCelula===cel.dataset.fabcel?null:cel.dataset.fabcel;fabRenderPainel();return}
+    const apx=e.target.closest('[data-fabapx]');
+    if(apx){if(_fabAPFoco)_fabAPMudo.add(_fabAPFoco);_fabAPFoco=null;fabRenderPainel();return}
+    const pb=e.target.closest('[data-fabpronto]');
+    if(pb){_fabPainel='valid';try{sv('bt-fab-painel','valid')}catch(_){}fabRenderPainel();return}
     const cb=e.target.closest('[data-fabctx]');
     if(cb){
       if(cb.dataset.fabctx==='alterna'){_fabCtxAberto=!_fabCtxAberto;
