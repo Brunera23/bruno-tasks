@@ -2001,15 +2001,27 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-ini-fechar:hover{border-color:var(--label2);color:var(--label)}
 
 /* faixa de contexto: sempre visivel, porque e ela que sustenta as recomendacoes */
-.fab-ctxbar{padding:11px 14px;border-bottom:1px solid var(--sep);cursor:pointer;background:var(--hover)}
-.fab-ctxbar:hover{background:var(--card)}
+.fab-ctxbar{border-bottom:1px solid var(--sep);background:var(--hover)}
+.fab-ctxbar-lin{display:flex;align-items:center;gap:8px;padding:8px 12px}
+.fab-ctxbar-lin>button{border:0;background:none;cursor:pointer;font-family:inherit;text-align:left;padding:0}
+.fab-ctxbar-t{flex-shrink:0}
+.fab-ctxbar-t:hover{filter:brightness(1.18)}
+.fab-ctxbar-seta{color:var(--label3);font-size:13px;line-height:1;flex-shrink:0}
+.fab-ctxbar-corpo{padding:0 12px 11px}
+.fab-ctxbar-rev{margin-top:8px;border:1px solid var(--sep);background:var(--card);color:var(--label2);
+  font-size:11.5px;font-weight:650;padding:5px 11px;border-radius:8px;cursor:pointer;font-family:inherit}
+.fab-ctxbar-rev:hover{border-color:#0078d4;color:var(--label)}
 .fab-ctxbar-t{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
   padding:2px 8px;border-radius:10px;color:#fff}
 .fab-ctxbar.firme .fab-ctxbar-t{background:#1e6b34}
 .fab-ctxbar.media .fab-ctxbar-t{background:#c07d1a}
 .fab-ctxbar.fraca .fab-ctxbar-t{background:#a3312c}
-.fab-ctxbar-d{display:block;margin-top:5px;font-size:12px;color:var(--label2);line-height:1.45}
-.fab-ctxbar-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.fab-ctxbar-d{flex:1;min-width:0;display:flex;align-items:center;gap:6px;font-size:11.5px;
+  color:var(--label2);line-height:1.35}
+.fab-ctxbar-d>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fab-ctxbar-d:hover{color:var(--label)}
+.fab-ctxbar.aberto .fab-ctxbar-d>span:first-child{white-space:normal}
+.fab-ctxbar-chips{display:flex;flex-wrap:wrap;gap:4px}
 .fab-ctxbar-chips i{font-style:normal;font-size:10.5px;padding:2px 7px;border-radius:9px;
   background:var(--bg);border:1px solid var(--sep);color:var(--label2)}
 .fab-passo-ctx{display:block;margin-top:6px;padding:6px 9px;border-left:3px solid #0078d4;
@@ -2075,7 +2087,18 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 
 /* painel lateral */
 .fab-painel{width:348px;flex-shrink:0;display:flex;flex-direction:column;border:1px solid var(--sep);
-  border-radius:14px;background:var(--card);overflow:hidden}
+  border-radius:14px;background:var(--card);overflow:hidden;transition:width .22s var(--ease-expo)}
+/* recolhido, o painel devolve a largura toda ao quadro */
+.fab-painel.min{width:38px}
+.fab-painel-min{flex:0 0 34px;border:0;background:none;color:var(--label3);font-size:16px;cursor:pointer;
+  line-height:1;border-left:1px solid var(--sep)}
+.fab-painel-min:hover{background:var(--hover);color:var(--label)}
+.fab-painel-abrir{width:100%;height:100%;border:0;background:none;cursor:pointer;display:flex;
+  flex-direction:column;align-items:center;gap:12px;padding:12px 0;font-family:inherit}
+.fab-painel-abrir:hover{background:var(--hover)}
+.fab-painel-abrir-i{color:var(--label3);font-size:16px;line-height:1;transform:rotate(180deg)}
+.fab-painel-abrir-t{writing-mode:vertical-rl;font-size:12px;font-weight:650;color:var(--label2);
+  letter-spacing:.02em;white-space:nowrap}
 .fab-painel-abas{display:flex;border-bottom:1px solid var(--sep);flex-shrink:0}
 .fab-painel-abas button{flex:1;padding:12px 4px;border:0;background:none;color:var(--label2);font-size:13px;
   font-weight:650;cursor:pointer;position:relative}
@@ -2200,7 +2223,8 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 /* paleta e wizard */
 .fab-modal{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.45);display:none;
   align-items:center;justify-content:center;padding:20px}
-.fab-modal-cx{width:100%;max-width:560px;max-height:82vh;display:flex;flex-direction:column;
+.fab-modal-cx.pal{max-width:860px}
+.fab-modal-cx{width:100%;max-width:560px;max-height:86vh;display:flex;flex-direction:column;
   background:var(--bg);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .fab-modal-top{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--sep);flex-shrink:0}
 .fab-modal-top b{font-size:15px;color:var(--label)}
@@ -2209,15 +2233,23 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
   background:var(--card);color:var(--label);font-size:13px;outline:none}
 .fab-pal-busca:focus{border-color:#0078d4}
 #fabPalLista{overflow-y:auto;padding:12px 18px 18px}
-.fab-pal-grupo{margin-bottom:14px}
-.fab-pal-grupo>span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
-  color:var(--et);margin-bottom:6px}
-.fab-pal-grupo button{display:inline-flex;align-items:center;gap:6px;margin:0 5px 5px 0;padding:6px 11px 6px 7px;
-  border:1px solid var(--sep);background:var(--card);color:var(--label);border-radius:18px;font-size:12px;
-  font-weight:600;cursor:pointer;text-align:left}
-.fab-pal-grupo button:hover{border-color:#0078d4;background:var(--hover)}
-.fab-pal-grupo button i{width:17px;height:17px;color:var(--label2);flex-shrink:0}
+/* Catalogo em grade: 57 componentes em fileiras de pilulas viravam um paredao
+   sem hierarquia. Cada peca vira um cartao com icone, nome e o que ela e. */
+#fabPalLista{padding:14px 20px 20px}
+.fab-pal-grupo{margin-bottom:20px}
+.fab-pal-grupo>span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;font-weight:700;
+  color:var(--et);margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--sep)}
+.fab-pal-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:8px}
+.fab-pal-grupo button{display:flex;align-items:flex-start;gap:9px;padding:10px 11px;
+  border:1px solid var(--sep);background:var(--card);color:var(--label);border-radius:11px;
+  cursor:pointer;text-align:left;font-family:inherit;transition:border-color .12s,background .12s}
+.fab-pal-grupo button:hover{border-color:var(--et);background:var(--hover)}
+.fab-pal-grupo button i{width:22px;height:22px;color:var(--et);flex-shrink:0;margin-top:1px}
 .fab-pal-grupo button i svg{width:100%;height:100%;display:block}
+.fab-pal-txt{min-width:0;display:flex;flex-direction:column;gap:2px}
+.fab-pal-txt b{font-size:12.5px;font-weight:650;line-height:1.25}
+.fab-pal-txt em{font-style:normal;font-size:11px;color:var(--label2);line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 #fabWizConteudo{overflow-y:auto;padding:22px}
 .fab-wiz-n{display:inline-block;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
   color:var(--label2);margin-bottom:6px}
@@ -2285,7 +2317,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
     </div>
 
     <div class="fab-modal" id="fabPaleta">
-      <div class="fab-modal-cx">
+      <div class="fab-modal-cx pal">
         <div class="fab-modal-top"><b>Catálogo de componentes Fabric</b>
           <button class="fab-modal-x" onclick="fabFecharPaleta()">×</button></div>
         <input class="fab-pal-busca" id="fabPalBusca" type="search" placeholder="Buscar componente..." autocomplete="off">
@@ -2934,7 +2966,7 @@ let _loggingOut=false;
 // outra entra, o cache da anterior continua lá, aparece na tela da conta nova e
 // pode até ser gravado por cima dos dados dela no Firestore. Estas chaves são
 // dados de conta e precisam morrer junto com a sessão.
-const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel','bt-canvas','bt-cv-cam','bt-cv-boards','bt-cv-edges','bt-cv-cur','bt-fab-arqs','bt-fab-items','bt-fab-edges','bt-fab-cur','bt-fab-cam','bt-fab-painel','bt-menu'];
+const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel','bt-canvas','bt-cv-cam','bt-cv-boards','bt-cv-edges','bt-cv-cur','bt-fab-arqs','bt-fab-items','bt-fab-edges','bt-fab-cur','bt-fab-cam','bt-fab-painel','bt-fab-ctxab','bt-fab-pmin','bt-menu'];
 const LS_ACCOUNT_UID='bt-account-uid'; // uid dono do cache que está no disco agora
 function clearAccountCache(){ACCOUNT_LS_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}
 
@@ -6888,6 +6920,10 @@ let fabEdges=ld('bt-fab-edges',[]);        // ligacoes: {id,arq,from,to}
 let fabCur=ld('bt-fab-cur','');            // arquitetura aberta
 let fabCams=ld('bt-fab-cam',{});
 let _fabSel=null,_fabDrag=null,_fabPan=null,_fabHover=null,_fabVerTudo=false,_fabPainel=ld('bt-fab-painel','passo');
+// Contexto recolhido por padrao: depois de respondido ele e referencia, nao
+// conteudo — ocupava metade do painel para dizer o que ja foi decidido.
+// Painel recolhido devolve a largura inteira ao quadro.
+let _fabCtxAberto=ld('bt-fab-ctxab',false),_fabPainelMin=ld('bt-fab-pmin',false);
 let _fabHist=[],_fabHistFut=[],_fabHistCong=false;
 const FAB_W=200,FAB_H=66,FAB_HEAD=42,FAB_PAD=18;
 // Caixa ocupada por um no. Container cresce para caber quem esta dentro dele —
@@ -8961,18 +8997,42 @@ function fabRenderPainel(){
   const apl=fabCtxAplicaveis(),tot=apl.length;
   const resp=apl.filter(q=>fabCtxRespondida(ctx,q)&&ctx[q.k]!=='naoinformado').length;
   const firmeza=resp===tot?'firme':resp>=Math.ceil(tot/2)?'media':'fraca';
-  const faixa=`<div class="fab-ctxbar ${firmeza}" data-fabctx="abrir" title="Clique para revisar o contexto">
-    <span class="fab-ctxbar-t">Contexto ${resp}/${tot}</span>
-    <span class="fab-ctxbar-d">${resp===tot?'recomendações com base completa'
+  // O contexto e a base da recomendacao, mas depois de respondido ele vira
+  // referencia — nao precisa ocupar meio painel. Fica numa linha, e abre se
+  // voce quiser conferir.
+  const _resumo=resp===tot?'recomendações com base completa'
       :resp===0?'sem contexto — as sugestões são genéricas'
-      :'faltam '+(tot-resp)+' respostas para as recomendações ficarem firmes'}</span>
-    ${resp?`<span class="fab-ctxbar-chips">${apl.filter(q=>fabCtxRespondida(ctx,q)&&ctx[q.k]!=='naoinformado').map(q=>
-      `<i>${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</i>`).join('')}</span>`:''}
+      :'faltam '+(tot-resp)+' respostas para as recomendações ficarem firmes';
+  // O selo abre a revisao direto; a linha inteira expande as respostas. Duas
+  // acoes diferentes no mesmo lugar precisam de dois alvos.
+  const faixa=`<div class="fab-ctxbar ${firmeza}${_fabCtxAberto?' aberto':''}">
+    <div class="fab-ctxbar-lin">
+      <button class="fab-ctxbar-t" data-fabctx="abrir" title="Revisar as respostas de contexto">Contexto ${resp}/${tot}</button>
+      <button class="fab-ctxbar-d" data-fabctx="alterna" title="${_fabCtxAberto?'Recolher':'Ver as respostas'}">
+        <span>${_resumo}</span><span class="fab-ctxbar-seta">${_fabCtxAberto?'⌃':'⌄'}</span>
+      </button>
+    </div>
+    ${_fabCtxAberto?`<div class="fab-ctxbar-corpo">
+      ${resp?`<span class="fab-ctxbar-chips">${apl.filter(q=>fabCtxRespondida(ctx,q)&&ctx[q.k]!=='naoinformado').map(q=>
+        `<i>${escapeHtml(fabCtxRotulo(q.k,ctx[q.k]))}</i>`).join('')}</span>`:''}
+      <button class="fab-ctxbar-rev" data-fabctx="abrir">Revisar contexto</button>
+    </div>`:''}
   </div>`;
+  const pn=$('#fabPainel');
+  if(pn)pn.classList.toggle('min',!!_fabPainelMin);
+  // Recolhido, o painel vira uma faixa estreita e o quadro ocupa a tela. O que
+  // fica visivel e o suficiente para saber que ha algo esperando resposta.
+  if(_fabPainelMin){
+    el.innerHTML=`<button class="fab-painel-abrir" data-fabmin="0" title="Abrir o painel">
+      <span class="fab-painel-abrir-i">›</span>
+      <span class="fab-painel-abrir-t">Próximo passo${nAvisos?' · '+nAvisos:''}</span>
+    </button>`;
+    return;
+  }
   el.innerHTML=faixa+`
     <div class="fab-painel-abas">${abas.map(([k,t])=>
       `<button class="${_fabPainel===k?'on':''}" data-fabpainel="${k}">${t}${k==='valid'&&nAvisos?`<span class="fab-badge">${nAvisos}</span>`:''}</button>`
-    ).join('')}</div>
+    ).join('')}<button class="fab-painel-min" data-fabmin="1" title="Recolher o painel e ampliar o quadro">›</button></div>
     <div class="fab-painel-corpo">${corpo}</div>`;
 }
 // O no que o alerta esta acusando, quando da para identificar. Sem isso o
@@ -9289,12 +9349,14 @@ function fabRenderPaleta(q){
       return (d.nome+' '+d.oque+' '+d.quando).toLowerCase().includes(q);
     });
     if(!itens.length)return;
-    html+=`<div class="fab-pal-grupo"><span style="--et:${et.cor}">${et.nome}</span>
-      ${itens.map(k=>{
+    html+=`<div class="fab-pal-grupo" style="--et:${et.cor}"><span>${et.nome}</span>
+      <div class="fab-pal-lista">${itens.map(k=>{
         const d=FAB_COMP[k];
         return `<button data-fabadd="${k}" title="${escapeHtml(d.oque)}">
-          <i>${FAB_ICO[d.ico]||FAB_ICO.base}</i>${escapeHtml(d.nome)}</button>`;
-      }).join('')}</div>`;
+          <i>${FAB_ICO[d.ico]||FAB_ICO.base}</i>
+          <span class="fab-pal-txt"><b>${escapeHtml(d.nome)}</b>
+            <em>${escapeHtml(d.curto||d.oque)}</em></span></button>`;
+      }).join('')}</div></div>`;
   });
   el.innerHTML=html||'<div class="fab-vaziop">Nada encontrado.</div>';
 }
@@ -9493,8 +9555,15 @@ function fabInit(){
       fabAddManual(comp);
       return;
     }
+    const mn=e.target.closest('[data-fabmin]');
+    if(mn){_fabPainelMin=mn.dataset.fabmin==='1';try{sv('bt-fab-pmin',_fabPainelMin)}catch(_){}
+      fabRenderPainel();setTimeout(()=>{try{fabAjustar()}catch(_){}},80);return}
     const cb=e.target.closest('[data-fabctx]');
-    if(cb){fabAbrirContexto();return}
+    if(cb){
+      if(cb.dataset.fabctx==='alterna'){_fabCtxAberto=!_fabCtxAberto;
+        try{sv('bt-fab-ctxab',_fabCtxAberto)}catch(_){}fabRenderPainel();return}
+      fabAbrirContexto();return;
+    }
     const g=e.target.closest('[data-fabguia]');
     if(g){
       const a=g.dataset.fabguia;
