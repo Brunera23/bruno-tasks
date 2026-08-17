@@ -2336,6 +2336,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 /* decisao que vem do esqueleto da estrategia, nao do "o que costuma vir depois" */
 .fab-passo-n.rot{background:#ece6fb;color:#553aa8}
 .fab-passo-n.refino{background:var(--hover);color:var(--label3)}
+.fab-passo-n.ctxp{background:#e6f2ec;color:#1e6b34}
 .fab-passo-cab b{display:block;font-size:16px;font-weight:700;color:var(--label);line-height:1.32;letter-spacing:-.01em}
 .fab-passo-cab i{display:block;margin-top:7px;font-style:normal;font-size:12.5px;color:var(--label2);line-height:1.6}
 .fab-passo-ops{display:flex;flex-direction:column;gap:7px}
@@ -7391,7 +7392,43 @@ function fabVoltarPai(){
   fabSave();fabRender();
   setTimeout(()=>{try{fabAjustar()}catch(e){}},40);
 }
-function fabCtx(){return fabArq()?.ctx||{}}
+// ---------- contexto em tres niveis ----------
+// Nivel 1 (arquitetura) vale para a plataforma inteira e mora em `arq.ctx`.
+// Niveis 2 (papel do pipeline) e 3 (ingestao) variam POR PIPELINE e moram no
+// dono do escopo: a propria arquitetura para o mestre, e o no Invoke para cada
+// filho. Um pipeline que so le a lista e invoca outros nao tem origem, nem
+// volume, nem padrao de carga — perguntar SCD2 para ele era pergunta sem
+// resposta, e era o que forcava uma resposta unica para pergunta com N.
+function fabDonoPipe(no){return (no&&no.pipe)?fabItems.find(n=>n.id===no.pipe):null}
+function fabEscopoCtx(no){return fabDonoPipe(no)||fabArq()}
+function fabCtxDe(no){
+  const arq=fabArq(),dono=fabEscopoCtx(no);
+  return {...(arq?.ctx||{}),...((dono&&dono.ctxPipe)||{})};
+}
+// o escopo em foco: o que o passo a passo esta conduzindo, ou o que voce clicou
+function fabNoFoco(){
+  const id=_fabGuia.atual||_fabSel;
+  return id?fabItems.find(n=>n.id===id&&n.arq===fabCur):null;
+}
+function fabCtx(){return fabCtxDe(fabNoFoco())}
+// identidade do escopo, para o vigia saber que o foco mudou de pipeline
+function fabEscopoId(){const d=fabDonoPipe(fabNoFoco());return d?d.id:'@mestre'}
+// grava a resposta no nivel a que ela pertence
+function fabCtxGravar(k,v){
+  const arq=fabArq();if(!arq)return;
+  const q=FAB_CTXQ_MAP[k];
+  if(!q||q.nivel==='arq'){arq.ctx=arq.ctx||{};arq.ctx[k]=v;return}
+  const dono=fabEscopoCtx(fabNoFoco())||arq;
+  dono.ctxPipe=dono.ctxPipe||{};
+  dono.ctxPipe[k]=v;
+}
+function fabCtxApagar(k){
+  const arq=fabArq();if(!arq)return;
+  const q=FAB_CTXQ_MAP[k];
+  if(!q||q.nivel==='arq'){if(arq.ctx)delete arq.ctx[k];return}
+  const dono=fabEscopoCtx(fabNoFoco())||arq;
+  if(dono.ctxPipe)delete dono.ctxPipe[k];
+}
 function fabNos(){return fabItems.filter(n=>n.arq===fabCur)}
 function fabLigs(){
   const ids=new Set(fabNos().map(n=>n.id));
@@ -8435,7 +8472,13 @@ function fabMapearAP(){
   });
 }
 
+let _fabAPEscopo=null;    // de qual pipeline era a ultima medicao
 function fabVigia(){
+  // Trocar o foco troca o contexto, e com ele o conjunto de anti-padroes. Isso
+  // nao e "nasceu um novo": e outra medicao. Sem re-basear, so olhar outro
+  // pipeline ja disparava alerta falso.
+  const esc=fabEscopoId();
+  if(esc!==_fabAPEscopo){_fabAPEscopo=esc;_fabAP=null;_fabAPFoco=null}
   const ativos=fabAntipadroes();
   const agora=new Set(ativos.map(v=>v.id));
   if(_fabAP===null){_fabAP=agora;return}     // primeiro render nao acusa nada
@@ -8712,7 +8755,25 @@ function fabNovaArq(nome,ctx,nos,props,cfgs){
 // distribui os componentes de um template em colunas por etapa do fluxo.
 // `props` traz o proposito padrao de cada componente no contexto do template —
 // sem isso, um template pronto nasceria com dez perguntas pendentes na tela.
+// Um padrao pronto que traz Copy Data obviamente ingere; um que so traz Lookup
+// e Invoke obviamente orquestra. Perguntar o papel depois de montar o template
+// e perguntar o que o proprio template ja respondeu.
+function fabPapelDoDesenho(comps){
+  const tem=l=>l.some(c=>comps.includes(c));
+  if(tem(['copy','copyjob','dataflow','mirroring','shortcut','eventstream']))return 'ingere';
+  if(tem(['invoke','foreach','lookup']))return 'orquestra';
+  if(tem(['notebook','sparkjob','sproc','silver','gold']))return 'transforma';
+  if(tem(['semantic','pbi','rtdash','mlmodel']))return 'publica';
+  return null;
+}
 function fabSemear(comps,props,cfgs){
+  // o papel do pipeline sai do proprio desenho: nao ha por que perguntar o que
+  // o padrao pronto ja respondeu
+  const _a=fabArq();
+  if(_a){
+    const pap=fabPapelDoDesenho(comps||[]);
+    if(pap){_a.ctxPipe=_a.ctxPipe||{};if(_a.ctxPipe.papel===undefined)_a.ctxPipe.papel=pap}
+  }
   const ordem=FAB_ETAPAS.map(e=>e.id);
   const colDe=c=>{
     const d=FAB_COMP[c];if(!d)return 0;
@@ -9138,7 +9199,27 @@ function fabPasso(){
   }
   const no=nos.find(n=>n.id===_fabGuia.atual);
   if(!no){_fabGuia.atual=null;fabSalvarGuia();return fabPasso()}
+  // O passo de contexto do pipeline. `papel` vem ANTES de tudo, porque e ele
+  // que decide o que faz sentido recomendar: um pipeline que so orquestra nao
+  // tem origem nem padrao de carga. As perguntas de ingestao vem DEPOIS da
+  // pendencia do no — quando voce esta olhando um componente, a configuracao
+  // obrigatoria dele e o assunto imediato.
+  // Passar os niveis explicitamente furava a trava: `ingest` so existe depois
+  // de `papel==='ingere'`. Usa os niveis ATIVOS.
+  const _falta=fabCtxFaltando();
+  const _passoCtx=q=>{
+    const _dono=fabDonoPipe(no);
+    return {tipo:'ctxpipe',no,q,t:q.t,dica:q.dica,
+      escopo:_dono?('Pipeline chamado por '+FAB_COMP[_dono.comp].nome):'Pipeline principal',
+      op:q.op.map(o=>({...o,comp:null,desc:o.desc||''}))};
+  };
+  const _qPipe=_falta.find(q=>q.nivel==='pipe');
+  if(_qPipe)return _passoCtx(_qPipe);
   const pend=fabPendencia(no);
+  if(!pend){
+    const _qIng=_falta.find(q=>q.nivel==='ingest');
+    if(_qIng)return _passoCtx(_qIng);
+  }
   // resolvido o que a peca transversal exigia, a conducao retoma o caminho do
   // dado — em vez de seguir emendando monitoramento em cima de monitoramento
   if(!pend&&_fabGuia.volta&&fabEhTransversal(no.comp)){
@@ -9246,8 +9327,9 @@ function fabPainelPasso(){
     </div>`+(_fabColunas?fabColunasHTML(p.no.comp):'')+(_fabDetalhe?fabDetalheHTML(d):'');
   }
   const cab=foco+`<div class="fab-passo-cab">
-    <span class="fab-passo-n${p.tipo==='roteiro'?' rot':''}${p.refino?' refino':''}">${p.tipo==='roteiro'
+    <span class="fab-passo-n${p.tipo==='roteiro'?' rot':''}${p.refino?' refino':''}${p.tipo==='ctxpipe'?' ctxp':''}">${p.tipo==='roteiro'
       ?`Estratégia · decisão ${p.prog.i} de ${p.prog.n}`
+      :p.tipo==='ctxpipe'?`Contexto · ${escapeHtml(p.escopo)}`
       :p.refino?'Refinamento':`Passo ${_fabGuia.passo}`}</span>
     <b>${escapeHtml(p.t)}</b>
     ${p.dica?`<i>${escapeHtml(p.dica)}</i>`:''}
@@ -9288,6 +9370,10 @@ function fabPainelPasso(){
     }
   }
   const cards=p.op.map(o=>{
+    if(p.tipo==='ctxpipe'){
+      return `<button class="fab-passo-op" data-fabpasso="ctxq" data-campo="${p.q.k}" data-v="${o.v}">
+        <b>${escapeHtml(o.nome)}</b>${o.desc?`<p>${escapeHtml(o.desc)}</p>`:''}</button>`;
+    }
     // decisao de configuracao do roteiro: mesma forma da resposta de pendencia
     if(p.tipo==='roteiro'&&p.pos&&p.pos.campo){
       return `<button class="fab-passo-op" data-fabpasso="rotcfg" data-campo="${p.pos.campo}"
@@ -9325,6 +9411,11 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
   const p=fabPasso();if(!p)return;
   // decisao de configuracao vinda do roteiro: define o que a peca existente vai
   // ser, em vez de acrescentar peca nova
+  if(tipo==='ctxq'){
+    fabCtxGravar(campo,valor);
+    fabSave();fabRender();
+    return;
+  }
   if(tipo==='rotcfg'){
     const alvo=fabNos().find(n=>n.comp===subtipo);
     if(alvo)fabDefinirCfg(alvo.id,campo,valor);
@@ -9430,7 +9521,7 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
 // As perguntas vivem AQUI, no palco, e nao num assistente separado: ter dois
 // questionarios competindo era o que tornava o fluxo confuso.
 const FAB_CTXQ=[
-  {k:'objetivo',t:'Qual é o objetivo desta arquitetura?',
+  {k:'objetivo',nivel:'arq',t:'Qual é o objetivo desta arquitetura?',
    dica:'É o objetivo que determina por onde faz sentido começar e quais componentes entram em jogo.',
    op:[
      {v:'ingestao',nome:'Trazer dados para o Fabric',desc:'O foco é a ingestão em si: origens, carga e controle.'},
@@ -9441,7 +9532,7 @@ const FAB_CTXQ=[
      {v:'governanca',nome:'Governança e qualidade',desc:'Controle, log, linhagem, segurança e padronização.'},
      {v:'selfservice',nome:'Self-service analytics',desc:'Base curada para a área de negócio explorar sozinha.'}
    ]},
-  {k:'origem',t:'De onde vem o dado principal?',
+  {k:'origem',nivel:'ingest',t:'De onde vem o dado principal?',
    dica:'A origem determina a técnica de ingestão, o custo e os cuidados de toda a carga.',
    op:[
      {v:'relacional',nome:'Banco relacional',desc:'SQL Server, Oracle, PostgreSQL.'},
@@ -9457,14 +9548,14 @@ const FAB_CTXQ=[
      {v:'objeto',nome:'Object storage',desc:'S3, ADLS, GCS. O dado já está num lake: quase sempre dá para apontar em vez de copiar.'},
      {v:'mainframe',nome:'Mainframe / AS400 / DB2',desc:'Legado crítico com janela de acesso negociada e formatos que exigem conversão.'}
    ]},
-  {k:'objetos',t:'Quantos objetos essa carga precisa trazer?',
+  {k:'objetos',nivel:'ingest',t:'Quantos objetos essa carga precisa trazer?',
    dica:'Volume de linhas e quantidade de objetos são coisas diferentes, e é esta que decide a estratégia: 3 tabelas gigantes e 300 tabelas pequenas pedem desenhos opostos.',
    op:[
      {v:'poucos',nome:'Poucos (até 3)',desc:'Um pipeline explícito por objeto é mais legível e mais fácil de depurar. Metadados aqui só adicionam peça.'},
      {v:'dezenas',nome:'Dezenas (4 a 50)',desc:'A faixa em que o pipeline dirigido por metadados começa a se pagar: uma peça no lugar de dezenas.'},
      {v:'centenas',nome:'Centenas (50+)',desc:'Metadados deixam de ser opção e viram necessidade. Manter um pipeline por objeto nessa escala é inviável.'}
    ]},
-  {k:'volume',t:'Qual o volume esperado?',
+  {k:'volume',nivel:'ingest',t:'Qual o volume esperado?',
    dica:'Volume decide entre processamento distribuído e ferramenta visual — e é onde mais se erra por otimismo.',
    op:[
      {v:'pequeno',nome:'Pequeno',desc:'Até algumas dezenas de milhares de linhas.'},
@@ -9472,7 +9563,7 @@ const FAB_CTXQ=[
      {v:'grande',nome:'Grande',desc:'Dezenas de milhões — Dataflow Gen2 começa a doer aqui.'},
      {v:'muitogrande',nome:'Muito grande',desc:'Bilhões de linhas: Spark e particionamento deixam de ser opcionais.'}
    ]},
-  {k:'mudanca',t:'A origem permite saber o que mudou desde a última carga?',
+  {k:'mudanca',nivel:'ingest',t:'A origem permite saber o que mudou desde a última carga?',
    dica:'É o bloqueio prático mais comum em projeto real. Sem uma forma de identificar o que mudou, carga incremental é impossível — e recomendar incremental sem verificar isso seria o pior conselho que esta ferramenta poderia dar.',
    quando:ctx=>['relacional','sap','oracle','api','arquivos','sharepoint','clouddw','saas','nosql','mainframe'].includes(Array.isArray(ctx.origem)?ctx.origem[0]:ctx.origem),
    op:[
@@ -9481,14 +9572,14 @@ const FAB_CTXQ=[
      {v:'nao',nome:'Não há como saber',desc:'Sem coluna de controle e sem CDC. Só resta carga full a cada execução, ou comparar snapshots — caro e pouco confiável para detectar exclusão.'},
      {v:'naosei',nome:'Ainda não sei',desc:'Descobrir isso é o primeiro trabalho técnico do projeto: determina se a carga será incremental ou full.'}
    ]},
-  {k:'freq',t:'Com que frequência o dado precisa chegar?',
+  {k:'freq',nivel:'ingest',t:'Com que frequência o dado precisa chegar?',
    dica:'Tempo real custa muito mais para construir e operar. Se ninguém age em minutos, lote é mais barato e mais simples.',
    op:[
      {v:'batch',nome:'Batch',desc:'Diário, algumas vezes ao dia. Cobre a maioria dos casos.'},
      {v:'nrt',nome:'Near real time',desc:'Minutos. Mirroring e micro-batch resolvem.'},
      {v:'realtime',nome:'Real time',desc:'Segundos. Só se alguém ou algo age imediatamente sobre o dado.'}
    ]},
-  {k:'janela',t:'Quanto tempo há disponível para a carga rodar?',
+  {k:'janela',nivel:'ingest',t:'Quanto tempo há disponível para a carga rodar?',
    dica:'Volume alto com a madrugada inteira e volume alto com vinte minutos são problemas diferentes. É a janela que decide particionamento e paralelismo.',
    quando:ctx=>!fabCtxTem(ctx,'freq','realtime'),
    op:[
@@ -9496,7 +9587,7 @@ const FAB_CTXQ=[
      {v:'horas',nome:'Algumas horas',desc:'Exige carga incremental e atenção ao tempo de cada etapa. Ainda cabe sem paralelismo pesado.'},
      {v:'apertada',nome:'Minutos',desc:'Particionamento e paralelismo deixam de ser refinamento. Full load está fora de questão.'}
    ]},
-  {k:'consumo',t:'Como o dado será consumido?',multi:true,
+  {k:'consumo',nivel:'arq',t:'Como o dado será consumido?',multi:true,
    dica:'Pode marcar mais de um — servir dashboard e ML ao mesmo tempo é comum, e cada consumo puxa exigências diferentes. O consumo define a camada final e o quanto de curadoria é necessário antes dela.',
    op:[
      {v:'dashboard',nome:'Dashboard e relatórios',desc:'Power BI sobre modelo semântico.'},
@@ -9504,21 +9595,21 @@ const FAB_CTXQ=[
      {v:'ml',nome:'Machine Learning',desc:'Treino e inferência — exige dado consistente e histórico.'},
      {v:'apis',nome:'APIs / data product',desc:'Outros times ou sistemas consomem o dado.'}
    ]},
-  {k:'historico',t:'Precisa saber como o dado era antes?',
+  {k:'historico',nivel:'ingest',t:'Precisa saber como o dado era antes?',
    dica:'Define a modelagem inteira. Guardar só o estado atual é bem mais simples — e irreversível se depois pedirem o histórico.',
    op:[
      {v:'atual',nome:'Não, só o estado atual',desc:'Sobrescrever a cada carga. O mais simples, e suficiente para muito relatório operacional.'},
      {v:'scd',nome:'Sim, histórico de mudanças',desc:'Dimensão de mudança lenta (SCD2): guarda o valor anterior com data de início e fim. Exige MERGE e modelagem dimensional.'},
      {v:'auditoria',nome:'Sim, auditoria completa',desc:'Todo estado já recebido, com data. Bronze com snapshot torna-se inegociável, e Data Vault entra em consideração.'}
    ]},
-  {k:'sensivel',t:'Há dado pessoal ou sensível envolvido?',
+  {k:'sensivel',nivel:'arq',t:'Há dado pessoal ou sensível envolvido?',
    dica:'Define segurança, mascaramento e retenção. Descobrir isso depois de publicar costuma significar refazer o modelo semântico.',
    op:[
      {v:'nao',nome:'Não',desc:'Dado operacional sem identificação de pessoa. Governança padrão basta.'},
      {v:'pessoal',nome:'Sim, dado pessoal (LGPD)',desc:'Nome, CPF, contato, localização. Exige RLS, controle de acesso e política de retenção definida.'},
      {v:'restrito',nome:'Sim, altamente restrito',desc:'Saúde, financeiro ou segredo de negócio. Além de RLS, pede mascaramento por coluna, linhagem e trilha de auditoria.'}
    ]},
-  {k:'equipe',t:'Quem vai manter isso no dia a dia?',
+  {k:'equipe',nivel:'arq',t:'Quem vai manter isso no dia a dia?',
    dica:'É o contexto mais ignorado e o que mais derruba arquitetura: a melhor solução no papel não sobrevive a quem não consegue mantê-la.',
    op:[
      {v:'codigo',nome:'Time confortável com código',desc:'Python/Spark, versionamento em Git. Abre caminho para Notebook.'},
@@ -9526,7 +9617,7 @@ const FAB_CTXQ=[
      {v:'lowcode',nome:'Preferência por interface visual',desc:'Vindo de Power BI. Favorece Dataflow Gen2 — com limite de volume.'},
      {v:'misto',nome:'Misto',desc:'Há gente de código e de interface visual.'}
    ]},
-  {k:'estrategia',t:'Qual estratégia de ingestão e orquestração?',multi:true,
+  {k:'estrategia',nivel:'arq',t:'Qual estratégia de ingestão e orquestração?',multi:true,
    dica:'Pode marcar mais de uma: o normal é usar metadados para o grosso das cargas e pipeline explícito para os casos especiais. É a decisão que mais muda o resto: ela define se você mantém um pipeline ou quarenta, e o que faz sentido sugerir daqui para frente.',
    rec:ctx=>{
      if(fabCtxTem(ctx,'freq','realtime')||fabCtxTem(ctx,'origem','streaming'))return 'streaming';
@@ -9545,7 +9636,7 @@ const FAB_CTXQ=[
      {v:'zeroetl',nome:'Zero-ETL (Mirroring / Shortcut)',desc:'Sem pipeline para manter: o dado é espelhado ou apontado onde já está. É o menor custo de manutenção — quando a origem é suportada e você não precisa filtrar na entrada.'},
      {v:'streaming',nome:'Streaming-first',desc:'O evento entra em fluxo contínuo e é roteado por Eventstream. Latência de segundos, ao custo de complexidade operacional bem maior que lote.'}
    ]},
-  {k:'carga',t:'Como cada execução traz o dado?',
+  {k:'carga',nivel:'ingest',t:'Como cada execução traz o dado?',
    dica:'É a decisão que mais separa arquitetura de desenho bonito. Ela define o que a origem precisa entregar, o que a tabela de controle guarda, e o que acontece quando alguém apaga uma linha lá na frente. Recomendar incremental sem verificar se dá para saber o que mudou seria o pior conselho desta ferramenta.',
    quando:ctx=>!fabCtxTem(ctx,'origem','streaming')&&!fabCtxTem(ctx,'freq','realtime'),
    rec:ctx=>{
@@ -9566,7 +9657,7 @@ const FAB_CTXQ=[
      {v:'append',nome:'Só inserção',desc:'Cada execução acrescenta, nada é atualizado. Natural para evento e log. Exige idempotência: reprocessar a mesma janela não pode duplicar.'},
      {v:'naosei',nome:'Ainda não sei',desc:'Determinar isso é o primeiro trabalho técnico do projeto. Até lá, as recomendações ficam genéricas — e a ferramenta vai dizer isso em vez de fingir firmeza.'}
    ]},
-  {k:'modelagem',t:'Como a camada de consumo é estruturada?',
+  {k:'modelagem',nivel:'arq',t:'Como a camada de consumo é estruturada?',
    dica:'Decide o que o modelo semântico consegue fazer e o que vira contorção em DAX depois. Trocar de modelagem com relatório publicado é das mudanças mais caras que existem.',
    quando:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice')||fabCtxTem(ctx,'objetivo','dw')||fabCtxTem(ctx,'objetivo','lakehouse'),
    rec:ctx=>{
@@ -9582,7 +9673,17 @@ const FAB_CTXQ=[
      {v:'obt',nome:'One Big Table',desc:'Tudo desnormalizado numa tabela larga. Ótimo para ML e para consulta ad-hoc em Spark. Ruim para BI corporativo: métrica sem dimensão compartilhada não reconcilia entre relatórios.'},
      {v:'naomodelado',nome:'Sem modelagem formal',desc:'O consumo lê o dado tratado como ele está. Aceitável em análise pontual; vira dívida assim que o segundo relatório precisar da mesma métrica.'}
    ]},
-  {k:'criticidade',t:'Qual a criticidade dessa carga?',
+  {k:'papel',nivel:'pipe',t:'O que este pipeline faz?',
+   dica:'Um pipeline que só lê a lista de casos de uso e invoca outros não tem origem, nem volume, nem padrão de carga — essas respostas vivem em cada filho. Perguntar SCD2 para o orquestrador é pergunta sem resposta, e é por isso que esta pergunta vem antes das outras.',
+   rec:ctx=>fabCtxTem(ctx,'estrategia','metadata')?'orquestra':'ingere',
+   op:[
+     {v:'orquestra',nome:'Orquestra: lê a lista e invoca outros',desc:'O mestre do padrão dirigido por metadados. Lookup sobre o catálogo, ForEach, Invoke por caso de uso. Ele não move dado — quem move são os filhos, e cada um com o seu contexto.'},
+     {v:'ingere',nome:'Ingere dados de fato',desc:'Traz dado de uma origem para dentro do Fabric. É o único papel que precisa responder origem, volume, como detectar mudança e padrão de carga.'},
+     {v:'transforma',nome:'Transforma o que já está no lake',desc:'Bronze para Silver, Silver para Gold. A origem já é interna: não há conexão externa nem janela de extração para negociar.'},
+     {v:'publica',nome:'Publica para consumo',desc:'Atualiza modelo semântico, materializa agregado, libera acesso. O fim do caminho.'},
+     {v:'manutencao',nome:'Rotina de controle ou manutenção',desc:'OPTIMIZE, VACUUM, expurgo de log, reconciliação. Roda em cima do que já existe.'}
+   ]},
+  {k:'criticidade',nivel:'arq',t:'Qual a criticidade dessa carga?',
    dica:'Define o rigor de controle, log e tratamento de erro que vale a pena investir desde o início.',
    op:[
      {v:'alta',nome:'Alta — o negócio depende disso',desc:'Tem SLA, alguém cobra quando atrasa. Exige log, alerta e validação.'},
@@ -9595,15 +9696,30 @@ const FAB_CTXQ_MAP=Object.fromEntries(FAB_CTXQ.map(q=>[q.k,q]));
 let _fabIni={aberto:false,passo:0};
 
 // perguntas ainda sem resposta, na ordem
-function fabCtxFaltando(){
+// Que niveis fazem sentido perguntar agora. Com o quadro vazio so existe a
+// arquitetura; o papel do pipeline so tem resposta quando ha pipeline; e as
+// perguntas de ingestao so existem para quem ingere de fato.
+function fabNiveisAtivos(){
+  const ctx=fabCtx();
+  const n=['arq'];
+  if(fabNos().length)n.push('pipe');
+  if(fabCtxTem(ctx,'papel','ingere'))n.push('ingest');
+  return n;
+}
+function fabCtxDoNivel(niveis){
+  return FAB_CTXQ.filter(q=>niveis.includes(q.nivel||'arq'));
+}
+function fabCtxFaltando(niveis){
   const ctx=fabCtx();
   // `quando` mantem o questionario adaptativo: nao pergunta o que nao decide
   // nada naquele cenario — CDC nao faz sentido para streaming, por exemplo.
-  return FAB_CTXQ.filter(q=>!fabCtxRespondida(ctx,q)&&(!q.quando||q.quando(ctx)));
+  return fabCtxDoNivel(niveis||fabNiveisAtivos())
+    .filter(q=>!fabCtxRespondida(ctx,q)&&(!q.quando||q.quando(ctx)));
 }
-function fabCtxAplicaveis(){
+function fabCtxAplicaveis(niveis){
   const ctx=fabCtx();
-  return FAB_CTXQ.filter(q=>!q.quando||q.quando(ctx)||fabCtxRespondida(ctx,q));
+  return fabCtxDoNivel(niveis||fabNiveisAtivos())
+    .filter(q=>!q.quando||q.quando(ctx)||fabCtxRespondida(ctx,q));
 }
 function fabCtxRotulo(k,v){
   const q=FAB_CTXQ_MAP[k];if(!q)return v;
@@ -9808,19 +9924,19 @@ function fabIniAcao(acao,k,v){
   if(acao==='voltar'){
     // voltar = desfazer a ultima resposta, que reabre aquela pergunta
     if((_fabIni.sel||[]).length){_fabIni.sel=[];fabRenderIni();return}
-    const dadas=a?FAB_CTXQ.filter(q=>a.ctx&&fabCtxRespondida(a.ctx,q)):[];
-    if(dadas.length){delete a.ctx[dadas[dadas.length-1].k];fabSave();fabRenderPainel()}
+    const _c=fabCtx();
+    const dadas=a?fabCtxDoNivel(fabNiveisAtivos()).filter(q=>fabCtxRespondida(_c,q)):[];
+    if(dadas.length){fabCtxApagar(dadas[dadas.length-1].k);fabSave();fabRenderPainel()}
     else _fabIni.aberto=false;
     fabRenderIni();return;
   }
   // pular marca o restante como nao informado; a barra continua acusando base
   // incompleta, entao a recomendacao nao se apresenta como firme
   if(acao==='pular'&&a){
-    a.ctx=a.ctx||{};
-    fabCtxFaltando().forEach(q=>{a.ctx[q.k]='naoinformado'});
+    fabCtxFaltando().forEach(q=>fabCtxGravar(q.k,'naoinformado'));
     fabSave();fabRenderIni();fabRenderPainel();return;
   }
-  if(acao==='refazer'&&a){delete a.ctx[k];fabSave();fabRenderIni();fabRenderPainel();return}
+  if(acao==='refazer'&&a){fabCtxApagar(k);fabSave();fabRenderIni();fabRenderPainel();return}
   if(acao==='alterna'){
     const sel=_fabIni.sel||[];
     _fabIni.sel = sel.includes(v)? sel.filter(x=>x!==v) : sel.concat([v]);
@@ -9829,15 +9945,14 @@ function fabIniAcao(acao,k,v){
   if(acao==='confirma'&&a){
     const sel=_fabIni.sel||[];
     if(!sel.length)return;
-    a.ctx=a.ctx||{};
     // ordem canonica das opcoes, nao a de clique — o rotulo fica estavel
     const q=FAB_CTXQ_MAP[k];
-    a.ctx[k]=q.op.map(o=>o.v).filter(x=>sel.includes(x));
+    fabCtxGravar(k,q.op.map(o=>o.v).filter(x=>sel.includes(x)));
     _fabIni.sel=[];
     fabSave();fabRenderIni();fabRenderPainel();return;
   }
   if(acao==='resp'&&a){
-    a.ctx=a.ctx||{};a.ctx[k]=v;
+    fabCtxGravar(k,v);
     if(k==='objetivo'&&/^(Nova arquitetura|Do zero)$/.test(a.nome))a.nome=fabCtxRotulo('objetivo',v);
     fabSave();fabRenderIni();fabRenderPainel();return;
   }
@@ -9890,6 +10005,22 @@ function fabNoHTML(n){
 // filho. Reconstroi no no, seguindo a cadeia a partir de cada container.
 function fabMigrarEscopo(){
   let mudou=false;
+  // Contexto salvo antes dos tres niveis vinha todo em `arq.ctx`. As respostas
+  // de pipeline e de ingestao descem para o escopo do mestre, que e o que uma
+  // arquitetura desenhada como um pipeline unico de fato era.
+  const _a=fabArq();
+  if(_a&&_a.ctx){
+    const desce=FAB_CTXQ.filter(q=>q.nivel&&q.nivel!=='arq'&&_a.ctx[q.k]!==undefined);
+    if(desce.length){
+      _a.ctxPipe=_a.ctxPipe||{};
+      desce.forEach(q=>{
+        if(_a.ctxPipe[q.k]===undefined)_a.ctxPipe[q.k]=_a.ctx[q.k];
+        delete _a.ctx[q.k];
+      });
+      if(_a.ctxPipe.papel===undefined)_a.ctxPipe.papel='ingere';
+      mudou=true;
+    }
+  }
   // Artefato que ficou preso num laco (por diagrama antigo ou por heranca pela
   // aresta) sai dele. Era o que fazia a tabela de log ser contada como
   // atividade do ForEach e a moldura esticar para engoli-la.
@@ -10912,17 +11043,17 @@ function fabInit(){
     if(c){
       const a=fabArq(),sel=_fabIni.sel||[];if(!a||!sel.length)return;
       const q=FAB_CTXQ_MAP[c.dataset.fabctxc];
-      a.ctx=a.ctx||{};a.ctx[q.k]=q.op.map(o=>o.v).filter(x=>sel.includes(x));
+      fabCtxGravar(q.k,q.op.map(o=>o.v).filter(x=>sel.includes(x)));
       _fabIni.sel=[];fabSave();fabRenderCtxModal();fabRenderPainel();return;
     }
     const r=e.target.closest('[data-fabctxr]');
     if(r){
       const a=fabArq();if(!a)return;
-      a.ctx=a.ctx||{};a.ctx[r.dataset.fabctxr]=r.dataset.v;fabSave();
+      fabCtxGravar(r.dataset.fabctxr,r.dataset.v);fabSave();
       fabRenderCtxModal();fabRenderPainel();return;
     }
     const q=e.target.closest('[data-fabctxq]');
-    if(q){const a=fabArq();if(a){delete a.ctx[q.dataset.fabctxq];fabSave();fabRenderCtxModal()}}
+    if(q){const a=fabArq();if(a){fabCtxApagar(q.dataset.fabctxq);fabSave();fabRenderCtxModal()}}
   });
 
   // ---- wizard ----
