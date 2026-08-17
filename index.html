@@ -6572,6 +6572,13 @@ const FAB_VALID=[
     quando:g=>g.nos.some(n=>fabEhContainer(n.comp)&&!g.nos.some(k=>k.escopo===n.id)),
     texto:'Existe um ForEach ou If sem nenhuma atividade dentro. Ele não faz nada assim.',
     resolver:'Selecione o laço e escolha o que roda dentro dele.'},
+  {id:'metadata-comeca-errado',nivel:'aviso',antipadrao:true,
+   porqueDoi:'O fluxo abre por uma atividade de ingestão, sem catálogo e sem Lookup. Isso é um pipeline explícito — a estratégia declarada não está no desenho, está só na resposta do contexto.',
+   custo:'Quando o segundo objeto chegar e você perceber que vai duplicar o pipeline.',
+   titulo:'Metadata-driven começando pelo caminho do pipeline explícito',
+   quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','metadata')&&g.tem(['copy','copyjob','dataflow'])&&!g.tem(['ctrltable'])&&!g.tem(['lookup']),
+   texto:'Você declarou estratégia dirigida por metadados, mas o desenho começa direto na atividade que move o dado. Em metadata-driven a primeira atividade do pipeline é o Lookup sobre a tabela de controle: é ela que diz o que processar. Sem isso, o que está desenhado é um pipeline por objeto.',
+   resolver:'Comece pela Tabela de Controle e leia-a com um Lookup; a atividade de ingestão passa a rodar dentro do laço, uma vez por objeto.'},
   {id:'metadata-sem-controle',nivel:'aviso',antipadrao:true,porqueDoi:'A estratégia declarada é dirigida por metadados, mas não há de onde ler o escopo — o pipeline volta a ser um por objeto.',custo:'Assim que o segundo objeto entrar.',titulo:'Estratégia por metadados sem tabela de controle',
     quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','metadata')&&g.contar()>=3&&!g.tem(['ctrltable']),
     texto:'A estratégia declarada é dirigida por metadados, mas não há tabela de controle. Sem ela o pipeline não tem de onde ler o escopo — e você volta a manter um pipeline por objeto.',
@@ -8438,7 +8445,11 @@ function fabVigia(){
   _fabAPMudo.forEach(id=>{if(!agora.has(id))_fabAPMudo.delete(id)});
   if(_fabAPFoco&&!agora.has(_fabAPFoco))_fabAPFoco=null;
   if(!novos.length)return;
-  const alvo=novos.find(v=>!_fabAPMudo.has(v.id));
+  // Nascendo varios de uma vez, avisa primeiro o que aponta uma peca do
+  // diagrama: alerta acionavel vale mais que alerta generico.
+  const cand=novos.filter(v=>!_fabAPMudo.has(v.id))
+    .sort((a,b)=>(fabAlvoDoAlerta(a)?0:1)-(fabAlvoDoAlerta(b)?0:1));
+  const alvo=cand[0];
   if(!alvo)return;
   _fabAPFoco=alvo.id;
   try{toast('Anti-padrão: '+alvo.titulo)}catch(e){}
@@ -8765,6 +8776,54 @@ function fabRenomear(){
 // A cadeia reaproveita o que ja existe: pendencia (proposito/config) e
 // fabSugestoes(no). O que muda e a conducao — em vez de esperar voce clicar num
 // no, o painel sempre mostra a decisao da vez.
+
+// ---------- ponto de partida: quem manda e a ESTRATEGIA ----------
+// Comecar por uma origem e ir direto ao Copy E a estrategia explicita, nao a
+// dirigida por metadados. Em metadata-driven a primeira atividade do pipeline e
+// o Lookup sobre a tabela de controle — a origem nem aparece no mestre, ela vive
+// dentro do filho. Oferecer origem como comeco era oferecer um caminho que
+// contradiz o que o usuario acabou de declarar.
+const FAB_INICIO_EST={
+  metadata:{t:'Por onde começar?',
+    dica:'Dirigido por metadados começa pelo catálogo, não pela origem. Sem uma tabela que diga o que processar, não existe pipeline metadata-driven — existe pipeline explícito com um laço em volta.',
+    op:[
+      {id:'ctrltable',porque:'O catálogo do que processar: origem, destino, modo de carga e até onde já foi. É dela que o Lookup lê, e é ela que faz um pipeline atender N objetos.'},
+      {id:'pipeline',porque:'Se você prefere desenhar o contêiner primeiro e pendurar o controle depois, comece pelo pipeline mestre.'},
+      {id:'warehouse',porque:'Quando o catálogo ainda não existe e a primeira decisão é onde ele vai morar.'}
+    ]},
+  explicito:{t:'Por onde começar?',
+    dica:'Um pipeline por objeto começa pelo próprio pipeline: ele é a unidade que você vai versionar, depurar e repetir.',
+    op:[
+      {id:'pipeline',porque:'O contêiner da carga. Cada objeto terá o seu, e é por isso que o padrão entre eles importa.'},
+      {id:'copy',porque:'Se a carga é uma cópia direta e você quer desenhar a atividade antes do contêiner.'}
+    ]},
+  codigo:{t:'Por onde começar?',
+    dica:'Code-first começa pelo código que faz a carga — ele é o artefato que entra no Git e em revisão.',
+    op:[
+      {id:'notebook',porque:'O notebook parametrizado que lê, transforma e grava. É onde a lógica vive e é testada.'},
+      {id:'pipeline',porque:'Quando o pipeline só agenda e passa parâmetros para o notebook.'},
+      {id:'lakehouse',porque:'Se a primeira decisão é onde o Delta vai morar.'}
+    ]},
+  lowcode:{t:'Por onde começar?',
+    dica:'Low-code começa pela transformação visual que a área de negócio vai manter sozinha.',
+    op:[
+      {id:'dataflow',porque:'Power Query sobre a origem, mantido por quem conhece a regra. É a peça central desta estratégia.'},
+      {id:'lakehouse',porque:'O destino do que o Dataflow produzir.'}
+    ]},
+  zeroetl:{t:'Por onde começar?',
+    dica:'Zero-ETL não tem pipeline para começar: comece pelo mecanismo de replicação, que é o que substitui a ingestão inteira.',
+    op:[
+      {id:'mirroring',porque:'Réplica contínua e gerenciada da origem para o OneLake, exclusões inclusive. Sem pipeline para manter.'},
+      {id:'shortcut',porque:'Quando o dado já está num lake e você só precisa apontar para ele, sem copiar nada.'}
+    ]},
+  streaming:{t:'Por onde começar?',
+    dica:'Fluxo contínuo começa por quem recebe o evento. O resto do desenho pendura nele.',
+    op:[
+      {id:'eventstream',porque:'Captura e roteia o evento assim que ele acontece. É a porta de entrada do streaming no Fabric.'},
+      {id:'eventhouse',porque:'Se a primeira decisão é onde a telemetria vai ser consultada por tempo.'}
+    ]}
+};
+
 const FAB_INICIO={
   ia:{t:'Por onde começar?',
     dica:'Plataforma para IA se sustenta no dado que alimenta o modelo. A natureza dessa origem define praticamente tudo o que vem depois — inclusive se o caminho é lote ou fluxo contínuo.',
@@ -9066,7 +9125,7 @@ function fabPasso(){
   const arq=fabArq();if(!arq)return null;
   const nos=fabNos();
   if(!nos.length||!_fabGuia.atual){
-    const ini=FAB_INICIO[fabCtx().objetivo]||FAB_INICIO.ingestao;
+    const ini=fabIniPor(fabCtx());
     // a origem escolhida no questionario sobe para o topo, mas as outras
     // continuam visiveis — a ideia e mostrar o leque, nao decidir por voce
     const mapa={relacional:'src_sqlserver',sap:'src_sap',pi:'src_pi',api:'src_api',arquivos:'src_files',streaming:'src_stream',clouddw:'src_bigquery',saas:'src_saas',nosql:'src_nosql',dataverse:'src_dataverse',objeto:'src_objeto',mainframe:'src_mainframe'};
@@ -9564,19 +9623,25 @@ function fabCtxRespondida(ctx,q){
 
 // Opcoes de partida, ordenadas pelo contexto. O `porque` de cada uma cita o que
 // foi respondido — e o que sustenta a recomendacao.
+function fabIniPor(ctx){
+  // a estrategia declarada manda; o objetivo so decide quando nao ha estrategia
+  const est=FAB_ESTRATEGIA.filter(e=>fabCtxTem(ctx,'estrategia',e.id)).map(e=>e.id);
+  for(const id of ['metadata','zeroetl','streaming','codigo','lowcode','explicito'])
+    if(est.includes(id)&&FAB_INICIO_EST[id])return FAB_INICIO_EST[id];
+  return FAB_INICIO[ctx.objetivo]||FAB_INICIO.ingestao;
+}
 function fabIniOpcoes(){
   const ctx=fabCtx();
-  const ini=FAB_INICIO[ctx.objetivo]||FAB_INICIO.ingestao;
-  const mapa={relacional:'src_sqlserver',sap:'src_sap',pi:'src_pi',api:'src_api',arquivos:'src_files',streaming:'src_stream',clouddw:'src_bigquery',saas:'src_saas',nosql:'src_nosql',dataverse:'src_dataverse',objeto:'src_objeto',mainframe:'src_mainframe'};
-  const pref=mapa[ctx.origem];
-  const op=ini.op.filter(o=>FAB_COMP[o.id]).map(o=>({...o,comp:FAB_COMP[o.id],peso:0}));
-  if(pref&&FAB_COMP[pref]&&!op.some(o=>o.id===pref))
-    op.push({id:pref,comp:FAB_COMP[pref],porque:FAB_COMP[pref].oque,peso:0});
-  op.forEach(o=>{
-    if(o.id===pref){o.peso+=100;o.ancora='Você indicou esta origem no contexto.'}
-    if(fabCtxTem(ctx,'freq','realtime')&&(o.id==='src_stream'||o.id==='src_pi'))o.peso+=25;
-    if(fabCtxTem(ctx,'freq','batch')&&o.id==='src_stream')o.peso-=25;
-    if(fabCtxTem(ctx,'consumo','ml')&&o.id==='src_pi')o.peso+=10;
+  const ini=fabIniPor(ctx);
+  // Origem nao e ponto de partida: ela e a conexao que a atividade de ingestao
+  // usa, nao a primeira atividade do pipeline.
+  const op=ini.op.filter(o=>FAB_COMP[o.id]&&fabNatureza(o.id)!=='origem')
+    .map(o=>({...o,comp:FAB_COMP[o.id],peso:0}));
+  op.forEach((o,i)=>{
+    o.peso+=(op.length-i)*30;                       // a ordem declarada e a recomendacao
+    const cp=fabCtxPeso(o.id,ctx);
+    o.peso+=cp.peso;
+    if(cp.ctxPros[0])o.ancora=cp.ctxPros[0];
   });
   op.sort((a,b)=>b.peso-a.peso);
   return op;
@@ -10151,6 +10216,7 @@ function fabAlvoDoAlerta(v){
     case 'sproc-lakehouse': return acha(n=>n.comp==='sproc');
     case 'controle-sem-log': return acha(n=>n.comp==='sproc');
     case 'laco-sem-ordem': {const t=fabGrafo().soltosNoLaco();return t.length?t[0].id:null}
+    case 'metadata-comeca-errado': return acha(n=>['copy','copyjob','dataflow'].includes(n.comp));
     case 'tabela-sem-casa': {const t=fabGrafo().semCasa();return t.length?t[0].id:null}
     case 'orfao': {const o=fabGrafo().orfaos();return o.length?o[0].id:null}
     case 'pendencias': {const pd=fabGrafo().pendentes();return pd.length?pd[0].id:null}
@@ -10469,7 +10535,7 @@ const FAB_PEDE={
   'ml-sem-dq':['dq'],'wh-como-bronze':['lakehouse','bronze'],'pbi-sobre-cru':['silver','gold'],
   'sproc-lakehouse':['warehouse'],'incremental-sem-controle':['ctrltable','sproc'],
   'controle-sem-log':['logtable'],'critico-sem-alerta':['notify','activator'],
-  'tabela-sem-casa':['warehouse','lakehouse'],
+  'tabela-sem-casa':['warehouse','lakehouse'],'metadata-comeca-errado':['ctrltable','lookup'],
   'incremental-sem-manutencao':['otimiza'],'directlake-sem-guardrail':['otimiza'],
   'segredo-no-pipeline':['keyvault'],'dev-prod-juntos':['capacidade','workspace'],
   'incremental-sem-delete':['ctrltable'],'datavault-sem-apresentacao':['semantic','gold'],
@@ -10492,10 +10558,9 @@ const FAB_PEDE={
 // ainda nao existe. Oferecer tudo seria deixar o usuario montar um desenho que
 // nasce invalido — e o validador so reclamaria depois.
 const FAB_INICIAVEL=new Set([
-  // origens: o comeco natural de qualquer fluxo de dados
-  'src_sqlserver','src_oracle','src_sap','src_saphana','src_pi','src_api',
-  'src_sharepoint','src_files','src_stream','src_bigquery','src_snowflake','src_databricks',
-  'src_saas','src_nosql','src_dataverse','src_objeto','src_mainframe',
+  // Origem NAO abre arquitetura: ela e a conexao que a atividade de ingestao
+  // usa, nao a primeira atividade do pipeline. No canvas do Fabric nao existe
+  // caixa de SQL Server — existe Copy Data com uma conexao configurada dentro.
   // armazenamento que ja existe: quando o desenho parte do que ja esta no ar
   'lakehouse','warehouse','eventhouse','sqldb','onelake','shortcut','mirroring',
   // fundacao e governanca: nao dependem de fluxo anterior
@@ -10505,7 +10570,7 @@ const FAB_INICIAVEL=new Set([
 ]);
 // por que os demais nao abrem uma arquitetura — explicar e melhor que so esconder
 const FAB_NAO_INICIA={
-  ingestao:'Precisa de uma origem antes: é ela que define como o dado entra e a que custo.',
+  ingestao:'',
   transformacao:'Precisa de dado armazenado antes — sem isso não há o que transformar.',
   armazenamento:'Camada pressupõe ingestão. Comece pela origem ou pelo armazenamento que já existe.',
   curadoria:'Curadoria é etapa intermediária: exige dado limpo antes dela.',
@@ -10515,6 +10580,8 @@ const FAB_NAO_INICIA={
 };
 function fabPorqueNaoInicia(id){
   const d=FAB_COMP[id];if(!d)return '';
+  if(fabNatureza(id)==='origem')
+    return 'Origem não é atividade de pipeline: ela é a conexão que o Copy Data (ou o Notebook) usa por dentro. Comece pela atividade que traz o dado — a origem aparece nela.';
   if(id==='bronze'||id==='silver'||id==='gold')
     return 'Camada pressupõe ingestão: só existe depois que o dado entra.';
   return FAB_NAO_INICIA[d.etapa]||'Depende de um componente anterior.';
@@ -10539,7 +10606,7 @@ function fabRenderPaleta(q){
   let html='';
   if(vazio){
     // ordem: primeiro o que o objetivo declarado recomenda
-    const rec=new Set(((FAB_INICIO[fabCtx().objetivo]||FAB_INICIO.ingestao).op||[]).map(o=>o.id));
+    const rec=new Set((fabIniPor(fabCtx()).op||[]).map(o=>o.id));
     const bloqueados=Object.keys(FAB_COMP).filter(k=>!fabPodeIniciar(k));
     html+=`<div class="fab-pal-aviso">
       <b>O quadro está vazio</b>
