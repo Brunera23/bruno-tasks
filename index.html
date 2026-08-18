@@ -1952,6 +1952,101 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-no:hover .fab-no-del,.fab-no.sel .fab-no-del{opacity:1}
 
 /* sugestoes flutuantes e perguntas da arvore */
+/* ===== modo laudo: a declaracao, sem quadro ===== */
+.fab-modo{display:flex;gap:2px;padding:3px;background:var(--hover);border-radius:10px;margin-right:auto}
+.fab-modo button{border:0;background:none;padding:6px 14px;border-radius:8px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:650;color:var(--label2)}
+.fab-modo button.on{background:var(--card);color:var(--label);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.fab-laudo-wrap{flex:1;min-height:0;overflow-y:auto;padding:0 4px 40px}
+.fab-laudo{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:26px;padding-top:6px}
+.fab-laudo section>h3{margin:0 0 11px;font-size:13px;font-weight:800;color:var(--label);
+  letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.fab-ld-n{font-size:10.5px;font-weight:800;background:var(--label);color:var(--card);
+  padding:1px 7px;border-radius:9px}
+.fab-ld-vazio,.fab-ld-nada,.fab-ld-limpo{font-size:12.5px;color:var(--label2);line-height:1.55;margin:0}
+.fab-ld-limpo{padding:11px 13px;background:#f2f9f4;border-left:3px solid #1e6b34;
+  border-radius:0 8px 8px 0;color:#1e6b34}
+/* padroes */
+.fab-ld-padroes{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.fab-ld-pad{text-align:left;padding:11px 13px;border:1.5px solid var(--sep);border-radius:11px;
+  background:var(--card);cursor:pointer;font-family:inherit}
+.fab-ld-pad:hover{border-color:#0a5fa8}
+.fab-ld-pad.on{border-color:#0a5fa8;background:#eef5ff}
+.fab-ld-pad b{display:block;font-size:12.5px;font-weight:700;color:var(--label);margin-bottom:3px}
+.fab-ld-pad i{display:block;font-style:normal;font-size:11px;color:var(--label2);line-height:1.42}
+/* pecas declaradas */
+.fab-ld-add{margin-bottom:11px;padding:7px 13px;border:1px dashed var(--sep);border-radius:9px;
+  background:none;color:var(--label2);font-family:inherit;font-size:12px;cursor:pointer}
+.fab-ld-add:hover{border-color:#0a5fa8;color:var(--label)}
+.fab-ld-grupo{margin-bottom:10px}
+.fab-ld-grupo>span{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;
+  font-weight:800;color:var(--et);margin-bottom:5px}
+/* peca declarada e um chip, nao uma linha: onze pecas em lista empurravam o
+   laudo — que e o ponto da tela — para fora do primeiro scroll */
+.fab-ld-chips{display:flex;flex-wrap:wrap;gap:5px}
+.fab-ld-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 6px 5px 9px;
+  border:1px solid var(--sep);border-radius:9px;background:var(--card);max-width:100%}
+.fab-ld-chip.culpada{border-color:#d9534f;background:#fdf3f2}
+.fab-ld-chip b{font-size:11.5px;font-weight:650;color:var(--label);white-space:nowrap}
+.fab-ld-chip button{border:0;background:none;color:var(--label3);cursor:pointer;
+  font-size:11px;padding:1px 3px;border-radius:5px;line-height:1}
+.fab-ld-chip button:hover{background:#fdf3f2;color:#d9534f}
+.fab-ld-ico{width:15px;height:15px;flex-shrink:0;color:var(--label2);font-style:normal}
+.fab-ld-ico svg{width:100%;height:100%;display:block}
+/* a declaracao recua para o fim quando ja ha o que diagnosticar */
+.fab-ld-decl.dobra{padding-top:18px;border-top:1px solid var(--sep)}
+.fab-ld-sub{font-size:11px;font-weight:500;color:var(--label2);letter-spacing:0}
+.fab-ld-decl details{margin-bottom:11px}
+.fab-ld-decl summary{cursor:pointer;font-size:11.5px;color:var(--label2);padding:4px 0}
+.fab-ld-decl summary:hover{color:var(--label)}
+.fab-ld-decl details .fab-ld-padroes{margin:9px 0}
+/* placar do laudo */
+.fab-ld-placar{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:11px;
+  font-size:11.5px;color:var(--label2)}
+.fab-ld-placar .p{display:inline-flex;align-items:center;justify-content:center;min-width:20px;
+  height:20px;padding:0 5px;border-radius:6px;font-size:11px;font-weight:800;color:#fff}
+.fab-ld-placar .p.ap{background:#c1362f}
+.fab-ld-placar .p.av{background:#a5701a}
+.fab-ld-placar .p.sg{background:var(--label3)}
+/* achados */
+.fab-ld-achado{padding:12px 14px;margin-bottom:9px;border-radius:11px;border:1px solid var(--sep);background:var(--card)}
+.fab-ld-achado.ap{border-color:#d9534f;background:#fdf3f2}
+.fab-ld-achado.av{border-color:#c07d1a;background:#fff8e8}
+.fab-ld-achado-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.fab-ld-achado-top b{font-size:13px;font-weight:750;color:var(--label)}
+.fab-ld-selo{font-size:9px;font-weight:800;letter-spacing:.6px;padding:2px 7px;border-radius:5px;color:#fff}
+.fab-ld-selo.ap{background:#c1362f}.fab-ld-selo.av{background:#a5701a}.fab-ld-selo.sg{background:var(--label3)}
+.fab-ld-achado p{margin:0 0 5px;font-size:12.5px;line-height:1.55;color:var(--label)}
+.fab-ld-custo{color:var(--label2)!important;font-size:11.5px!important}
+.fab-ld-fix{font-size:12px!important;color:var(--label2)!important;padding-top:5px;border-top:1px solid var(--sep)}
+/* decisoes */
+.fab-ld-sugs{border:1px solid var(--sep);border-radius:11px;background:var(--card);padding:11px 14px}
+.fab-ld-sugs>b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
+  font-weight:800;color:var(--label2);margin-bottom:6px}
+.fab-ld-sug{border-top:1px solid var(--sep)}
+.fab-ld-sug:first-of-type{border-top:0}
+.fab-ld-sug summary{cursor:pointer;padding:7px 0;font-size:12.5px;font-weight:600;color:var(--label)}
+.fab-ld-sug summary:hover{color:#0a5fa8}
+.fab-ld-sug p{margin:0 0 6px;font-size:12px;line-height:1.55;color:var(--label2)}
+.fab-ld-dec{padding:13px 15px;margin-bottom:10px;border:1px solid var(--sep);border-radius:11px;background:var(--card)}
+.fab-ld-dec>b{display:block;font-size:13.5px;font-weight:700;color:var(--label);line-height:1.35;margin-bottom:4px}
+.fab-ld-dec>i{display:block;font-style:normal;font-size:11.5px;color:var(--label2);line-height:1.5;margin-bottom:10px}
+.fab-ld-ops{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:7px}
+.fab-ld-op{text-align:left;padding:9px 11px;border:1px solid var(--sep);border-radius:9px;
+  background:var(--bg);cursor:pointer;font-family:inherit}
+.fab-ld-op:hover{border-color:#0a5fa8;background:var(--card)}
+.fab-ld-op b{display:block;font-size:12px;font-weight:700;color:var(--label);margin-bottom:2px}
+.fab-ld-op span{display:block;font-size:11px;color:var(--label2);line-height:1.45}
+.fab-ld-op.add b{color:#0a5fa8}
+.fab-ld-vertodas{margin-top:4px;border:0;background:none;color:var(--label2);font-size:11.5px;
+  cursor:pointer;text-decoration:underline;font-family:inherit;padding:4px 0}
+.fab-ld-vertodas:hover{color:var(--label)}
+/* honestidade sobre o alcance */
+.fab-ld-limite{padding:11px 14px;border:1px dashed var(--sep);border-radius:11px;background:var(--hover)}
+.fab-ld-limite summary{cursor:pointer;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
+  font-weight:800;color:var(--label2)}
+.fab-ld-limite summary:hover{color:var(--label)}
+.fab-ld-limite p{margin:7px 0 0;font-size:11.5px;color:var(--label2);line-height:1.55}
 .fab-sugs{position:absolute;top:0;left:0;width:0;height:0;z-index:4}
 .fab-sug-linha{position:absolute;height:1.5px;background:var(--sep);pointer-events:none}
 .fab-fluxo{position:absolute;transform:translateY(-50%);width:298px;display:flex;
@@ -2490,6 +2585,10 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
       <div class="page-head fab-topo">
         <h1 title="Arquitetura guiada no Microsoft Fabric">Fabric Advisor</h1>
         <div class="fab-abas" id="fabAbas"></div>
+        <div class="fab-modo" id="fabModo">
+          <button data-fabmodo="laudo">Laudo</button>
+          <button data-fabmodo="quadro">Quadro</button>
+        </div>
         <div class="fab-tools">
           <button class="fab-btn prim" id="fabNovaBtn">+ Nova arquitetura</button>
           <button class="fab-btn" id="fabAddBtn">+ Componente</button>
@@ -2506,6 +2605,7 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
         <div class="fab-stage" id="fabStage"><div class="fab-world" id="fabWorld"></div><div class="fab-start" id="fabStart"></div></div>
         <div class="fab-painel" id="fabPainel"></div>
       </div>
+      <div class="fab-laudo-wrap" id="fabLaudoWrap"></div>
       <div class="fab-vazio" id="fabVazio">
         <b>Nenhuma arquitetura ainda</b>
         <p>Responda cinco perguntas rápidas e o app monta um ponto de partida coerente com o seu cenário.
@@ -3165,7 +3265,7 @@ let _loggingOut=false;
 // outra entra, o cache da anterior continua lá, aparece na tela da conta nova e
 // pode até ser gravado por cima dos dados dela no Firestore. Estas chaves são
 // dados de conta e precisam morrer junto com a sessão.
-const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel','bt-canvas','bt-cv-cam','bt-cv-boards','bt-cv-edges','bt-cv-cur','bt-fab-arqs','bt-fab-items','bt-fab-edges','bt-fab-cur','bt-fab-cam','bt-fab-painel','bt-fab-ctxab','bt-fab-pmin','bt-menu'];
+const ACCOUNT_LS_KEYS=['bt-v5','bt-cats','bt-log','bt-projects','bt-agents','bt-ui','bt-due-notified','btUserRole','btPushEnabled','bt-del','bt-catdel','bt-projdel','bt-canvas','bt-cv-cam','bt-cv-boards','bt-cv-edges','bt-cv-cur','bt-fab-arqs','bt-fab-items','bt-fab-edges','bt-fab-cur','bt-fab-cam','bt-fab-painel','bt-fab-ctxab','bt-fab-pmin','bt-fab-modo','bt-menu'];
 const LS_ACCOUNT_UID='bt-account-uid'; // uid dono do cache que está no disco agora
 function clearAccountCache(){ACCOUNT_LS_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}})}
 
@@ -7434,6 +7534,14 @@ let _fabSel=null,_fabDrag=null,_fabPan=null,_fabHover=null,_fabVerTudo=false,_fa
 // conteudo — ocupava metade do painel para dizer o que ja foi decidido.
 // Painel recolhido devolve a largura inteira ao quadro.
 let _fabCtxAberto=ld('bt-fab-ctxab',false),_fabPainelMin=ld('bt-fab-pmin',false);
+// Modo da tela. `laudo` e a declaracao — voce diz QUAIS pecas o pipeline tem e
+// como cada uma esta configurada, e o app devolve o diagnostico. `quadro` e o
+// desenho, que fica no ar ate o modo novo provar que serve.
+// A medicao que motivou isto: as MESMAS 11 pecas, com desenho completo e com
+// zero arestas, produzem as mesmas recomendacoes. O desenho nao informa o
+// conselho — ele so gera duas regras que reclamam dele proprio.
+let _fabModo=ld('bt-fab-modo','laudo');
+let _fabLaudoTudo=false;    // mostrar tambem as perguntas que nao mudam nada
 let _fabHist=[],_fabHistFut=[],_fabHistCong=false;
 const FAB_W=200,FAB_H=66,FAB_HEAD=42,FAB_PAD=18;
 // Caixa ocupada por um no. Container cresce para caber quem esta dentro dele —
@@ -7976,16 +8084,33 @@ function fabSugestoes(no){
 }
 
 // ---------- validacao ----------
+// Regra que so sabe falar do DESENHO: ela pergunta por aresta, por escopo ou
+// por orfandade. Fora do quadro essas perguntas nao existem — e das nove, quatro
+// (`foreach-aninhado`, `container-vazio`, `artefato-no-laco`, `orfao`) so
+// existiam para policiar o proprio canvas. As outras cinco viram pergunta
+// explicita na Parte 2, o que e mais confiavel do que inferir de aresta.
+const _FAB_RX_DESENHO=/\.ligado\(|\.semCasa\(|\.orfaos\(|\.ligs|escopo/;
+const _fabRegraDesenho={};
+function fabRegraPrecisaDesenho(r){
+  if(_fabRegraDesenho[r.id]===undefined)
+    _fabRegraDesenho[r.id]=_FAB_RX_DESENHO.test(String(r.quando));
+  return _fabRegraDesenho[r.id];
+}
 function fabValidar(){
   const g=fabGrafo(),ctx=fabCtx(),out=[];
   if(!g.contar())return out;
+  const soDecl=_fabModo==='laudo';
   FAB_VALID.forEach(r=>{
+    if(soDecl&&fabRegraPrecisaDesenho(r))return;
     try{
       if(r.quando(g,ctx))out.push({...r,detalheTxt:r.detalhe?r.detalhe(g):''});
     }catch(e){console.warn('[fab] regra '+r.id+' falhou',e)}
   });
   return out.sort((a,b)=>(a.nivel==='aviso'?0:1)-(b.nivel==='aviso'?0:1));
 }
+// Quantas regras a declaracao ainda nao alcanca. O app diz isso na cara do
+// usuario em vez de fingir cobertura total.
+function fabRegrasForaDoLaudo(){return FAB_VALID.filter(fabRegraPrecisaDesenho)}
 
 
 // ---------- mapa de estrategias ----------
@@ -8660,7 +8785,14 @@ function fabPapelServe(pos,ctx){
 // posicoes que valem neste contexto, com o estado de cada uma
 function fabRoteiro(){
   const g=fabGrafo(),ctx=fabCtx();
-  return FAB_ROTEIRO.filter(pos=>{try{return (!pos.se||pos.se(ctx))&&fabPapelServe(pos,ctx)}catch(e){return false}})
+  const soDecl=_fabModo==='laudo';
+  return FAB_ROTEIRO.filter(pos=>{try{
+      // `casa_controle` e `casa_camadas` perguntam onde a tabela mora olhando as
+      // arestas. Sem desenho a pergunta continua valida, mas a resposta vira
+      // configuracao — entra na Parte 2.
+      if(soDecl&&_FAB_RX_DESENHO.test(String(pos.ok||'')))return false;
+      return (!pos.se||pos.se(ctx))&&fabPapelServe(pos,ctx);
+    }catch(e){return false}})
     .map(pos=>{
       let pronta=false;try{pronta=!!pos.ok(g,ctx)}catch(e){pronta=false}
       const _pass=o=>!o.se||(()=>{try{return o.se(ctx)}catch(e){return false}})();
@@ -10490,6 +10622,8 @@ function fabRender(){
   const w=$('#fabWorld');if(!w)return;
   if(fabArq()&&fabMigrarEscopo())fabSave();
   fabRenderAbas();
+  fabRenderModo();
+  if(_fabModo==='laudo'){fabRenderLaudo();return}
   const arq=fabArq();
   const vazio=$('#fabVazio'),palco=$('#fabStage');
   if(!arq){
@@ -10662,6 +10796,36 @@ function fabRenderSugs(){
   box.innerHTML=abre+cabCtx+chips+verTudo+dica+`</div>`+linha;
 }
 function fabPosSug(){fabRenderSugs()}
+
+// Alterna a tela inteira. O quadro continua existindo — ele so sai de cena.
+function fabRenderModo(){
+  const m=$('#fabModo');if(m)[...m.children].forEach(b=>
+    b.classList.toggle('on',b.dataset.fabmodo===_fabModo));
+  const laudo=_fabModo==='laudo';
+  const cx=document.querySelector('#fabricView .fab-corpo');
+  const lw=$('#fabLaudoWrap'), vz=$('#fabVazio'), hint=document.querySelector('#fabricView .fab-hint');
+  if(cx)cx.style.display=laudo?'none':'';
+  if(lw)lw.style.display=laudo?'':'none';
+  if(hint)hint.style.display=laudo?'none':'';
+  if(vz&&laudo)vz.style.display='none';
+  // as ferramentas de quadro nao servem ao laudo
+  ['fabAddBtn','fabZoomOut','fabFit','fabZoomIn'].forEach(id=>{
+    const b=$('#'+id);if(b)b.style.display=laudo?'none':'';
+  });
+  const z=document.querySelector('#fabricView .fab-zoom');
+  if(z)z.style.display=laudo?'none':'';
+}
+function fabRenderLaudo(){
+  const el=$('#fabLaudoWrap');if(!el)return;
+  fabMapearAP();
+  el.innerHTML=fabLaudoHTML();
+  fabVigia();
+}
+function fabTrocarModo(m){
+  _fabModo=m;try{sv('bt-fab-modo',m)}catch(e){}
+  _fabAP=null;_fabAPFoco=null;          // outro modo, outra medicao: re-basear
+  fabRender();
+}
 
 // ---------- cartao de explicacao ----------
 function fabCartao(compId,alvo,motivo,nivel,ctxNota,ctxAviso){
@@ -10964,6 +11128,196 @@ function fabPainelResumo(){
   </div>`;
 }
 
+// ================= MODO LAUDO =================
+// A entrada deixa de ser um desenho e passa a ser uma DECLARACAO: quais pecas o
+// pipeline tem e como cada uma esta configurada. E o mesmo `fabItems` de hoje
+// sem `x`, `y` e sem arestas — por isso arquitetura salva abre aqui sem
+// conversao, e `fabValidar`/`fabRoteiro`/`fabProntidao` rodam sem alteracao.
+
+// ---- "nenhuma pergunta sem consequencia visivel" ----
+// Uma decisao so aparece se ALGUMA resposta possivel muda alguma coisa que voce
+// ve: o laudo, as colunas de uma tabela, ou um trecho de receita. As outras
+// ficam sob "ver todas". Isso e testado de verdade, simulando cada resposta —
+// nao e uma lista escrita a mao que envelhece.
+let _fabImportaCache={chave:null,mapa:{}};
+function _fabAssinatura(){
+  return JSON.stringify(fabNos().map(n=>[n.comp,n.prop||'',n.cfg||{}]))+
+    JSON.stringify(fabCtx());
+}
+function _fabRetrato(){
+  const regras=fabValidar().map(v=>v.id).sort().join('|');
+  let extra='';
+  fabNos().forEach(n=>{
+    if(FAB_COLUNAS[n.comp]||Object.keys(FAB_COLUNAS).some(k=>k.startsWith(n.comp+':')))
+      try{extra+=(fabColunas(n.comp,n.prop)||{cols:[]}).cols.map(c=>c.n).join(',')}catch(e){}
+    try{const r=fabReceita(n.comp,n.prop);if(r)extra+=JSON.stringify(r.expr||[])}catch(e){}
+  });
+  return regras+'§'+extra;
+}
+function fabDecisoesQueImportam(){
+  const chave=_fabAssinatura();
+  if(_fabImportaCache.chave===chave)return _fabImportaCache.mapa;
+  const mapa={},base=_fabRetrato();
+  fabRoteiro().forEach(pos=>{
+    if(!pos.campo){mapa[pos.id]=true;return}          // criar peca sempre importa
+    const alvo=fabNos().find(n=>(pos.cfgDe||[]).includes(n.comp));
+    if(!alvo){mapa[pos.id]=false;return}
+    alvo.cfg=alvo.cfg||{};
+    const antes=alvo.cfg[pos.campo];
+    let muda=false;
+    for(const o of (pos.op||[])){
+      alvo.cfg[pos.campo]=o.v;
+      if(_fabRetrato()!==base){muda=true;break}
+    }
+    if(antes===undefined)delete alvo.cfg[pos.campo]; else alvo.cfg[pos.campo]=antes;
+    mapa[pos.id]=muda;
+  });
+  _fabImportaCache={chave,mapa};
+  return mapa;
+}
+
+// ---- as pecas declaradas ----
+function fabDeclararPadrao(refId){
+  const ref=FAB_REF[refId];if(!ref)return;
+  fabMarcar();
+  const arq=fabArq();if(!arq)return;
+  arq.padrao=refId;
+  // remove o que estava e declara as pecas do padrao, com proposito e config
+  fabItems=fabItems.filter(n=>n.arq!==fabCur);
+  fabEdges=fabEdges.filter(e=>e.arq!==fabCur);
+  const pap=fabPapelDoDesenho(ref.nos||[]);
+  if(pap){arq.ctxPipe=arq.ctxPipe||{};if(arq.ctxPipe.papel===undefined)arq.ctxPipe.papel=pap}
+  (ref.nos||[]).forEach((c,i)=>{
+    const no=fabNovoNo(c,120+(i%6)*260,140+Math.floor(i/6)*180,(ref.props||{})[c]);
+    if(no&&(ref.cfg||{})[c])no.cfg={...(no.cfg||{}),...ref.cfg[c]};
+  });
+  _fabSel=null;fabSave();fabRender();
+}
+function fabDeclararPeca(comp){
+  const ja=fabNos().find(n=>n.comp===comp);
+  fabMarcar();
+  if(ja){
+    fabItems=fabItems.filter(n=>n.id!==ja.id);
+    fabEdges=fabEdges.filter(e=>e.from!==ja.id&&e.to!==ja.id);
+  }else{
+    const k=fabNos().length;
+    fabNovoNo(comp,120+(k%6)*260,140+Math.floor(k/6)*180);
+  }
+  fabSave();fabRender();
+}
+
+// ---- a tela ----
+function fabLaudoHTML(){
+  const arq=fabArq();
+  if(!arq)return '<div class="fab-ld-vazio"><b>Nenhuma arquitetura ainda</b><p>Crie uma para declarar o pipeline que você tem.</p></div>';
+  const nos=fabNos();
+  const vazio=!nos.length;
+
+  // ---- a declaracao: qual padrao e quais pecas ----
+  const padrao=arq.padrao&&FAB_REF[arq.padrao];
+  const padroes=`<div class="fab-ld-padroes">${Object.entries(FAB_REF).map(([id,r])=>
+    `<button class="fab-ld-pad${arq.padrao===id?' on':''}" data-fabpadrao="${id}">
+      <b>${escapeHtml(r.nome)}</b><i>${escapeHtml(r.quando)}</i></button>`).join('')}</div>`;
+
+  const porEtapa={};
+  nos.forEach(n=>{const d=FAB_COMP[n.comp];if(!d)return;(porEtapa[d.etapa]=porEtapa[d.etapa]||[]).push(n)});
+  const pecas=FAB_ETAPAS.filter(e=>porEtapa[e.id]).map(e=>
+    `<div class="fab-ld-grupo" style="--et:${e.cor}"><span>${escapeHtml(e.nome)}</span>
+      <div class="fab-ld-chips">${porEtapa[e.id].map(n=>{
+        const d=FAB_COMP[n.comp],obj=fabPropNome(n);
+        const cfg=Object.entries(n.cfg||{}).map(([k,v])=>FAB_ROT[v]||v).join(' · ');
+        return `<span class="fab-ld-chip${_fabAPNos[n.id]?' culpada':''}"
+          title="${escapeHtml([obj,cfg].filter(Boolean).join(' — ')||d.oque)}">
+          <i class="fab-ld-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</i>
+          <b>${escapeHtml(d.nome)}</b>
+          <button data-fabdecl="${n.comp}" title="Não tenho esta peça">✕</button>
+        </span>`}).join('')}</div>
+    </div>`).join('');
+
+  const decl=`<section class="fab-ld-decl${vazio?'':' dobra'}">
+    <h3>${vazio?'1 · De qual padrão o seu pipeline mais se aproxima?':'A declaração'}
+      ${vazio?'':`<span class="fab-ld-sub">${nos.length} peças${padrao?' · '+escapeHtml(padrao.nome):''}</span>`}</h3>
+    ${vazio?padroes:`<details><summary>trocar o padrão ou as peças</summary>${padroes}
+      <button class="fab-ld-add" data-fablaudopal="1">+ adicionar peça do catálogo</button></details>`}
+    ${vazio?'<p class="fab-ld-nada">Escolha o padrão mais próximo. Você ajusta as peças em seguida — nada aqui precisa estar certo de primeira.</p>':pecas}
+  </section>`;
+
+  if(vazio)return `<div class="fab-laudo">${decl}</div>`;
+
+  // ---- o laudo, que e o ponto ----
+  const av=fabValidar();
+  const aps=av.filter(v=>v.antipadrao);
+  const avisos=av.filter(v=>v.nivel==='aviso'&&!v.antipadrao);
+  const sugs=av.filter(v=>v.nivel!=='aviso'&&!v.antipadrao);
+  const cartao=(v,cls)=>`<div class="fab-ld-achado ${cls}">
+    <div class="fab-ld-achado-top">
+      ${v.antipadrao?'<span class="fab-ld-selo ap">ANTI-PADRÃO</span>'
+        :v.nivel==='aviso'?'<span class="fab-ld-selo av">AVISO</span>'
+        :'<span class="fab-ld-selo sg">SUGESTÃO</span>'}
+      <b>${escapeHtml(v.titulo)}</b>
+    </div>
+    <p>${escapeHtml(v.porqueDoi||v.texto)}</p>
+    ${v.custo?`<p class="fab-ld-custo"><i>Quando a conta chega:</i> ${escapeHtml(v.custo)}</p>`:''}
+    <p class="fab-ld-fix">${escapeHtml(v.resolver)}</p>
+  </div>`;
+  const placar=`<div class="fab-ld-placar">
+    <span class="p ap">${aps.length}</span> anti-padrão${aps.length===1?'':'s'} ·
+    <span class="p av">${avisos.length}</span> aviso${avisos.length===1?'':'s'} ·
+    <span class="p sg">${sugs.length}</span> sugest${sugs.length===1?'ão':'ões'}</div>`;
+  // Anti-padrao e aviso vem em cartao cheio; sugestao vem em linha, aberta sob
+  // demanda. Oito sugestoes com o mesmo peso visual de um anti-padrao diluem
+  // exatamente o achado que importa.
+  const sugLista=sugs.length?`<div class="fab-ld-sugs">
+    <b>${sugs.length} sugest${sugs.length===1?'ão':'ões'} de refinamento</b>
+    ${sugs.map(v=>`<details class="fab-ld-sug">
+      <summary>${escapeHtml(v.titulo)}</summary>
+      <p>${escapeHtml(v.porqueDoi||v.texto)}</p>
+      <p class="fab-ld-fix">${escapeHtml(v.resolver)}</p>
+    </details>`).join('')}
+  </div>`:'';
+  const laudo=(av.length
+    ?placar+aps.map(v=>cartao(v,'ap')).join('')+avisos.map(v=>cartao(v,'av')).join('')+sugLista
+    :'<p class="fab-ld-limpo">Nada a apontar nesta declaração. Responda as decisões abaixo para o laudo ficar mais preciso.</p>');
+
+  // ---- as decisoes que mudam alguma coisa ----
+  const importa=fabDecisoesQueImportam();
+  const rot=fabRoteiro().filter(x=>!x.pronta);
+  const uteis=rot.filter(x=>importa[x.id]!==false);
+  const mudas=rot.filter(x=>importa[x.id]===false);
+  const lista=(_fabLaudoTudo?rot:uteis);
+  const dec=lista.map(pos=>`<div class="fab-ld-dec">
+      <b>${escapeHtml(pos.t)}</b>
+      ${pos.dica?`<i>${escapeHtml(fabCurta(pos.dica,240))}</i>`:''}
+      <div class="fab-ld-ops">${(pos.op||[]).map(o=>
+        pos.campo
+          ?`<button class="fab-ld-op" data-fablaudocfg="${pos.campo}" data-comp="${pos.compAlvo||''}" data-v="${o.v}">
+             <b>${escapeHtml(o.nome)}</b><span>${escapeHtml(fabCurta(o.porque||'',160))}</span></button>`
+          :`<button class="fab-ld-op add" data-fablaudoadd="${o.id}">
+             <b>+ ${escapeHtml((FAB_COMP[o.id]||{}).nome||o.id)}</b><span>${escapeHtml(fabCurta(o.porque||'',160))}</span></button>`
+      ).join('')}</div>
+    </div>`).join('');
+  const verTodas=mudas.length?`<button class="fab-ld-vertodas" data-fablaudotudo="1">${
+    _fabLaudoTudo?'ocultar as que não mudam nada':'ver '+mudas.length+' decisão'+(mudas.length>1?'ões':'')+' que não muda'+(mudas.length>1?'m':'')+' o laudo'}</button>`:'';
+
+  // ---- honestidade sobre o alcance ----
+  const fora=fabRegrasForaDoLaudo();
+  const limite=`<details class="fab-ld-limite">
+    <summary>O que este laudo ainda não alcança — ${fora.length} de ${FAB_VALID.length} regras</summary>
+    <p>Estas dependem de como as peças se ligam entre si: ${
+      fora.map(v=>escapeHtml(v.titulo)).join(' · ')}.
+      Quatro delas existiam só para policiar o desenho e foram descartadas de propósito;
+      as outras cinco viram pergunta explícita na próxima entrega — perguntar é mais
+      confiável do que deduzir de uma seta.</p>
+  </details>`;
+
+  return `<div class="fab-laudo">
+    <section><h3>Laudo</h3>${laudo}</section>
+    <section><h3>Decisões que mudam o laudo${uteis.length?` <span class="fab-ld-n">${uteis.length}</span>`:''}</h3>
+      ${dec||'<p class="fab-ld-limpo">Nenhuma decisão em aberto muda o diagnóstico.</p>'}${verTodas}</section>
+    ${decl}
+    ${limite}
+  </div>`;
+}
 // ---------- inicio guiado ----------
 const FAB_ROT={
   ingestao:'Ingestão de dados',lakehouse:'Lakehouse',dw:'Data Warehouse',rt:'Real Time Analytics',
@@ -11253,6 +11607,8 @@ function fabRenderPaleta(q){
 }
 function fabAddManual(comp){
   if(!fabArq()){toast('Crie uma arquitetura primeiro');return}
+  // no laudo nao ha onde posicionar: adicionar e declarar que a peca existe
+  if(_fabModo==='laudo'){fabFecharPaleta();fabDeclararPeca(comp);return}
   const _o=fabNos().find(n=>n.id===_fabSel);
   if(_o&&fabNivelProibido(_o,comp)){
     toast('O Fabric aceita um único nível de ForEach. Use Invoke Pipeline para ir mais fundo.');
@@ -11421,6 +11777,35 @@ function fabInit(){
       _fabAP=null;_fabAPFoco=null;   // outro quadro, outra linha de base
       fabSave();fabRender();
     }
+  });
+
+  // ---- alternador de modo ----
+  const md=$('#fabModo');
+  if(md)md.addEventListener('click',e=>{
+    const b=e.target.closest('[data-fabmodo]');
+    if(b)fabTrocarModo(b.dataset.fabmodo);
+  });
+
+  // ---- modo laudo ----
+  const lw=$('#fabLaudoWrap');
+  if(lw)lw.addEventListener('click',e=>{
+    const pad=e.target.closest('[data-fabpadrao]');
+    if(pad){fabDeclararPadrao(pad.dataset.fabpadrao);return}
+    const dec=e.target.closest('[data-fabdecl]');
+    if(dec){fabDeclararPeca(dec.dataset.fabdecl);return}
+    const pal=e.target.closest('[data-fablaudopal]');
+    if(pal){fabAbrirPaleta();return}
+    const cfg=e.target.closest('[data-fablaudocfg]');
+    if(cfg){
+      const alvo=fabNos().find(n=>n.comp===cfg.dataset.comp);
+      if(alvo)fabDefinirCfg(alvo.id,cfg.dataset.fablaudocfg,cfg.dataset.v);
+      else toast('Declare a peça antes de responder por ela');
+      return;
+    }
+    const add=e.target.closest('[data-fablaudoadd]');
+    if(add){fabDeclararPeca(add.dataset.fablaudoadd);return}
+    const tudo=e.target.closest('[data-fablaudotudo]');
+    if(tudo){_fabLaudoTudo=!_fabLaudoTudo;fabRenderLaudo();return}
   });
 
   // ---- painel lateral ----
