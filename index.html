@@ -1972,19 +1972,15 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-sug.ok{opacity:.72}
 .fab-sug.ruim{opacity:.62;border-color:#d9534f}
 .fab-sug.ruim .fab-sug-txt b{text-decoration:line-through}
-/* "por que agora": a razao de CONTEXTO da peca, no proprio chip. Antes ela so
-   existia no cartao do painel — e o chip flutuante, que e onde a maior parte
-   das escolhas acontece, dizia so o nome e uma legenda generica. */
-.fab-sug.comagora{align-items:flex-start;padding-top:9px;padding-bottom:9px;white-space:normal}
-.fab-sug.comagora .fab-sug-ico{margin-top:1px}
-.fab-sug-txt i.fab-sug-agora{display:block;margin-top:5px;font-size:10.5px;
-  color:var(--label2);line-height:1.42;white-space:normal;max-width:248px}
-.fab-sug-txt i.fab-sug-agora b{display:inline;font-weight:800;text-transform:uppercase;
-  letter-spacing:.45px;font-size:9px;color:var(--label3);white-space:nowrap;margin-right:3px}
-.fab-sug-txt i.fab-sug-ressalva{display:block;margin-top:4px;font-size:10.5px;
-  color:#a3312c;line-height:1.42;white-space:normal;max-width:248px}
-.fab-sug-txt i.fab-sug-ressalva b{display:inline;font-weight:800;text-transform:uppercase;
-  letter-spacing:.45px;font-size:9px;color:#a3312c;opacity:.85;white-space:nowrap;margin-right:3px}
+/* A razao de contexto e UMA, no topo da coluna: ela fala da estrategia, nao de
+   cada peca. Repetida cartao a cartao virava parede de texto. */
+.fab-sug-ctx{padding:8px 11px;margin-bottom:2px;border-radius:9px;
+  background:#eef5ff;border-left:3px solid #0a5fa8;color:#1c4f80;
+  font-size:11px;line-height:1.42;white-space:normal;font-weight:500}
+.fab-sug-ctx b{display:block;font-size:9px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.5px;opacity:.72;margin-bottom:2px}
+.fab-sug-dica{display:block;padding:2px 4px;font-size:10px;color:var(--label3);
+  line-height:1.35;white-space:normal;font-style:italic}
 .fab-vertudo{border:0;background:none;color:var(--label2);font-size:11px;cursor:pointer;
   text-decoration:underline;padding:2px 0;white-space:nowrap}
 .fab-vertudo:hover{color:var(--label)}
@@ -10591,20 +10587,10 @@ function fabRenderAbas(){
 // Este e o comportamento central: seleciona um componente e ao lado dele
 // aparece o que faz sentido vir depois. O que nao aparece tem motivo — e o
 // motivo esta em "ver tudo".
-// Toda opcao explica POR QUE AGORA, no chip e no cartao. A ordem nao e
-// estetica: a nota de contexto vale mais que o texto de catalogo, porque ela e
-// a unica que sabe o que voce respondeu. Sem nota de contexto, cai no motivo da
-// propria sugestao; sem ele, no `quando` do componente. Peca vetada mostra o
-// motivo do veto no lugar — e ali "por que agora" vira "por que nao".
 function fabCurta(t,n){
   t=String(t||'').trim();if(t.length<=n)return t;
   const corte=t.slice(0,n);const esp=corte.lastIndexOf(' ');
   return (esp>n*0.6?corte.slice(0,esp):corte).replace(/[,;:.\s]+$/,'')+'…';
-}
-function fabPorQueAgora(s){
-  if(s.peso<=-999)return {rot:'por que não',agora:fabCurta(s.porque,140),ressalva:''};
-  const agora=s.ctxNota||s.porque||(s.comp&&s.comp.quando)||'';
-  return {rot:'por que agora',agora:fabCurta(agora,118),ressalva:fabCurta(s.ctxAviso,110)};
 }
 
 function fabRenderSugs(){
@@ -10650,21 +10636,30 @@ function fabRenderSugs(){
   const ocultas=sugs.filter(s=>s.peso<=0);
   if(!_fabVerTudo)sugs=sugs.filter(s=>s.peso>0);
   sugs=sugs.slice(0,7);
+  // A nota de contexto vale para a ESTRATEGIA, nao para cada peca: repetida em
+  // seis cartoes ela deixa de explicar e vira parede de texto — e ainda cortada
+  // no mesmo ponto nos tres primeiros. Aqui ela aparece UMA vez, no topo da
+  // coluna, e o detalhe por peca continua onde ja estava: no cartao que abre ao
+  // passar o mouse.
+  const _cont={};
+  sugs.forEach(s=>{if(s.ctxNota)_cont[s.ctxNota]=(_cont[s.ctxNota]||0)+1});
+  const _maior=Object.entries(_cont).sort((a,b)=>b[1]-a[1])[0];
+  const notaGeral=(_maior&&_maior[1]>=2)?_maior[0]:'';
+  const cabCtx=notaGeral
+    ?`<div class="fab-sug-ctx"><b>Pelo seu contexto</b>${escapeHtml(fabCurta(notaGeral,210))}</div>`:'';
   const chips=sugs.map(s=>{
     const cls=s.peso<=0?'fab-sug ruim':(s.nivel==='rec'?'fab-sug rec':'fab-sug ok');
     const et=FAB_ETAPA[s.comp.etapa]||{cor:'#888'};
-    const ag=fabPorQueAgora(s);
-    return `<button class="${cls}${s.jaExiste?' ja':''}${ag.agora||ag.ressalva?' comagora':''}" data-fabsug="${s.id}" style="--et:${et.cor}">
+    return `<button class="${cls}${s.jaExiste?' ja':''}" data-fabsug="${s.id}" style="--et:${et.cor}">
       <span class="fab-sug-ico">${FAB_ICO[s.comp.ico]||FAB_ICO.base}</span>
       <span class="fab-sug-txt"><b>${escapeHtml(s.comp.nome)}${
         s.jaExiste?'<em>ligar</em>':''}</b>${
-        s.comp.curto?`<i>${escapeHtml(s.comp.curto)}</i>`:''}${
-        ag.agora?`<i class="fab-sug-agora"><b>${ag.rot}</b>${escapeHtml(ag.agora)}</i>`:''}${
-        ag.ressalva?`<i class="fab-sug-ressalva"><b>ressalva</b>${escapeHtml(ag.ressalva)}</i>`:''}</span></button>`;
+        s.comp.curto?`<i>${escapeHtml(s.comp.curto)}</i>`:''}</span></button>`;
   }).join('');
   const verTudo=ocultas.length?`<button class="fab-vertudo" data-fabvertudo="1">${
     _fabVerTudo?'ocultar não recomendados':'ver '+ocultas.length+' não recomendado'+(ocultas.length>1?'s':'')}</button>`:'';
-  box.innerHTML=abre+chips+verTudo+`</div>`+linha;
+  const dica=sugs.length?`<span class="fab-sug-dica">passe o mouse em uma peça para ver por que ela cabe aqui</span>`:'';
+  box.innerHTML=abre+cabCtx+chips+verTudo+dica+`</div>`+linha;
 }
 function fabPosSug(){fabRenderSugs()}
 
@@ -10771,7 +10766,11 @@ function fabRenderPainel(){
     title="${pr.pronto?'Nada obrigatório em aberto':'Ver o que falta'}">
     <div class="fab-pront-bar"><span style="width:${pr.pronto?100:pr.pct}%"></span></div>
     <div class="fab-pront-txt">
-      <b>${pr.pronto?'Pronta para o seu contexto':'Estratégia '+pr.feitas+' de '+pr.total}</b>
+      <b>${pr.pronto?'Pronta para o seu contexto'
+        // "Estrategia 6 de 16" colidia com o "Estrategia · decisao 2 de 7" logo
+        // abaixo: duas contagens, mesmo nome, numeros diferentes. Esta e a do
+        // total; a de baixo e a da fase em que voce esta.
+        :pr.feitas+' de '+pr.total+' decisões tomadas'}</b>
       <i>${pr.pronto
         ?(pr.opcionais.length?'daqui em diante é opcional — '+pr.opcionais.length+(pr.opcionais.length===1?' sugestão':' sugestões')+' de refinamento':'nada em aberto')
         :'falta '+_falta.join(' · ')}</i>
