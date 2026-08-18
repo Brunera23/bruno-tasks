@@ -1954,12 +1954,13 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 /* sugestoes flutuantes e perguntas da arvore */
 .fab-sugs{position:absolute;top:0;left:0;width:0;height:0;z-index:4}
 .fab-sug-linha{position:absolute;height:1.5px;background:var(--sep);pointer-events:none}
-.fab-fluxo{position:absolute;transform:translateY(-50%);width:290px;display:flex;
-  flex-direction:column;align-items:flex-start;gap:7px;max-height:78vh;overflow-y:auto;
-  overscroll-behavior:contain;padding-right:2px}
-.fab-fluxo.esq{align-items:flex-end}
-.fab-fluxo.esq .fab-op,.fab-fluxo.esq .fab-perg{text-align:right}
-.fab-sug{display:flex;align-items:center;gap:9px;padding:7px 14px 7px 10px;max-width:100%;
+.fab-fluxo{position:absolute;transform:translateY(-50%);width:298px;display:flex;
+  flex-direction:column;align-items:stretch;gap:6px;max-height:78vh;overflow-y:auto;
+  overscroll-behavior:contain;padding:8px;border-radius:14px;
+  background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(3px);
+  box-shadow:0 6px 24px rgba(0,0,0,.13),0 0 0 1px var(--sep)}
+
+.fab-sug{display:flex;align-items:center;gap:9px;padding:7px 12px 7px 10px;width:100%;text-align:left;
   border:1.5px dashed var(--sep);background:var(--bg);border-radius:12px;cursor:pointer;white-space:nowrap;
   font-size:13px;font-weight:600;color:var(--label2);animation:fabIn .18s ease-out}
 @keyframes fabIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
@@ -1969,7 +1970,21 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-sug-ico svg{width:100%;height:100%;display:block}
 .fab-sug.rec{border-color:color-mix(in srgb,var(--et) 55%,transparent);color:var(--label)}
 .fab-sug.ok{opacity:.72}
-.fab-sug.ruim{opacity:.5;border-color:#d9534f;text-decoration:line-through}
+.fab-sug.ruim{opacity:.62;border-color:#d9534f}
+.fab-sug.ruim .fab-sug-txt b{text-decoration:line-through}
+/* "por que agora": a razao de CONTEXTO da peca, no proprio chip. Antes ela so
+   existia no cartao do painel — e o chip flutuante, que e onde a maior parte
+   das escolhas acontece, dizia so o nome e uma legenda generica. */
+.fab-sug.comagora{align-items:flex-start;padding-top:9px;padding-bottom:9px;white-space:normal}
+.fab-sug.comagora .fab-sug-ico{margin-top:1px}
+.fab-sug-txt i.fab-sug-agora{display:block;margin-top:5px;font-size:10.5px;
+  color:var(--label2);line-height:1.42;white-space:normal;max-width:248px}
+.fab-sug-txt i.fab-sug-agora b{display:inline;font-weight:800;text-transform:uppercase;
+  letter-spacing:.45px;font-size:9px;color:var(--label3);white-space:nowrap;margin-right:3px}
+.fab-sug-txt i.fab-sug-ressalva{display:block;margin-top:4px;font-size:10.5px;
+  color:#a3312c;line-height:1.42;white-space:normal;max-width:248px}
+.fab-sug-txt i.fab-sug-ressalva b{display:inline;font-weight:800;text-transform:uppercase;
+  letter-spacing:.45px;font-size:9px;color:#a3312c;opacity:.85;white-space:nowrap;margin-right:3px}
 .fab-vertudo{border:0;background:none;color:var(--label2);font-size:11px;cursor:pointer;
   text-decoration:underline;padding:2px 0;white-space:nowrap}
 .fab-vertudo:hover{color:var(--label)}
@@ -2159,6 +2174,8 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
   background:var(--bg);border:1px solid var(--sep);color:var(--label2)}
 .fab-passo-ctx{display:block;margin-top:6px;padding:6px 9px;border-left:3px solid #0078d4;
   background:#eef5ff;border-radius:0 6px 6px 0;font-size:11.5px;color:#1c4f80;line-height:1.45}
+.fab-passo-ctx b{display:block;font-size:9px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.5px;opacity:.72;margin-bottom:2px}
 .fab-card-sec.contexto{background:#eef5ff;border-left:3px solid #0078d4;padding:8px 10px;border-radius:0 7px 7px 0}
 .fab-card-sec.ctxaviso{background:#fff8e8;border-left:3px solid #c07d1a;padding:8px 10px;border-radius:0 7px 7px 0}
 .fab-passo-ctx.aviso{border-left-color:#c07d1a;background:#fff8e8;color:#7a4e08}
@@ -2311,6 +2328,24 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-cols-pre{margin:8px 0 0;padding:10px;background:var(--bg);border:1px solid var(--sep);border-radius:7px;
   font-size:10.5px;line-height:1.5;overflow-x:auto;color:var(--label);
   font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre}
+/* receita de uso: a configuracao concreta da peca. Fica acima dos detalhes
+   porque e o que o usuario abre o painel para ver — "como uso isto de fato". */
+.fab-rec{margin:-6px 0 12px;padding:12px 14px;border:1.5px solid #0a5fa8;border-radius:10px;
+  background:#eef5ff;font-size:12.5px;line-height:1.55;color:#173a5c}
+.fab-rec-t{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
+  font-weight:800;color:#0a5fa8;margin-bottom:9px}
+.fab-rec-passos{margin:0;padding-left:17px}
+.fab-rec-passos li{margin-bottom:6px}
+.fab-rec-exprs{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.fab-rec-expr i{display:block;font-style:normal;font-size:10px;text-transform:uppercase;
+  letter-spacing:.5px;font-weight:800;color:#4a6b85;margin-bottom:3px}
+.fab-rec-expr pre{margin:0;padding:8px 10px;border-radius:7px;background:var(--card);
+  border:1px solid var(--sep);font-size:10.5px;line-height:1.5;overflow-x:auto;
+  color:var(--label);font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre}
+.fab-rec-cuidado{margin:11px 0 0;padding:8px 10px;border-left:3px solid #c07d1a;
+  background:#fff8e8;border-radius:0 7px 7px 0;color:#7a4e08;font-size:11.5px;line-height:1.45}
+.fab-rec-cuidado b{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;
+  margin-bottom:2px;opacity:.8}
 .fab-det{margin:-6px 0 12px;padding:11px 13px;border:1px solid var(--sep);border-radius:9px;
   background:var(--hover);font-size:12.5px;line-height:1.55}
 .fab-det>p{margin:0 0 9px;color:var(--label)}
@@ -5414,6 +5449,10 @@ function fabArtefatoExistente(comp){
 // Colunas base de cada tabela. Nao e schema completo: e o minimo que faz a
 // tabela cumprir o papel dela — e o que costuma faltar quando alguem monta
 // isso na pressa. `se` deixa a coluna aparecer so quando o contexto a exige.
+// A decisao de separar catalogo de estado nao e cosmetica: ela muda o formato
+// da tabela. Separado, o catalogo deixa de carregar watermark e status — quem
+// os guarda e a tabela de estado, que tem outro dono e outro ciclo de vida.
+function fabCtrlSeparado(g){return g.cfg('ctrltable','forma','separada')||g.cfg('ctrltable','forma','historico')}
 const FAB_COLUNAS={
   logtable:{t:'Log de Execução',ddl:'log_execucao',cols:[
     {n:'execucao_id',t:'uniqueidentifier',p:'O RunId do pipeline. É a chave que amarra tudo que aconteceu numa rodada.'},
@@ -5442,8 +5481,8 @@ const FAB_COLUNAS={
     {n:'janela_execucao',t:'varchar(60) NULL',dono:'catalogo',p:'Quando este caso pode rodar. Origem que só libera de madrugada precisa disto declarado, não combinado por e-mail.'},
     {n:'ordem',t:'int DEFAULT 100',dono:'catalogo',p:'Prioridade dentro da mesma janela.'},
     {n:'ativo',t:'bit DEFAULT 1',dono:'catalogo',p:'Liga e desliga um caso de uso sem publicar nada. Em incidente, é a primeira coluna que alguém procura.'},
-    {n:'ultima_execucao',t:'datetime2 NULL',dono:'execucao',p:'Quando este caso rodou pela última vez. Escrito pela carga, não por gente.'},
-    {n:'ultimo_status',t:'varchar(20) NULL',dono:'execucao',p:'Resultado da última execução. É o que o executor consulta para decidir se repete.'},
+    {n:'ultima_execucao',t:'datetime2 NULL',dono:'execucao',p:'Quando este caso rodou pela última vez. Escrito pela carga, não por gente.',se:g=>!fabCtrlSeparado(g)},
+    {n:'ultimo_status',t:'varchar(20) NULL',dono:'execucao',p:'Resultado da última execução. É o que o executor consulta para decidir se repete.',se:g=>!fabCtrlSeparado(g)},
     {n:'atualizado_em',t:'datetime2',dono:'catalogo',p:'Quando a configuração mudou.'},
     {n:'atualizado_por',t:'varchar(120)',dono:'catalogo',p:'Quem mudou. A tabela decide o comportamento do framework inteiro: mudança sem autor é risco.'}
   ]},
@@ -5462,7 +5501,7 @@ const FAB_COLUNAS={
     {n:'destino_objeto',t:'varchar(200)',dono:'catalogo',p:'Tabela de destino.'},
     {n:'modo_carga',t:'varchar(20)',dono:'catalogo',p:'full / incremental / merge. É o que o pipeline lê para decidir o caminho.'},
     {n:'coluna_watermark',t:'varchar(120) NULL',dono:'catalogo',p:'QUAL coluna da origem controla o incremental. Deixar isso implícito no código é o erro que trava a manutenção.'},
-    {n:'watermark_valor',t:'varchar(60) NULL',dono:'execucao',p:'Último valor lido. Guardado como texto para servir data, número ou versão.'},
+    {n:'watermark_valor',t:'varchar(60) NULL',dono:'execucao',p:'Último valor lido. Guardado como texto para servir data, número ou versão.',se:g=>!fabCtrlSeparado(g)},
     {n:'ativo',t:'bit DEFAULT 1',dono:'catalogo',p:'Liga e desliga a carga sem publicar nada. Vale ouro em incidente.'},
     {n:'ordem',t:'int DEFAULT 100',dono:'catalogo',p:'Prioridade de execução. Dimensão antes de fato, mestre antes de movimento.'},
     {n:'paralelismo_max',t:'int NULL',dono:'catalogo',p:'Teto de execução simultânea para este objeto. Protege origem frágil.',se:g=>g.cfg('foreach','execucao','paralelo')},
@@ -6658,6 +6697,13 @@ const FAB_VALID=[
    quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','metadata')&&g.tem(['copy','copyjob','dataflow'])&&!g.tem(['ctrltable'])&&!g.tem(['lookup']),
    texto:'Você declarou estratégia dirigida por metadados, mas o desenho começa direto na atividade que move o dado. Em metadata-driven a primeira atividade do pipeline é o Lookup sobre a tabela de controle: é ela que diz o que processar. Sem isso, o que está desenhado é um pipeline por objeto.',
    resolver:'Comece pela Tabela de Controle e leia-a com um Lookup; a atividade de ingestão passa a rodar dentro do laço, uma vez por objeto.'},
+  {id:'deploy-sobre-watermark',nivel:'aviso',antipadrao:true,
+   porqueDoi:'Configuração e estado de produção estão na mesma tabela, e existe Deployment Pipeline no desenho. Promover de dev para prod passa a ser uma escolha entre duas perdas: ou o deploy leva a configuração e apaga os watermarks de produção, ou preserva os watermarks e não leva a configuração nova.',
+   custo:'No primeiro deploy depois que a carga incremental já estiver em produção — e o sintoma é recarregar tudo, ou pior, não recarregar nada.',
+   titulo:'Deploy promovendo a tabela que guarda o watermark',
+   quando:g=>g.tem(['deploy'])&&g.tem(['ctrltable'])&&g.cfg('ctrltable','forma','unica'),
+   texto:'O catálogo é configuração: versionado, revisado, promovido entre ambientes. O watermark é estado de produção: nasce lá e não pode voltar. Na mesma tabela, o Deployment Pipeline não tem como tratar os dois de forma diferente. Há um segundo custo, mais silencioso: a identidade que roda o pipeline precisa de UPDATE nessa tabela para gravar o watermark — e com isso ganha permissão para trocar origem e destino de qualquer carga sem que ninguém veja.',
+   resolver:'Separe em duas tabelas: o catálogo (origem, destino, modo, ativo) e o estado (watermark, última execução, status). Refaça a decisão "o catálogo e o estado moram na mesma tabela?" escolhendo separar.'},
   {id:'metadata-sem-controle',nivel:'aviso',antipadrao:true,porqueDoi:'A estratégia declarada é dirigida por metadados, mas não há de onde ler o escopo — o pipeline volta a ser um por objeto.',custo:'Assim que o segundo objeto entrar.',titulo:'Estratégia por metadados sem tabela de controle',
     quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','metadata')&&g.contar()>=3&&!g.tem(['ctrltable']),
     texto:'A estratégia declarada é dirigida por metadados, mas não há tabela de controle. Sem ela o pipeline não tem de onde ler o escopo — e você volta a manter um pipeline por objeto.',
@@ -7656,16 +7702,33 @@ function fabCtxPeso(pid,ctx){
     }
     // Estrategia declarada: e a decisao que redefine o escopo do que faz
     // sentido sugerir, entao pesa mais que as demais dimensoes de contexto.
-    if(fabCtxTem(ctx,'estrategia','metadata')){
+    // Metadados e pipeline-por-objeto sao estrategias OPOSTAS. Marcadas as duas,
+    // os dois blocos disparavam e o mesmo cartao mostrava dois conselhos
+    // contraditorios lado a lado — "esta peca faz um pipeline atender N
+    // objetos" junto de "metadados adicionam complexidade sem ganho aqui".
+    // Conselho que se contradiz nao e conselho: aqui vira UMA nota, que nomeia
+    // o conflito e diz o criterio de desempate.
+    const _estMeta=fabCtxTem(ctx,'estrategia','metadata');
+    const _estExp=fabCtxTem(ctx,'estrategia','explicito');
+    if(_estMeta&&_estExp){
       if(['ctrltable','lookup','foreach','invoke'].includes(p.id))
-        emp(55,'Estratégia dirigida por metadados: esta peça é o que faz um pipeline atender N objetos.');
+        emp(20,'Você marcou as duas estratégias: dirigida por metadados e um pipeline por objeto. Esta peça serve à primeira e pesa na segunda. O desempate é a contagem: a partir de cinco objetos com a mesma lógica de carga, o catálogo se paga; abaixo disso, o pipeline explícito é mais legível.');
+      if(p.id==='copy')
+        emp(18,'Com as duas estratégias marcadas, o Copy é a peça em comum — muda só onde ele mora: no caminho explícito ele é o pipeline; no dirigido por metadados ele roda dentro do laço, parametrizado pela linha do catálogo.');
       if(['mirroring','shortcut'].includes(p.id))
-        emp(-40,'Você declarou pipeline dirigido por metadados: réplica gerenciada é a estratégia oposta — ela não passa por tabela de controle nem por laço.');
-    }
-    if(fabCtxTem(ctx,'estrategia','explicito')){
-      if(['ctrltable','lookup','foreach'].includes(p.id))
-        emp(-50,'Você optou por um pipeline por objeto: metadados adicionam complexidade sem o ganho de escala aqui.');
-      if(p.id==='copy')emp(20,'Carga explícita: a atividade direta é o caminho mais legível.');
+        emp(-40,'Réplica gerenciada é a terceira estratégia, e ela não passa por tabela de controle nem por laço — não combina com nenhuma das duas que você marcou.');
+    }else{
+      if(_estMeta){
+        if(['ctrltable','lookup','foreach','invoke'].includes(p.id))
+          emp(55,'Estratégia dirigida por metadados: esta peça é o que faz um pipeline atender N objetos.');
+        if(['mirroring','shortcut'].includes(p.id))
+          emp(-40,'Você declarou pipeline dirigido por metadados: réplica gerenciada é a estratégia oposta — ela não passa por tabela de controle nem por laço.');
+      }
+      if(_estExp){
+        if(['ctrltable','lookup','foreach'].includes(p.id))
+          emp(-50,'Você optou por um pipeline por objeto: metadados adicionam complexidade sem o ganho de escala aqui.');
+        if(p.id==='copy')emp(20,'Carga explícita: a atividade direta é o caminho mais legível.');
+      }
     }
     if(fabCtxTem(ctx,'estrategia','codigo')){
       if(['notebook','sparkjob'].includes(p.id))emp(45,'Estratégia code-first: lógica versionada e testável em PR.');
@@ -7685,6 +7748,44 @@ function fabCtxPeso(pid,ctx){
     }
   return {peso,ctxPros,ctxContras};
 }
+// De que papel e cada peca. Sai do proprio roteiro: se toda posicao que oferece
+// a peca declara `papel`, a peca pertence a esses papeis; se qualquer posicao a
+// oferece sem restricao, ela vale para todos. Assim a sugestao flutuante e o
+// roteiro nunca discordam — antes o roteiro podia parar de cobrar Silver e a
+// sugestao continuava oferecendo.
+const FAB_PAPEL_NOME={orquestra:'orquestra: lê a lista e invoca outros',
+  ingere:'ingere dados de uma origem',transforma:'transforma o que já está no lake',
+  publica:'publica para consumo',manutencao:'é rotina de manutenção'};
+const FAB_PAPEL_DONO={orquestra:'ao pipeline que orquestra',ingere:'ao pipeline que ingere',
+  transforma:'ao pipeline que transforma',publica:'ao pipeline que publica',
+  manutencao:'à rotina de manutenção'};
+let _fabPapelComp=null;
+function fabPapelComp(){
+  if(_fabPapelComp)return _fabPapelComp;
+  const m={};
+  FAB_ROTEIRO.forEach(pos=>{
+    if(pos.campo)return;                      // decisao de configuracao nao cria peca
+    (pos.op||[]).forEach(o=>{
+      if(!o.id)return;
+      if(m[o.id]===false)return;              // ja e universal
+      if(!pos.papel){m[o.id]=false;return}
+      m[o.id]=new Set([...(m[o.id]||[]),...pos.papel]);
+    });
+  });
+  _fabPapelComp=m;return m;
+}
+// motivo pelo qual esta peca nao e o proximo passo DESTE pipeline — string
+// vazia quando serve. O texto vai para "ver tudo", como todo veto do motor.
+function fabPapelVeto(comp,ctx){
+  const pap=ctx&&ctx.papel;if(!pap)return '';
+  const m=fabPapelComp()[comp];
+  if(!m||m===false||m.has(pap))return '';
+  const donos=[...m].map(x=>FAB_PAPEL_DONO[x]||x);
+  const lista=donos.length>1?donos.slice(0,-1).join(', ')+' e '+donos[donos.length-1]:donos[0];
+  return (FAB_COMP[comp]?FAB_COMP[comp].nome:comp)+' pertence '+lista+'. Você declarou que este pipeline '+
+    (FAB_PAPEL_NOME[pap]||pap)+' — essa decisão vive no filho, não aqui. Para mudar, troque o papel do pipeline no contexto.';
+}
+
 function fabSugestoes(no){
   const def=FAB_COMP[no.comp];if(!def)return [];
   const g=fabGrafo(),ctx=fabCtx();
@@ -7725,6 +7826,10 @@ function fabSugestoes(no){
       porque:'O pipeline chamado é outro artefato, com canvas próprio. Use "montar pipeline" no card do Invoke para desenhá-lo em um quadro separado.'}}
     if(fabNivelProibido(no,p.id)){peso=-999;p={...p,nivel:'evitar',
       porque:'O Fabric aceita um único nível de ForEach. Para repetir dentro de um laço, chame outro pipeline por Invoke Pipeline — é a saída oficial.'}}
+    // O papel declarado do pipeline recorta o que faz sentido aqui. Sem isso um
+    // orquestrador recebia Silver, Gold e modelo semantico como proximo passo.
+    const _pv=fabPapelVeto(p.id,ctx);
+    if(_pv){peso=-999;p={...p,nivel:'evitar',porque:_pv}}
     // Dentro de um laco entra so o que executa por item. Artefato e um so para a
     // arquitetura inteira — a tabela de log nao se multiplica por iteracao. O que
     // roda por item e quem ESCREVE nela.
@@ -8050,7 +8155,21 @@ const FAB_ROTEIRO=[
      {id:'foreach',porque:'ForEach itera sobre o que o Lookup devolveu. É o coração do padrão dirigido por metadados.'},
      {id:'invoke',porque:'Se a lógica por objeto já é grande, chame um pipeline filho: o pai orquestra, o filho executa. Também é a saída oficial quando faltaria um segundo nível de laço.'}]},
 
-  {id:'movimento', fase:'Ingestão', foco:['foreach','lookup','origem','pipeline'],
+  {id:'ctrl_forma', fase:'Estratégia', foco:['ctrltable','lookup','deploy'],
+   se:ctx=>fabCtxTem(ctx,'estrategia','metadata'),
+   t:'O catálogo e o estado de execução moram na mesma tabela?',
+   dica:'Não existe padrão ouro chancelado pela Microsoft: o Metadata-driven copy task do próprio Fabric gera uma tabela só. Quem separa, separa por dois motivos mecânicos. Deploy: configuração é versionada e promovida de dev para prod, watermark é estado de produção — na mesma tabela, ou o deploy apaga o watermark, ou não consegue levar a configuração. Privilégio mínimo: a identidade do pipeline precisa de UPDATE no estado; se for a mesma tabela, ela também pode trocar origem e destino em silêncio.',
+   cfgDe:['ctrltable'],campo:'forma',
+   op:[
+     {v:'separada',nome:'Catálogo e estado em tabelas separadas',
+      porque:'O catálogo (origem, destino, modo, ativo) é configuração: vive no Git e é promovido entre ambientes. O estado (watermark, última execução, status) é produção: nasce e morre lá. Separar deixa o deploy sobrescrever um sem tocar no outro, e deixa a identidade do pipeline ter UPDATE só no estado.'},
+     {v:'unica',nome:'Uma tabela só',
+      porque:'Menos junção e menos cerimônia — e é o que o Metadata-driven copy task do Fabric gera. Sustenta bem enquanto forem poucos objetos e o deploy for manual. Assim que entrar Deployment Pipeline, o watermark vira vítima da promoção.'},
+     {v:'historico',nome:'Catálogo, estado e histórico de execução',
+      porque:'As duas acima mais a tabela de log. É o que responde "quanto essa carga levava há três meses" e "quando esse objeto começou a demorar". Custa uma tabela a mais e uma escrita por execução.'}
+   ]},
+
+  {id:'movimento', fase:'Ingestão', papel:['ingere'], foco:['foreach','lookup','origem','pipeline'],
    t:'O que efetivamente traz o dado da origem?',
    dica:'Esta é a decisão de custo e de manutenção da ingestão. Ela depende menos do que você prefere e mais do volume, da origem e de quem vai manter isso daqui a um ano.',
    ok:g=>g.tem(['copy','copyjob','dataflow','notebook','mirroring','shortcut','eventstream','sparkjob']),
@@ -8071,7 +8190,7 @@ const FAB_ROTEIRO=[
      {id:'eventstream',porque:'Fluxo contínuo de eventos: o caminho nativo quando o dado chega empurrado, não consultado.',
       se:ctx=>fabCtxTem(ctx,'freq','realtime')||fabCtxTem(ctx,'estrategia','streaming')}]},
 
-  {id:'aterrissagem', fase:'Ingestão', foco:['copy','copyjob','dataflow','notebook','mirroring','shortcut','eventstream','sparkjob'],
+  {id:'aterrissagem', fase:'Ingestão', papel:['ingere'], foco:['copy','copyjob','dataflow','notebook','mirroring','shortcut','eventstream','sparkjob'],
    t:'Onde o dado aterrissa quando entra no Fabric?',
    dica:'O destino da ingestão decide o que dá para fazer depois. Gravar direto em camada tratada parece economia de tempo até o primeiro reprocessamento.',
    ok:g=>g.tem(['bronze','lakehouse','warehouse','eventhouse']),
@@ -8110,7 +8229,7 @@ const FAB_ROTEIRO=[
      {id:'sqldb',porque:'SQL database do Fabric quando o controle serve também uma aplicação operacional, e não só o analítico.',
       se:ctx=>fabCtxTem(ctx,'equipe','sql')}]},
 
-  {id:'casa_camadas', fase:'Controle', foco:['bronze','silver','gold'],
+  {id:'casa_camadas', fase:'Controle', papel:['ingere','transforma','publica'], foco:['bronze','silver','gold'],
    t:'Onde ficam as camadas de dado?',
    dica:'Bronze, Silver e Gold são tabelas Delta — elas moram num item que as hospede. Misturar camada de dado com tabela de controle no mesmo item é o que depois trava a permissão.',
    ok:g=>!g.semCasa(['bronze','silver','gold']).length,
@@ -8130,7 +8249,7 @@ const FAB_ROTEIRO=[
      {id:'fail',porque:'Interrompe explicitamente. Em regra crítica, parar é melhor que propagar dado inválido para a camada de cima.'},
      {id:'activator',porque:'Alerta baseado em regra sobre o próprio dado, sem alguém olhando painel.'}]},
 
-  {id:'limpeza', fase:'Transformação', foco:['bronze','lakehouse','eventhouse'], se:ctx=>!fabCtxTem(ctx,'objetivo','ingestao'),
+  {id:'limpeza', fase:'Transformação', papel:['ingere','transforma'], foco:['bronze','lakehouse','eventhouse'], se:ctx=>!fabCtxTem(ctx,'objetivo','ingestao'),
    t:'O dado cru está guardado. O que o torna confiável?',
    dica:'Bronze é fiel à origem — inclusive aos defeitos dela. Alguém precisa tipar, padronizar e validar antes que isso vire número no relatório.',
    ok:g=>g.tem(['silver']), apos:['bronze','lakehouse'],
@@ -8141,25 +8260,25 @@ const FAB_ROTEIRO=[
      {id:'dataflow',porque:'Transformação visual quando a regra é simples e quem mantém não escreve código.',
       se:ctx=>fabCtxTem(ctx,'equipe','lowcode')}]},
 
-  {id:'qualidade', fase:'Transformação', foco:['silver','bronze','notebook','dataflow'], se:ctx=>fabCtxTem(ctx,'criticidade','alta')||fabCtxTem(ctx,'consumo','ml'),
+  {id:'qualidade', fase:'Transformação', papel:['ingere','transforma'], foco:['silver','bronze','notebook','dataflow'], se:ctx=>fabCtxTem(ctx,'criticidade','alta')||fabCtxTem(ctx,'consumo','ml'),
    t:'Quem garante que o dado passou nas regras?',
    dica:'Validação implícita não existe: ou a regra está escrita em algum lugar, ou ninguém a está aplicando.',
    ok:g=>g.tem(['dq']), apos:['silver','bronze','notebook'],
    op:[{id:'dq',porque:'Not null, unicidade, integridade referencial e variação de volume. Marcar a linha reprovada é melhor que descartá-la em silêncio.'}]},
 
-  {id:'curadoria', fase:'Consumo', foco:['silver','dq','sproc','notebook'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice')||fabCtxTem(ctx,'objetivo','dw'),
+  {id:'curadoria', fase:'Consumo', papel:['ingere','transforma','publica'], foco:['silver','dq','sproc','notebook'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice')||fabCtxTem(ctx,'objetivo','dw'),
    t:'Como o negócio enxerga esse dado?',
    dica:'Regra de negócio aplicada no relatório é regra que cada relatório aplica de um jeito. A camada de curadoria existe para que a métrica tenha uma definição só.',
    ok:g=>g.tem(['gold']), apos:['silver','notebook','sproc','warehouse'],
    op:[{id:'gold',porque:'Dimensões e fatos, com a regra de negócio já aplicada. É o que o modelo semântico consome.'}]},
 
-  {id:'semantico', fase:'Consumo', foco:['gold','warehouse','silver'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice'),
+  {id:'semantico', fase:'Consumo', papel:['ingere','transforma','publica'], foco:['gold','warehouse','silver'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice'),
    t:'Onde a métrica é definida uma única vez?',
    dica:'Sem camada semântica, cada relatório reimplementa a métrica — e dois diretores discutem faturamento com números diferentes.',
    ok:g=>g.tem(['semantic']), apos:['gold','warehouse','silver'],
    op:[{id:'semantic',porque:'Modelo semântico sobre a camada curada: uma definição de métrica valendo para todo consumo.'}]},
 
-  {id:'entrega', fase:'Consumo', foco:['semantic'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard'),
+  {id:'entrega', fase:'Consumo', papel:['ingere','transforma','publica'], foco:['semantic'], se:ctx=>fabCtxTem(ctx,'consumo','dashboard'),
    t:'Como isso chega a quem decide?',
    dica:'Último passo do caminho do dado. Daqui em diante o que resta é governança.',
    ok:g=>g.tem(['pbi','rtdash']), apos:['semantic'],
@@ -8177,7 +8296,7 @@ const FAB_ROTEIRO=[
      {id:'pbimonitor',porque:'Painel sobre o log: status das cargas, duração e falhas, sem abrir o Fabric.'},
      {id:'activator',porque:'Alerta automático quando o status gravado for de falha ou a duração fugir do normal.'}]},
 
-  {id:'seguranca', fase:'Operação', foco:['semantic','gold','pbi','rls'], se:ctx=>fabCtxTem(ctx,'sensivel','sim'),
+  {id:'seguranca', fase:'Operação', papel:['ingere','transforma','publica'], foco:['semantic','gold','pbi','rls'], se:ctx=>fabCtxTem(ctx,'sensivel','sim'),
    t:'Quem pode ver o quê?',
    dica:'Você indicou dado sensível. Definir isso depois de publicar significa que alguém já viu o que não devia.',
    ok:g=>g.tem(['rls']), apos:['semantic','gold','warehouse'],
@@ -8186,7 +8305,7 @@ const FAB_ROTEIRO=[
 
   // ---- fase Carga: o esqueleto que faltava. Declarar "incremental" nao e
   // arquitetura; arquitetura e responder ESTAS perguntas. ----
-  {id:'wm_fonte', fase:'Carga', foco:['ctrltable','copy','notebook'],
+  {id:'wm_fonte', fase:'Carga', papel:['ingere','transforma'], foco:['ctrltable','copy','notebook'],
    se:ctx=>fabCargaDe(ctx)==='watermark',
    t:'Qual coluna da origem marca o que mudou?',
    dica:'É a pergunta que decide se o incremental é possível. Deixá-la implícita no código é o erro que trava a manutenção seis meses depois, quando ninguém lembra qual coluna era.',
@@ -8198,7 +8317,7 @@ const FAB_ROTEIRO=[
      {v:'id_sequencial',nome:'ID sequencial',porque:'Serve para tabela que só recebe inserção. Não vê atualização — se a linha muda depois de criada, você não vai saber.'},
      {v:'nenhuma',nome:'Não há coluna confiável',porque:'Então o incremental por watermark não é viável, e insistir nele vai perder dado em silêncio. Reveja o padrão de carga.'}
    ]},
-  {id:'wm_leitura', fase:'Carga', foco:['ctrltable','lookup','pipeline'],
+  {id:'wm_leitura', fase:'Carga', papel:['ingere','transforma'], foco:['ctrltable','lookup','pipeline'],
    se:ctx=>fabCargaDe(ctx)==='watermark',
    t:'Quem lê o último valor processado?',
    dica:'Alguém precisa buscar até onde a carga anterior chegou, antes de filtrar a origem. Sem isso, a "carga incremental" recarrega tudo e ninguém percebe — só a fatura.',
@@ -8209,7 +8328,7 @@ const FAB_ROTEIRO=[
      {v:'notebook',id:'notebook',porque:'Se a carga já é código, ler o watermark de dentro dele evita uma ida e volta ao Warehouse.',
       se:ctx=>fabCtxTem(ctx,'estrategia','codigo')||fabCtxTem(ctx,'equipe','codigo')}
    ]},
-  {id:'wm_margem', fase:'Carga', foco:['ctrltable','copy','sproc'],
+  {id:'wm_margem', fase:'Carga', papel:['ingere','transforma'], foco:['ctrltable','copy','sproc'],
    se:ctx=>fabCargaDe(ctx)==='watermark',
    t:'Qual a margem de retrocesso para dado que chega atrasado?',
    dica:'Registro lançado hoje com data de ontem nunca entra num watermark sem margem — e esse é o furo mais silencioso que existe em carga incremental. Ninguém percebe até alguém conferir um número fechado.',
@@ -8221,7 +8340,7 @@ const FAB_ROTEIRO=[
      {v:'fechamento',nome:'Até o fechamento do mês',porque:'Financeiro e fiscal reabrem período. Aqui a margem tem que ir até o fechamento, e reprocessar por janela precisa ser barato.'},
      {v:'sem',nome:'Sem margem',porque:'Só quando a origem garante que nada é lançado com data retroativa. É raro — confirme com quem opera o sistema antes de assumir, porque o furo é silencioso.'}
    ]},
-  {id:'wm_gravacao', fase:'Carga', foco:['sproc','ctrltable','notebook'],
+  {id:'wm_gravacao', fase:'Carga', papel:['ingere','transforma'], foco:['sproc','ctrltable','notebook'],
    se:ctx=>fabCargaDe(ctx)==='watermark',
    t:'Quando o novo watermark é gravado?',
    dica:'A pergunta que separa carga incremental de perda de dado. Gravar antes de terminar significa que uma falha no meio faz a próxima execução pular a janela inteira — e ela nunca mais volta.',
@@ -8232,7 +8351,7 @@ const FAB_ROTEIRO=[
      {v:'transacao',nome:'Na mesma transação da carga',porque:'Melhor ainda quando destino e controle vivem no mesmo Warehouse: ou os dois acontecem, ou nenhum.'},
      {v:'antes',nome:'No início da execução',porque:'Anti-padrão. Falhou no meio? A janela foi marcada como processada e o dado dela nunca chega. É a causa mais comum de buraco silencioso em incremental.'}
    ]},
-  {id:'wm_delete', fase:'Carga', foco:['ctrltable','sproc','copy','notebook'],
+  {id:'wm_delete', fase:'Carga', papel:['ingere','transforma'], foco:['ctrltable','sproc','copy','notebook'],
    se:ctx=>fabCargaDe(ctx)==='watermark'||fabCargaDe(ctx)==='merge',
    t:'Como você detecta exclusão na origem?',
    dica:'Watermark por data de atualização nunca vê DELETE físico: a linha some da origem e continua viva no seu destino para sempre. Descobre-se quando alguém pergunta por que o total não bate.',
@@ -8245,7 +8364,7 @@ const FAB_ROTEIRO=[
      {v:'naoimporta',nome:'Exclusão não acontece nesta origem',porque:'Legítimo para tabela append-only — mas registre a premissa. Ela é falsa com mais frequência do que se imagina.'}
    ]},
 
-  {id:'cdc_ordem', fase:'Carga', foco:['copy','notebook','mirroring','eventstream'],
+  {id:'cdc_ordem', fase:'Carga', papel:['ingere','transforma'], foco:['copy','notebook','mirroring','eventstream'],
    se:ctx=>fabCargaDe(ctx)==='cdc',
    t:'Em que ordem as mudanças são aplicadas?',
    dica:'Change feed entrega eventos, e a ordem importa: aplicar um UPDATE antes do INSERT que o criou deixa a tabela num estado que não existiu na origem.',
@@ -8256,7 +8375,7 @@ const FAB_ROTEIRO=[
      {v:'ultimo',nome:'Só o último estado de cada chave',porque:'Mais rápido e suficiente quando você só quer o estado atual. Perde o caminho — não serve se alguém for auditar as transições.'},
      {v:'servico',nome:'O serviço cuida disso',porque:'Mirroring gerenciado resolve ordem internamente. Só confirme que é mesmo Mirroring, e não um pipeline seu lendo change feed.'}
    ]},
-  {id:'merge_chave', fase:'Carga', foco:['sproc','notebook','gold','silver'],
+  {id:'merge_chave', fase:'Carga', papel:['ingere','transforma'], foco:['sproc','notebook','gold','silver'],
    se:ctx=>['merge','scd2'].includes(fabCargaDe(ctx)),
    t:'Qual chave concilia origem e destino?',
    dica:'MERGE com chave que não é única não falha: ele atualiza a linha errada, em silêncio, e o número fica sutilmente errado. É o defeito mais caro de achar em toda a engenharia de dados.',
@@ -8268,7 +8387,7 @@ const FAB_ROTEIRO=[
      {v:'hash',nome:'Hash das colunas de negócio',porque:'Resolve chave longa ou composta grande, e deixa a comparação barata. Fixe o algoritmo — mudar o hash reprocessa tudo.'},
      {v:'naogarantida',nome:'A unicidade não é garantida',porque:'Então MERGE não é seguro aqui. Deduplique antes, ou use append com marcação de versão — qualquer coisa menos um MERGE que atualiza a linha errada.'}
    ]},
-  {id:'scd_atributos', fase:'Carga', foco:['gold','sproc','notebook'],
+  {id:'scd_atributos', fase:'Carga', papel:['ingere','transforma'], foco:['gold','sproc','notebook'],
    se:ctx=>fabCargaDe(ctx)==='scd2',
    t:'Quais atributos disparam uma nova versão?',
    dica:'Versionar tudo faz a dimensão explodir em linhas por mudança irrelevante — telefone corrigido não deveria criar uma versão histórica de cliente. Versionar de menos perde justamente o que alguém queria consultar.',
@@ -8279,7 +8398,7 @@ const FAB_ROTEIRO=[
      {v:'todos',nome:'Todos os atributos',porque:'Auditoria completa da dimensão. Prepare-se para o volume: correção de cadastro vira versão nova.'},
      {v:'lista',nome:'Uma lista explícita, revisada com o negócio',porque:'Mais trabalho no começo e menos discussão depois. É o que se faz quando a dimensão é relevante de verdade.'}
    ]},
-  {id:'full_atomicidade', fase:'Carga', foco:['copy','sproc','notebook','gold','silver'],
+  {id:'full_atomicidade', fase:'Carga', papel:['ingere','transforma'], foco:['copy','sproc','notebook','gold','silver'],
    se:ctx=>fabCargaDe(ctx)==='full',
    t:'O que o consumo enxerga durante a recarga?',
    dica:'TRUNCATE seguido de INSERT deixa a tabela vazia por alguns minutos. Se alguém abrir o relatório nessa janela, vê zero — e abre um chamado dizendo que o dado sumiu.',
@@ -8290,7 +8409,7 @@ const FAB_ROTEIRO=[
      {v:'overwrite',nome:'Overwrite atômico do Delta',porque:'No Lakehouse, sobrescrever a partição inteira é transacional: o leitor vê a versão antiga até a nova ficar pronta.'},
      {v:'truncate',nome:'TRUNCATE e INSERT',porque:'Só quando a recarga roda em janela sem consumo. Fora disso, é buraco visível para o usuário.'}
    ]},
-  {id:'snap_retencao', fase:'Carga', foco:['bronze','silver','gold','lakehouse'],
+  {id:'snap_retencao', fase:'Carga', papel:['ingere','transforma'], foco:['bronze','silver','gold','lakehouse'],
    se:ctx=>fabCargaDe(ctx)==='snapshot',
    t:'Por quanto tempo cada foto é guardada?',
    dica:'Snapshot sem política de descarte é a fatura crescendo sozinha. E a conversa sobre apagar sempre acontece tarde demais, quando já não se sabe o que pode sair.',
@@ -8302,7 +8421,7 @@ const FAB_ROTEIRO=[
      {v:'legal',nome:'Pelo prazo legal',porque:'Fiscal e contábil têm prazo definido. Se é esse o caso, escreva qual — retenção "para sempre por segurança" não é decisão, é omissão.'},
      {v:'rolante',nome:'Janela rolante com agregado permanente',porque:'Guarda o detalhe por pouco tempo e o agregado para sempre. O melhor equilíbrio quando o volume é alto.'}
    ]},
-  {id:'append_dedup', fase:'Carga', foco:['bronze','copy','notebook','eventstream','silver'],
+  {id:'append_dedup', fase:'Carga', papel:['ingere','transforma'], foco:['bronze','copy','notebook','eventstream','silver'],
    se:ctx=>fabCargaDe(ctx)==='append',
    t:'O que impede duplicata ao reprocessar?',
    dica:'Carga append é a mais simples até o dia em que alguém reprocessa uma janela. Sem chave de idempotência, o reprocessamento dobra o número — e o número dobrado parece plausível.',
@@ -8363,7 +8482,7 @@ const FAB_ROTEIRO=[
      {v:'regra',nome:'Quando a regra virar lógica de verdade',porque:'Condicional aninhada em Power Query é ilegível para quem não a escreveu — e não entra em revisão.'},
      {v:'critico',nome:'Quando virar carga crítica',porque:'Carga com SLA precisa de log, alerta e retry de verdade. Isso não é o forte do Dataflow.'}
    ]},
-  {id:'zero_lacuna', fase:'Estratégia', foco:['mirroring','shortcut','lakehouse','bronze'],
+  {id:'zero_lacuna', fase:'Estratégia', papel:['ingere','transforma'], foco:['mirroring','shortcut','lakehouse','bronze'],
    se:ctx=>fabCtxTem(ctx,'estrategia','zeroetl'),
    t:'O que o espelho NÃO resolve?',
    dica:'Zero-ETL entrega o estado atual da origem, com o modelo dela. Tudo que você precisar além disso — histórico, padronização, regra de negócio — continua sendo trabalho seu, e é melhor decidir isso agora.',
@@ -8399,7 +8518,7 @@ const FAB_ROTEIRO=[
    ]},
 
   // ---- fase Modelagem ----
-  {id:'mod_grao', fase:'Modelagem', foco:['gold','silver','semantic'],
+  {id:'mod_grao', fase:'Modelagem', papel:['ingere','transforma','publica'], foco:['gold','silver','semantic'],
    se:ctx=>['estrela','flocos','datavault'].includes(Array.isArray(ctx.modelagem)?ctx.modelagem[0]:ctx.modelagem),
    t:'Qual a granularidade da tabela de fato?',
    dica:'É a primeira decisão de um modelo dimensional e a mais cara de mudar. Grão errado não dá erro: dá número que não bate, e a descoberta acontece meses depois numa reunião.',
@@ -8411,7 +8530,7 @@ const FAB_ROTEIRO=[
      {v:'snapshot_periodico',nome:'Foto periódica de saldo',porque:'Para estoque, saldo e posição: o fato não é evento, é estado. Grão diferente, tabela diferente.'},
      {v:'acumulado',nome:'Acumulado de processo',porque:'Uma linha por instância do processo, com as datas de cada etapa. É o que responde tempo de ciclo.'}
    ]},
-  {id:'mod_chave', fase:'Modelagem', foco:['gold','sproc','notebook'],
+  {id:'mod_chave', fase:'Modelagem', papel:['ingere','transforma','publica'], foco:['gold','sproc','notebook'],
    se:ctx=>['estrela','flocos'].includes(Array.isArray(ctx.modelagem)?ctx.modelagem[0]:ctx.modelagem),
    t:'As dimensões usam chave substituta?',
    dica:'Amarrar o fato à chave da origem parece economia até a origem mudar o código, ou até um segundo sistema trazer a mesma entidade com outro identificador.',
@@ -8421,7 +8540,7 @@ const FAB_ROTEIRO=[
      {v:'sim',nome:'Sim, chave substituta',porque:'Isola o modelo de mudança na origem e é pré-requisito para SCD2. É o padrão em Kimball por um motivo.'},
      {v:'natural',nome:'Não, chave natural direto',porque:'Aceitável em modelo pequeno com origem única e estável. Registre a premissa — é ela que vai cair primeiro.'}
    ]},
-  {id:'mod_dimdata', fase:'Modelagem', foco:['gold','semantic'],
+  {id:'mod_dimdata', fase:'Modelagem', papel:['ingere','transforma','publica'], foco:['gold','semantic'],
    se:ctx=>['estrela','flocos','obt'].includes(Array.isArray(ctx.modelagem)?ctx.modelagem[0]:ctx.modelagem),
    t:'Existe uma dimensão de data?',
    dica:'Sem tabela de data marcada como tal, o Power BI não faz inteligência de tempo: acumulado do ano, mesmo período do ano anterior, nada disso funciona direito. E a solução em DAX é sempre pior.',
@@ -8434,7 +8553,7 @@ const FAB_ROTEIRO=[
    ]},
 
   // ---- fase Consumo: performance é decisão de arquitetura, não ajuste fino ----
-  {id:'perf_otimiza', fase:'Consumo', foco:['gold','silver','bronze','lakehouse','semantic'],
+  {id:'perf_otimiza', fase:'Consumo', papel:['ingere','transforma','publica'], foco:['gold','silver','bronze','lakehouse','semantic'],
    se:ctx=>['watermark','cdc','merge','append','scd2'].includes(fabCargaDe(ctx)),
    t:'Quem cuida da manutenção das tabelas Delta?',
    dica:'Carga incremental grava arquivos pequenos a cada execução. Depois de alguns meses, a leitura fica lenta sem ninguém ter mudado nada — e a causa é invisível em qualquer painel de uso.',
@@ -8445,7 +8564,7 @@ const FAB_ROTEIRO=[
      {v:'notebook',id:'notebook',porque:'Se já há Spark no desenho, um notebook de manutenção resolve e fica versionado junto do resto.',
       se:ctx=>fabCtxTem(ctx,'estrategia','codigo')||fabCtxTem(ctx,'equipe','codigo')}
    ]},
-  {id:'perf_modo', fase:'Consumo', foco:['semantic','gold','warehouse','lakehouse'],
+  {id:'perf_modo', fase:'Consumo', papel:['ingere','transforma','publica'], foco:['semantic','gold','warehouse','lakehouse'],
    se:ctx=>fabCtxTem(ctx,'consumo','dashboard')||fabCtxTem(ctx,'consumo','selfservice'),
    t:'Como o modelo semântico lê o dado?',
    dica:'Direct Lake é o motivo de boa parte do Fabric existir, mas ele tem limites de tamanho por capacidade. Estourar o limite não dá erro: o modelo cai para DirectQuery em silêncio e a performance despenca sem explicação visível.',
@@ -8458,7 +8577,7 @@ const FAB_ROTEIRO=[
    ]},
 
   // ---- fase Operação ----
-  {id:'ops_segredo', fase:'Operação', foco:['pipeline','copy','notebook','origem','dataflow'],
+  {id:'ops_segredo', fase:'Operação', papel:['ingere','transforma','publica'], foco:['pipeline','copy','notebook','origem','dataflow'],
    se:ctx=>!fabCtxTem(ctx,'criticidade','exploratoria'),
    t:'Onde ficam as credenciais de acesso à origem?',
    dica:'Senha em parâmetro de pipeline vai para o Git, aparece no log de execução e sobrevive em toda cópia do workspace. É o achado mais comum e mais constrangedor de qualquer auditoria.',
@@ -8490,10 +8609,26 @@ const FAB_ROTEIRO=[
      {id:'workspace',porque:'Workspaces separados por ambiente e domínio, sobre a capacidade certa.'},
      {id:'deploy',porque:'Deployment pipeline: promover de desenvolvimento para produção sem refazer à mão.'}]}
 ];
+// Uma posicao so e cobrada de quem tem o papel para responde-la. Antes deste
+// recorte, NENHUMA das 45 posicoes olhava `papel`: um pipeline que declarou
+// "orquestra" era cobrado sobre Silver, Gold, modelo semantico, grao do fato e
+// dimensao de data — decisoes que pertencem aos filhos que ingerem e publicam,
+// nao ao mestre que le a lista e invoca. Era dai que vinha o "falta 14
+// decisoes" num orquestrador ja completo, e a sensacao de que o app deixa
+// crescer o pipeline em direcoes que nao fazem sentido.
+// Posicao SEM `papel` vale para todos — inclusive para diagrama antigo, que
+// nao tem `ctxPipe` e portanto nao tem papel declarado.
+function fabPapelServe(pos,ctx){
+  if(!pos.papel)return true;
+  const pap=ctx&&ctx.papel;
+  if(!pap)return true;
+  return pos.papel.includes(pap);
+}
+
 // posicoes que valem neste contexto, com o estado de cada uma
 function fabRoteiro(){
   const g=fabGrafo(),ctx=fabCtx();
-  return FAB_ROTEIRO.filter(pos=>{try{return !pos.se||pos.se(ctx)}catch(e){return false}})
+  return FAB_ROTEIRO.filter(pos=>{try{return (!pos.se||pos.se(ctx))&&fabPapelServe(pos,ctx)}catch(e){return false}})
     .map(pos=>{
       let pronta=false;try{pronta=!!pos.ok(g,ctx)}catch(e){pronta=false}
       const _pass=o=>!o.se||(()=>{try{return o.se(ctx)}catch(e){return false}})();
@@ -9277,6 +9412,134 @@ function fabColunasHTML(comp,prop){
     <pre class="fab-cols-pre">${escapeHtml(ddl)}</pre>
   </div>`;
 }
+// ---------- receita de uso ----------
+// Os componentes sempre souberam dizer o que sao, quando usar e o que evitar.
+// Nenhum campo dizia COMO USAR. Aqui entra a configuracao concreta: a query do
+// Lookup, a expressao do ForEach, o INSERT que semeia um caso de uso novo.
+// So existe para as pecas do caminho dirigido por metadados — receita generica
+// nao ajuda ninguem, e receita inventada atrapalha.
+function fabCtrlNome(){
+  const n=fabNos().find(x=>x.comp==='ctrltable');
+  const d=(n&&FAB_COLUNAS['ctrltable:'+(n.prop||'')])||FAB_COLUNAS.ctrltable;
+  return d.ddl;
+}
+function fabCtrlUC(){return fabNos().some(x=>x.comp==='ctrltable'&&x.prop==='catalogo_uc')}
+
+const FAB_RECEITA={
+  lookup:()=>({t:'Como configurar este Lookup',
+    passos:[
+      'Connection: o item onde a tabela de controle vive — o mesmo que você declarou em "onde a tabela de controle mora".',
+      'Use query: Query. Tabela inteira traz colunas que o laço não usa e aproxima do limite de retorno.',
+      'firstRowOnly: DESLIGADO. Ligado, o Lookup devolve só a primeira linha e o ForEach itera uma vez — é o defeito mais comum deste padrão, e ele não dá erro: a carga simplesmente processa um objeto e declara sucesso.'
+    ],
+    expr:[['Query', fabCtrlUC()
+        ? "SELECT uc_id, uc_nome, pipeline_alvo, parametros_json, ordem\n  FROM "+fabCtrlNome()+"\n WHERE ativo = 1\n ORDER BY ordem;"
+        : "SELECT objeto_id, origem_schema, origem_objeto, destino_schema, destino_objeto,\n       modo_carga, coluna_watermark, watermark_valor\n  FROM "+fabCtrlNome()+"\n WHERE ativo = 1\n ORDER BY ordem;"]],
+    cuidado:'O retorno do Lookup mora na memória do pipeline e tem teto (na ordem de 5.000 linhas / 4 MB). Catálogo que cresce além disso precisa de filtro por janela de execução — não de um Lookup maior.'}),
+
+  foreach:()=>({t:'Como configurar este ForEach',
+    passos:[
+      'Items: a saída do Lookup. O nome da atividade dentro de @activity() tem de bater LETRA POR LETRA com o nome do Lookup no canvas — renomear o Lookup depois quebra o laço.',
+      'Sequential ligado processa um por vez. Desligado, o Batch count define quantos simultâneos (teto de 50). Paralelismo alto contra origem transacional é incidente, não otimização.',
+      'Dentro do laço, cada coluna da linha corrente é @item().<coluna>.'
+    ],
+    expr:[['Items','@activity(\'Lookup catálogo\').output.value'],
+          ['Coluna da linha corrente','@item().'+(fabCtrlUC()?'pipeline_alvo':'origem_objeto')],
+          ['Batch count','entre 4 e 8 para origem transacional; acima disso só com a origem medida']],
+    cuidado:'O ForEach não tem saída própria: o que aconteceu em cada iteração só existe se alguma coisa dentro dele escrever isso. Em paralelo, sem log por item você sabe que o lote falhou e não sabe qual objeto.'}),
+
+  invoke:()=>({t:'Como configurar este Invoke Pipeline',
+    passos:[
+      'O pipeline de destino é escolhido em lista — ele NÃO aceita expressão. A coluna pipeline_alvo do catálogo não entra na referência do Invoke.',
+      'Há dois desenhos honestos para isso: (a) um filho genérico que recebe o caso de uso por parâmetro e decide internamente; (b) um Switch sobre @item().pipeline_alvo com um Invoke por ramo. (a) escala, (b) é mais legível quando são poucos e muito diferentes entre si.',
+      'Wait on completion: LIGADO. Desligado, o pai grava sucesso sem saber o que aconteceu com o filho — o histórico fica bonito e mentiroso.'
+    ],
+    expr:[['Parâmetro do filho (id)','@item().'+(fabCtrlUC()?'uc_id':'objeto_id')],
+          ['Parâmetro do filho (objeto)','@json(item().parametros_json)'],
+          ['Correlação com a execução do pai','@pipeline().RunId']],
+    cuidado:'@json() só funciona se o parâmetro do filho for do tipo Object. Se for String, passe item().parametros_json cru e converta lá dentro — passar objeto para parâmetro String vira "[object Object]" em silêncio.'}),
+
+  sproc:()=>({t:'Como usar esta procedure no controle de execução',
+    passos:[
+      'São duas chamadas, não uma: início ANTES do laço e fim DEPOIS dele. Uma procedure só, chamada no fim, não registra a execução que morreu no meio — e é justamente essa que você precisa ver.',
+      'Se quiser rastreio por objeto, repita o par DENTRO do laço, com o id do item.',
+      'A atividade Stored Procedure não devolve resultado para o pipeline. Precisando do id de execução de volta, ou você chama a procedure por uma atividade Lookup, ou usa @pipeline().RunId como id — o segundo caminho é mais simples e já vem correlacionado com o monitor do Fabric.'
+    ],
+    expr:[['Parâmetro execucao_id','@pipeline().RunId'],
+          ['Parâmetro pipeline_nome','@pipeline().Pipeline'],
+          ['Parâmetro disparo','@pipeline().TriggerType'],
+          ['Atualização segura do watermark','UPDATE '+fabCtrlNome()+'\n   SET watermark_valor = @novo,\n       ultima_execucao  = SYSUTCDATETIME()\n WHERE objeto_id = @objeto_id\n   AND (watermark_valor IS NULL OR @novo > watermark_valor);']],
+    cuidado:'A guarda "@novo > watermark_valor" não é preciosismo: sem ela, reexecutar uma carga antiga anda com o watermark para trás e o próximo incremental pula o intervalo inteiro, em silêncio.'}),
+
+  logtable:()=>({t:'Como escrever nesta tabela de log',
+    passos:[
+      'INSERT no início, com status RODANDO. UPDATE no fim, com status, duração e linhas.',
+      'Gravar só no fim é o erro clássico: a execução que travou não deixa linha nenhuma, e o histórico mostra apenas as que deram certo.',
+      'A chave é o id da execução — use @pipeline().RunId e o log fica ligado ao que o monitor do Fabric mostra.'
+    ],
+    expr:[['Início',"INSERT INTO log_execucao (execucao_id, pipeline_nome, objeto, status, inicio)\nVALUES (@execucao_id, @pipeline_nome, @objeto, 'RODANDO', SYSUTCDATETIME());"],
+          ['Fim',"UPDATE log_execucao\n   SET status = @status, fim = SYSUTCDATETIME(),\n       linhas = @linhas, erro = @erro\n WHERE execucao_id = @execucao_id AND objeto = @objeto;"]],
+    cuidado:'Em laço paralelo, a granularidade tem de ser por item. Com uma linha por execução você descobre que o lote falhou e não descobre qual dos quarenta objetos falhou.'}),
+
+  copy:()=>({t:'Como parametrizar este Copy pelo catálogo',
+    passos:[
+      'Source → Use query: Query, com conteúdo dinâmico montado a partir de @item(). É isto que faz uma atividade só atender N objetos.',
+      'Destination → tabela também vem do catálogo: @item().destino_schema e @item().destino_objeto.',
+      'Carga full e incremental convivem no mesmo Copy: o WHERE só entra quando modo_carga = incremental.'
+    ],
+    expr:[['Query de origem (incremental)',"@concat('SELECT * FROM ', item().origem_schema, '.', item().origem_objeto,\n        ' WHERE ', item().coluna_watermark, ' > ''', item().watermark_valor, '''')"],
+          ['Tabela de destino','@item().destino_objeto']],
+    cuidado:'Isso é SQL montado por concatenação: quem escreve no catálogo escreve na consulta. Por isso o catálogo precisa de dono declarado e de coluna atualizado_por — a tabela decide o comportamento de todas as cargas.'}),
+
+  'ctrltable:catalogo_uc':()=>({t:'Como semear e manter este catálogo',
+    passos:[
+      'Um caso de uso novo entra por INSERT — não por publicar pipeline. É este o ganho inteiro do padrão.',
+      'O INSERT é configuração: ele vive num script versionado no Git e é promovido de dev para prod, não digitado no editor de produção.',
+      'Desligar em incidente é UPDATE em ativo, e volta sozinho quando a origem voltar.'
+    ],
+    expr:[['Caso de uso novo',"INSERT INTO "+fabCtrlNome()+"\n  (uc_nome, pipeline_alvo, parametros_json, depende_de, janela_execucao, ordem, ativo,\n   atualizado_em, atualizado_por)\nVALUES\n  ('vendas_diario', 'PL_ING_Generico',\n   '{\"origem\":\"SAP\",\"objeto\":\"VBAK\",\"modo\":\"incremental\"}',\n   NULL, '02:00-05:00', 100, 1, SYSUTCDATETIME(), 'bruno');"],
+          ['Desligar em incidente',"UPDATE "+fabCtrlNome()+" SET ativo = 0, atualizado_em = SYSUTCDATETIME(),\n       atualizado_por = 'plantao' WHERE uc_nome = 'vendas_diario';"],
+          ['O que o executor lê',"SELECT uc_id, pipeline_alvo, parametros_json FROM "+fabCtrlNome()+"\n WHERE ativo = 1 ORDER BY ordem;"]],
+    cuidado:'depende_de só vira ordem de execução se alguém a respeitar. Ou o executor lê a coluna e monta as ondas, ou ela é documentação — e documentação não segura dimensão antes de fato.'}),
+
+  'ctrltable:catalogo_objetos':()=>({t:'Como semear e manter este catálogo',
+    passos:[
+      'Objeto novo entra por INSERT. Treze das quatorze colunas são configuração: elas vivem em script versionado e são promovidas entre ambientes.',
+      'Só watermark_valor é escrita pela carga. É a única linha desta tabela que o deploy não pode levar de dev para prod.',
+      'Ligar e desligar carga é UPDATE em ativo — sem publicar nada.'
+    ],
+    expr:[['Objeto novo',"INSERT INTO "+fabCtrlNome()+"\n  (origem_sistema, origem_schema, origem_objeto, destino_schema, destino_objeto,\n   modo_carga, coluna_watermark, ativo, ordem, atualizado_em, atualizado_por)\nVALUES\n  ('SAP', 'dbo', 'VBAK', 'bronze', 'sap_vbak',\n   'incremental', 'ERDAT', 1, 100, SYSUTCDATETIME(), 'bruno');"],
+          ['Semear o watermark inicial',"UPDATE "+fabCtrlNome()+" SET watermark_valor = '1900-01-01'\n WHERE origem_objeto = 'VBAK' AND watermark_valor IS NULL;"]],
+    cuidado:'Semear watermark com a data de hoje é o jeito mais rápido de perder o histórico inteiro sem nenhum erro aparecer: a primeira carga traz só o que chegou depois do INSERT.'}),
+
+  'ctrltable:watermark_only':()=>({t:'Como manter esta tabela de estado',
+    passos:[
+      'Aqui não há configuração: toda linha é escrita pela carga. É por isso que ela pode ter permissão de UPDATE para a identidade do pipeline sem risco nenhum.',
+      'O catálogo vive fora — arquivo no Git, outro sistema, ou a tabela de catálogo separada.',
+      'Nenhum deploy toca nesta tabela. Ela nasce em cada ambiente e fica lá.'
+    ],
+    expr:[['Leitura antes da carga',"SELECT watermark_valor FROM "+fabCtrlNome()+" WHERE objeto = @objeto;"],
+          ['Gravação depois da carga',"UPDATE "+fabCtrlNome()+"\n   SET watermark_valor = @novo, ultima_execucao = SYSUTCDATETIME(), ultimo_status = 'OK'\n WHERE objeto = @objeto AND (watermark_valor IS NULL OR @novo > watermark_valor);"]],
+    cuidado:'Se a linha do objeto ainda não existir, o UPDATE não grava nada e não dá erro. Use MERGE, ou semeie a linha junto com o objeto no catálogo.'})
+};
+
+// receita aplicavel a esta peca, ja resolvida contra o desenho atual
+function fabReceita(comp,prop){
+  const r=(prop&&FAB_RECEITA[comp+':'+prop])||FAB_RECEITA[comp];
+  if(!r)return null;
+  try{return typeof r==='function'?r():r}catch(e){return null}
+}
+function fabReceitaHTML(comp,prop){
+  const r=fabReceita(comp,prop);if(!r)return '';
+  return `<div class="fab-rec">
+    <b class="fab-rec-t">${escapeHtml(r.t)}</b>
+    ${r.passos&&r.passos.length?`<ol class="fab-rec-passos">${r.passos.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ol>`:''}
+    ${r.expr&&r.expr.length?`<div class="fab-rec-exprs">${r.expr.map(([k,v])=>
+      `<div class="fab-rec-expr"><i>${escapeHtml(k)}</i><pre>${escapeHtml(v)}</pre></div>`).join('')}</div>`:''}
+    ${r.cuidado?`<p class="fab-rec-cuidado"><b>O que costuma dar errado</b>${escapeHtml(r.cuidado)}</p>`:''}
+  </div>`;
+}
+
 function fabDetalheHTML(d){
   const li=(t,a,c)=>a&&a.length?`<div class="fab-det-sec ${c||''}"><b>${t}</b><ul>${a.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>`:'';
   return `<div class="fab-det">
@@ -9431,9 +9694,10 @@ function fabPainelPasso(){
       <span class="fab-foco-acoes">
         ${FAB_COLUNAS[p.no.comp]?`<button data-fabguia="colunas">${_fabColunas?'ocultar':'colunas'}</button>`:''}
         ${(d.propositos&&d.propositos.length)?`<button data-fabguia="reobjetivo" title="Trocar o objetivo deste componente">alterar</button>`:''}
-        <button data-fabguia="detalhe">${_fabDetalhe?'menos':'detalhes'}</button>
+        <button data-fabguia="detalhe">${_fabDetalhe?'menos':(fabReceita(p.no.comp,p.no.prop)?'como usar':'detalhes')}</button>
       </span>
-    </div>`+(_fabColunas?fabColunasHTML(p.no.comp,p.no.prop):'')+(_fabDetalhe?fabDetalheHTML(d):'');
+    </div>`+(_fabColunas?fabColunasHTML(p.no.comp,p.no.prop):'')
+      +(_fabDetalhe?fabReceitaHTML(p.no.comp,p.no.prop)+fabDetalheHTML(d):'');
   }
   const cab=foco+`<div class="fab-passo-cab">
     <span class="fab-passo-n${p.tipo==='roteiro'?' rot':''}${p.refino?' refino':''}${p.tipo==='ctxpipe'?' ctxp':''}">${p.tipo==='roteiro'
@@ -9498,8 +9762,12 @@ function fabPainelPasso(){
     const c=o.comp;if(!c)return '';
     const et=FAB_ETAPA[c.etapa]||{cor:'#888',nome:''};
     const risco=(c.riscos&&c.riscos[0])?`<span class="fab-passo-risco">Atenção: ${escapeHtml(c.riscos[0])}</span>`:'';
-    const nota=(o.ctxNota?`<span class="fab-passo-ctx">${escapeHtml(o.ctxNota)}</span>`:'')
-      +(o.ctxAviso?`<span class="fab-passo-ctx aviso">${escapeHtml(o.ctxAviso)}</span>`:'');
+    // "Por que agora" nunca fica em branco: sem nota de contexto, entra o
+    // `quando` do componente — que ate aqui so aparecia no modal de detalhes.
+    const _ag=o.ctxNota||c.quando||'';
+    const _rot=o.ctxNota?'Pelo seu contexto':'Quando faz sentido';
+    const nota=(_ag?`<span class="fab-passo-ctx"><b>${_rot}</b>${escapeHtml(_ag)}</span>`:'')
+      +(o.ctxAviso?`<span class="fab-passo-ctx aviso"><b>Ressalva</b>${escapeHtml(o.ctxAviso)}</span>`:'');
     return `<button class="fab-passo-op comp${o.jaExiste?' ja':''}" data-fabpasso="add" data-v="${o.id}" style="--et:${et.cor}">
       <span class="fab-passo-ico">${FAB_ICO[c.ico]||FAB_ICO.base}</span>
       <span class="fab-passo-txt">
@@ -10268,6 +10536,22 @@ function fabRenderAbas(){
 // Este e o comportamento central: seleciona um componente e ao lado dele
 // aparece o que faz sentido vir depois. O que nao aparece tem motivo — e o
 // motivo esta em "ver tudo".
+// Toda opcao explica POR QUE AGORA, no chip e no cartao. A ordem nao e
+// estetica: a nota de contexto vale mais que o texto de catalogo, porque ela e
+// a unica que sabe o que voce respondeu. Sem nota de contexto, cai no motivo da
+// propria sugestao; sem ele, no `quando` do componente. Peca vetada mostra o
+// motivo do veto no lugar — e ali "por que agora" vira "por que nao".
+function fabCurta(t,n){
+  t=String(t||'').trim();if(t.length<=n)return t;
+  const corte=t.slice(0,n);const esp=corte.lastIndexOf(' ');
+  return (esp>n*0.6?corte.slice(0,esp):corte).replace(/[,;:.\s]+$/,'')+'…';
+}
+function fabPorQueAgora(s){
+  if(s.peso<=-999)return {rot:'por que não',agora:fabCurta(s.porque,140),ressalva:''};
+  const agora=s.ctxNota||s.porque||(s.comp&&s.comp.quando)||'';
+  return {rot:'por que agora',agora:fabCurta(agora,118),ressalva:fabCurta(s.ctxAviso,110)};
+}
+
 function fabRenderSugs(){
   const box=$('#fabSugs');if(!box)return;
   const no=fabNos().find(n=>n.id===_fabSel);
@@ -10314,11 +10598,14 @@ function fabRenderSugs(){
   const chips=sugs.map(s=>{
     const cls=s.peso<=0?'fab-sug ruim':(s.nivel==='rec'?'fab-sug rec':'fab-sug ok');
     const et=FAB_ETAPA[s.comp.etapa]||{cor:'#888'};
-    return `<button class="${cls}${s.jaExiste?' ja':''}" data-fabsug="${s.id}" style="--et:${et.cor}">
+    const ag=fabPorQueAgora(s);
+    return `<button class="${cls}${s.jaExiste?' ja':''}${ag.agora||ag.ressalva?' comagora':''}" data-fabsug="${s.id}" style="--et:${et.cor}">
       <span class="fab-sug-ico">${FAB_ICO[s.comp.ico]||FAB_ICO.base}</span>
       <span class="fab-sug-txt"><b>${escapeHtml(s.comp.nome)}${
         s.jaExiste?'<em>ligar</em>':''}</b>${
-        s.comp.curto?`<i>${escapeHtml(s.comp.curto)}</i>`:''}</span></button>`;
+        s.comp.curto?`<i>${escapeHtml(s.comp.curto)}</i>`:''}${
+        ag.agora?`<i class="fab-sug-agora"><b>${ag.rot}</b>${escapeHtml(ag.agora)}</i>`:''}${
+        ag.ressalva?`<i class="fab-sug-ressalva"><b>ressalva</b>${escapeHtml(ag.ressalva)}</i>`:''}</span></button>`;
   }).join('');
   const verTudo=ocultas.length?`<button class="fab-vertudo" data-fabvertudo="1">${
     _fabVerTudo?'ocultar não recomendados':'ver '+ocultas.length+' não recomendado'+(ocultas.length>1?'s':'')}</button>`:'';
@@ -10632,7 +10919,10 @@ const FAB_ROT={
   pequeno:'Pequeno (até milhares de linhas)',medio:'Médio (milhões)',grande:'Grande (dezenas de milhões)',
   muitogrande:'Muito grande (bilhões)',
   batch:'Batch (diário ou mais)',nrt:'Near real time (minutos)',realtime:'Real time (segundos)',
-  dashboard:'Dashboard e relatórios',ml:'Machine Learning',operacional:'Relatórios operacionais',apis:'APIs / data product'
+  dashboard:'Dashboard e relatórios',ml:'Machine Learning',operacional:'Relatórios operacionais',apis:'APIs / data product',
+  // forma da tabela de controle: aparece na faixa de foco do painel
+  unica:'catálogo e estado juntos',separada:'catálogo + estado separados',
+  historico:'catálogo + estado + histórico'
 };
 const FAB_PERG=[
   {k:'objetivo',t:'Qual é o objetivo principal?',
@@ -10864,11 +11154,31 @@ function fabRenderPaleta(q){
         `<div><b>${escapeHtml(FAB_COMP[k].nome)}</b><span>${escapeHtml(fabPorqueNaoInicia(k))}</span></div>`).join('')}</div>`;
     }
   }
+  // O catalogo tambem respeita o papel declarado. Era o buraco que sobrava: o
+  // roteiro parava de cobrar Silver e Gold num orquestrador, a sugestao parava
+  // de oferecer, e o catalogo continuava servindo tudo — "o advisor deveria por
+  // si so evitar essas direcoes".
+  const _ctxP=fabCtx();
+  const fora=(!vazio&&_ctxP.papel)?Object.keys(FAB_COMP).filter(k=>fabPapelVeto(k,_ctxP)):[];
+  if(fora.length){
+    const pap=FAB_PAPEL_NOME[_ctxP.papel]||_ctxP.papel;
+    html+=`<div class="fab-pal-aviso">
+      <b>Este pipeline ${escapeHtml(pap)}</b>
+      <p>${fora.length} componentes ficaram de fora porque pertencem a outro papel — eles são decisão do pipeline filho que ingere, transforma ou publica, não deste. Para mudar, troque o papel do pipeline no contexto.</p>
+      <button data-fabpaltudo="1">${_fabPalTudo?'ocultar':'ver'} os ${fora.length} que não pertencem${_fabPalTudo?'':' e por quê'}</button>
+    </div>`;
+    if(_fabPalTudo){
+      html+=`<div class="fab-pal-bloq">${fora.map(k=>
+        `<div><b>${escapeHtml(FAB_COMP[k].nome)}</b><span>${escapeHtml(fabPapelVeto(k,_ctxP))}</span></div>`).join('')}</div>`;
+    }
+  }
+  const foraSet=new Set(_fabPalTudo?[]:fora);
   FAB_ETAPAS.forEach(et=>{
     const itens=Object.keys(FAB_COMP).filter(k=>{
       const d=FAB_COMP[k];
       if(d.etapa!==et.id)return false;
       if(vazio&&!fabPodeIniciar(k))return false;
+      if(foraSet.has(k))return false;
       if(!q)return true;
       return (d.nome+' '+d.oque+' '+d.quando).toLowerCase().includes(q);
     });
