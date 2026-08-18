@@ -2292,6 +2292,14 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-foco-acoes{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex-shrink:0;max-width:170px}
 .fab-cols{margin:-6px 0 12px;padding:12px 14px;border:1px solid var(--sep);border-radius:9px;background:var(--hover)}
 .fab-cols>b{display:block;font-size:13px;color:var(--label);margin-bottom:3px}
+.fab-cols-donos{margin:0 0 9px;font-size:11px;color:var(--label2);line-height:1.5}
+.fab-cols-donos .dn{font-weight:700}
+.fab-cols-donos .dn.cat{color:#0a5fa8}
+.fab-cols-donos .dn.exe{color:#8a5a00}
+.fab-col-dono{font-size:8.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
+  padding:2px 5px;border-radius:4px;margin-left:6px;white-space:nowrap}
+.fab-col-dono.catalogo{background:#e4eefb;color:#0a5fa8}
+.fab-col-dono.execucao{background:#fdf0d9;color:#8a5a00}
 .fab-cols-sub{margin:0 0 10px;font-size:11.5px;color:var(--label2);line-height:1.45}
 .fab-col{padding:7px 0;border-top:1px solid var(--sep)}
 .fab-col code{font-size:12px;font-weight:700;color:var(--label);font-family:ui-monospace,Menlo,Consolas,monospace}
@@ -5423,21 +5431,43 @@ const FAB_COLUNAS={
     {n:'tentativa',t:'int DEFAULT 1',p:'Número da tentativa. Distingue falha intermitente de falha real.'},
     {n:'duracao_seg',t:'AS DATEDIFF(second,inicio,fim)',p:'Coluna calculada. Tendência de duração revela degradação antes de virar incidente.'}
   ]},
+  // Catalogo de casos de uso: o formato de quem monta um framework. A linha nao
+  // descreve uma tabela, descreve um caso de uso e o pipeline que o executa.
+  'ctrltable:catalogo_uc':{t:'Catálogo de Casos de Uso',ddl:'controle_uc',cols:[
+    {n:'uc_id',t:'int IDENTITY PK',dono:'catalogo',p:'Chave do caso de uso.'},
+    {n:'uc_nome',t:'varchar(120)',dono:'catalogo',p:'Nome legível. É o que aparece no log e no painel — vale ser o mesmo nome que o time usa na conversa.'},
+    {n:'pipeline_alvo',t:'varchar(200)',dono:'catalogo',p:'Qual pipeline o executor invoca. É esta coluna que transforma o mestre em executor genérico: trocar o alvo não é publicar pipeline.'},
+    {n:'parametros_json',t:'varchar(4000) NULL',dono:'catalogo',p:'Os parâmetros que o filho recebe, em JSON. Sem isto, cada caso de uso vira um pipeline com valores fixos dentro.'},
+    {n:'depende_de',t:'varchar(200) NULL',dono:'catalogo',p:'Casos de uso que precisam terminar antes deste. É o que permite ordenar dimensão antes de fato sem escrever a ordem no pipeline.'},
+    {n:'janela_execucao',t:'varchar(60) NULL',dono:'catalogo',p:'Quando este caso pode rodar. Origem que só libera de madrugada precisa disto declarado, não combinado por e-mail.'},
+    {n:'ordem',t:'int DEFAULT 100',dono:'catalogo',p:'Prioridade dentro da mesma janela.'},
+    {n:'ativo',t:'bit DEFAULT 1',dono:'catalogo',p:'Liga e desliga um caso de uso sem publicar nada. Em incidente, é a primeira coluna que alguém procura.'},
+    {n:'ultima_execucao',t:'datetime2 NULL',dono:'execucao',p:'Quando este caso rodou pela última vez. Escrito pela carga, não por gente.'},
+    {n:'ultimo_status',t:'varchar(20) NULL',dono:'execucao',p:'Resultado da última execução. É o que o executor consulta para decidir se repete.'},
+    {n:'atualizado_em',t:'datetime2',dono:'catalogo',p:'Quando a configuração mudou.'},
+    {n:'atualizado_por',t:'varchar(120)',dono:'catalogo',p:'Quem mudou. A tabela decide o comportamento do framework inteiro: mudança sem autor é risco.'}
+  ]},
+  'ctrltable:watermark_only':{t:'Estado de Execução',ddl:'controle_watermark',cols:[
+    {n:'objeto',t:'varchar(200) PK',dono:'catalogo',p:'Qual objeto este estado descreve.'},
+    {n:'watermark_valor',t:'varchar(60) NULL',dono:'execucao',p:'Último valor lido. Guardado como texto para servir data, número ou versão.'},
+    {n:'ultima_execucao',t:'datetime2 NULL',dono:'execucao',p:'Quando a carga chegou até aqui.'},
+    {n:'ultimo_status',t:'varchar(20) NULL',dono:'execucao',p:'Resultado da última tentativa.'}
+  ]},
   ctrltable:{t:'Tabela de Controle',ddl:'controle_carga',cols:[
-    {n:'objeto_id',t:'int IDENTITY PK',p:'Chave do objeto controlado.'},
-    {n:'origem_sistema',t:'varchar(60)',p:'Qual sistema. Separa SAP de SQL Server quando ambos alimentam a mesma plataforma.'},
-    {n:'origem_schema',t:'varchar(120)',p:'Schema na origem.'},
-    {n:'origem_objeto',t:'varchar(200)',p:'Tabela ou endpoint de origem.'},
-    {n:'destino_schema',t:'varchar(120)',p:'Schema de destino no Fabric.'},
-    {n:'destino_objeto',t:'varchar(200)',p:'Tabela de destino.'},
-    {n:'modo_carga',t:'varchar(20)',p:'full / incremental / merge. É o que o pipeline lê para decidir o caminho.'},
-    {n:'coluna_watermark',t:'varchar(120) NULL',p:'QUAL coluna da origem controla o incremental. Deixar isso implícito no código é o erro que trava a manutenção.'},
-    {n:'watermark_valor',t:'varchar(60) NULL',p:'Último valor lido. Guardado como texto para servir data, número ou versão.'},
-    {n:'ativo',t:'bit DEFAULT 1',p:'Liga e desliga a carga sem publicar nada. Vale ouro em incidente.'},
-    {n:'ordem',t:'int DEFAULT 100',p:'Prioridade de execução. Dimensão antes de fato, mestre antes de movimento.'},
-    {n:'paralelismo_max',t:'int NULL',p:'Teto de execução simultânea para este objeto. Protege origem frágil.',se:g=>g.cfg('foreach','execucao','paralelo')},
-    {n:'atualizado_em',t:'datetime2',p:'Quando a configuração mudou.'},
-    {n:'atualizado_por',t:'varchar(120)',p:'Quem mudou. A tabela decide o comportamento do fluxo inteiro: mudança sem autor é risco.'}
+    {n:'objeto_id',t:'int IDENTITY PK',dono:'catalogo',p:'Chave do objeto controlado.'},
+    {n:'origem_sistema',t:'varchar(60)',dono:'catalogo',p:'Qual sistema. Separa SAP de SQL Server quando ambos alimentam a mesma plataforma.'},
+    {n:'origem_schema',t:'varchar(120)',dono:'catalogo',p:'Schema na origem.'},
+    {n:'origem_objeto',t:'varchar(200)',dono:'catalogo',p:'Tabela ou endpoint de origem.'},
+    {n:'destino_schema',t:'varchar(120)',dono:'catalogo',p:'Schema de destino no Fabric.'},
+    {n:'destino_objeto',t:'varchar(200)',dono:'catalogo',p:'Tabela de destino.'},
+    {n:'modo_carga',t:'varchar(20)',dono:'catalogo',p:'full / incremental / merge. É o que o pipeline lê para decidir o caminho.'},
+    {n:'coluna_watermark',t:'varchar(120) NULL',dono:'catalogo',p:'QUAL coluna da origem controla o incremental. Deixar isso implícito no código é o erro que trava a manutenção.'},
+    {n:'watermark_valor',t:'varchar(60) NULL',dono:'execucao',p:'Último valor lido. Guardado como texto para servir data, número ou versão.'},
+    {n:'ativo',t:'bit DEFAULT 1',dono:'catalogo',p:'Liga e desliga a carga sem publicar nada. Vale ouro em incidente.'},
+    {n:'ordem',t:'int DEFAULT 100',dono:'catalogo',p:'Prioridade de execução. Dimensão antes de fato, mestre antes de movimento.'},
+    {n:'paralelismo_max',t:'int NULL',dono:'catalogo',p:'Teto de execução simultânea para este objeto. Protege origem frágil.',se:g=>g.cfg('foreach','execucao','paralelo')},
+    {n:'atualizado_em',t:'datetime2',dono:'catalogo',p:'Quando a configuração mudou.'},
+    {n:'atualizado_por',t:'varchar(120)',dono:'catalogo',p:'Quem mudou. A tabela decide o comportamento do fluxo inteiro: mudança sem autor é risco.'}
   ]},
   bronze:{t:'Bronze',ddl:'bronze.<objeto>',cols:[
     {n:'<colunas da origem>',t:'como vieram',p:'Sem conversão de tipo e sem renomear. O valor do Bronze é ser fiel ao que a origem entregou, inclusive nos defeitos.'},
@@ -5470,8 +5500,10 @@ const FAB_COLUNAS={
     ]}
 };
 // colunas aplicaveis ao contexto e a arquitetura montada
-function fabColunas(comp){
-  const d=FAB_COLUNAS[comp];if(!d)return null;
+function fabColunas(comp,prop){
+  // o formato da tabela depende do que ela e: catalogo de objetos, catalogo de
+  // casos de uso ou so estado de execucao
+  const d=(prop&&FAB_COLUNAS[comp+':'+prop])||FAB_COLUNAS[comp];if(!d)return null;
   const g=fabGrafo(),ctx=fabCtx();
   return {...d,cols:d.cols.filter(c=>{try{return !c.se||c.se(g,ctx)}catch(e){return true}})};
 }
@@ -5525,10 +5557,11 @@ const FAB_ESCRITOR={
       ['sproc','Stored Procedure','O caminho mais limpo: uma procedure de início e outra de fim, chamadas pelo pipeline. Grava status, duração, volume e erro de forma transacional.'],
       ['notebook','Notebook','Quando a carga já é código, registrar de dentro dele evita uma ida e volta ao Warehouse.']]},
   ctrltable:{t:'Quem mantém esta Tabela de Controle atualizada?',
-    dica:'Ela define o que processar e até onde já foi. Sem alguém gravando o watermark ao final da carga, a próxima execução relê tudo.',
+    dica:'Cuidado: esta tabela tem DOIS donos. As colunas de catálogo — origem, destino, modo de carga, ativo — são configuração, mantidas por gente. Só o watermark é escrito pela carga. Responda pensando em quem mexe no catálogo.',
     op:[
-      ['sproc','Stored Procedure','Atualiza o watermark ao final da carga, na mesma transação que fecha a execução.'],
-      ['notebook','Notebook','Quando a carga é code-first e o controle vive junto dela.']]}
+      ['manual','Mantida à mão (configuração)','O catálogo é configuração: alguém insere a linha quando um objeto novo entra, e versiona isso como versiona código. É a resposta certa para 13 das 14 colunas — a carga fica responsável só pelo watermark.'],
+      ['sproc','Stored Procedure','Atualiza o watermark ao final da carga, na mesma transação que fecha a execução. Não deveria tocar nas colunas de catálogo.'],
+      ['notebook','Notebook','Quando a carga é code-first e o controle vive junto dela. Mesma ressalva: watermark sim, catálogo não.']]}
 };
 // ja existe quem escreva neste artefato?
 function fabTemEscritor(no){
@@ -6262,12 +6295,35 @@ const FAB_COMP={
 
   // ===== GOVERNANÇA E CONTROLE =====
   ctrltable:{nome:'Tabela de Controle',etapa:'governanca',ico:'ctrl',
+    propositos:[
+      {id:'catalogo_objetos',nome:'Catálogo de objetos a carregar',
+       desc:'Uma linha por tabela ou arquivo: de onde vem, para onde vai, em que modo e até onde já foi. É o formato clássico do metadata-driven.',
+       proximos:[
+         {id:'lookup',nivel:'rec',porque:'O Lookup lê esta lista e devolve os objetos ativos para o laço iterar.'},
+         {id:'sproc',nivel:'ok',porque:'A procedure que fecha a carga atualiza o watermark aqui — só o watermark.'}
+       ]},
+      {id:'catalogo_uc',nome:'Catálogo de casos de uso (UC_Executor)',
+       desc:'Uma linha por caso de uso, não por tabela. O mestre lê a lista e invoca o pipeline de cada um, com os parâmetros dele. É o formato de quem tem um framework, não uma carga.',
+       proximos:[
+         {id:'lookup',nivel:'rec',porque:'O Lookup lê os casos de uso ativos e devolve a lista para o executor.'},
+         {id:'invoke',nivel:'rec',porque:'Cada caso de uso vira uma chamada de pipeline filho, parametrizada pela linha.'},
+         {id:'foreach',nivel:'rec',porque:'O laço que percorre os casos de uso, um a um ou em paralelo.'}
+       ]},
+      {id:'watermark_only',nome:'Só o estado de execução',
+       desc:'Quando o catálogo vive fora (arquivo de configuração, Git, outro sistema) e o Fabric só precisa lembrar até onde cada objeto chegou.',
+       proximos:[
+         {id:'sproc',nivel:'rec',porque:'Sem catálogo aqui, o único trabalho desta tabela é guardar o watermark que a procedure grava.'},
+         {id:'lookup',nivel:'ok',porque:'A leitura do último valor processado antes de filtrar a origem.'}
+       ]}
+    ],
     curto:'O que processar e até onde já foi',
     exige:[{k:'onde',t:'Onde a tabela de controle vive?',
-    dica:'Ela precisa de escrita transacional: o pipeline lê e a procedure atualiza na mesma execução.',
+    dica:'O critério não é preferência, é QUEM ESCREVE nela. Procedure precisa de T-SQL com escrita; Spark grava em Delta em qualquer lugar. Escolher errado só aparece quando a carga tenta gravar.',
     op:[
-      ['warehouse','Warehouse','O lugar natural: T-SQL completo e escrita transacional junto das procedures.'],
-      ['sqldb','SQL database','Quando a configuração é mantida por uma aplicação, não pelo time de dados.']]}],
+      ['warehouse','Warehouse','Escolha isto se uma Stored Procedure vai atualizar o watermark. T-SQL completo, escrita transacional, e o log de execução mora junto. É o caso mais comum.'],
+      ['lakehouse','Lakehouse','Escolha isto se quem escreve é Notebook/Spark. A tabela Delta aguenta bem — mas o endpoint SQL do Lakehouse é somente leitura, então esqueça procedures aqui.'],
+      ['sqldb','SQL database','Quando o catálogo também serve uma aplicação operacional, não só o time de dados. Replica para o OneLake sem ETL.']],
+    alerta:{lakehouse:'Com o catálogo no Lakehouse, quem atualiza o watermark tem que ser Notebook. Procedure não grava no endpoint do Lakehouse.'}}],
     oque:'Tabela de metadados que define o que processar e como: lista de objetos, watermark, flags, parâmetros.',
     quando:'Assim que houver mais de três objetos com a mesma lógica de carga.',
     evitar:'Deixar a tabela de controle sem dono e sem validação — ela passa a decidir o comportamento do fluxo inteiro.',
@@ -6497,10 +6553,26 @@ const FAB_VALID=[
     texto:'Alguns componentes ainda não têm o objetivo (ou a configuração obrigatória) declarado. Sem isso o app não consegue recomendar o que vem depois deles — e o diagrama não se explica sozinho.',
     resolver:'Selecione o componente marcado com "?" e responda a pergunta que aparece ao lado.',
     detalhe:g=>g.pendentes().map(n=>FAB_COMP[n.comp]?.nome).filter(Boolean).join(', ')},
-  {id:'sproc-lakehouse',nivel:'aviso',antipadrao:true,porqueDoi:'O endpoint SQL do Lakehouse é somente leitura. A procedure não vai gravar, e o erro só aparece em execução.',custo:'Na primeira tentativa de rodar.',titulo:'Procedure apoiada em Lakehouse',
-    quando:g=>g.tem(['sproc'])&&!g.tem(['warehouse','sqldb']),
-    texto:'Existe Stored Procedure na arquitetura, mas nenhum Warehouse ou SQL database. O endpoint do Lakehouse é somente leitura — procedure com escrita não roda sobre ele.',
-    resolver:'Adicione um Warehouse (ou SQL database) para hospedar as procedures, ou troque a procedure por Notebook.'},
+  {id:'sproc-sem-casa',nivel:'aviso',antipadrao:true,
+   porqueDoi:'A procedure precisa de um motor T-SQL para existir. Sem Warehouse nem SQL database no desenho, ela não tem onde ser criada — e isso só aparece na hora de publicar.',
+   custo:'Na primeira tentativa de publicar.',
+   titulo:'Procedure sem armazenamento que a hospede',
+   quando:g=>g.tem(['sproc'])&&!g.tem(['warehouse','sqldb']),
+   texto:'Há Stored Procedure no desenho, mas nenhum Warehouse ou SQL database para hospedá-la. Procedure não é item solto do Fabric: ela vive dentro de um motor T-SQL com escrita.',
+   resolver:'Adicione o Warehouse (ou SQL database) onde essas procedures vão morar — ou troque a procedure por Notebook, se a carga for code-first.'},
+  // Este e o Lakehouse de verdade: ele existe no desenho e a procedure grava
+  // nele. Antes a regra disparava por AUSENCIA de Warehouse e acusava um
+  // Lakehouse imaginario — a configuracao da procedure nem oferece essa opcao.
+  {id:'sproc-lakehouse',nivel:'aviso',antipadrao:true,
+   porqueDoi:'O endpoint SQL do Lakehouse é somente leitura. A procedure não vai gravar, e o erro só aparece em execução.',
+   custo:'Na primeira tentativa de rodar.',titulo:'Procedure gravando em Lakehouse',
+   quando:g=>g.tem(['sproc'])&&g.tem(['lakehouse'])&&!g.tem(['warehouse','sqldb'])
+     &&g.ligs.some(e=>{
+       const de=g.nos.find(n=>n.id===e.from),para=g.nos.find(n=>n.id===e.to);
+       return de&&para&&de.comp==='sproc'&&['lakehouse','bronze','silver','gold'].includes(para.comp);
+     }),
+   texto:'A procedure está gravando numa tabela hospedada em Lakehouse. O endpoint SQL do Lakehouse é somente leitura — quem escreve em Delta ali é Spark, não T-SQL.',
+   resolver:'Mova essas tabelas para um Warehouse, ou troque a procedure por Notebook.'},
   {id:'incremental-sem-controle',nivel:'aviso',antipadrao:true,porqueDoi:'Sem onde guardar o último valor lido, ou a carga relê tudo, ou alguém escreve a data no pipeline à mão.',custo:'Na segunda execução.',titulo:'Carga incremental sem tabela de controle',
     quando:g=>(g.prop('copy','incremental')||g.prop('lookup','watermark_lk'))&&!g.tem(['ctrltable']),
     texto:'Há carga declarada como incremental, mas nenhuma tabela de controle guardando o watermark. Sem ela, a cada execução a carga não sabe de onde continuar.',
@@ -6573,6 +6645,12 @@ const FAB_VALID=[
     quando:g=>g.nos.some(n=>fabEhContainer(n.comp)&&!g.nos.some(k=>k.escopo===n.id)),
     texto:'Existe um ForEach ou If sem nenhuma atividade dentro. Ele não faz nada assim.',
     resolver:'Selecione o laço e escolha o que roda dentro dele.'},
+  {id:'catalogo-sem-dono',nivel:'sugestao',
+   titulo:'Catálogo sem dono declarado',
+   quando:g=>g.tem(['ctrltable'])&&!g.temCfg('ctrltable','mantida')
+     &&!g.nos.some(n=>n.comp==='ctrltable'&&n.prop==='watermark_only'),
+   texto:'As colunas de catálogo desta tabela — origem, destino, modo de carga, ativo — são configuração: elas decidem o comportamento de todas as cargas. Quem as mantém não está declarado, e "todo mundo pode mexer" é o mesmo que ninguém ser responsável.',
+   resolver:'Declare quem mantém o catálogo. Se for configuração versionada, marque "mantida à mão" — a carga fica responsável só pelo watermark.'},
   {id:'metadata-comeca-errado',nivel:'aviso',antipadrao:true,
    porqueDoi:'O fluxo abre por uma atividade de ingestão, sem catálogo e sem Lookup. Isso é um pipeline explícito — a estratégia declarada não está no desenho, está só na resposta do contexto.',
    custo:'Quando o segundo objeto chegar e você perceber que vai duplicar o pipeline.',
@@ -7522,7 +7600,7 @@ function fabPendencia(no){
       op:def.propositos.map(p=>({v:p.id,nome:p.nome,desc:p.desc}))};
   // artefato sem escritor e tao incompleto quanto Copy Data sem destino
   const esc=FAB_ESCRITOR[no.comp];
-  if(esc&&!fabTemEscritor(no))
+  if(esc&&!fabTemEscritor(no)&&!(no.cfg&&no.cfg.mantida==='manual'))
     return {tipo:'escritor',t:esc.t,dica:esc.dica,
       op:esc.op.map(([v,nome,desc])=>({v,nome,desc,alerta:''}))};
   for(const ex of (def.exige||[])){
@@ -8539,6 +8617,16 @@ function fabProntidao(){
     pct:total?Math.round(feitas/total*100):(fabNos().length?100:0),
     pronto:fabNos().length>0&&!abertas.length&&!avisos.length&&!pend.length};
 }
+// Progresso DENTRO da fase. O total global ("decisao 10 de 26") desanima logo
+// no segundo passo e nao ajuda a decidir nada: o que importa e quanto falta
+// para fechar o assunto em que voce esta.
+function fabProgFase(rot,pos){
+  const f=pos.fase||'Estratégia';
+  const mesma=rot.filter(x=>(x.fase||'Estratégia')===f);
+  return {i:mesma.indexOf(pos)+1,n:mesma.length,fase:f,
+    fases:{feitas:new Set(rot.filter(x=>x.pronta).map(x=>x.fase||'Estratégia')).size,
+           total:new Set(rot.map(x=>x.fase||'Estratégia')).size}};
+}
 // a proxima decisao do esqueleto que ainda nao foi tomada
 function fabRoteiroFalta(){return fabRoteiro().find(p=>!p.pronta)||null}
 // a peca do diagrama de onde a proxima decisao em aberto se pendura. E o que
@@ -8630,8 +8718,20 @@ function fabCurva(a,b){
 }
 
 // ---------- criacao ----------
+// Proposito que o contexto ja responde. Perguntar o formato do catalogo depois
+// de o pipeline ter declarado que so orquestra e perguntar o que ja se sabe —
+// e cada pergunta a mais no comeco e o que faz o fluxo parecer travado.
+const FAB_PROP_INFERIDO={
+  ctrltable:ctx=>fabCtxTem(ctx,'papel','orquestra')?'catalogo_uc':'catalogo_objetos'
+};
 function fabNovoNo(comp,x,y,prop,escopo,pipe){
   const def=FAB_COMP[comp];if(!def)return null;
+  if(!prop&&FAB_PROP_INFERIDO[comp]){
+    try{
+      const inf=FAB_PROP_INFERIDO[comp](fabCtx());
+      if(inf&&(def.propositos||[]).some(x=>x.id===inf))prop=inf;
+    }catch(e){}
+  }
   const no={id:'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
     arq:fabCur,comp,x:Math.round(x/8)*8,y:Math.round(y/8)*8,nota:'',cfg:{}};
   if(escopo)no.escopo=escopo;
@@ -9154,17 +9254,26 @@ function fabPergProx(no){
   return FAB_PERG_PROX[no.comp+':'+(no.prop||'')]||FAB_PERG_PROX[no.comp]||null;
 }
 let _fabDetalhe=false,_fabColunas=false;
-function fabColunasHTML(comp){
-  const c=fabColunas(comp);if(!c)return '';
+function fabColunasHTML(comp,prop){
+  const c=fabColunas(comp,prop);if(!c)return '';
   const ddl='CREATE TABLE '+c.ddl+' (\n'+
     c.cols.map(x=>'  '+x.n.padEnd(22)+' '+x.t).join(',\n')+'\n);';
+  // Quantas colunas sao configuracao e quantas a carga escreve. E a conta que
+  // explica por que "quem mantem esta tabela?" nao se responde com uma peca so.
+  const nCat=c.cols.filter(x=>x.dono==='catalogo').length;
+  const nExe=c.cols.filter(x=>x.dono==='execucao').length;
+  const donos=(nCat&&nExe)?`<p class="fab-cols-donos">
+      <span class="dn cat">${nCat} de catálogo</span> mantidas por gente, versionadas como configuração ·
+      <span class="dn exe">${nExe} de execução</span> escritas pela carga</p>`:'';
   return `<div class="fab-cols">
     <b>Colunas base — ${escapeHtml(c.t)}</b>
     <p class="fab-cols-sub">O mínimo para a tabela cumprir o papel dela. Ajustadas ao contexto que você respondeu.</p>
-    ${c.cols.map(x=>`<div class="fab-col">
-      <code>${escapeHtml(x.n)}</code><i>${escapeHtml(x.t)}</i>
+    ${donos}
+    ${c.cols.map(x=>`<div class="fab-col${x.dono?' d-'+x.dono:''}">
+      <code>${escapeHtml(x.n)}</code><i>${escapeHtml(x.t)}</i>${
+        x.dono?`<span class="fab-col-dono ${x.dono}">${x.dono==='catalogo'?'catálogo':'execução'}</span>`:''}
       <p>${escapeHtml(x.p)}</p></div>`).join('')}
-    <button class="fab-cols-ddl" data-fabddl="${escapeHtml(comp)}">Copiar esboço de DDL</button>
+    <button class="fab-cols-ddl" data-fabddl="${escapeHtml(comp)}" data-prop="${escapeHtml(prop||'')}">Copiar esboço de DDL</button>
     <pre class="fab-cols-pre">${escapeHtml(ddl)}</pre>
   </div>`;
 }
@@ -9263,7 +9372,7 @@ function fabPasso(){
     // "O que roda DENTRO do laço?" diz mais que "o que traz o dado?".
     const _pq=(pos.apos&&pos.apos.includes(no.comp)&&fabPergProx(no))||pos.t;
     return {tipo:'roteiro',no,pos,t:_pq,dica:pos.dica,
-      prog:{i:rot.indexOf(pos)+1,n:rot.length},op};
+      prog:fabProgFase(rot,pos),op};
   }
   const sugs=fabSugestoes(no).filter(s=>s.peso>0);
   const d=FAB_COMP[no.comp];
@@ -9271,7 +9380,7 @@ function fabPasso(){
   if(!sugs.length&&abertas.length){
     const q=abertas[0],_ctx2=fabCtx();
     return {tipo:'roteiro',no,pos:q,t:q.t,dica:q.dica,
-      prog:{i:rot.indexOf(q)+1,n:rot.length},
+      prog:fabProgFase(rot,q),
       op:q.campo
         ? q.op.map(o=>({...o,comp:null,desc:o.porque}))
         : q.op.map(o=>{const cp=fabCtxPeso(o.id,_ctx2);
@@ -9324,11 +9433,11 @@ function fabPainelPasso(){
         ${(d.propositos&&d.propositos.length)?`<button data-fabguia="reobjetivo" title="Trocar o objetivo deste componente">alterar</button>`:''}
         <button data-fabguia="detalhe">${_fabDetalhe?'menos':'detalhes'}</button>
       </span>
-    </div>`+(_fabColunas?fabColunasHTML(p.no.comp):'')+(_fabDetalhe?fabDetalheHTML(d):'');
+    </div>`+(_fabColunas?fabColunasHTML(p.no.comp,p.no.prop):'')+(_fabDetalhe?fabDetalheHTML(d):'');
   }
   const cab=foco+`<div class="fab-passo-cab">
     <span class="fab-passo-n${p.tipo==='roteiro'?' rot':''}${p.refino?' refino':''}${p.tipo==='ctxpipe'?' ctxp':''}">${p.tipo==='roteiro'
-      ?`Estratégia · decisão ${p.prog.i} de ${p.prog.n}`
+      ?`${escapeHtml(p.prog.fase)} · decisão ${p.prog.i} de ${p.prog.n}`
       :p.tipo==='ctxpipe'?`Contexto · ${escapeHtml(p.escopo)}`
       :p.refino?'Refinamento':`Passo ${_fabGuia.passo}`}</span>
     <b>${escapeHtml(p.t)}</b>
@@ -9424,7 +9533,12 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
   }
   if(tipo==='pend'){
     if(subtipo==='proposito')fabDefinirProp(_fabGuia.atual,valor);
-    else if(subtipo==='escritor')fabCriarEscritor(_fabGuia.atual,valor);
+    else if(subtipo==='escritor'){
+      // "mantida a mao" nao cria peca: ela declara que o catalogo e
+      // configuracao, e configuracao nao tem atividade que a escreva
+      if(valor==='manual')fabDefinirCfg(_fabGuia.atual,'mantida','manual');
+      else fabCriarEscritor(_fabGuia.atual,valor);
+    }
     else fabDefinirCfg(_fabGuia.atual,campo,valor);
     fabRenderPainel();
     return;
@@ -10345,6 +10459,7 @@ function fabAlvoDoAlerta(v){
     case 'wh-como-bronze': return acha(n=>n.comp==='copy');
     case 'incremental-sem-fonte': return acha(n=>n.comp==='copy');
     case 'sproc-lakehouse': return acha(n=>n.comp==='sproc');
+    case 'sproc-sem-casa': return acha(n=>n.comp==='sproc');
     case 'controle-sem-log': return acha(n=>n.comp==='sproc');
     case 'laco-sem-ordem': {const t=fabGrafo().soltosNoLaco();return t.length?t[0].id:null}
     case 'metadata-comeca-errado': return acha(n=>['copy','copyjob','dataflow'].includes(n.comp));
@@ -10664,7 +10779,7 @@ const FAB_PEDE={
   'sem-workspace':['workspace','deploy'],'sem-seguranca':['rls'],
   'stream-sem-eventhouse':['eventhouse'],'muitas-tabelas':['ctrltable','lookup'],
   'ml-sem-dq':['dq'],'wh-como-bronze':['lakehouse','bronze'],'pbi-sobre-cru':['silver','gold'],
-  'sproc-lakehouse':['warehouse'],'incremental-sem-controle':['ctrltable','sproc'],
+  'sproc-lakehouse':['warehouse'],'sproc-sem-casa':['warehouse','sqldb'],'incremental-sem-controle':['ctrltable','sproc'],
   'controle-sem-log':['logtable'],'critico-sem-alerta':['notify','activator'],
   'tabela-sem-casa':['warehouse','lakehouse'],'metadata-comeca-errado':['ctrltable','lookup'],
   'incremental-sem-manutencao':['otimiza'],'directlake-sem-guardrail':['otimiza'],
@@ -10891,7 +11006,10 @@ function fabInit(){
       if(!_fabSel)return;
       fabFecharCartao();
       if(op.dataset.fabop==='proposito')fabDefinirProp(_fabSel,op.dataset.v);
-      else if(op.dataset.fabop==='escritor')fabCriarEscritor(_fabSel,op.dataset.v);
+      else if(op.dataset.fabop==='escritor'){
+        if(op.dataset.v==='manual')fabDefinirCfg(_fabSel,'mantida','manual');
+        else fabCriarEscritor(_fabSel,op.dataset.v);
+      }
       else fabDefinirCfg(_fabSel,op.dataset.campo,op.dataset.v);
       return;
     }
@@ -10945,7 +11063,7 @@ function fabInit(){
     if(b){_fabPainel=b.dataset.fabpainel;try{sv('bt-fab-painel',_fabPainel)}catch(_){}fabRenderPainel();return}
     const dd=e.target.closest('[data-fabddl]');
     if(dd){
-      const c=fabColunas(dd.dataset.fabddl);
+      const c=fabColunas(dd.dataset.fabddl,dd.dataset.prop||null);
       if(c){
         const ddl='CREATE TABLE '+c.ddl+' (\n'+c.cols.map(x=>'  '+x.n.padEnd(22)+' '+x.t).join(',\n')+'\n);';
         try{navigator.clipboard.writeText(ddl);toast('DDL copiado')}catch(_){toast('Não foi possível copiar')}
