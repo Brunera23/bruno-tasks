@@ -5407,7 +5407,14 @@ const FAB_ORDEM={
   capacidade:72, keyvault:72,
   semantic:80, pbi:85, rtdash:85, pbimonitor:85, mlmodel:85, activator:88
 };
-function fabOrdem(c){
+// A mesma peca pode ocupar dois lugares no caminho conforme o que ela faz. A
+// procedure de controle de execucao abre a corrida, antes de qualquer leitura;
+// a de watermark e a de MERGE fecham. Sem esta distincao o motor barrava
+// "procedure -> Lookup" como fluxo invertido — e esse e o desenho certo de quem
+// registra a execucao antes de ler o catalogo.
+const FAB_ORDEM_PROP={'sproc:controle_exec':8};
+function fabOrdem(c,prop){
+  if(prop&&FAB_ORDEM_PROP[c+':'+prop]!==undefined)return FAB_ORDEM_PROP[c+':'+prop];
   if(FAB_ORDEM[c]!==undefined)return FAB_ORDEM[c];
   const d=FAB_COMP[c];return d?(FAB_ORDEM_ETAPA[d.etapa]!==undefined?FAB_ORDEM_ETAPA[d.etapa]:40):40;
 }
@@ -5882,7 +5889,7 @@ const FAB_COMP={
     proximos:[
       {id:'bronze',nivel:'rec',porque:'O destino natural de uma cópia crua é a camada Bronze — dado como veio, sem regra aplicada.'},
       {id:'logtable',nivel:'rec',porque:'Registre linhas lidas/gravadas, duração e status a cada execução. Sem isso você descobre a falha pelo usuário reclamando.'},
-      {id:'sproc',nivel:'rec',porque:'Stored Procedure logo após a cópia é o padrão para fechar o controle de execução: grava o resultado, atualiza o watermark e marca a carga como concluída.'},
+      {id:'sproc',prop:'controle_exec',nivel:'rec',porque:'Stored Procedure logo após a cópia é o padrão para fechar o controle de execução: grava o resultado, atualiza o watermark e marca a carga como concluída.'},
       {id:'lookup',nivel:'rec',porque:'Se você vai copiar várias tabelas, Lookup lê a lista do que copiar de uma tabela de controle em vez de você duplicar a atividade N vezes.'},
       {id:'notify',nivel:'rec',porque:'Falha silenciosa é o pior modo de falha. Notificação no caminho de erro custa 5 minutos para configurar.'},
       {id:'notebook',nivel:'ok',porque:'Se a validação depois da cópia é mais que um SELECT, Notebook dá mais controle.'},
@@ -6205,7 +6212,7 @@ const FAB_COMP={
     proximos:[
       {id:'gold',nivel:'rec',porque:'Progressão natural: do dado confiável para o dado modelado por assunto de negócio.'},
       {id:'notebook',nivel:'rec',porque:'A modelagem que leva Silver a Gold.'},
-      {id:'sproc',nivel:'ok',porque:'Se a camada vive no Warehouse, o MERGE é trabalho de procedure.'},
+      {id:'sproc',prop:'merge',nivel:'ok',porque:'Se a camada vive no Warehouse, o MERGE é trabalho de procedure.'},
       {id:'dq',nivel:'rec',porque:'É aqui que a validação tem melhor custo-benefício: barato de corrigir, cedo o bastante para não contaminar.'}
     ]},
   gold:{nome:'Gold (pronto para consumo)',etapa:'curadoria',ico:'layer',
@@ -6339,7 +6346,7 @@ const FAB_COMP={
        desc:'Uma linha por tabela ou arquivo: de onde vem, para onde vai, em que modo e até onde já foi. É o formato clássico do metadata-driven.',
        proximos:[
          {id:'lookup',nivel:'rec',porque:'O Lookup lê esta lista e devolve os objetos ativos para o laço iterar.'},
-         {id:'sproc',nivel:'ok',porque:'A procedure que fecha a carga atualiza o watermark aqui — só o watermark.'}
+         {id:'sproc',prop:'watermark',nivel:'ok',porque:'A procedure que fecha a carga atualiza o watermark aqui — só o watermark.'}
        ]},
       {id:'catalogo_uc',nome:'Catálogo de casos de uso (UC_Executor)',
        desc:'Uma linha por caso de uso, não por tabela. O mestre lê a lista e invoca o pipeline de cada um, com os parâmetros dele. É o formato de quem tem um framework, não uma carga.',
@@ -6351,7 +6358,7 @@ const FAB_COMP={
       {id:'watermark_only',nome:'Só o estado de execução',
        desc:'Quando o catálogo vive fora (arquivo de configuração, Git, outro sistema) e o Fabric só precisa lembrar até onde cada objeto chegou.',
        proximos:[
-         {id:'sproc',nivel:'rec',porque:'Sem catálogo aqui, o único trabalho desta tabela é guardar o watermark que a procedure grava.'},
+         {id:'sproc',prop:'watermark',nivel:'rec',porque:'Sem catálogo aqui, o único trabalho desta tabela é guardar o watermark que a procedure grava.'},
          {id:'lookup',nivel:'ok',porque:'A leitura do último valor processado antes de filtrar a origem.'}
        ]}
     ],
@@ -6370,7 +6377,7 @@ const FAB_COMP={
     riscos:['Vira ponto único de falha','Erro de configuração se propaga para todas as cargas','Precisa de versionamento e controle de acesso'],
     proximos:[
       {id:'lookup',nivel:'rec',porque:'Lookup é como o pipeline lê a tabela de controle.'},
-      {id:'sproc',nivel:'rec',porque:'A procedure atualiza o watermark ao final da carga — é o que fecha o ciclo do incremental.'},
+      {id:'sproc',prop:'watermark',nivel:'rec',porque:'A procedure atualiza o watermark ao final da carga — é o que fecha o ciclo do incremental.'},
       {id:'warehouse',nivel:'rec',porque:'Ela precisa de escrita transacional: Warehouse é onde funciona bem.'},
       {id:'logtable',nivel:'rec',porque:'Controle diz o que fazer; log diz o que aconteceu. São tabelas diferentes com papéis diferentes.'}
     ]},
@@ -6697,6 +6704,15 @@ const FAB_VALID=[
    quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','metadata')&&g.tem(['copy','copyjob','dataflow'])&&!g.tem(['ctrltable'])&&!g.tem(['lookup']),
    texto:'Você declarou estratégia dirigida por metadados, mas o desenho começa direto na atividade que move o dado. Em metadata-driven a primeira atividade do pipeline é o Lookup sobre a tabela de controle: é ela que diz o que processar. Sem isso, o que está desenhado é um pipeline por objeto.',
    resolver:'Comece pela Tabela de Controle e leia-a com um Lookup; a atividade de ingestão passa a rodar dentro do laço, uma vez por objeto.'},
+  {id:'log-cego-na-leitura',nivel:'aviso',antipadrao:true,
+   porqueDoi:'O log só abre depois que o catálogo foi lido — mas a leitura do catálogo é justamente onde a execução costuma morrer: conexão fora do ar, permissão revogada, tabela travada, retorno acima do limite do Lookup. Quando isso acontece, não existe linha nenhuma no log. E "sem linha" é indistinguível de "nunca foi disparado".',
+   custo:'Na primeira madrugada em que o Warehouse do catálogo estiver indisponível. Você vai passar a manhã descobrindo se o pipeline rodou.',
+   titulo:'Log que não cobre a leitura do catálogo',
+   quando:g=>g.tem(['lookup'])&&g.tem(['logtable'])&&
+     (g.cfg('sproc','momento_log','pos_leitura')||g.cfg('sproc','momento_log','so_fim')||
+      g.cfg('notebook','momento_log','pos_leitura')||g.cfg('notebook','momento_log','so_fim')),
+   texto:'A execução só passa a ser registrada depois do Lookup sobre a tabela de controle. Tudo que falhar antes disso — e a leitura do catálogo é a parte mais frágil do começo — fica invisível. O padrão que resolve é abrir a linha de log como PRIMEIRA atividade do pipeline, com status RODANDO, e fechá-la no fim com o resultado. Assim a execução que morre lendo o catálogo aparece como uma linha aberta que nunca fechou, que é exatamente o sinal que você quer ver.',
+   resolver:'Refaça a decisão "em que ponto a execução começa a ser registrada?" escolhendo antes da primeira leitura, e mova a procedure de início para antes do Lookup no diagrama.'},
   {id:'deploy-sobre-watermark',nivel:'aviso',antipadrao:true,
    porqueDoi:'Configuração e estado de produção estão na mesma tabela, e existe Deployment Pipeline no desenho. Promover de dev para prod passa a ser uma escolha entre duas perdas: ou o deploy leva a configuração e apaga os watermarks de produção, ou preserva os watermarks e não leva a configuração nova.',
    custo:'No primeiro deploy depois que a carga incremental já estiver em produção — e o sintoma é recarregar tudo, ou pior, não recarregar nada.',
@@ -6980,7 +6996,7 @@ const FAB_PROP={
        proximos:[
          {id:'bronze',nivel:'rec',porque:'Ingestão bruta pede camada Bronze: o dado fica fiel à origem e você pode reprocessar sem reextrair.'},
          {id:'logtable',nivel:'rec',porque:'Registre linhas lidas/gravadas, duração e status. Sem isso, uma carga que falhou às 2h só aparece quando alguém reclamar do número.'},
-         {id:'sproc',nivel:'rec',porque:'Uma procedure logo após a cópia fecha o ciclo de controle: grava o resultado da execução e marca a carga como concluída.'},
+         {id:'sproc',prop:'controle_exec',nivel:'rec',porque:'Uma procedure logo após a cópia fecha o ciclo de controle: grava o resultado da execução e marca a carga como concluída.'},
          {id:'notify',nivel:'rec',porque:'Caminho de falha sem aviso é falha silenciosa.'},
          {id:'dq',nivel:'ok',porque:'Validar volume recebido contra o esperado detecta origem truncada logo na entrada.'}
        ]},
@@ -6989,7 +7005,7 @@ const FAB_PROP={
        proximos:[
          {id:'ctrltable',nivel:'rec',porque:'Incremental exige guardar o último valor lido por objeto. É a tabela de controle que faz isso.'},
          {id:'lookup',nivel:'rec',porque:'O Lookup lê o watermark da tabela de controle antes da cópia — é assim que o pipeline sabe de onde continuar.'},
-         {id:'sproc',nivel:'rec',porque:'Ao final da carga, a procedure atualiza o watermark. Sem esse passo, a próxima execução relê tudo de novo.'},
+         {id:'sproc',prop:'watermark',nivel:'rec',porque:'Ao final da carga, a procedure atualiza o watermark. Sem esse passo, a próxima execução relê tudo de novo.'},
          {id:'logtable',nivel:'rec',porque:'Em carga incremental o log é o que prova que nenhuma janela foi pulada.'},
          {id:'bronze',nivel:'ok',porque:'O incremental normalmente aterrissa em Bronze antes de ser tratado.'}
        ]},
@@ -7014,7 +7030,7 @@ const FAB_PROP={
        desc:'Trazer o dado para uma área temporária antes de carregar dimensões e fatos.',
        proximos:[
          {id:'warehouse',nivel:'rec',porque:'Staging para modelo dimensional vive no Warehouse, onde o MERGE por T-SQL funciona bem.'},
-         {id:'sproc',nivel:'rec',porque:'A procedure é quem transforma staging em dimensão e fato, de forma transacional.'},
+         {id:'sproc',prop:'merge',nivel:'rec',porque:'A procedure é quem transforma staging em dimensão e fato, de forma transacional.'},
          {id:'gold',nivel:'rec',porque:'O destino final do staging é o modelo dimensional da camada Gold.'},
          {id:'logtable',nivel:'rec',porque:'Registrar volume por tabela de staging revela carga incompleta antes de virar fato errado.'}
        ]}
@@ -7037,7 +7053,7 @@ const FAB_PROP={
          {id:'copy',nivel:'rec',porque:'A movimentação do dado propriamente dita.'},
          {id:'logtable',nivel:'rec',porque:'Mesmo em carga única, o histórico de execução é o que permite investigar depois.'},
          {id:'notify',nivel:'rec',porque:'Sem notificação, a falha só aparece quando o número estiver errado no relatório.'},
-         {id:'sproc',nivel:'ok',porque:'Para fechar o controle de execução ao final.'}
+         {id:'sproc',prop:'controle_exec',nivel:'ok',porque:'Para fechar o controle de execução ao final.'}
        ]},
       {id:'mestre',nome:'Pipeline mestre coordenando outros',
        desc:'Um orquestrador que chama pipelines filhos especializados.',
@@ -7064,9 +7080,13 @@ const FAB_PROP={
         ['sqldb','SQL database (Fabric)','Quando a procedure serve uma aplicação operacional, não o analítico. Replica para o OneLake automaticamente, sem ETL.']]}],
     propositos:[
       {id:'controle_exec',nome:'Controlar a execução (início / fim / status)',
-       desc:'Marcar que a carga começou, gravar o resultado ao final e registrar erro. É o padrão de controle de execução.',
+       desc:'Marcar que a carga começou, gravar o resultado ao final e registrar erro. São duas chamadas: a de início é a PRIMEIRA atividade do pipeline, antes de qualquer leitura; a de fim vem depois de tudo, inclusive no caminho de falha.',
        proximos:[
          {id:'logtable',nivel:'rec',porque:'É o par direto: a procedure de início insere a linha de execução, a de fim atualiza status, duração e volume. O log é o produto desta procedure.'},
+         // O unico ponto do catalogo onde uma peca aponta para TRAS no caminho
+         // do dado — e aqui isso e o desenho certo, nao um engano: quem abre o
+         // log roda antes de quem le o catalogo.
+         {id:'lookup',nivel:'rec',porque:'Com a execução já registrada, o passo seguinte é ler o catálogo. Esta é a ordem que importa: o Lookup falha (conexão, permissão, tabela travada, retorno acima do limite), e com a linha de log já aberta essa falha aparece. Aberto depois dele, a execução que morre lendo o catálogo não deixa rastro nenhum.'},
          {id:'pbimonitor',nivel:'rec',porque:'Com o log alimentado, um painel sobre ele mostra o estado das cargas sem ninguém abrir o Fabric.'},
          {id:'semantic',nivel:'rec',porque:'Modelo semântico sobre o log é o que transforma a tabela de controle em informação consumível.'},
          {id:'ctrltable',nivel:'ok',porque:'A mesma procedure costuma atualizar o watermark ao encerrar a carga.'},
@@ -7260,7 +7280,7 @@ const FAB_PROP={
       {id:'dimensional',nome:'Modelo dimensional (dimensões e fatos)',
        desc:'Kimball: staging, dimensões, fatos e semantic model no topo.',
        proximos:[
-         {id:'sproc',nivel:'rec',porque:'O MERGE que carrega dimensões e fatos é trabalho de procedure.'},
+         {id:'sproc',prop:'merge',nivel:'rec',porque:'O MERGE que carrega dimensões e fatos é trabalho de procedure.'},
          {id:'gold',nivel:'rec',porque:'O modelo dimensional é a camada Gold.'},
          {id:'semantic',nivel:'rec',porque:'Caminho mais direto do Warehouse ao Power BI.'},
          {id:'dq',nivel:'ok',porque:'Integridade referencial validada evita fato órfão no relatório.'}
@@ -7270,7 +7290,7 @@ const FAB_PROP={
        proximos:[
          {id:'ctrltable',nivel:'rec',porque:'A tabela de controle precisa de escrita transacional — é aqui que ela funciona bem.'},
          {id:'logtable',nivel:'rec',porque:'O log de execução vive aqui pelo mesmo motivo: escrita transacional e consulta por SQL.'},
-         {id:'sproc',nivel:'rec',porque:'As procedures de início e fim de execução que alimentam o log.'},
+         {id:'sproc',prop:'controle_exec',nivel:'rec',porque:'As procedures de início e fim de execução que alimentam o log.'},
          {id:'pbimonitor',nivel:'rec',porque:'Com controle e log no Warehouse, o painel de monitoramento sai quase de graça.'}
        ]},
       {id:'serving',nome:'Camada de serving para BI',
@@ -7287,12 +7307,12 @@ const FAB_PROP={
       {id:'fato',nome:'Tabela de fato',desc:'Os eventos ou medidas do negócio, no grão declarado. É o centro da estrela.',
        proximos:[
          {id:'semantic',nivel:'rec',porque:'O fato só vira métrica dentro de um modelo semântico — antes disso ele é uma tabela grande.'},
-         {id:'sproc',nivel:'rec',porque:'A carga do fato costuma ser um MERGE que resolve as chaves substitutas das dimensões.'}
+         {id:'sproc',prop:'merge',nivel:'rec',porque:'A carga do fato costuma ser um MERGE que resolve as chaves substitutas das dimensões.'}
        ]},
       {id:'dim',nome:'Tabela de dimensão',desc:'Os atributos pelos quais o negócio corta os números. É o que faz o relatório ser navegável.',
        proximos:[
          {id:'semantic',nivel:'rec',porque:'Dimensão sem relacionamento no modelo semântico não filtra nada.'},
-         {id:'sproc',nivel:'ok',porque:'Dimensão com histórico exige MERGE que fecha a vigência da versão anterior.'}
+         {id:'sproc',prop:'merge',nivel:'ok',porque:'Dimensão com histórico exige MERGE que fecha a vigência da versão anterior.'}
        ]},
       {id:'hub_sat',nome:'Hub / Link / Satélite (Data Vault)',desc:'Rastreabilidade total e carga paralelizável. Não é camada de consumo: exige uma estrela por cima.',
        proximos:[
@@ -7843,7 +7863,9 @@ function fabSugestoes(no){
     // O fluxo anda para a frente. Voltar so faz sentido para peca transversal
     // (log, alerta, governanca), que se pendura em qualquer ponto.
     if(!fabEhTransversal(p.id)&&!fabEhTransversal(no.comp)){
-      const _oa=fabOrdem(no.comp),_ob=fabOrdem(p.id);
+      // o proposito do no de origem ja e conhecido e muda o lugar dele no
+      // caminho; o do candidato ainda nao existe
+      const _oa=fabOrdem(no.comp,no.prop),_ob=fabOrdem(p.id,p.prop);
       if(_ob<_oa){
         if(_oa-_ob>=12){peso=-999;p={...p,nivel:'evitar',
           porque:c.nome+' vem ANTES de '+def.nome+' no caminho do dado — ligar assim inverte a ordem do fluxo. Selecione o ponto certo do diagrama para encaixá-lo.'}}
@@ -8208,7 +8230,7 @@ const FAB_ROTEIRO=[
    ok:g=>g.tem(['sproc'])||g.prop('notebook','log'),
    apos:['copy','notebook','dataflow','foreach'], dentro:'foreach',
    op:[
-     {id:'sproc',porque:'Uma procedure de início e outra de fim, chamadas pelo pipeline: gravam status, duração, volume e erro de forma transacional. É o caminho mais limpo.',
+     {id:'sproc',prop:'controle_exec',porque:'Uma procedure de início e outra de fim, chamadas pelo pipeline: gravam status, duração, volume e erro de forma transacional. É o caminho mais limpo.',
       se:ctx=>!fabCtxTem(ctx,'equipe','codigo')||true},
      {id:'notebook',porque:'Se a carga já é código, registrar de dentro dele evita uma ida e volta ao Warehouse.',
       se:ctx=>fabCtxTem(ctx,'equipe','codigo')||fabCtxTem(ctx,'estrategia','codigo')}]},
@@ -8218,6 +8240,20 @@ const FAB_ROTEIRO=[
    dica:'O log é uma tabela, não uma atividade: ele não roda. Quem grava nele é a procedure — e é a granularidade dessa tabela que decide se você reprocessa um objeto ou quarenta.',
    ok:g=>g.tem(['logtable']), apos:['sproc','notebook'],
    op:[{id:'logtable',porque:'Uma linha por execução (ou por objeto), com status, duração, volume e erro. É o que responde "a carga de ontem funcionou?" sem abrir o Fabric.'}]},
+
+  {id:'log_momento', fase:'Controle', foco:['sproc','logtable','lookup','notebook'],
+   se:ctx=>!fabCtxTem(ctx,'criticidade','exploratoria'),
+   t:'Em que ponto do pipeline a execução começa a ser registrada?',
+   dica:'A resposta curta é: antes da primeira leitura. O Lookup falha — conexão fora do ar, permissão revogada, catálogo travado, retorno acima do limite. Se o log só abre depois dele, a execução que morreu lendo o catálogo não deixa linha nenhuma, e "sem linha" é indistinguível de "nunca rodou". Você descobre pela ausência, que é a pior forma de descobrir.',
+   cfgDe:['sproc','notebook'],campo:'momento_log',
+   op:[
+     {v:'abertura',nome:'Antes da primeira leitura',
+      porque:'A procedure de início roda como primeira atividade do pipeline, antes do Lookup. Ela grava execucao_id, nome do pipeline, gatilho e hora de início com status RODANDO. Qualquer falha depois disso — inclusive na leitura do catálogo — encontra a linha já lá para ser fechada como ERRO. É o único ponto que cobre a falha de leitura.'},
+     {v:'pos_leitura',nome:'Depois do Lookup, já com o escopo conhecido',
+      porque:'Registra também quantos objetos entraram na corrida, o que é informação boa. Mas compra isso com um ponto cego: falha de conexão ou de permissão no catálogo não deixa rastro. Só escolha isto se o Lookup lê algo trivial e local — e mesmo assim você perde o "começou às 3h e nunca terminou".'},
+     {v:'so_fim',nome:'Uma linha só, gravada no fim',
+      porque:'Anti-padrão. Execução que trava, estoura tempo ou é cancelada nunca chega ao INSERT — e o histórico mostra apenas as execuções que deram certo. É um log que responde a pergunta que você não precisa fazer.'}
+   ]},
 
   {id:'casa_controle', fase:'Controle', foco:['logtable','ctrltable','sproc'],
    t:'Onde vivem as tabelas de controle e de log?',
@@ -9459,9 +9495,24 @@ const FAB_RECEITA={
           ['Correlação com a execução do pai','@pipeline().RunId']],
     cuidado:'@json() só funciona se o parâmetro do filho for do tipo Object. Se for String, passe item().parametros_json cru e converta lá dentro — passar objeto para parâmetro String vira "[object Object]" em silêncio.'}),
 
+  'sproc:controle_exec':()=>({t:'Onde entram as duas chamadas de controle',
+    passos:[
+      'A de INÍCIO é a primeira atividade do pipeline — antes do Lookup, não depois. O Lookup é a parte mais frágil do começo (conexão, permissão, tabela travada, retorno acima do limite). Com o log já aberto, essa falha aparece como linha que ficou em RODANDO; sem ele, não aparece nada.',
+      'A de FIM vem depois do laço, e precisa rodar TAMBÉM no caminho de falha. No pipeline isso é a dependência "on completion" (ou um par upon success / upon failure), nunca só "on success" — senão você volta a não fechar a linha das execuções que quebraram.',
+      'Rastreio por objeto é o mesmo par repetido DENTRO do laço, com o id do item. Em ForEach paralelo isso deixa de ser refinamento: sem ele você sabe que o lote falhou e não sabe qual dos quarenta.',
+      'A atividade Stored Procedure não devolve resultado para o pipeline. Precisando do id de execução de volta, ou você chama a procedure por uma atividade Lookup, ou usa @pipeline().RunId como id — o segundo é mais simples e já vem correlacionado com o monitor do Fabric.'
+    ],
+    expr:[['Ordem no canvas','sp_exec_inicio  →  Lookup  →  ForEach ( … )  →  sp_exec_fim'],
+          ['Parâmetro execucao_id','@pipeline().RunId'],
+          ['Parâmetro pipeline_nome','@pipeline().Pipeline'],
+          ['Parâmetro disparo','@pipeline().TriggerType'],
+          ['Abertura',"INSERT INTO log_execucao (execucao_id, pipeline_nome, disparo, inicio, status)\nVALUES (@execucao_id, @pipeline_nome, @disparo, SYSUTCDATETIME(), 'RODANDO');"],
+          ['Fechamento',"UPDATE log_execucao\n   SET fim = SYSUTCDATETIME(), status = @status, erro = @erro\n WHERE execucao_id = @execucao_id AND objeto IS NULL;"]],
+    cuidado:'Se a chamada de fim depender de sucesso, o log volta a mentir por omissão: as execuções que falharam ficam eternamente em RODANDO e ninguém distingue "travou" de "ainda está rodando". Feche no caminho de falha também, com o status certo.'}),
+
   sproc:()=>({t:'Como usar esta procedure no controle de execução',
     passos:[
-      'São duas chamadas, não uma: início ANTES do laço e fim DEPOIS dele. Uma procedure só, chamada no fim, não registra a execução que morreu no meio — e é justamente essa que você precisa ver.',
+      'São duas chamadas, não uma: início ANTES da primeira leitura e fim DEPOIS do laço. Uma procedure só, chamada no fim, não registra a execução que morreu no meio — e é justamente essa que você precisa ver.',
       'Se quiser rastreio por objeto, repita o par DENTRO do laço, com o id do item.',
       'A atividade Stored Procedure não devolve resultado para o pipeline. Precisando do id de execução de volta, ou você chama a procedure por uma atividade Lookup, ou usa @pipeline().RunId como id — o segundo caminho é mais simples e já vem correlacionado com o monitor do Fabric.'
     ],
@@ -9836,7 +9887,11 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
     const le=!!pos.sentidoLe;
     const jaTem=fabArtefatoExistente(valor);
     const v=jaTem?null:fabVaga(anc,fabEhArtefato(valor));
-    const no=jaTem||fabNovoNo(valor,v.x,v.y,null,le?undefined:esc,fabPipeDe(anc,valor));
+    // A opcao pode dizer PARA QUE a peca esta entrando. Quando diz, o proposito
+    // ja nasce declarado e a pergunta seguinte deixa de existir — a posicao que
+    // pede uma procedure de controle de execucao sabe que e disso que se trata.
+    const _prop=((pos.op||[]).find(o=>o.id===valor)||{}).prop||null;
+    const no=jaTem||fabNovoNo(valor,v.x,v.y,_prop,le?undefined:esc,fabPipeDe(anc,valor));
     if(no){
       if(anc){
         const de=le?no:anc, para=le?anc:no;
@@ -9869,7 +9924,7 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
     const le=!!(sug&&sug.sentido==='le');
     const jaTem=fabArtefatoExistente(valor);
     const v=jaTem?null:fabVaga(anc,fabEhArtefato(valor));
-    const no=jaTem||fabNovoNo(valor,v.x,v.y,null,le?undefined:fabEscopoDe(anc,valor),fabPipeDe(anc,valor));
+    const no=jaTem||fabNovoNo(valor,v.x,v.y,(sug&&sug.prop)||null,le?undefined:fabEscopoDe(anc,valor),fabPipeDe(anc,valor));
     if(no&&anc){
       const de=le?no:anc, para=le?anc:no;
       if(!fabCriaCiclo(de.id,para.id)&&!fabLigs().some(e=>e.from===de.id&&e.to===para.id))
@@ -10922,7 +10977,10 @@ const FAB_ROT={
   dashboard:'Dashboard e relatórios',ml:'Machine Learning',operacional:'Relatórios operacionais',apis:'APIs / data product',
   // forma da tabela de controle: aparece na faixa de foco do painel
   unica:'catálogo e estado juntos',separada:'catálogo + estado separados',
-  historico:'catálogo + estado + histórico'
+  historico:'catálogo + estado + histórico',
+  // quando a execucao passa a ser registrada
+  abertura:'log aberto antes da leitura',pos_leitura:'log aberto após o Lookup',
+  so_fim:'log gravado só no fim'
 };
 const FAB_PERG=[
   {k:'objetivo',t:'Qual é o objetivo principal?',
