@@ -2038,6 +2038,12 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-ld-op b{display:block;font-size:12px;font-weight:700;color:var(--label);margin-bottom:2px}
 .fab-ld-op span{display:block;font-size:11px;color:var(--label2);line-height:1.45}
 .fab-ld-op.add b{color:#0a5fa8}
+.fab-ld-dec.pend{border-color:#0a5fa8;background:#f7fbff}
+.fab-ld-dec.plat{border-style:dashed;background:var(--hover);opacity:.9}
+.fab-ld-dec.plat>b{font-size:12.5px;font-weight:650}
+.fab-ld-n.plat{background:var(--label3)}
+.fab-ld-platnota{margin:0 0 10px;font-size:11.5px;color:var(--label2);line-height:1.55;
+  padding:9px 11px;border-left:3px solid var(--label3);background:var(--hover);border-radius:0 8px 8px 0}
 .fab-ld-vertodas{margin-top:4px;border:0;background:none;color:var(--label2);font-size:11.5px;
   cursor:pointer;text-decoration:underline;font-family:inherit;padding:4px 0}
 .fab-ld-vertodas:hover{color:var(--label)}
@@ -7778,7 +7784,38 @@ function fabPendencia(no){
       return {tipo:'exige',campo:ex.k,t:ex.t,dica:ex.dica||'',
         op:ex.op.map(([v,nome,desc])=>({v,nome,desc:desc||'',alerta:(ex.alerta&&ex.alerta[v])||''}))};
   }
+  // Cada arquitetura AQUI e um Data Pipeline la no Fabric. O Invoke nao desenha
+  // um sub-fluxo: ele referencia OUTRO pipeline, escolhido de uma lista. Modelar
+  // o filho como moldura dentro do mesmo quadro era ficcao — no Fabric ele e um
+  // artefato separado, com nome proprio.
+  if(no.comp==='invoke'&&!(no.cfg&&no.cfg.chama)){
+    const outras=fabArqs.filter(a=>a.id!==fabCur);
+    return {tipo:'chama',campo:'chama',
+      t:'Qual pipeline este Invoke chama?',
+      dica:'No Fabric o pipeline chamado é outro artefato, escolhido de uma lista — a referência não aceita expressão. Aqui, cada arquitetura é um pipeline: aponte para a que corresponde ao filho.',
+      op:outras.map(a=>({v:a.id,nome:a.nome,desc:fabResumoArq(a)}))
+        .concat([{v:'@novo',nome:'Criar o pipeline filho agora',
+          desc:'Abre uma arquitetura nova, já ligada a este Invoke. Você desenha o filho lá e volta.'},
+          {v:'@externo',nome:'Existe no Fabric, fora deste app',
+          desc:'O filho já está publicado e você não vai modelá-lo aqui. O laudo para de cobrar, mas também não sabe o que ele faz.'}])};
+  }
   return null;
+}
+// uma linha sobre o que uma arquitetura tem, para escolher pelo conteudo
+function fabResumoArq(a){
+  const n=fabItems.filter(x=>x.arq===a.id);
+  if(!n.length)return 'ainda vazia';
+  const pap=(a.ctxPipe&&a.ctxPipe.papel)||'';
+  const rot={orquestra:'orquestra',ingere:'ingere',transforma:'transforma',
+    publica:'publica',manutencao:'manutenção'}[pap];
+  return (rot?rot+' · ':'')+n.length+' peça'+(n.length===1?'':'s')+': '+
+    n.slice(0,4).map(x=>(FAB_COMP[x.comp]||{}).nome||x.comp).join(', ')+(n.length>4?'…':'');
+}
+// a arquitetura que um Invoke chama, quando ela existe aqui
+function fabArqChamada(no){
+  const id=no&&no.cfg&&no.cfg.chama;
+  if(!id||id.charAt(0)==='@')return null;
+  return fabArqs.find(a=>a.id===id)||null;
 }
 function fabTemPendencia(no){return !!fabPendencia(no)}
 
@@ -7952,7 +7989,7 @@ function fabSugestoes(no){
       porque:'O Fabric aceita um único nível de ForEach. Para repetir dentro de um laço, chame outro pipeline por Invoke Pipeline — é a saída oficial.'}}
     // O papel declarado do pipeline recorta o que faz sentido aqui. Sem isso um
     // orquestrador recebia Silver, Gold e modelo semantico como proximo passo.
-    const _pv=fabPapelVeto(p.id,ctx);
+    const _pv=fabPapelVeto(p.id,ctx)||fabVetoPlataforma(p.id,ctx);
     if(_pv){peso=-999;p={...p,nivel:'evitar',porque:_pv}}
     // Dentro de um laco entra so o que executa por item. Artefato e um so para a
     // arquitetura inteira — a tabela de log nao se multiplica por iteracao. O que
@@ -8444,7 +8481,7 @@ const FAB_ROTEIRO=[
      {id:'rtdash',porque:'Painel em tempo real sobre o Eventhouse, quando a latência importa mais que o histórico.',
       se:ctx=>fabCtxTem(ctx,'freq','realtime')}]},
 
-  {id:'monitor', fase:'Operação', foco:['logtable','pbi','semantic'], se:ctx=>!fabCtxTem(ctx,'criticidade','exploratoria'),
+  {id:'monitor', fase:'Operação', plataforma:true, foco:['logtable','pbi','semantic'], se:ctx=>!fabCtxTem(ctx,'criticidade','exploratoria'),
    t:'Quem olha o log quando ninguém está olhando?',
    dica:'Log sem leitor é arquivo morto: ele só serve depois do incidente, e mesmo assim só se alguém lembrar dele.',
    ok:g=>!g.tem(['logtable'])||g.tem(['pbimonitor','activator','monitorhub']),
@@ -8740,7 +8777,7 @@ const FAB_ROTEIRO=[
    dica:'Senha em parâmetro de pipeline vai para o Git, aparece no log de execução e sobrevive em toda cópia do workspace. É o achado mais comum e mais constrangedor de qualquer auditoria.',
    ok:g=>g.tem(['keyvault']),apos:['pipeline','copy','notebook'],
    op:[{v:'keyvault',id:'keyvault',porque:'Azure Key Vault com identidade gerenciada: o segredo nunca aparece no desenho, no log nem no repositório.'}]},
-  {id:'ops_capacidade', fase:'Operação', foco:['workspace','deploy','capacidade'],
+  {id:'ops_capacidade', fase:'Operação', plataforma:true, foco:['workspace','deploy','capacidade'],
    se:ctx=>fabCtxTem(ctx,'criticidade','alta')||fabCtxTem(ctx,'volume','grande')||fabCtxTem(ctx,'volume','muitogrande'),
    t:'Em qual capacidade isso roda, e dividindo com quem?',
    dica:'No Fabric tudo consome CU da mesma capacidade. Um notebook mal comportado em desenvolvimento derruba o refresh do relatório do diretor — e a relação entre as duas coisas não é óbvia para ninguém.',
@@ -8758,7 +8795,7 @@ const FAB_ROTEIRO=[
      {v:'legal',nome:'Pelo prazo de auditoria',porque:'Quando o log faz parte da evidência de controle. Se é o caso, escreva o prazo em vez de guardar por medo.'}
    ]},
 
-  {id:'ambientes', fase:'Operação', foco:['pbi','rtdash','workspace','semantic','deploy'],
+  {id:'ambientes', fase:'Operação', plataforma:true, foco:['pbi','rtdash','workspace','semantic','deploy'],
    t:'Onde isso tudo é publicado, e como vai para produção?',
    dica:'É a decisão mais cara de desfazer. Reorganizar workspace depois quebra referência de relatório, de shortcut e de permissão.',
    ok:g=>g.tem(['workspace','deploy']), solto:true,
@@ -8780,6 +8817,25 @@ function fabPapelServe(pos,ctx){
   const pap=ctx&&ctx.papel;
   if(!pap)return true;
   return pos.papel.includes(pap);
+}
+
+// ---------- decisao de PLATAFORMA x decisao de PIPELINE ----------
+// O recorte por `papel` nao dava conta de um caso inteiro: ha pecas que se
+// constroem UMA VEZ para a plataforma e servem a todos os pipelines. A tabela
+// de log e uma so; o painel sobre ela e o modelo semantico dela sao construidos
+// uma vez, por quem cuida da plataforma. Oferecer "Painel de Monitoramento"
+// dentro de cada orquestrador e pedir que cada pipeline construa o proprio
+// Power BI. O que e do pipeline: GRAVAR no log e avisar quando falha.
+const FAB_PLATAFORMA=new Set(['pbimonitor','monitorhub','workspace','deploy','capacidade','lineage']);
+function fabEhPlataforma(c){return FAB_PLATAFORMA.has(c)}
+// Uma peca de plataforma so e "de plataforma" quando existe pipeline declarado
+// — sem papel nenhum, a arquitetura pode ser a propria plataforma.
+function fabVetoPlataforma(comp,ctx){
+  if(!fabEhPlataforma(comp))return '';
+  if(!(ctx&&ctx.papel))return '';
+  const d=FAB_COMP[comp];
+  return (d?d.nome:comp)+' se constrói uma vez para a plataforma inteira e serve a todos os '+
+    'seus pipelines — não é decisão deste aqui. O que é deste pipeline: gravar no log e avisar quando falhar.';
 }
 
 // posicoes que valem neste contexto, com o estado de cada uma
@@ -8905,8 +8961,19 @@ function fabAPFaixa(){
 // PRONTA para o contexto declarado quando tres coisas valem ao mesmo tempo:
 // o esqueleto da estrategia fechou, nao ha aviso de validacao, e nada ficou
 // pendente de decisao. Dai em diante o que existe e opcional — e o app diz isso.
+// Uma posicao de plataforma nao e cobrada de UM pipeline: ela vale para todos.
+// Sem papel declarado nao ha essa distincao — a arquitetura pode ser a propria
+// plataforma, e ai a decisao e dela mesma.
+function fabPosPlataforma(pos,ctx){return !!pos.plataforma&&!!(ctx&&ctx.papel)}
+function fabRoteiroSplit(){
+  const ctx=fabCtx(),rot=fabRoteiro();
+  return {pipeline:rot.filter(x=>!fabPosPlataforma(x,ctx)),
+          plataforma:rot.filter(x=>fabPosPlataforma(x,ctx))};
+}
 function fabProntidao(){
-  const rot=fabRoteiro(),g=fabGrafo(),av=fabValidar();
+  const g=fabGrafo(),av=fabValidar();
+  // o que fecha ESTE pipeline nao inclui o que se decide uma vez la fora
+  const rot=fabRoteiroSplit().pipeline;
   const abertas=rot.filter(x=>!x.pronta);
   const avisos=av.filter(v=>v.nivel==='aviso'||v.antipadrao);
   const opcionais=av.filter(v=>v.nivel!=='aviso');
@@ -9064,6 +9131,42 @@ function fabCriarEscritor(artId,comp){
 function fabDefinirCfg(id,campo,valor){
   const no=fabItems.find(n=>n.id===id);if(!no)return;
   fabMarcar();no.cfg=no.cfg||{};no.cfg[campo]=valor;fabSave();fabRender();
+}
+// Liga este Invoke a OUTRO pipeline do app. `@novo` cria a arquitetura filha e
+// ja deixa a referencia apontada para ela; `@externo` declara que o filho vive
+// fora daqui — o laudo para de cobrar e diz que nao sabe o que ele faz.
+function fabLigarPipeline(id,alvo){
+  const no=fabItems.find(n=>n.id===id);if(!no)return;
+  if(alvo==='@novo'){
+    const nome=(fabArq()?fabArq().nome:'Pipeline')+' — filho';
+    const ctxHerdado={...(fabArq()?fabArq().ctx:{})};
+    fabMarcar();
+    const novoId=fabNovaArq(nome,ctxHerdado,[]);
+    // `fabItems` e global, nao escopado por `fabCur`: a referencia no pai pode
+    // ser gravada depois de a arquitetura corrente ja ter mudado
+    no.cfg=no.cfg||{};no.cfg.chama=novoId;
+    // o filho de um orquestrador ingere — e para isso que ele foi chamado
+    const f=fabArqs.find(a=>a.id===novoId);
+    if(f){f.ctxPipe={papel:'ingere'};f.paiInvoke=id}
+    _fabSel=null;fabSave();fabRender();
+    toast('Pipeline filho criado — você está nele agora');
+    return;
+  }
+  fabDefinirCfg(id,'chama',alvo);
+  if(alvo!=='@externo')toast('Invoke apontando para "'+((fabArqs.find(a=>a.id===alvo)||{}).nome||alvo)+'"');
+}
+// Rotulo legivel de uma configuracao. `chama` guarda o id de outra arquitetura,
+// que nao diz nada para quem le — aqui vira o nome dela.
+function fabCfgRotulo(no,k,v){
+  if(k==='chama'){
+    if(v==='@externo')return 'chama pipeline externo';
+    const a=fabArqs.find(x=>x.id===v);
+    return a?'chama: '+a.nome:'chama: (pipeline removido)';
+  }
+  return FAB_ROT[v]||v;
+}
+function fabCfgTexto(no){
+  return Object.entries(no.cfg||{}).map(([k,v])=>fabCfgRotulo(no,k,v)).join(' · ');
 }
 // rotulo curto do proposito, para o no ficar autoexplicativo no diagrama
 function fabPropNome(no){
@@ -9860,7 +9963,7 @@ function fabPainelPasso(){
   if(p.no){
     const d=FAB_COMP[p.no.comp],et=FAB_ETAPA[d.etapa]||{cor:'#888'};
     const obj=fabPropNome(p.no);
-    const cfg=Object.entries(p.no.cfg||{}).map(([k,v])=>FAB_ROT[v]||v).join(' · ');
+    const cfg=fabCfgTexto(p.no);
     foco=`<div class="fab-foco" style="--et:${et.cor}">
       <span class="fab-foco-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</span>
       <span class="fab-foco-txt">
@@ -9980,6 +10083,7 @@ function fabPassoEscolher(tipo,valor,campo,subtipo){
   }
   if(tipo==='pend'){
     if(subtipo==='proposito')fabDefinirProp(_fabGuia.atual,valor);
+    else if(subtipo==='chama'){fabLigarPipeline(_fabGuia.atual,valor);return}
     else if(subtipo==='escritor'){
       // "mantida a mao" nao cria peca: ela declara que o catalogo e
       // configuracao, e configuracao nao tem atividade que a escreva
@@ -10551,8 +10655,8 @@ function fabNoHTML(n){
   const filho=n.comp==='invoke'
     ?`<button class="fab-no-filho" data-fabfilho="${n.id}" title="${_temPipe?'Ir para o pipeline chamado, aqui mesmo':'Montar o pipeline chamado neste mesmo quadro'}">${
       _temPipe?'ir ao pipeline ↓':'montar pipeline ↓'}</button>`:'';
-  const cfgTxt=Object.values(n.cfg||{}).length?
-    `<span class="fab-no-cfg">${escapeHtml(Object.values(n.cfg).map(v=>FAB_ROT[v]||v).join(' · '))}</span>`:'';
+  const cfgTxt=Object.keys(n.cfg||{}).length?
+    `<span class="fab-no-cfg">${escapeHtml(fabCfgTexto(n))}</span>`:'';
   const _ap=_fabAPNos[n.id];
   return `<div class="fab-no${sel}${pend?' pend':''}${emEscopo}${art} nat-${nat}${_ap?' antipadrao':''}" data-fab="${n.id}" style="left:${n.x}px;top:${n.y}px;--et:${et.cor}"${
     _ap?` title="Anti-padrão: ${escapeHtml(_ap.titulo)}"`:''}>
@@ -11225,7 +11329,7 @@ function fabLaudoHTML(){
     `<div class="fab-ld-grupo" style="--et:${e.cor}"><span>${escapeHtml(e.nome)}</span>
       <div class="fab-ld-chips">${porEtapa[e.id].map(n=>{
         const d=FAB_COMP[n.comp],obj=fabPropNome(n);
-        const cfg=Object.entries(n.cfg||{}).map(([k,v])=>FAB_ROT[v]||v).join(' · ');
+        const cfg=fabCfgTexto(n);
         return `<span class="fab-ld-chip${_fabAPNos[n.id]?' culpada':''}"
           title="${escapeHtml([obj,cfg].filter(Boolean).join(' — ')||d.oque)}">
           <i class="fab-ld-ico">${FAB_ICO[d.ico]||FAB_ICO.base}</i>
@@ -11279,9 +11383,25 @@ function fabLaudoHTML(){
     ?placar+aps.map(v=>cartao(v,'ap')).join('')+avisos.map(v=>cartao(v,'av')).join('')+sugLista
     :'<p class="fab-ld-limpo">Nada a apontar nesta declaração. Responda as decisões abaixo para o laudo ficar mais preciso.</p>');
 
+  // ---- pendencia de peca: o que a propria peca exige antes de qualquer outra
+  // coisa. Sem isto o Invoke nunca era perguntado no Laudo, e "qual pipeline
+  // este Invoke chama" e a decisao mais importante de um orquestrador.
+  const pend=fabNos().map(n=>({no:n,p:fabPendencia(n)})).filter(x=>x.p);
+  const pendHTML=pend.map(({no,p:pd})=>`<div class="fab-ld-dec pend">
+      <b>${escapeHtml(FAB_COMP[no.comp].nome)} — ${escapeHtml(pd.t)}</b>
+      ${pd.dica?`<i>${escapeHtml(fabCurta(pd.dica,240))}</i>`:''}
+      <div class="fab-ld-ops">${(pd.op||[]).map(o=>
+        `<button class="fab-ld-op" data-fablaudopend="${pd.tipo}" data-no="${no.id}"
+           data-campo="${pd.campo||''}" data-v="${o.v}">
+           <b>${escapeHtml(o.nome)}</b><span>${escapeHtml(fabCurta(o.desc||'',160))}</span></button>`
+      ).join('')}</div>
+    </div>`).join('');
+
   // ---- as decisoes que mudam alguma coisa ----
   const importa=fabDecisoesQueImportam();
-  const rot=fabRoteiro().filter(x=>!x.pronta);
+  const split=fabRoteiroSplit();
+  const rot=split.pipeline.filter(x=>!x.pronta);
+  const plat=split.plataforma.filter(x=>!x.pronta);
   const uteis=rot.filter(x=>importa[x.id]!==false);
   const mudas=rot.filter(x=>importa[x.id]===false);
   const lista=(_fabLaudoTudo?rot:uteis);
@@ -11312,8 +11432,12 @@ function fabLaudoHTML(){
 
   return `<div class="fab-laudo">
     <section><h3>Laudo</h3>${laudo}</section>
-    <section><h3>Decisões que mudam o laudo${uteis.length?` <span class="fab-ld-n">${uteis.length}</span>`:''}</h3>
-      ${dec||'<p class="fab-ld-limpo">Nenhuma decisão em aberto muda o diagnóstico.</p>'}${verTodas}</section>
+    <section><h3>Decisões que mudam o laudo${(uteis.length+pend.length)?` <span class="fab-ld-n">${uteis.length+pend.length}</span>`:''}</h3>
+      ${pendHTML}${dec||(pendHTML?'':'<p class="fab-ld-limpo">Nenhuma decisão em aberto muda o diagnóstico.</p>')}${verTodas}</section>
+    ${plat.length?`<section><h3>Decisões de plataforma <span class="fab-ld-n plat">${plat.length}</span></h3>
+      <p class="fab-ld-platnota">Estas valem para <b>todos</b> os seus pipelines, não só este. Painel de monitoramento, workspace e capacidade se constroem uma vez — o que é deste pipeline é gravar no log e avisar quando falhar.</p>
+      ${plat.map(pos=>`<div class="fab-ld-dec plat"><b>${escapeHtml(pos.t)}</b>
+        ${pos.dica?`<i>${escapeHtml(fabCurta(pos.dica,200))}</i>`:''}</div>`).join('')}</section>`:''}
     ${decl}
     ${limite}
   </div>`;
@@ -11733,6 +11857,7 @@ function fabInit(){
         if(op.dataset.v==='manual')fabDefinirCfg(_fabSel,'mantida','manual');
         else fabCriarEscritor(_fabSel,op.dataset.v);
       }
+      else if(op.dataset.fabop==='chama')fabLigarPipeline(_fabSel,op.dataset.v);
       else fabDefinirCfg(_fabSel,op.dataset.campo,op.dataset.v);
       return;
     }
@@ -11795,6 +11920,17 @@ function fabInit(){
     if(dec){fabDeclararPeca(dec.dataset.fabdecl);return}
     const pal=e.target.closest('[data-fablaudopal]');
     if(pal){fabAbrirPaleta();return}
+    const pd=e.target.closest('[data-fablaudopend]');
+    if(pd){
+      const id=pd.dataset.no,t=pd.dataset.fablaudopend,v=pd.dataset.v;
+      if(t==='proposito')fabDefinirProp(id,v);
+      else if(t==='chama')fabLigarPipeline(id,v);
+      else if(t==='escritor'){
+        if(v==='manual')fabDefinirCfg(id,'mantida','manual'); else fabCriarEscritor(id,v);
+      }
+      else fabDefinirCfg(id,pd.dataset.campo,v);
+      return;
+    }
     const cfg=e.target.closest('[data-fablaudocfg]');
     if(cfg){
       const alvo=fabNos().find(n=>n.comp===cfg.dataset.comp);
