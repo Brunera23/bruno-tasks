@@ -2020,6 +2020,17 @@ body:has(.fabric-view.active) .wk-toggle,body:has(.fabric-view.active) .wdg-pane
 .fab-ld-custo{color:var(--label2)!important;font-size:11.5px!important}
 .fab-ld-fix{font-size:12px!important;color:var(--label2)!important;padding-top:5px;border-top:1px solid var(--sep)}
 /* decisoes */
+.fab-estado{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 13px;
+  border-radius:10px;margin-bottom:4px;font-size:11.5px;line-height:1.45}
+.fab-estado.rascunho{background:var(--hover);border:1px dashed var(--sep);color:var(--label2)}
+.fab-estado.fechado{background:#f2f9f4;border:1px solid #1e6b34;color:#1e6b34}
+.fab-estado-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;
+  padding:2px 8px;border-radius:6px;background:var(--card);flex-shrink:0}
+.fab-estado.fechado .fab-estado-t{background:#1e6b34;color:#fff}
+.fab-estado-d{flex:1;min-width:120px}
+.fab-estado button{border:1px solid var(--sep);background:var(--card);color:var(--label2);
+  font-family:inherit;font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;flex-shrink:0}
+.fab-estado button:hover{border-color:#0a5fa8;color:var(--label)}
 .fab-ld-sugs{border:1px solid var(--sep);border-radius:11px;background:var(--card);padding:11px 14px}
 .fab-ld-sugs>b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
   font-weight:800;color:var(--label2);margin-bottom:6px}
@@ -6738,7 +6749,10 @@ const FAB_VALID=[
    porqueDoi:'A procedure precisa de um motor T-SQL para existir. Sem Warehouse nem SQL database no desenho, ela não tem onde ser criada — e isso só aparece na hora de publicar.',
    custo:'Na primeira tentativa de publicar.',
    titulo:'Procedure sem armazenamento que a hospede',
-   quando:g=>g.tem(['sproc'])&&!g.tem(['warehouse','sqldb']),
+   // A casa agora e DECLARADA (`cfg.onde`), nao deduzida do desenho: uma
+   // procedure que ja disse onde vive nao esta sem casa so porque o item nao
+   // foi desenhado. Sem a declaracao, a cobranca continua valendo.
+   quando:g=>g.tem(['sproc'])&&!g.temCfg('sproc','onde')&&!g.tem(['warehouse','sqldb']),
    texto:'Há Stored Procedure no desenho, mas nenhum Warehouse ou SQL database para hospedá-la. Procedure não é item solto do Fabric: ela vive dentro de um motor T-SQL com escrita.',
    resolver:'Adicione o Warehouse (ou SQL database) onde essas procedures vão morar — ou troque a procedure por Notebook, se a carga for code-first.'},
   // Este e o Lakehouse de verdade: ele existe no desenho e a procedure grava
@@ -6839,6 +6853,20 @@ const FAB_VALID=[
    quando:(g,ctx)=>fabCtxTem(ctx,'estrategia','metadata')&&g.tem(['copy','copyjob','dataflow'])&&!g.tem(['ctrltable'])&&!g.tem(['lookup']),
    texto:'Você declarou estratégia dirigida por metadados, mas o desenho começa direto na atividade que move o dado. Em metadata-driven a primeira atividade do pipeline é o Lookup sobre a tabela de controle: é ela que diz o que processar. Sem isso, o que está desenhado é um pipeline por objeto.',
    resolver:'Comece pela Tabela de Controle e leia-a com um Lookup; a atividade de ingestão passa a rodar dentro do laço, uma vez por objeto.'},
+  {id:'abertura-sem-quem-abra',nivel:'aviso',antipadrao:true,
+   porqueDoi:'A decisão declarada foi abrir o log antes da primeira leitura, mas o desenho tem uma procedure de controle só — e ela está DENTRO do laço, onde só roda depois que o escopo já foi lido e a iteração já começou. Não existe nada abrindo a corrida. Na prática o log só sabe de execuções que chegaram até o laço.',
+   custo:'Na primeira execução que morre antes do laço: ela não deixa linha nenhuma, e você descobre pela ausência.',
+   titulo:'Log declarado na abertura, mas ninguém abre',
+   quando:g=>{
+     const sp=g.nos.filter(n=>n.comp==='sproc'&&(!n.prop||n.prop==='controle_exec'));
+     if(!sp.length)return false;
+     const declarouAbertura=sp.some(n=>n.cfg&&n.cfg.momento_log==='abertura');
+     if(!declarouAbertura)return false;
+     // quem abre a corrida roda FORA do laco; dentro dele so ha registro por item
+     return !sp.some(n=>!n.escopo);
+   },
+   texto:'São duas chamadas, não uma: a de início roda como primeira atividade do pipeline, antes do Lookup; a de fim roda depois do laço, inclusive no caminho de falha. O desenho tem só a de dentro do laço — essa é a de registro por item, não a que abre a execução.',
+   resolver:'Adicione uma segunda Stored Procedure de controle de execução FORA do laço, antes da leitura do catálogo. A que está dentro do laço continua válida: ela registra o resultado de cada item.'},
   {id:'log-cego-na-leitura',nivel:'aviso',antipadrao:true,
    porqueDoi:'O log só abre depois que o catálogo foi lido — mas a leitura do catálogo é justamente onde a execução costuma morrer: conexão fora do ar, permissão revogada, tabela travada, retorno acima do limite do Lookup. Quando isso acontece, não existe linha nenhuma no log. E "sem linha" é indistinguível de "nunca foi disparado".',
    custo:'Na primeira madrugada em que o Warehouse do catálogo estiver indisponível. Você vai passar a manhã descobrindo se o pipeline rodou.',
@@ -8177,12 +8205,45 @@ function fabRegraPrecisaDesenho(r){
     _fabRegraDesenho[r.id]=_FAB_RX_DESENHO.test(String(r.quando));
   return _fabRegraDesenho[r.id];
 }
+// Regra de AUSENCIA cobra o que ainda nao existe ("falta alerta", "falta log").
+// Regra de DECISAO cobra o que voce escolheu ("voce marcou so_fim, e isso cega o
+// log"). A segunda esta errada no instante em que voce decide; a primeira nao —
+// enquanto o pipeline esta sendo montado, "ainda nao adicionei" e o estado
+// normal, nao um defeito. Gritar as duas do mesmo jeito no meio da montagem foi
+// a queixa: "ainda nao finalizei o pipeline, esta correto ser cobrado tao cedo?".
+// A leitura de configuracao manda: regra que olha uma escolha e sempre decisao.
+function fabRegraDeAusencia(r){
+  const s=String(r.quando);
+  // le uma escolha -> e decisao, nao ausencia
+  if(/g\.cfg\(|g\.temCfg\(|g\.propCfg\(|g\.prop\(/.test(s))return false;
+  // Aponta uma peca que EXISTE e esta errada ali -> tambem e decisao. "Voce
+  // declarou metadata e abriu por Copy Data" nao e falta: e contradicao entre o
+  // que voce disse e o que voce desenhou, e isso ja esta errado agora.
+  // "Carga critica sem alerta" nao aponta peca nenhuma — so diz que falta.
+  if(/[^!]\bg\.tem\(/.test(s))return false;
+  return /!\s*g\.\w*tem\(|pendentes\(/.test(s);
+}
+function fabEstadoArq(){const a=fabArq();return (a&&a.estado)||'rascunho'}
+function fabFechado(){return fabEstadoArq()==='fechado'}
+// o que o rascunho esta segurando — o app diz o numero em vez de esconder
+function fabSeguradasPeloRascunho(){
+  if(fabFechado())return [];
+  const g=fabGrafo(),ctx=fabCtx();
+  if(!g.contar())return [];
+  return FAB_VALID.filter(r=>{
+    if(!fabRegraDeAusencia(r))return false;
+    if(_fabModo==='laudo'&&fabRegraPrecisaDesenho(r))return false;
+    try{return !!r.quando(g,ctx)}catch(e){return false}
+  });
+}
 function fabValidar(){
   const g=fabGrafo(),ctx=fabCtx(),out=[];
   if(!g.contar())return out;
   const soDecl=_fabModo==='laudo';
+  const rascunho=!fabFechado();
   FAB_VALID.forEach(r=>{
     if(soDecl&&fabRegraPrecisaDesenho(r))return;
+    if(rascunho&&fabRegraDeAusencia(r))return;   // ainda montando: falta nao e defeito
     try{
       if(r.quando(g,ctx))out.push({...r,detalheTxt:r.detalhe?r.detalhe(g):''});
     }catch(e){console.warn('[fab] regra '+r.id+' falhou',e)}
@@ -9134,6 +9195,27 @@ function fabCurva(a,b){
 const FAB_PROP_INFERIDO={
   ctrltable:ctx=>fabCtxTem(ctx,'papel','orquestra')?'catalogo_uc':'catalogo_objetos'
 };
+// Configuracao que o pipeline JA respondeu em outra peca. Perguntar tres vezes
+// onde fica o Warehouse — uma na procedure, uma no catalogo, uma no log — e
+// repetir uma decisao que ja foi tomada. Controle e log moram juntos: e o
+// desenho normal, e quem quiser separar troca a resposta.
+const FAB_CFG_INFERIDA={
+  logtable:{onde:()=>{
+    const n=fabNos().find(x=>(x.comp==='ctrltable'||x.comp==='sproc')&&x.cfg&&x.cfg.onde
+      &&x.cfg.onde!=='lakehouse');
+    return n?n.cfg.onde:null;
+  }}
+};
+function fabAplicarCfgInferida(no){
+  const m=FAB_CFG_INFERIDA[no.comp];if(!m)return false;
+  let mudou=false;
+  Object.entries(m).forEach(([k,fn])=>{
+    if(no.cfg&&no.cfg[k]!==undefined)return;
+    let v=null;try{v=fn()}catch(e){}
+    if(v){no.cfg=no.cfg||{};no.cfg[k]=v;no.cfgInferida=no.cfgInferida||{};no.cfgInferida[k]=true;mudou=true}
+  });
+  return mudou;
+}
 function fabNovoNo(comp,x,y,prop,escopo,pipe){
   const def=FAB_COMP[comp];if(!def)return null;
   if(!prop&&FAB_PROP_INFERIDO[comp]){
@@ -9147,6 +9229,7 @@ function fabNovoNo(comp,x,y,prop,escopo,pipe){
   if(escopo)no.escopo=escopo;
   if(pipe)no.pipe=pipe;
   if(prop&&def.propositos&&def.propositos.some(p=>p.id===prop))no.prop=prop;
+  fabAplicarCfgInferida(no);
   fabItems.push(no);return no;
 }
 function fabDefinirProp(id,prop){
@@ -10974,6 +11057,20 @@ function fabRenderLaudo(){
   el.innerHTML=fabLaudoHTML();
   fabVigia();
 }
+// Voce diz quando o pipeline parou de ser rascunho. Ate la, o app cobra o que
+// voce DECIDIU errado e guarda o que ainda FALTA — que e o estado normal de
+// quem esta montando.
+function fabFecharPipeline(){
+  const a=fabArq();if(!a)return;
+  fabMarcar();
+  a.estado=fabFechado()?'rascunho':'fechado';
+  _fabAP=null;_fabAPFoco=null;         // outro criterio, outra medicao
+  fabSave();fabRender();
+  const seg=a.estado==='fechado'?fabValidar().filter(v=>v.nivel==='aviso'||v.antipadrao).length:0;
+  toast(a.estado==='fechado'
+    ?(seg?'Pipeline fechado — '+seg+' ponto'+(seg>1?'s':'')+' a resolver':'Pipeline fechado — nada a resolver')
+    :'De volta a rascunho');
+}
 function fabTrocarModo(m){
   _fabModo=m;try{sv('bt-fab-modo',m)}catch(e){}
   _fabAP=null;_fabAPFoco=null;          // outro modo, outra medicao: re-basear
@@ -11079,7 +11176,16 @@ function fabRenderPainel(){
   if(pr.abertas.length)_falta.push(pr.abertas.length+(pr.abertas.length===1?' decisão':' decisões'));
   if(pr.pend.length)_falta.push(pr.pend.length+(pr.pend.length===1?' pendência':' pendências'));
   if(pr.avisos.length)_falta.push(pr.avisos.length+(pr.avisos.length===1?' aviso':' avisos'));
-  const pront=`<div class="fab-pront${pr.pronto?' ok':''}" data-fabpronto="1"
+  const seg=fabSeguradasPeloRascunho();
+  const estado=`<div class="fab-estado ${fabFechado()?'fechado':'rascunho'}">
+    <span class="fab-estado-t">${fabFechado()?'Pipeline fechado':'Rascunho'}</span>
+    <span class="fab-estado-d">${fabFechado()
+      ?'tudo é cobrado, inclusive o que falta'
+      :(seg.length?seg.length+' cobrança'+(seg.length>1?'s':'')+' de "falta X" segurada'+(seg.length>1?'s':'')+' até você fechar'
+        :'o que você decidir errado aparece na hora; o que ainda falta espera')}</span>
+    <button data-fabfechar="1">${fabFechado()?'voltar a rascunho':'marcar como fechado'}</button>
+  </div>`;
+  const pront=estado+`<div class="fab-pront${pr.pronto?' ok':''}" data-fabpronto="1"
     title="${pr.pronto?'Nada obrigatório em aberto':'Ver o que falta'}">
     <div class="fab-pront-bar"><span style="width:${pr.pronto?100:pr.pct}%"></span></div>
     <div class="fab-pront-txt">
@@ -11479,7 +11585,17 @@ function fabLaudoHTML(){
       confiável do que deduzir de uma seta.</p>
   </details>`;
 
+  const seg=fabSeguradasPeloRascunho();
+  const estado=`<div class="fab-estado ${fabFechado()?'fechado':'rascunho'}">
+    <span class="fab-estado-t">${fabFechado()?'Pipeline fechado':'Rascunho'}</span>
+    <span class="fab-estado-d">${fabFechado()
+      ?'tudo é cobrado, inclusive o que ainda falta'
+      :(seg.length?seg.length+' cobrança'+(seg.length>1?'s':'')+' de "falta X" segurada'+(seg.length>1?'s':'')+' — o que você decidir errado continua aparecendo na hora'
+        :'o que você decidir errado aparece na hora; o que ainda falta espera você fechar')}</span>
+    <button data-fablaudofechar="1">${fabFechado()?'voltar a rascunho':'marcar como fechado'}</button>
+  </div>`;
   return `<div class="fab-laudo">
+    ${estado}
     <section><h3>Laudo</h3>${laudo}</section>
     <section><h3>Decisões que mudam o laudo${(uteis.length+pend.length)?` <span class="fab-ld-n">${uteis.length+pend.length}</span>`:''}</h3>
       ${pendHTML}${dec||(pendHTML?'':'<p class="fab-ld-limpo">Nenhuma decisão em aberto muda o diagnóstico.</p>')}${verTodas}</section>
@@ -11969,6 +12085,8 @@ function fabInit(){
     if(dec){fabDeclararPeca(dec.dataset.fabdecl);return}
     const pal=e.target.closest('[data-fablaudopal]');
     if(pal){fabAbrirPaleta();return}
+    const fx=e.target.closest('[data-fablaudofechar]');
+    if(fx){fabFecharPipeline();return}
     const pd=e.target.closest('[data-fablaudopend]');
     if(pd){
       const id=pd.dataset.no,t=pd.dataset.fablaudopend,v=pd.dataset.v;
@@ -11996,6 +12114,8 @@ function fabInit(){
   // ---- painel lateral ----
   const pn=$('#fabPainel');
   if(pn)pn.addEventListener('click',e=>{
+    const fx=e.target.closest('[data-fabfechar]');
+    if(fx){fabFecharPipeline();return}
     const b=e.target.closest('[data-fabpainel]');
     if(b){_fabPainel=b.dataset.fabpainel;try{sv('bt-fab-painel',_fabPainel)}catch(_){}fabRenderPainel();return}
     const dd=e.target.closest('[data-fabddl]');
