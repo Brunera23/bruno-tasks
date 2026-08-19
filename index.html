@@ -5682,6 +5682,12 @@ function fabNatureza(comp){
 // -> Warehouse" virava seta de fluxo, como se a tabela desaguasse no armazem —
 // quando na verdade ela MORA nele. Tabela nao flui para lugar nenhum: ela e
 // hospedada, escrita e lida.
+// A aresta que so diz "esta peca mora naquele armazenamento" — redundante com
+// a configuracao `onde`, que ja aparece escrita no proprio card.
+function fabArestaDeMoradia(a,b){
+  const onde=a&&a.cfg&&a.cfg.onde;
+  return !!onde && b && b.comp===onde && fabNatureza(b.comp)==='armazem';
+}
 function fabRelacao(ca,cb){
   const a=fabNatureza(ca),b=fabNatureza(cb);
   if(a==='config'||b==='config')return '';
@@ -6294,6 +6300,11 @@ const FAB_COMP={
   // ===== CAMADAS =====
   bronze:{nome:'Bronze (dado cru)',etapa:'armazenamento',ico:'layer',
     curto:'Guardar o dado como veio, sem regra',
+    exige:[{k:'onde',t:'Onde esta camada mora?',
+      dica:'Tabela não é item do Fabric: ela vive dentro de um Lakehouse ou de um Warehouse. Não é detalhe — é essa escolha que decide se dá para escrevê-la por procedure (Warehouse) ou só por Spark (Lakehouse, cujo endpoint SQL é somente leitura).',
+      op:[
+        ['lakehouse','Lakehouse','Delta no OneLake, com Spark e SQL por cima. É onde as camadas do medalhão normalmente moram.'],
+        ['warehouse','Warehouse','Quando a camada é lida por T-SQL e mantida por procedure. Escrita transacional e MERGE completo.']]}],
     oque:'Camada que guarda o dado exatamente como veio da origem, sem regra aplicada.',
     quando:'Sempre que houver mais de uma origem, extração cara, ou necessidade de auditoria e reprocessamento.',
     evitar:'Aplicar limpeza aqui. O valor do Bronze é ser fiel ao que a origem entregou — inclusive nos defeitos.',
@@ -6306,6 +6317,11 @@ const FAB_COMP={
     ]},
   silver:{nome:'Silver (limpo e padronizado)',etapa:'transformacao',ico:'layer',
     curto:'Dado limpo, tipado e padronizado',
+    exige:[{k:'onde',t:'Onde esta camada mora?',
+      dica:'Tabela não é item do Fabric: ela vive dentro de um Lakehouse ou de um Warehouse. Não é detalhe — é essa escolha que decide se dá para escrevê-la por procedure (Warehouse) ou só por Spark (Lakehouse, cujo endpoint SQL é somente leitura).',
+      op:[
+        ['lakehouse','Lakehouse','Delta no OneLake, com Spark e SQL por cima. É onde as camadas do medalhão normalmente moram.'],
+        ['warehouse','Warehouse','Quando a camada é lida por T-SQL e mantida por procedure. Escrita transacional e MERGE completo.']]}],
     oque:'Dado limpo, tipado, deduplicado e com esquema padronizado entre origens.',
     quando:'Sempre que houver mais de uma origem falando da mesma entidade, ou dado cru com qualidade irregular.',
     evitar:'Aplicar regra específica de um relatório aqui. Silver é dado confiável e reutilizável — regra de consumo é Gold.',
@@ -6319,6 +6335,11 @@ const FAB_COMP={
     ]},
   gold:{nome:'Gold (pronto para consumo)',etapa:'curadoria',ico:'layer',
     curto:'Dado modelado, pronto para consumo',
+    exige:[{k:'onde',t:'Onde esta camada mora?',
+      dica:'Tabela não é item do Fabric: ela vive dentro de um Lakehouse ou de um Warehouse. Não é detalhe — é essa escolha que decide se dá para escrevê-la por procedure (Warehouse) ou só por Spark (Lakehouse, cujo endpoint SQL é somente leitura).',
+      op:[
+        ['lakehouse','Lakehouse','Delta no OneLake, com Spark e SQL por cima. É onde as camadas do medalhão normalmente moram.'],
+        ['warehouse','Warehouse','Quando a camada é lida por T-SQL e mantida por procedure. Escrita transacional e MERGE completo.']]}],
     oque:'Dado modelado para consumo: agregado, dimensional, com regra de negócio aplicada.',
     quando:'Sempre que houver consumo analítico — dashboard, relatório, modelo de ML.',
     evitar:'Apontar o Power BI direto no Silver para "economizar uma camada". A regra de negócio acaba dentro do relatório, e cada relatório terá a sua.',
@@ -6485,7 +6506,14 @@ const FAB_COMP={
     ]},
   logtable:{nome:'Log de Execução',etapa:'governanca',ico:'log',
     curto:'O que rodou, quanto, e com qual erro',
-    exige:[{k:'granularidade',t:'Qual a granularidade do log?',
+    exige:[{k:'onde',t:'Onde o log de execução mora?',
+      dica:'Ele precisa de escrita transacional e de consulta SQL — é lido o tempo todo e escrito a cada execução. Escolher errado só aparece quando a procedure tenta gravar.',
+      op:[
+        ['warehouse','Warehouse','T-SQL completo e escrita transacional. É o lar natural do log, junto da tabela de controle.'],
+        ['lakehouse','Lakehouse','Quando quem escreve é Notebook/Spark. Delta aguenta — mas o endpoint SQL é somente leitura, então esqueça procedure.'],
+        ['sqldb','SQL database','Quando o log também alimenta uma aplicação operacional.']],
+      alerta:{lakehouse:'Com o log no Lakehouse, quem grava tem que ser Notebook. Procedure não escreve no endpoint do Lakehouse.'}},
+      {k:'granularidade',t:'Qual a granularidade do log?',
     dica:'Decide o que você consegue responder quando algo falhar. É aqui que se define se você reprocessa uma tabela ou quarenta.',
     op:[
       ['execucao','Por execução','Uma linha por rodada do pipeline. Responde "rodou ou não", e só isso.'],
@@ -6635,19 +6663,22 @@ const FAB_REF={
     quando:'Múltiplas origens, necessidade de auditoria, consumo analítico. É o padrão-base da maioria dos projetos.',
     nos:['copy','bronze','notebook','silver','gold','semantic','pbi','logtable'],
     props:{copy:'bruto',notebook:'limpeza',semantic:'corporativo'},
-    cfg:{copy:{destino:'lakehouse'}}},
+    cfg:{copy:{destino:'lakehouse'},bronze:{onde:'lakehouse'},silver:{onde:'lakehouse'},
+      gold:{onde:'lakehouse'},logtable:{onde:'warehouse'}}},
   controle:{nome:'Controle de Execução (metadata-driven)',
     desc:'Pipeline dirigido por tabela de controle, com log de execução e painel de monitoramento. Uma peça atende N objetos.',
     quando:'Mais de três objetos com a mesma lógica de carga, ou necessidade de saber o que rodou e o que falhou.',
     nos:['ctrltable','pipeline','lookup','foreach','copy','warehouse','sproc','logtable','semantic','pbimonitor','notify'],
     props:{pipeline:'orquestrar',lookup:'lista',copy:'incremental',warehouse:'controle_wh',sproc:'controle_exec',semantic:'monitor'},
-    cfg:{copy:{destino:'lakehouse'},sproc:{onde:'warehouse'}}},
+    cfg:{copy:{destino:'lakehouse'},sproc:{onde:'warehouse'},
+      ctrltable:{onde:'warehouse'},logtable:{onde:'warehouse'}}},
   kimball:{nome:'Kimball (Staging → Dimensões → Fatos)',
     desc:'Modelagem dimensional clássica sobre Warehouse, com semantic model no topo.',
     quando:'Consumo predominante em BI, time forte em T-SQL, requisito de modelo dimensional.',
     nos:['copy','bronze','warehouse','sproc','gold','semantic','pbi','logtable'],
     props:{copy:'staging',warehouse:'dimensional',sproc:'merge',semantic:'corporativo'},
-    cfg:{copy:{destino:'lakehouse'},sproc:{onde:'warehouse'}}},
+    cfg:{copy:{destino:'lakehouse'},sproc:{onde:'warehouse'},
+      bronze:{onde:'lakehouse'},gold:{onde:'warehouse'},logtable:{onde:'warehouse'}}},
   realtime:{nome:'Real-Time Analytics',
     desc:'Fluxo contínuo do evento à ação, sem passar por lote.',
     quando:'Latência de segundos importa: monitoramento operacional, sensor, alarme de processo.',
@@ -6659,13 +6690,15 @@ const FAB_REF={
     quando:'Manutenção preventiva, OEE, detecção de anomalia em processo industrial.',
     nos:['src_pi','eventstream','eventhouse','lakehouse','notebook','silver','gold','mlmodel','semantic','pbi','dq','logtable'],
     props:{eventstream:'persistir',lakehouse:'silver_l',notebook:'ml',semantic:'dominio'},
-    cfg:{eventstream:{destino:'varios'}}},
+    cfg:{eventstream:{destino:'varios'},silver:{onde:'lakehouse'},gold:{onde:'lakehouse'},
+      logtable:{onde:'warehouse'}}},
   dataproduct:{nome:'Data Product',
     desc:'Dado tratado como produto: dono definido, contrato, qualidade e consumo documentado.',
     quando:'Organização com múltiplos times consumindo o mesmo domínio de dado.',
     nos:['copy','bronze','silver','gold','dq','semantic','lineage','workspace','logtable'],
     props:{copy:'bruto',semantic:'dominio'},
-    cfg:{copy:{destino:'lakehouse'}}}
+    cfg:{copy:{destino:'lakehouse'},bronze:{onde:'lakehouse'},silver:{onde:'lakehouse'},
+      gold:{onde:'lakehouse'},logtable:{onde:'warehouse'}}}
 };
 
 // ---------- regras de validação ----------
@@ -7714,11 +7747,18 @@ function fabGrafo(){
     // Tabela nao e item do Fabric: ela mora dentro de um Lakehouse/Warehouse.
     // Uma cadeia de camadas conta como abrigada se QUALQUER elo dela alcanca o
     // armazenamento — senao Bronze/Silver/Gold acusariam tres vezes o mesmo.
+    // "Onde esta tabela mora" e uma DECLARACAO da peca, nao uma relacao de
+    // fluxo. Antes isso era deduzido caminhando as arestas — o que obrigava a
+    // desenhar uma seta para dizer "mora em", e o rotulo saia errado: de
+    // Stored Procedure para Warehouse a heuristica escrevia "grava em", quando
+    // a verdade e que a procedure VIVE dentro do Warehouse.
+    // Agora a casa declarada (`cfg.onde`) manda. O caminho pelas arestas
+    // continua como reserva, para diagrama antigo que ainda nao respondeu.
     semCasa:(só)=>{
       const idx={};nos.forEach(n=>idx[n.id]=n);
       const viz={};nos.forEach(n=>viz[n.id]=[]);
       ligs.forEach(e=>{if(viz[e.from]&&viz[e.to]){viz[e.from].push(e.to);viz[e.to].push(e.from)}});
-      const abrigada=n=>{
+      const porAresta=n=>{
         const vis=new Set([n.id]),fila=[n.id];
         while(fila.length){
           for(const v of viz[fila.shift()]||[]){
@@ -7731,6 +7771,7 @@ function fabGrafo(){
         }
         return false;
       };
+      const abrigada=n=>(n.cfg&&n.cfg.onde)?true:porAresta(n);
       return nos.filter(n=>fabNatureza(n.comp)==='tabela'&&(!só||só.includes(n.comp))&&!abrigada(n));
     },
     // Dentro de um laco, atividade sem ligacao com as irmas roda AO MESMO TEMPO
@@ -8126,7 +8167,10 @@ function fabSugestoes(no){
 // (`foreach-aninhado`, `container-vazio`, `artefato-no-laco`, `orfao`) so
 // existiam para policiar o proprio canvas. As outras cinco viram pergunta
 // explicita na Parte 2, o que e mais confiavel do que inferir de aresta.
-const _FAB_RX_DESENHO=/\.ligado\(|\.semCasa\(|\.orfaos\(|\.ligs|escopo/;
+// `semCasa` saiu desta lista: ela agora le a casa DECLARADA (`cfg.onde`), nao
+// as arestas. Com isso `tabela-sem-casa` e as decisoes `casa_controle` e
+// `casa_camadas` voltam a funcionar no Laudo.
+const _FAB_RX_DESENHO=/\.ligado\(|\.orfaos\(|\.ligs|escopo/;
 const _fabRegraDesenho={};
 function fabRegraPrecisaDesenho(r){
   if(_fabRegraDesenho[r.id]===undefined)
@@ -10782,6 +10826,11 @@ function fabRender(){
     // entrada no escopo nao vira seta: quem diz "esta dentro" e a moldura
     if(e.dentro&&b.escopo===a.id)return;
     const c=fabCurva(a,b);
+    // Moradia nao e fluxo. A Stored Procedure nao "grava em" o Warehouse: ela
+    // VIVE dentro dele. Quando a peca ja declarou onde mora, a seta so repete
+    // isso — com o verbo errado, porque a heuristica de rotulo olha so as
+    // naturezas e nao sabe distinguir as duas relacoes.
+    if(fabArestaDeMoradia(a,b))return;
     const rel=e.chama?'chama':fabRelacao(a.comp,b.comp);
     arestas+=`<g class="fab-edge${e.dentro?' dentro':''}${e.chama?' chama':''}${rel?' rel':''}" data-fabedge="${e.id}">
       ${rel?`<text x="${c.mx}" y="${c.my-9}" class="fab-edge-rot">${rel}</text>`:''}
